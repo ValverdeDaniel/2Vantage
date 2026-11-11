@@ -1,0 +1,36 @@
+# VCS
+.git
+.gitignore
+
+# Secrets
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+
+# Runtime data the container creates itself
+media/
+staticfiles/
+
+# The frontend is its own image locally (Dockerfile.dev); the production build stage copies it (§11).
+frontend/
+
+# Docs and specs (README.md ships)
+*.md
+!README.md
+**/CLAUDE.md
+
+# Python caches
+__pycache__/
+**/__pycache__/
+*.py[cod]
+**/*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,73 @@
+.stepper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+.step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--grey-500);
+  font-size: var(--text-sm);
+}
+
+.step + .step::before {
+  display: inline-block;
+  width: 32px;
+  height: 2px;
+  margin-right: var(--space-1);
+  border-radius: 1px;
+  background: var(--grey-300);
+  content: '';
+}
+
+.dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--grey-300);
+  border-radius: 50%;
+  background: var(--color-surface);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}
+
+.done {
+  color: var(--grey-700);
+}
+
+.done .dot {
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}
+
+.done + .step::before,
+.current::before {
+  background: var(--color-brand);
+}
+
+.current {
+  color: var(--color-brand);
+  font-weight: var(--weight-bold);
+}
+
+.current .dot {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  color: var(--color-brand-text);
+}
+
+.current .label {
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-brand-soft);
+}
+
+.lost {
+  opacity: 0.6;
+}

@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:15
+    # Postgres is often killed rather than stopped locally; syncfs keeps crash recovery quick.
+    command: ["postgres", "-c", "recovery_init_sync_method=syncfs"]
+    stop_grace_period: 60s
+    ports: ["5436:5432"]
+    environment:
+      POSTGRES_DB: ${DB_NAME:-vantage2}
+      POSTGRES_USER: ${DB_USER:-vantage}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-vantage-dev}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-vantage} -d ${DB_NAME:-vantage2}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  backend:
+    build: .
+    ports: ["8004:8000"]
+    volumes: [".:/app", "media:/data/media"]
+    environment:
+      ENVIRONMENT: local
+      DJANGO_DEBUG: "True"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-only-not-secret}
+      DB_NAME: ${DB_NAME:-vantage2}
+      DB_USER: ${DB_USER:-vantage}
+      DB_PASSWORD: ${DB_PASSWORD:-vantage-dev}
+      DB_HOST: db
+      DB_PORT: "5432"
+      FRONTEND_URL: http://localhost:4001
+      MEDIA_ROOT: /data/media
+      AGENCY_TIME_ZONE: ${AGENCY_TIME_ZONE:-America/New_York}
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+
+  frontend:
+    build: {context: ./frontend, dockerfile: Dockerfile.dev}
+    ports: ["4001:4001"]
+    volumes: ["./frontend:/app", "/app/node_modules"]
+    environment:
+      VITE_API_PROXY: http://backend:8000
+    depends_on: [backend]
+
+volumes:
+  pgdata:
+  media:

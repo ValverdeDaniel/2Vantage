@@ -1,0 +1,23 @@
+# Pinned exactly (plan.md §3.1). Add a library in the slice that first needs it.
+Django==5.2.19
+djangorestframework==3.16.1
+psycopg2-binary==2.9.13
+gunicorn==23.0.0
+# Reading imports and writing the plan template (§9.3)
+openpyxl==3.1.5
+# Agency logo re-encoding (§6.2)
+pillow==13.0.0
+
+# Tests and lint
+pytest==8.4.2
+pytest-django==4.14.0
+ruff==0.17.4
+
+# Pulled in by the packages above, pinned at what was resolved on 2026-11-10
+asgiref==3.13.0
+et_xmlfile==2.0.0
+iniconfig==2.3.1
+packaging==26.3
+pluggy==1.7.0
+Pygments==2.21.0
+sqlparse==0.6.1

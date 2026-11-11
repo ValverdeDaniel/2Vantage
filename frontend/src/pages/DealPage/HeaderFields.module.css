@@ -1,0 +1,68 @@
+.fact {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--grey-700);
+}
+
+.label {
+  color: var(--color-text-muted);
+}
+
+.inlineEdit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+.inlineEdit:hover {
+  border-color: var(--color-border-strong);
+  background: var(--grey-50);
+}
+
+.inlineEdit:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.pencil {
+  color: var(--grey-400);
+  font-size: var(--text-sm);
+}
+
+.placeholder {
+  color: var(--color-text-subtle);
+  font-style: italic;
+  font-weight: var(--weight-normal);
+}
+
+.inlineForm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dateInput {
+  width: auto;
+}
+
+.error {
+  color: var(--color-red);
+  font-size: var(--text-sm);
+}
+
+.linesRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}

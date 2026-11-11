@@ -1,0 +1,17 @@
+line-length = 120
+target-version = "py312"
+# Keep the cache out of the synced repository folder.
+cache-dir = "/tmp/ruff_cache"
+extend-exclude = ["*/migrations/*", "frontend"]
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP", "DJ"]
+ignore = ["DJ001"]
+
+[format]
+quote-style = "single"
+
+[lint.per-file-ignores]
+# Data modules (vocabularies generated from plan.md §4) keep one row per line (§3.9).
+"deals/lines.py" = ["E501"]
+"quotes/fields.py" = ["E501"]

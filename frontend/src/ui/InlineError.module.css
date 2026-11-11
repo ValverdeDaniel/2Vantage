@@ -1,0 +1,34 @@
+.box {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  border: 1px solid #f3c1bb;
+  border-radius: var(--radius-md);
+  background: var(--color-red-soft);
+}
+
+.compact {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+}
+
+.icon {
+  color: var(--color-red);
+  font-weight: var(--weight-bold);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-weight: var(--weight-medium);
+}
+
+.detail {
+  font-size: var(--text-sm);
+  color: var(--grey-700);
+}

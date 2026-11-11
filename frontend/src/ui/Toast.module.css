@@ -1,0 +1,75 @@
+.region {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: min(420px, calc(100vw - 2 * var(--space-5)));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  pointer-events: auto;
+  animation: rise 0.16s ease-out;
+}
+
+.success {
+  border-left-color: var(--color-green);
+}
+
+.error {
+  border-left-color: var(--color-red);
+}
+
+.info {
+  border-left-color: var(--color-blue);
+}
+
+.icon {
+  font-weight: var(--weight-bold);
+  line-height: 22px;
+}
+
+.success .icon {
+  color: var(--color-green);
+}
+
+.error .icon {
+  color: var(--color-red);
+}
+
+.info .icon {
+  color: var(--color-blue);
+}
+
+.message {
+  flex: 1;
+  line-height: 22px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+}

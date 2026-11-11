@@ -1,0 +1,82 @@
+.wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.table {
+  width: 100%;
+  font-size: var(--text-md);
+}
+
+.table th,
+.table td {
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table th {
+  background: var(--grey-50);
+  color: var(--grey-600);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.row {
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--grey-50);
+}
+
+.lost td {
+  color: var(--grey-500);
+}
+
+.name {
+  color: var(--color-brand);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.name:hover {
+  text-decoration: underline;
+}
+
+.lost .name {
+  color: var(--grey-600);
+}
+
+.sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sort:hover {
+  color: var(--color-text);
+}
+
+.sortOn {
+  color: var(--color-brand);
+  font-size: var(--text-xs);
+}
+
+.sortOff {
+  color: var(--grey-400);
+  font-size: var(--text-xs);
+}

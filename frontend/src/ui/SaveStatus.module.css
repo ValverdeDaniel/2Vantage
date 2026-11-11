@@ -1,0 +1,17 @@
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 1em;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.tick {
+  color: var(--color-green);
+  font-weight: var(--weight-bold);
+}
+
+.error {
+  color: var(--color-red);
+}

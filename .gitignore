@@ -218,3 +218,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# 2Vantage
+.env.*
+!.env.example
+media/
+staticfiles/
+node_modules/
+frontend/dist/
+.ruff_cache/
