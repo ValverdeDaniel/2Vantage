@@ -1,7 +1,8 @@
 """Jobs and the deal's AI settings (plan.md §6.4; O.3.3, D.6). `ai` holds no business data: plans, answers and people
 stay with their owners, which apply a job's changes through their own services.
 
-Chat, ChatMessage and CarrierNote join in slice 24; firm-level jobs with no deal wait with the ledger (OQ6).
+Slice 24 adds the chats (`Chat`, `ChatMessage`; D7, D79), a turn's chat on its job, and the admins' carrier notes
+(`CarrierNote`, D119). Firm-level jobs with no deal wait with the ledger (OQ6).
 """
 
 from django.conf import settings
@@ -45,6 +46,7 @@ class Job(models.Model):
     created_by = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
     actor_label = models.CharField(max_length=100, blank=True)  # who started it when no user did (the portal)
     worker = models.CharField(max_length=100, blank=True)  # the worker that claimed it (host:pid)
+    chat = models.ForeignKey('Chat', null=True, blank=True, on_delete=models.SET_NULL, related_name='jobs')  # a turn's
     created_at = models.DateTimeField(auto_now_add=True)
     started_at = models.DateTimeField(null=True, blank=True)
     finished_at = models.DateTimeField(null=True, blank=True)
@@ -106,3 +108,61 @@ class DealAi(models.Model):
 
     def __str__(self):
         return f'AI settings of deal {self.deal_id}'
+
+
+class Chat(models.Model):
+    """One conversation with Claude on a deal (D7): everyone on the deal sees every chat (OQ3). Numbered per deal
+    under the DealAi lock (`next_chat`), on its first message, so an unsent "＋ New chat" leaves nothing behind."""
+
+    deal = models.ForeignKey(Deal, on_delete=models.CASCADE, related_name='ai_chats')
+    number = models.PositiveIntegerField()
+    title = models.CharField(max_length=80, blank=True)  # '' reads as "Chat N"
+    tab = models.CharField(max_length=20, blank=True)  # the deal tab it started on
+    created_by = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used_at = models.DateTimeField(null=True, blank=True)  # a person last wrote in it
+    last_used_by = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['deal', 'number'], name='one_chat_number_per_deal')]
+        ordering = ['-last_used_at', '-id']
+
+    def __str__(self):
+        return f'Chat {self.number} of deal {self.deal_id}'
+
+
+class ChatMessage(models.Model):
+    """One message of a chat (D79): a person's words or Claude's reply, and the turn it belongs to. No context and no
+    cost are kept here: the turn's job holds what it cost and what it changed."""
+
+    USER_ROLE, ASSISTANT = 'user', 'assistant'
+    ROLES = [(USER_ROLE, 'Person'), (ASSISTANT, 'Claude')]
+
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='messages')
+    role = models.CharField(max_length=10, choices=ROLES)
+    text = models.TextField()
+    author = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    job = models.ForeignKey(Job, null=True, blank=True, on_delete=models.SET_NULL, related_name='messages')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f'{self.role} message {self.id}'
+
+
+class CarrierNote(models.Model):
+    """An admin's note about one carrier's files, added to every Claude call about that carrier, outside the cache
+    (D119; the stand-in for lessons, OQ4). `carrier` is a key of `deals.carriers` (checked by the admin form)."""
+
+    carrier = models.CharField(max_length=60, unique=True)
+    text = models.TextField()
+    updated_by = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['carrier']
+
+    def __str__(self):
+        return f'Note on {self.carrier}'

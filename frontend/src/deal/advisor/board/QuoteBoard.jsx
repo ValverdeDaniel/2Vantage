@@ -26,6 +26,7 @@ import SelectBar from './SelectBar';
 import TableBar from './TableBar';
 import TransposedTable from './TransposedTable';
 import useBoardActions from './useBoardActions';
+import useBoardBridge from './useBoardBridge';
 import useBoardConfig from './useBoardConfig';
 import useBoardFilters from './useBoardFilters';
 import useBoardGrid from './useBoardGrid';
@@ -70,6 +71,7 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
     quotes = kept.ids.map((id) => board.order.byId.get(id)).filter(Boolean);
   } else if (held) setHeld(null);
   const drawn = drawnOrder(board.order, quotes, board.inProposal);
+  useBoardBridge({ dealId: deal.id, line, onLine, view, boardMeta, shownIds: quotes.map((p) => p.id), total: board.quotes.length }); // F108
 
   const max = boardMeta.transpose_max;
   const { blocked, shown } = transposeState(drawn.length, max, prefs.orientation);

@@ -5,15 +5,16 @@ import { kindLabel } from './drawerWords';
 import ModelBar from './ModelBar';
 
 /*
- * The drawer's panel (plan.md §8.17; D8, D9, D13, D14, D16; the old ScanChat's `bnf-scanchat` without its chat, which
- * is slice 24's): the whole panel takes dropped files ("Drop to attach…", D16; only file drags, the old fileDrag.js
- * rules), the model picker and the deal's spend, the file chips on a tab whose files Claude reads (or the File room
- * where each file says what it is), what Claude is doing and did (`children`), and 📎 Attach files. Before the deal
- * exists (the quote-first door) only the drop and 📎 show.
+ * The drawer's panel (plan.md §8.17; D7, D8, D9, D13, D14, D16, D19; the old ScanChat's `bnf-scanchat`): the whole
+ * panel takes dropped files ("Drop to attach…", D16; only file drags, the old fileDrag.js rules), the model picker and
+ * the deal's spend, Chats ▾ (`chat.bar`, slice 24), the file chips on a tab whose files Claude reads (or the File room
+ * where each file says what it is), the chat's messages (`chat.messages`), what Claude is doing and did (`children`),
+ * then the composer (`chat.composer`) and 📎 Attach files. Before the deal exists (the quote-first door) only the drop
+ * and 📎 show.
  */
 const isFileDrag = (event) => Array.from(event.dataTransfer?.types || []).includes('Files');
 
-export default function DrawerBody({ dealId, meta, state, kind, kinds, files, attach, model, onModel, children }) {
+export default function DrawerBody({ dealId, meta, state, kind, kinds, files, attach, model, onModel, chat = null, children }) {
   const picker = useRef(null);
   const depth = useRef(0);
   const [dropping, setDropping] = useState(false);
@@ -68,7 +69,8 @@ export default function DrawerBody({ dealId, meta, state, kind, kinds, files, at
             ? 'Your reads land at once, with ↶ Undo this run.'
             : 'Your reads wait here for your review before anything on the deal changes.')}
       </div>
-      {state && <ModelBar meta={meta} state={state} model={model} onModel={onModel} disabled={attach.busy} />}
+      {state && <ModelBar dealId={dealId} meta={meta} state={state} model={model} onModel={onModel} disabled={attach.busy} />}
+      {chat?.bar}
       {dealId && state && kind && (
         <FileChips
           dealId={dealId}
@@ -91,7 +93,9 @@ export default function DrawerBody({ dealId, meta, state, kind, kinds, files, at
           attach={attach}
         />
       )}
+      {chat?.messages}
       {children}
+
       <div className="bnf-scanchat-input">
         <input
           ref={picker}
@@ -114,6 +118,7 @@ export default function DrawerBody({ dealId, meta, state, kind, kinds, files, at
         >
           {attach.busy ? 'Attaching…' : '📎 Attach files'}
         </button>
+        {chat?.composer}
       </div>
     </div>
   );

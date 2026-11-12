@@ -17,7 +17,16 @@ ai sits left of every value owner in the chain, so it never imports them: they f
   (`merge`), finds each value in its file and builds the change set (`build_changes`); `apply` and `undo` land it
   through the owner's services and take it back (slice 19). `corpus` and `score` feed the Eval lane
   (`manage.py reader_eval`).
-- `context`, `tools`: the chat's context providers and tools (slice 24; empty until then).
+- `context` {name: ContextProvider(order, fn)}: what a chat turn is told about the deal, never stored (D78; slice 24).
+  `fn(deal, page) -> text` ('' for nothing), where `page` is what the person's tab shows ({tab, board, viewer}); the
+  turn joins them in `order`. quotes tells the plan table and the board, intake the client guidance.
+- `tools` {name: Tool}: Claude's strict chat tools (D81, O.3.3; slice 24), sent in `order` (a fixed list: the cache
+  key). `run(turn, data) -> str` validates `data` in code and answers in words for Claude; it raises
+  `ai.tools.ToolRefused(sentence)` for input it will not take. A tool never writes: it adds items to the turn's change
+  set (`turn.add(item)`) or sets the board (`turn.board`), and the change set lands through its owner (below).
+- `turn_owners` {owner: TurnOwner(order, apply)}: who lands a turn's items (`item['owner']`), in the chain's lock
+  order. `apply(user, deal, job, items) -> {activity_ids, plan_ids, areas, summary, skipped}` writes them through the
+  owner's services in the caller's transaction; ↶ Undo this run reverts those Activity rows.
 """
 
 from collections import namedtuple
@@ -27,12 +36,41 @@ from . import kinds
 
 JobKind = namedtuple('JobKind', 'lane run land', defaults=(None,))
 LocateHook = namedtuple('LocateHook', 'queries save')
+ContextProvider = namedtuple('ContextProvider', 'order fn')
+TurnOwner = namedtuple('TurnOwner', 'order apply')
 
 job_kinds = {}
 locate_hooks = {}
 readers = {}
 context = {}
 tools = {}
+turn_owners = {}
+deal_carriers = []  # fn(deal) -> carrier names on the deal's plans (quotes): whose carrier notes a turn carries
+
+
+@dataclass(frozen=True)
+class Tool:
+    """One chat tool (D81): `schema` is its strict input schema (every object closes with additionalProperties
+    false); `owner` is the app that registered it."""
+
+    name: str
+    owner: str
+    order: int
+    description: str
+    schema: dict
+    run: object
+
+
+def register_tool(tool):
+    tools[tool.name] = tool
+
+
+def register_context(name, fn, order):
+    context[name] = ContextProvider(order, fn)
+
+
+def register_turn_owner(owner, apply, order):
+    turn_owners[owner] = TurnOwner(order, apply)
 
 
 def register_kind(kind, run, land=None):

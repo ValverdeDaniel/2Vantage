@@ -81,6 +81,10 @@ def retry(user, job_id, *, model='', force=False, budget_override=False):
     from ..reading import may_use_opus
 
     job = Job.objects.select_related('deal').get(pk=job_id)
+    if job.kind == kinds.TURN:  # Run anyway on a turn the budget stopped, ↻ Try again on a turn (slice 24)
+        from .turns import retry_turn
+
+        return retry_turn(user, job, model=model, budget_override=budget_override)
     if job.kind != kinds.READ:
         raise Refused(NOT_A_READ)
     if job.status in kinds.ACTIVE:

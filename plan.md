@@ -3321,7 +3321,8 @@ D104). Client guidance is intake's `client_guidance` answer, not a field here (O
 24). **ChatMessage** — `chat`, `role`, `text`, `author`, `job`; no context and no cost (slice 24).
 
 **CarrierNote** — `carrier`, `text`, `updated_by`, `updated_at`; edited in Django admin and added to Claude's notes
-for that carrier (D119, OQ4; slice 24).
+for that carrier (D119, OQ4; slice 24). Built in slice 24 (`ai/migrations/0003_chats_notes.py`, with `Job.chat`):
+`carrier` is a key of `deals.carriers`, unique, picked from the carriers' list in the admin form.
 
 ### 6.5 intake
 
@@ -3892,7 +3893,17 @@ adds `read_documents` (files a finished read read), `spend.budget_usd` with the 
 `can.opus` (Opus, Run anyway and reads that land at once: admins and direct people), and on each job `model`,
 `cost_usd` (so far), `recent_steps` (the last 8), `over` (run, deal or total), `retry_of`, `review`; `news` rows add
 `auto` (it landed by itself, D71), `model` and `plan_ids`. `/api/meta/`'s `ai` adds `tabs` ({tab: [readers]}),
-`send_order` and `default_model`.
+`send_order` and `default_model`. Built in slice 24: GET `deals/{id}/ai/chats/` → `{chats: [{id, number, title
+("Chat N" when unnamed), named, tab, created_at, last_used_at, last_used_by, messages}], open (the chat this person
+last wrote in), window: 30}`; PATCH `ai/chats/{id}/` `{title}` → `{id, title, named}`; GET `ai/chats/{id}/messages/
+?before=` → `{chat, messages: [{id, role, text, author, created_at, job_id, turn: {id, status, land, wait_reason,
+resolution, over, error, model, cost_usd, summary, items, findings, board, landed {summary, plan_ids, areas, items,
+auto, undone}, retry_of}}], more}` (50 a page, oldest first); POST `deals/{id}/ai/messages/` `{text (≤ 8,000),
+chat_id?, document_ids? (≤ 3, none that list members), tab?, board?, viewer?, model?, budget_override?}` → 201
+`{chat_id, message, job, queue_position}` (409 without a key, for Opus or Run anyway by someone neither admin nor
+direct; 400 for bad ids, text, tab or page state); PATCH `deals/{id}/ai/` `{locked?, budget_usd?}` → the state plus
+`activity_ids` (anyone locks; only an admin changes the budget, 403 otherwise, OQ34). A turn's changes use the same
+`apply/` (`select`: item ids), `undo/`, `discard/` and `retry/` (Run anyway, Try again) doors as a read.
 
 | Method | Path | Auth | Request and response |
 |---|---|---|---|
@@ -5207,7 +5218,11 @@ AI door hides and the manual flow is unchanged (D26). Slices 16–24 build it; 3
   is no single `extract()` call site in a job, because up to four ranges stream at once in threads that only talk to
   Claude while the job's own thread reserves, settles and beats (`calls.Runner`); `calls.extract` is the one-thread
   form the Eval lane uses. A refusal retries once on the other of Sonnet 5.5 and Opus 5.5 only for admins and direct
-  people (D91). Every call's real usage and cost is recorded per call; `manage.py ai_spend` adds them up.
+  people (D91). Every call's real usage and cost is recorded per call; `manage.py ai_spend` adds them up. Since slice
+  24 a call that was sent but ended without its usage (Stop or cancel mid-stream, an error after sending) is charged
+  conservatively, never at $0: what the stream reported before it ended, else its input as estimated before sending,
+  else its whole reservation (`calls.charged_usage`); a call still queued at Stop costs nothing. A chat turn is
+  checked against the deal's budget before its first call (`budget.check_turn`) and stops calling at the run cap.
 
 ### 10.4 Readers
 
@@ -5250,7 +5265,12 @@ finding, when allowed → landing (§10.5).
   review). The read door is `POST deals/{id}/ai/reads/` (D39). Not built here: `read_checks` beyond the findings the
   rules make (D88, slice 24), the Opus step-up on a hard finding (D76; built in slice 20: `reading.steps_up` and
   `step_up`, the whole read again on Opus 5.5 for an admin or a direct person, its read replacing the first, the cost
-  cap counting both), carrier notes (D119, slice 24).
+  cap counting both), carrier notes (D119, slice 24). **Built in slice 24:** `quotes/read_checks.py` (D88, the old
+  `plan_checks.verify` over a change set) runs in `build_changes`: hard findings — a tier rate printed nowhere in its
+  file (unless it has image pages), a new plan with no rates on a tier-rated line, two plans of one line and role
+  sharing a code, a current plan left without its renewal on a line with renewals — step the read up (D76 is live);
+  soft ones (values not found, tier order, printed counts × rates against the printed premium) are listed. Each read's
+  per-call note carries its file's carrier note (`ai/carrier_notes.py`).
 
 ### 10.5 Landing, review and Undo
 
@@ -5316,6 +5336,23 @@ finding, when allowed → landing (§10.5).
 - **Carrier notes** (D119): an admin's note per carrier, added to each call outside the cache, in place of lessons.
 - **Deferred:** Claude Unleashed (D101, F4), lessons (D102) and saved readers (D103), per OQ4; census and questionnaire
   turn tools (D111, G103); earlier-year chats (D11).
+- **Built in slice 24:** `ai/turn.py` (the `turn` kind: history, context, files, up to 8 rounds, the reply as the
+  chat's next message), `history.py`, `turn_prompt.py` (the cached system prompt; the context: `<deal>`,
+  `<documents>`, each provider, `<carrier-notes>`, whether changes land), `turn_files.py` (≤ 3 attached files whole,
+  ≤ 100 pages; `read_document`), `turn_state.py` (the change set), `tools.py` (strict specs in a fixed order; inputs
+  parsed from text too), `services/chats.py`, `services/turns.py` (the land hook, apply, Undo through each owner's
+  reverter, Run anyway and Try again), `services/deal_ai.py` (lock, budget, their reverter), `carrier_notes.py`.
+  Owners register: quotes `set_board`, `propose_changes` (set_values, remove_plan), `clear_line`, the `<plans>` and
+  `<board>` context (each plan's monthly total from the Advisor's own figures, F114) and the turn owner
+  (`quotes/turn/`); intake `update_client_guidance` and `<guidance>` (`intake/turn.py`). The browser applies a turn's
+  board patch through `deal/shared/boardBridge.js` (F108): the Advisor's `useBoardBridge` sets the line and the
+  config in the URL, and Claude's pick (F25) shows as its chip. Not built here: `read_documents`, `check_values`,
+  `rank_plans`, `merge_plans`, `pair_plans`, `add_lines`, `set_table_note`, `set_rows` (slices 22, 37 and the
+  builder's); creating a plan from a chat (Claude adds plans by reading their file). **Decision (slice 24):** a turn's
+  changes land at once for an admin or a direct person (§2's `claude_direct`: "chat changes land at once, with Undo"),
+  removals included — the person asked for them, and sold or recommended plans are refused when proposed (D86) —
+  unless the table is locked or the deal lost; everyone else's wait in the chat for "Apply N selected ▸"
+  (`land.decide_turn`). §10.1's "a read that removes a plan waits" stays a rule for reads.
 
 ### 10.7 The Documents review station
 
@@ -6347,7 +6384,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | **Slice 22: AI-5** | | | | |
 | OQ33 | Should SBC reads wait for review even for direct people? | Open. Default: yes (D71) | Open | 22 |
 | **Slice 24: AI-6** | | | | |
-| OQ34 | Should only admins change a deal's AI budget? | Open. Default: yes | Open | 24 |
+| OQ34 | Should only admins change a deal's AI budget? | Open. Default: yes. Built in slice 24: `PATCH deals/{id}/ai/` `{budget_usd}` answers 403 for anyone but an admin; admins set it with ✎ Budget in the drawer's head bar (D100) | Open (default built) | 24 |
 | **Slice 69: STG-1 (after slice 16)** | | | | |
 | OQ105 | v1.1's M2, staging, was never built and Part P has no slice for it, though V.2 runs Gates B and C on staging. Add slice 69 STG-1 after slice 16, with slice 47 and Milestone 1 waiting on it? | Open. Default: yes (§11.1, §13.2) | Open | 69; 47, M1 |
 | **Slice 25: PRO-1** | | | | |

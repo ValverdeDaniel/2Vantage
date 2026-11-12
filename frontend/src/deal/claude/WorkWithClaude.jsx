@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAiState } from '../../api/ai';
 import { useMeta } from '../../api/meta';
@@ -9,6 +9,7 @@ import ClaudeStrip from './ClaudeStrip';
 import DealDrawer from './DealDrawer';
 import { claudeDoor, PILL_TABS, STRIP_TABS, useClaudeDoor } from './door';
 import { modelLabel, nextModel, tabKinds } from './drawerWords';
+import { afterTurn } from './afterTurn';
 import { flashWhenSettled } from './flashPlans';
 
 /*
@@ -35,16 +36,21 @@ function AroundTheTab({ deal, tab }) {
   const { data: meta } = useMeta();
   const door = useClaudeDoor();
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const asked = params.get('claude') === '1';
   const onFinished = useCallback(
     (job) => {
+      if (job.kind === 'turn') {
+        afterTurn(queryClient, deal.id, job, () => navigate(`/deals/${deal.id}/advisor${asked ? "?claude=1" : ""}`));
+        return;
+      }
       if (job.kind !== 'read') return;
       if (job.landed?.plan_ids?.length) flashWhenSettled(queryClient, deal.id, job.landed.plan_ids);
       else if (job.status === 'done' && job.land === 'staged' && job.wait_reason) {
         toast.info(`Claude read the files — ${job.wait_reason.charAt(0).toLowerCase()}${job.wait_reason.slice(1)}`);
       }
     },
-    [deal.id, queryClient, toast],
+    [deal.id, queryClient, toast, navigate, asked],
   );
   const ai = useAiState(deal.id, { onFinished });
   const state = ai.data;

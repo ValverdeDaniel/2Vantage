@@ -132,6 +132,20 @@ def check_run(deal_id, estimate, override=False):
         )
 
 
+def check_turn(deal_id, estimate, override=False):
+    """Refuse a chat turn the deal's budget cannot pay for, unless overridden (D24, D99). A turn's own spending stops
+    at the run cap as it goes (`over_run_cap`)."""
+    if override:
+        return
+    budget, spent = deal_budget(deal_id), deal_spent(deal_id)
+    if spent + estimate > budget:
+        raise OverLimit(
+            f'This deal has spent {_usd(spent)} of its {_usd(budget)} AI budget, so Claude was not asked. An admin '
+            'or a direct person can run it anyway.',
+            DEAL,
+        )
+
+
 def over_run_cap(spent_this_run, override=False):
     """True once a run has really spent past its cap: it keeps what it finished and waits (D53)."""
     return not override and spent_this_run > run_cap()
@@ -162,9 +176,12 @@ def reserve(*, model, input_tokens, max_tokens, purpose, job=None, deal_id=None)
         )
 
 
-def settle(call, *, answered, usage, status, stop_reason=''):
-    """Record what the call used, priced from the model that answered; adds it to its job's cost. Returns the cost."""
+def settle(call, *, answered, usage, status, stop_reason='', at_least=None):
+    """Record what the call used, priced from the model that answered; adds it to its job's cost. Returns the cost.
+    `at_least`: a floor in dollars (a sent call whose usage never came is charged its reservation, `calls.settle`)."""
     cost = pricing.cost(answered or call.model, usage)
+    if at_least is not None and Decimal(at_least) > cost:
+        cost = Decimal(at_least).quantize(Decimal('0.000001'))
     Call.objects.filter(pk=call.pk).update(
         answered=answered or '',
         usage=dict(usage or {}),

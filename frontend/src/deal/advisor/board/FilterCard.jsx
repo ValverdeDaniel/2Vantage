@@ -21,11 +21,11 @@ export default function FilterCard({ meta, line, lineLabel, view, filters, curre
   return (
     <div className="bnf-advisor-filtercard">
       <div className="bnf-advisor-filtercard-head">
-        <SavedBar line={line} lineLabel={lineLabel} current={config} onApply={apply} />
+        <SavedBar line={line} lineLabel={lineLabel} current={config} onApply={(saved) => { apply(saved); filters.clearPick?.(); }} />
         {filters.active > 0 && (
           <span className="bnf-advisor-filterstate">
             <b>{filters.active}</b> active
-            <button type="button" className="bnf-advisor-clear" onClick={clear} title="Reset every trigger and carrier chip">
+            <button type="button" className="bnf-advisor-clear" onClick={() => { clear(); filters.clearPick?.(); }} title="Reset every trigger, carrier chip and Claude’s pick">
               Clear
             </button>
           </span>
@@ -85,7 +85,10 @@ export default function FilterCard({ meta, line, lineLabel, view, filters, curre
         fields={fields}
         ops={board.rule_ops ?? []}
         lineLabel={lineLabel}
+        pick={filters.pick}
+        pickLineLabel={(key) => meta.lines.find((row) => row.key === key)?.label ?? key}
         onRemove={(rule) => set((now) => removeRule(now, rule))}
+        onClearPick={filters.clearPick}
       />
     </div>
   );

@@ -55,3 +55,23 @@ def decide(change_set, *, target, must_review=False, direct=False, asked_review=
     if any(item.get('op') == 'remove_plan' for item in items):
         return Landing(STAGED, REMOVES)
     return Landing(AUTO)
+
+
+TURN_WAITS = 'These changes wait for your review: nothing on the deal changes until you apply them.'
+TURN_LOCKED = 'The table is locked from Claude, so these changes wait for your review.'
+
+
+def decide_turn(change_set, *, direct=False, locked=False, lost=''):
+    """How a chat turn's changes land (plan.md §2's `claude_direct`: "chat changes land at once, with Undo"; D71,
+    D104): at once for an admin or a direct person, unless the table is locked or the deal lost; otherwise they wait.
+    A turn's removals are the person's own request, so they land like its other changes (sold and recommended plans
+    are refused when proposed, D86)."""
+    if not (change_set.get('items') or []):
+        return Landing('')
+    if not direct:
+        return Landing(STAGED, TURN_WAITS)
+    if locked:
+        return Landing(STAGED, TURN_LOCKED)
+    if lost:
+        return Landing(STAGED, lost)
+    return Landing(AUTO)

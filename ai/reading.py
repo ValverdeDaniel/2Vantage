@@ -23,7 +23,7 @@ from django.conf import settings
 from accounts.access import can_direct
 from documents.models import Document
 
-from . import budget, calls, client, content, pricing, ranges, read_files, registry
+from . import budget, calls, carrier_notes, client, content, pricing, ranges, read_files, registry
 from .models import Job
 from .progress import JobFailed, Stopped
 
@@ -77,8 +77,10 @@ class Run:
         self.notes = {}
 
     def note(self, file):
+        """The per-call note, outside the cache: the reader's own, then the file's carrier note (D55, D119)."""
         if file.id not in self.notes:
-            self.notes[file.id] = self.reader.note(file, {'deal_lines': list(self.job.deal.requested_lines or [])})
+            note = self.reader.note(file, {'deal_lines': list(self.job.deal.requested_lines or [])})
+            self.notes[file.id] = carrier_notes.note_for_read(note, file.carrier)
         return self.notes[file.id]
 
     def fail(self, file, part, reason):

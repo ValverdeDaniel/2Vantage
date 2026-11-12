@@ -9,12 +9,13 @@ numbered in that order and the board opens as the carrier printed it (D62). One 
   plan the file does not show becomes an alternate. A quote's `replaces` comes from the file, unticked when unsure.
 - `set_values`: it matched a plan (`match.py`); only values that change are listed (D60), each ticked or left alone.
 Then `counts.py` adds the printed tier counts (OQ30) and the lines no one asked for (D56); `locating.py` finds every
-value in its file (E79). The plans from these files the read did not return are listed as `kept` (D60).
+value in its file (E79). The plans from these files the read did not return are listed as `kept` (D60). Last,
+`read_checks` adds its findings (D88; slice 24): a hard one steps the read up to Opus 5.5 where allowed (D76).
 """
 
 from documents.kinds import PHI_KINDS
 
-from .. import fields
+from .. import fields, read_checks
 from . import counts as count_items
 from . import locating, rules
 from .match import match, ref_key
@@ -208,6 +209,7 @@ def build_changes(deal, user, merged, files, extra):
                     'hard': False,
                 }
             )
+    builder.findings += read_checks.for_read(builder.items, {plan.id: plan for plan in plans})  # D88 (slice 24)
     if builder.dropped:
         builder.findings.append(
             {

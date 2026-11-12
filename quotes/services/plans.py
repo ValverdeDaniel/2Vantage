@@ -148,9 +148,11 @@ def _refuse_stale(keys):
 
 
 @transaction.atomic
-def update_plan(user, plan_id, data, source_origin='typed', document=None, cells=None):
+def update_plan(user, plan_id, data, source_origin='typed', document=None, cells=None, by_claude=False):
     """Returns (plan, [changed value keys]); `plan.activity_id` is the Activity row a Revert would undo, or None.
-    Keys outside the PATCH list (role, links, stars, the sale) are ignored (F71)."""
+    Keys outside the PATCH list (role, links, stars, the sale) are ignored (F71). `by_claude`: a chat turn's change
+    (slice 24), recorded as Claude's in a row of its own that never merges with the person's edits, so its Undo puts
+    back only what Claude changed."""
     plan = locked(Plan, plan_id)
     data = {key: value for key, value in data.items() if key in PATCHABLE}
     if 'expect' in data:
@@ -191,6 +193,9 @@ def update_plan(user, plan_id, data, source_origin='typed', document=None, cells
             summary, coalesce, noun = 'Edited', 'quotes:values', 'plan value'
         else:
             summary, coalesce, noun = 'Edited', 'quotes:plans', 'plan detail'
+        if by_claude:
+            plural = '' if len(diff) == 1 else 's'
+            summary, coalesce = f'Claude edited {len(diff)} {noun}{plural} on {plan.carrier} {plan.name}', ''
         row = activity.record(
             plan.deal,
             user,
@@ -201,6 +206,7 @@ def update_plan(user, plan_id, data, source_origin='typed', document=None, cells
             coalesce,
             noun,
             changes=[activity.change(f'plan:{plan.id}', diff)],
+            actor_kind='claude' if by_claude else None,
         )
         plan.activity_id = row.id
         signals.changed(plan.deal_id, [plan.line])

@@ -56,10 +56,16 @@ class Polled(APIView):
 
 
 class DealAiView(Polled):
-    """GET the deal's AI state: jobs queued, running and just finished; lock, spend, permissions. Writes nothing."""
+    """GET the deal's AI state: jobs queued, running and just finished; lock, spend, permissions. Writes nothing.
+    PATCH {locked?, budget_usd?}: the table lock and the deal's budget (admins only), then the state (slice 24)."""
 
     def get(self, request, pk):
         return Response(selectors.deal_state(_deal(pk), request.user))
+
+    def patch(self, request, pk):
+        from .chat_views import patch_settings
+
+        return patch_settings(request, _deal(pk))
 
 
 class LocateView(APIView):

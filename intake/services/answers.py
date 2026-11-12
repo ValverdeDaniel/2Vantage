@@ -70,9 +70,10 @@ def _date(value):
 
 
 @transaction.atomic
-def update_answers(user, deal_id, raw, *, expect=None, origin='typed'):
+def update_answers(user, deal_id, raw, *, expect=None, origin='typed', by_claude=False):
     """Save the answers that changed. Returns Answered({key: [before, after]}, {key: source entry or None}, Activity
-    row or None)."""
+    row or None). `by_claude`: Claude's change from a chat turn (slice 24), recorded as Claude's in a row of its own
+    that never merges with the person's edits, so ↶ Undo this run puts back only what Claude changed."""
     if not isinstance(raw, dict) or not raw:
         raise ValidationError({'answers': [NOT_ANSWERS]})
     if origin not in ORIGINS:
@@ -106,6 +107,9 @@ def update_answers(user, deal_id, raw, *, expect=None, origin='typed'):
     if kept:
         entries.insert(0, activity.change(rows.intake_target(deal_id), kept))
     summary, noun = SUMMARY[origin]
+    coalesce = f'intake:answers:{origin}'
+    if by_claude:
+        summary, coalesce = f'Claude edited {len(changed)} {noun}{"" if len(changed) == 1 else "s"}', ''
     row = activity.record(
         deal,
         user,
@@ -113,8 +117,9 @@ def update_answers(user, deal_id, raw, *, expect=None, origin='typed'):
         'answers',
         summary,
         len(changed),
-        f'intake:answers:{origin}',
+        coalesce,
         noun,
         changes=entries,
+        actor_kind='claude' if by_claude else None,
     )
     return Answered(changed, {key: sources.get(key) for key in changed}, row)

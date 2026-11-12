@@ -6,7 +6,7 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 
 from ai import kinds
-from ai.models import DealAi, Job
+from ai.models import Chat, DealAi, Job
 from conftest import check_permissions, sweep_gets
 from documents.tests.helpers import stored
 
@@ -15,7 +15,8 @@ from documents.tests.helpers import stored
 def world(user, deal):
     document = stored(user, deal, name='renewal.pdf', kind='renewal')
     waiting = Job.objects.create(deal=deal, lane=kinds.WORK, kind=kinds.RANK, created_by=user)
-    return {'deal': deal, 'document': document, 'job': waiting}
+    chat = Chat.objects.create(deal=deal, number=1, created_by=user)
+    return {'deal': deal, 'document': document, 'job': waiting, 'chat': chat}
 
 
 def samples(world):
@@ -31,6 +32,10 @@ def samples(world):
         'api/ai/jobs/<int:job_id>/undo/': {'job_id': job.id},
         'api/deals/<int:pk>/ai/sends/': {'pk': deal.id},
         'api/ai/jobs/<int:job_id>/retry/': {'job_id': job.id},
+        'api/deals/<int:pk>/ai/chats/': {'pk': deal.id},
+        'api/deals/<int:pk>/ai/messages/': {'pk': deal.id},
+        'api/ai/chats/<int:chat_id>/': {'chat_id': world['chat'].id},
+        'api/ai/chats/<int:chat_id>/messages/': {'chat_id': world['chat'].id},
     }
 
 
@@ -53,6 +58,12 @@ def matrix(world):
         # attaching without a key reads nothing (D26), and a rank job is no read to try again (slice 20)
         ('POST', 'api/deals/<int:pk>/ai/sends/', REFUSED, {'document_ids': [world['document'].id]}),
         ('POST', 'api/ai/jobs/<int:job_id>/retry/', REFUSED),
+        # slice 24: chats; without a key Claude is not asked (D26); anyone locks the table (D104)
+        ('GET', 'api/deals/<int:pk>/ai/chats/', ALL),
+        ('POST', 'api/deals/<int:pk>/ai/messages/', REFUSED, {'text': 'Hello'}),
+        ('PATCH', 'api/ai/chats/<int:chat_id>/', ALL, {'title': 'Aetna fixes'}),
+        ('GET', 'api/ai/chats/<int:chat_id>/messages/', ALL),
+        ('PATCH', 'api/deals/<int:pk>/ai/', ALL, {'locked': True}),
     ]
 
 

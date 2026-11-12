@@ -8,3 +8,5 @@ export { default as WorkWithClaude } from './WorkWithClaude';
 export { default as AddQuotesButton } from './AddQuotesButton';
 export { default as QuoteDrop } from './QuoteDrop';
 export { claudeDoor, claudeRoom } from './door';
+// Slice 24: the plan table's lock switch on the Advisor's toolbar (F113, D104).
+export { default as TableLock } from './TableLock';

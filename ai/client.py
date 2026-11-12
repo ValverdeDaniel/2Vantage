@@ -4,6 +4,10 @@
 - `request()` builds one structured-output call (`output_config.format`, 128k `max_tokens`, adaptive thinking, the
   effort for its kind). The prompt is one system block marked for the cache, byte-identical across deals; the files
   and the per-call note follow in the user turn. No temperature, no prefill, no forced tool choice.
+- `converse()` builds one round of a chat turn (slice 24; D77, D81, D83): the same cached system block, the strict
+  tools in their fixed order, `tool_choice` auto (Sonnet 5.5 and Opus 5.5 refuse a forced one), adaptive thinking
+  and the turn's effort. The caller marks its own cache breakpoints on the messages (the turn's files and context,
+  then each round's tool results), so later rounds read what earlier ones wrote.
 - `transport()` sends it, streamed. Every stream event calls `on_event` (the job's beat: Stop raises there and the
   stream closes); a call also has a read timeout (silence) and a wall-clock cap. A client is built only from
   `settings.ANTHROPIC_API_KEY`, passed explicitly, so the SDK never falls back to an environment variable or an `ant`
@@ -73,6 +77,7 @@ class Reply:
     stop_reason: str = ''
     text: str = ''
     partial: bool = False
+    content: list = field(default_factory=list)  # the reply's blocks as sent back (thinking, text, tool_use): turns
 
 
 def available():
@@ -92,6 +97,21 @@ def request(*, model, system, content, schema, effort, max_tokens=MAX_TOKENS):
     }
 
 
+def converse(*, model, system, tools, messages, effort, max_tokens):
+    """The params of one round of a turn: `tools` strict, in a fixed order (the cache key); `messages` carry their own
+    cache breakpoints."""
+    return {
+        'model': model,
+        'max_tokens': max_tokens,
+        'system': [{'type': 'text', 'text': system, 'cache_control': {'type': 'ephemeral'}}],
+        'tools': tools,
+        'tool_choice': {'type': 'auto'},
+        'messages': messages,
+        'thinking': {'type': 'adaptive'},
+        'output_config': {'effort': effort},
+    }
+
+
 def check(reply):
     """The reply's data (parsed JSON), or Truncated / Refused / CallFailed."""
     if reply.stop_reason == 'max_tokens':
@@ -102,6 +122,15 @@ def check(reply):
         return json.loads(reply.text)
     except (TypeError, ValueError):
         raise CallFailed('Claude answered this part in a form that could not be read.', seen=reply) from None
+
+
+def check_round(reply):
+    """A turn's round: the reply itself (its blocks), or Truncated / Refused, each carrying the reply."""
+    if reply.stop_reason == 'refusal':
+        raise Refused('Claude declined to answer this.', seen=reply)
+    if reply.stop_reason == 'max_tokens':
+        raise Truncated('Claude’s answer was longer than one reply may be.', seen=reply)
+    return reply
 
 
 def _usage(usage):
@@ -155,7 +184,8 @@ class Live:
                     if time.monotonic() - started > WALL_SECONDS:
                         raise CallFailed('Claude took too long on this part.', seen=seen)
                 message = stream.get_final_message()
-        except ClaudeError:
+        except ClaudeError as exc:
+            exc.seen = exc.seen or seen  # Stop seen at a stream event (calls.Aborted): what the call used so far
             raise
         except Exception as exc:
             mapped = self._error(exc, seen)
@@ -165,7 +195,13 @@ class Live:
             logger.warning('A Claude call failed: %s', exc.__class__.__name__)  # the class only, never its text
             raise mapped from None
         text = ''.join(block.text for block in message.content if block.type == 'text')
-        return Reply(model=message.model, usage=_usage(message.usage), stop_reason=message.stop_reason or '', text=text)
+        return Reply(
+            model=message.model,
+            usage=_usage(message.usage),
+            stop_reason=message.stop_reason or '',
+            text=text,
+            content=[block.to_dict() for block in message.content],
+        )
 
 
 _installed = None

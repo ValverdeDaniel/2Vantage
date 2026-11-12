@@ -34,8 +34,8 @@ WAITING = 'Waiting to start'
 STOPPED_EARLY = 'Stopped before it started.'
 
 
-def start(user, deal, kind, *, documents=(), params=None, target=''):
-    """(job, created). `documents` are ids, kept in order."""
+def start(user, deal, kind, *, documents=(), params=None, target='', chat=None):
+    """(job, created). `documents` are ids, kept in order; `chat` is a turn's (slice 24)."""
     lane = kinds.LANE_OF[kind]
     documents, params = list(documents), dict(params or {})
     with transaction.atomic():
@@ -54,6 +54,7 @@ def start(user, deal, kind, *, documents=(), params=None, target=''):
             params=params,
             created_by=user if getattr(user, 'is_authenticated', False) else None,
             steps=[WAITING],
+            chat=chat,
         )
     if getattr(settings, 'AI_JOBS_INLINE', False):
         running.run_inline(job)

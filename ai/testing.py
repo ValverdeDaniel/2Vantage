@@ -7,6 +7,10 @@ no recording fails with "record it"; it never calls out. A recording carries its
 can carry a named fault: `truncate` (cut off at max_tokens), `refusal`, `silent` (the stream went quiet: the read
 timeout), `account` (the key refused), `bad_json`, or `cancel` (Stop pressed while the stream runs). With a
 `manifest` (the corpus's file hashes), recording a file outside it is refused.
+
+A chat turn's round (slice 24) is recorded with `content`, the reply's blocks (text, tool_use) as the API sends them,
+and its `stop_reason` (`tool_use` or `end_turn`); its key is ('turn', the person's words, the round number), so a
+test scripts a whole turn: Claude calls `set_board`, reads the tool's answer, then replies.
 """
 
 import copy
@@ -47,6 +51,23 @@ class Recording:
     events: int = 3
     date: str = '2026-11-12'
     schema: int = 1
+    content: list = None  # a turn's round: the reply's blocks
+    stop_reason: str = ''
+
+
+def turn_key(words, round_number):
+    """The fake's key for one round of a turn on these words (`ai.turn.round_key`)."""
+    from .turn import round_key
+
+    return round_key(words, round_number)
+
+
+def text_block(text):
+    return {'type': 'text', 'text': text}
+
+
+def tool_block(name, data, block_id=None):
+    return {'type': 'tool_use', 'id': block_id or f'toolu_{name}', 'name': name, 'input': data}
 
 
 class FakeTransport:
@@ -96,4 +117,9 @@ class FakeTransport:
             return client.Reply(model=model, usage=usage, stop_reason='refusal', text='')
         if fault == 'bad_json':
             return client.Reply(model=model, usage=usage, stop_reason='end_turn', text='{"lines": [}')
+        if recording.content is not None:
+            blocks = copy.deepcopy(recording.content)
+            text = ''.join(block.get('text', '') for block in blocks if block.get('type') == 'text')
+            stop = recording.stop_reason or ('tool_use' if any(b['type'] == 'tool_use' for b in blocks) else 'end_turn')
+            return client.Reply(model=model, usage=usage, stop_reason=stop, text=text, content=blocks)
         return client.Reply(model=model, usage=usage, stop_reason='end_turn', text=json.dumps(recording.data))

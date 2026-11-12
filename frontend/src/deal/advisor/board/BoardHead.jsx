@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { AddQuotesButton } from '../../claude';
+import { AddQuotesButton, TableLock } from '../../claude';
 import LineTabs from '../LineTabs';
 
 /*
@@ -30,6 +30,7 @@ export default function BoardHead({ dealId, lines, line, onLine, count, editing,
           )}
         </div>
         <span className="bnf-count-actions">
+          <TableLock dealId={dealId} />
           <button
             type="button"
             className="btn btn-secondary btn-sm"

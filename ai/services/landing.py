@@ -41,7 +41,7 @@ NOT_USED = 'This read was not used, so there is nothing to undo.'
 NOTHING_WRITTEN = 'Using this read changed nothing on the deal, so there is nothing to undo.'
 NO_LANDING = 'Reads of this kind cannot be used here yet.'
 COULD_NOT = 'Claude’s read could not be put on the deal by itself, so it waits for review.'
-KEPT = ('v', 'target', 'documents', 'summary', 'counts', 'model', 'cost_usd', 'estimate_usd')
+KEPT = ('v', 'target', 'documents', 'summary', 'counts', 'model', 'cost_usd', 'estimate_usd', 'reply_id', 'board')
 
 
 class UndoRefused(APIException):
@@ -57,7 +57,7 @@ class UndoRefused(APIException):
 
 def waiting(job):
     return (
-        job.kind in (kinds.READ, kinds.RECHECK)
+        job.kind in (kinds.READ, kinds.RECHECK, kinds.TURN)
         and job.status in (kinds.DONE, kinds.CANCELLED)
         and job.land == land.STAGED
         and not job.resolution.startswith((DISCARDED, APPLIED, UNDONE))
@@ -97,10 +97,15 @@ def apply(user, job_id, select=None, picks=None):
             raise Refused(USED)
         if not waiting(job):
             raise Refused(NOT_TO_USE)
-        reader = registry.readers.get(job.target)
-        if reader is None or reader.apply is None:
-            raise Refused(NO_LANDING)
-        landed = reader.apply(user, job.deal, job, select=select, picks=picks)
+        if job.kind == kinds.TURN:  # a chat turn's changes land through their owners (slice 24)
+            from .turns import land_turn
+
+            landed = land_turn(user, job, select)
+        else:
+            reader = registry.readers.get(job.target)
+            if reader is None or reader.apply is None:
+                raise Refused(NO_LANDING)
+            landed = reader.apply(user, job.deal, job, select=select, picks=picks)
         landed = {**landed, 'by': getattr(user, 'id', None), 'at': clock.now().isoformat()}
         job.result = {**(job.result or {}), 'landed': landed}
         job.resolution = APPLIED
@@ -120,6 +125,13 @@ def undo(user, job_id, force=False):
         landed = (job.result or {}).get('landed') or {}
         if not landed.get('activity_ids'):
             raise Refused(NOTHING_WRITTEN)
+        if job.kind == kinds.TURN:
+            from .turns import undo_turn
+
+            job.result = {**(job.result or {}), 'landed': {**landed, 'undone': undo_turn(user, job, landed)}}
+            job.resolution = UNDONE
+            job.save(update_fields=['result', 'resolution', 'updated_at'])
+            return job, True
         reader = registry.readers.get(job.target)
         if reader is None or reader.undo is None:
             raise Refused(NO_LANDING)
@@ -135,7 +147,7 @@ def undo(user, job_id, force=False):
     return job, True
 
 
-def _direct(user):
+def is_direct(user):
     from accounts.access import can_direct
 
     return bool(getattr(user, 'is_staff', False)) or can_direct(user)
@@ -163,7 +175,7 @@ def on_finish(job, change_set):
         change_set,
         target=job.target,
         must_review=reader.must_review or reader.apply is None,
-        direct=_direct(user),
+        direct=is_direct(user),
         asked_review=bool((job.params or {}).get('review')),
         locked=DealAi.objects.filter(deal_id=job.deal_id, locked_at__isnull=False).exists(),
         lost=rules.refuses(locked.deal, 'ai_land') or '',

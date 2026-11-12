@@ -26,7 +26,7 @@ export default function RunningCard({ dealId, job, meta }) {
   const seconds = useSeconds(job.status === 'running' ? job.started_at : null);
   const steps = (job.recent_steps || []).filter(Boolean);
   const cost = Number(job.cost_usd || 0);
-  const model = job.kind === 'read' ? modelLabel(meta, job.model || meta.ai?.default_model) : '';
+  const model = ['read', 'turn'].includes(job.kind) ? modelLabel(meta, job.model || meta.ai?.default_model) : '';
 
   async function press() {
     try {

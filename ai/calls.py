@@ -6,6 +6,11 @@ so the ledger never misses a call. The database is touched only by the thread th
 `AI_READ_PARALLEL` calls stream at once in threads that only talk to Claude, and the job's thread beats between them.
 When the beat raises (Stop pressed, the worker stopping, the job reaped), the streams in flight are aborted at their
 next event, recorded as stopped, and the beat's exception goes on.
+
+A call that was sent but ended without its usage (Stop or cancel mid-stream, an error after sending) is charged
+conservatively, never at $0: at least its input as estimated before it was sent, or its whole reservation when even
+that is unknown, so the total cap can never undercount what Anthropic may bill (slice 24). A call never sent (still
+queued at Stop) costs nothing.
 """
 
 import threading
@@ -29,6 +34,7 @@ class Planned:
     key: tuple  # (target, file hash, range label): what the fake client replays
     input_tokens: int  # estimated, for the worst case
     tag: object = None  # the caller's: which file and range
+    check: object = None  # reply -> data; a read's JSON by default (client.check), a turn's round its blocks
 
 
 @dataclass
@@ -38,15 +44,30 @@ class Done:
     reply: client.Reply = None
     error: client.ClaudeError = None
     cost: object = 0
+    sent: bool = False  # the request left for Claude: what it used is billed even when the answer never came
 
 
 def send(planned, on_event=None):
     """Network only: the reply's data, or the error with what the call used. Never touches the database."""
     try:
         reply = client.transport().send(planned.params, key=planned.key, on_event=on_event)
-        return Done(planned, data=client.check(reply), reply=reply)
+        return Done(planned, data=(planned.check or client.check)(reply), reply=reply, sent=True)
     except client.ClaudeError as exc:
-        return Done(planned, reply=exc.seen, error=exc)
+        return Done(planned, reply=exc.seen, error=exc, sent=True)
+
+
+INPUT_KEYS = ('input_tokens', 'cache_creation_input_tokens', 'cache_read_input_tokens')
+
+
+def charged_usage(planned, reply, sent):
+    """(usage to price, at_least): what a call is charged. A sent call whose usage never arrived is charged its input
+    estimate; with no estimate either, its whole reservation (`at_least` True)."""
+    usage = dict((reply.usage if reply else None) or {})
+    if not sent or any(int(usage.get(key) or 0) for key in INPUT_KEYS):
+        return usage, False
+    if planned.input_tokens:
+        return {**usage, 'input_tokens': int(planned.input_tokens), 'estimated': 'input'}, False
+    return usage, True
 
 
 def reserve(planned, *, job=None, deal_id=None, purpose='read'):
@@ -63,23 +84,25 @@ def reserve(planned, *, job=None, deal_id=None, purpose='read'):
 def settle(row, done, stopped=False):
     reply = done.reply
     status = Call.STOPPED if stopped or isinstance(done.error, Aborted) else Call.FAILED if done.error else Call.DONE
+    usage, whole = charged_usage(done.planned, reply, done.sent)
     done.cost = budget.settle(
         row,
         answered=reply.model if reply else '',
-        usage=reply.usage if reply else {},
+        usage=usage,
         status=status,
         stop_reason=reply.stop_reason if reply else '',
+        at_least=row.estimate_usd if whole else None,
     )
     return done
 
 
 def extract(planned, *, job=None, deal_id=None, purpose='read', on_event=None):
-    """One call, start to end, in this thread (the Eval lane, a single read). Returns Done."""
+    """One call, start to end, in this thread (the Eval lane, a single read, a turn's round). Returns Done."""
     row = reserve(planned, job=job, deal_id=deal_id, purpose=purpose)
     try:
         done = send(planned, on_event)
     except BaseException as exc:  # Stop, the worker stopping: recorded, then let go
-        settle(row, Done(planned, reply=getattr(exc, 'seen', None)), stopped=True)
+        settle(row, Done(planned, reply=getattr(exc, 'seen', None), sent=True), stopped=True)
         raise
     return settle(row, done)
 
@@ -142,7 +165,7 @@ class Runner:
             try:
                 done = send(planned, beat)
             except BaseException as exc:
-                settle(row, Done(planned, reply=getattr(exc, 'seen', None)), stopped=True)
+                settle(row, Done(planned, reply=getattr(exc, 'seen', None), sent=True), stopped=True)
                 raise
             return [(settle(row, done), row)]
         finished, _ = wait(list(self._futures), timeout=WAIT_SECONDS, return_when=FIRST_COMPLETED)
