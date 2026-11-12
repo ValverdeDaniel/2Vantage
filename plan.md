@@ -557,7 +557,7 @@ the rest). "Slice N" says when a piece arrives (§13). Untagged text in §3 is t
 | Tests | pytest 8, pytest-django; Vitest | built (Vitest: 6) | §12, Part Q. pytest-xdist joins once the serial run passes 45 s (Q.2). Vitest covers pure frontend modules only |
 | Lint | ruff; import-linter (`lint-imports`); ESLint 9 with react-hooks; stylelint | built (import-linter: 6; stylelint: 2) | import-linter holds the chain contract (§3.3); stylelint refuses undefined custom properties (§3.9) |
 | Acceptance harnesses | `browser/`: playwright-core driving the installed Chrome. `tools/parity/`: a tools image with headless LibreOffice, poppler and the Python readers | slice 3 | The Look, Walk, Recalc and Fidelity lanes (§12; Q.2, Q.5). Never in the app image |
-| Production serving | WhiteNoise; django-storages (Cloud Storage) | slice 69, staging (§11) | WhiteNoise serves `.mjs` as JavaScript, which pdf.js needs (E.6) |
+| Production serving | WhiteNoise 6.12; django-storages[google] 1.14 (Cloud Storage) | slice 69, staging (§11; built, Google Cloud not connected) | WhiteNoise serves `.mjs` as JavaScript, which pdf.js needs (E.6); Google's libraries load only when a bucket is named |
 | Containers | Docker Compose (local) | built | Cloud Run later (§11) |
 
 Versions are pinned exactly in `requirements.txt` (`==`) and `package-lock.json`. A library is added in the slice that
@@ -801,16 +801,24 @@ keeps the SPA and the API on one origin, so the session cookie works unchanged (
 `requirements.txt`; `COPY --chown=appuser:appuser . .`; `EXPOSE 8000`; `ENTRYPOINT ["/app/start.sh"]`. No compiler
 or Postgres client is needed (`psycopg2-binary` ships wheels).
 The worker runs the same image with the entry point `python manage.py run_worker`. LibreOffice and poppler stay out of
-this image; they live in the tools image (§3.1).
+this image; they live in the tools image (§3.1). Since slice 69 the Dockerfile has stages: `python` and `backend` make
+this image, the default target (`local`) that Compose builds; `spa` builds the SPA on Node 22 (`vite build
+--base=/static/`); `production` (`docker build --target production --build-arg GIT_SHA=<commit>`) is `python` plus
+the code without `frontend/`, the built SPA in `/app/spa`, static files collected at build, `ENVIRONMENT=production`
+and `GIT_SHA` (§11.2; deploy/README.md).
 
-**start.sh:** if `ENVIRONMENT=production`: `migrate --noinput`, `collectstatic --noinput`, then
-`exec gunicorn backend.wsgi:application --bind :${PORT:-8000} --workers 2 --threads 4 --timeout 60 --access-logfile -`.
-Otherwise: `migrate`, then `exec python manage.py runserver 0.0.0.0:8000`.
+**start.sh:** if `ENVIRONMENT=production` (slice 69), by its first argument: `web` (the default) `exec gunicorn
+backend.wsgi:application --bind :${PORT:-8000} --workers 2 --threads 4 --timeout 60 --access-logfile - --logger-class
+backend.gunicorn_log.TokenSafeLogger --forwarded-allow-ips '*'`; `worker` runs `run_worker` and answers on `$PORT`
+from an empty folder for Cloud Run's start-up probe; `migrate` runs `check --deploy --fail-level WARNING`, then
+`migrate --noinput` (the migrations job, §11.2); anything else is run as given. A web instance never migrates or
+collects static files at start. Otherwise: `migrate`, then `exec python manage.py runserver 0.0.0.0:8000`.
 
 **.dockerignore** (built): `.git`, `.gitignore`, `.env*` (keep `.env.example`), `media/`, `staticfiles/`, `frontend/`,
 `*.md` (keep `README.md`) and `**/CLAUDE.md`, `**/__pycache__/`, `**/*.pyc`, `.pytest_cache/`, `.ruff_cache/`, `.venv/`,
-`venv/`. Slice 3 adds `browser/` and `tools/`; `docs/` is already out through `*.md`. Slice 69 lets the production
-build stage read `frontend/` (§11.2).
+`venv/`. Slice 3 adds `browser/` and `tools/`. Slice 69 names `docs/` (Docker's `*.md` matches root files only) and
+lets the production build stage read `frontend/` (§11.2): only `frontend/node_modules/`, `frontend/dist/` and
+`frontend/.vite/` stay out.
 
 **.env.example** lists every variable in §3.5 with safe local defaults and no secrets.
 
@@ -866,6 +874,9 @@ python tools/parity/files.py --deals all                        # Fidelity, in t
 | `AGENCY_TIME_ZONE` | `America/New_York` | The agency's time zone. Decides "today" (`deals/clock.py`) and every date printed on a screen or in a file |
 | `SESSION_COOKIE_AGE` | `43200` (12 hours) | Sign-in lifetime in seconds (built). Open in §16 (OQ107), settled before the PHI gate (slice 47) |
 | `GIT_SHA` | `unknown` | Build commit shown by `/api/health/` |
+| `GS_BUCKET_NAME` (slice 69) | empty | Set: files live in this private Cloud Storage bucket (`backend/storage.py`, django-storages, whose Google libraries load only then); its `url()` names a path nothing serves, never a signed or public link. Empty: the filesystem under `MEDIA_ROOT` |
+| `CLOUD_SQL_INSTANCE` (slice 69) | empty | `project:region:instance`: connect through Cloud Run's Cloud SQL socket at `/cloudsql/<instance>` |
+| `DB_SSLMODE`, `DB_SSLROOTCERT` (slice 69) | empty | Staging's private-IP connection: `verify-ca` against the instance's server CA file (§11.2) |
 | `ANTHROPIC_API_KEY` | empty | Claude's key: only the Foobalabs organization's key (OQ29). Empty means no Claude: `/api/meta/` has no `ai` section and nothing calls out |
 | `AI_MODEL` (slice 18) | `claude-sonnet-5-5` | The default model. Reads never use Haiku; Opus 5.5 (`claude-opus-5-5`) is kept to admins and direct people (D91). The golden-deal trial sets the default (OQ31) |
 | `AI_EFFORT_<KIND>` (slice 18) | turn `low`; read and recheck `high` | Effort for each job kind that calls Claude, until the trial sets them (D.6, OQ31) |
@@ -909,7 +920,16 @@ ones when a test turns it off. The fake client joins `ai/testing.py` in slice 18
 the 1.x SDK uses (slice 18), pinned at WARNING: their DEBUG output contains document contents. App loggers at INFO (they
 still print only WARNING and above). Never configure the `django` or `django.server` loggers. `disable_existing_loggers
 = False`. In production, request logs and error reports drop the `/api/portal/`, `/portal/` and `/b/` paths, whose URLs
-carry link tokens (§11, L.6).
+carry link tokens (§11, L.6). Built in slice 69: `backend.logs.DropTokenPaths` on the console handler drops a record
+whose request or message names one, and gunicorn's `backend.gunicorn_log.TokenSafeLogger` skips a request on one or
+from one (its Referer); the SPA's page for a token path answers `no-referrer`, `no-store` and `noindex`.
+
+**Production (slice 69; §11.2):** with `ENVIRONMENT=production`, WhiteNoise follows `SecurityMiddleware` and serves
+`/static/` from `CompressedStaticFilesStorage` (`WHITENOISE_MIMETYPES` types `.mjs` as `text/javascript`; Vite's
+hashed `assets/` are immutable); `SECURE_PROXY_SSL_HEADER` trusts Cloud Run's `X-Forwarded-Proto`; `SECURE_SSL_REDIRECT`
+(except `/api/health/`); HSTS a year with subdomains and preload. `backend/spa.py` answers the SPA's `index.html`
+(`no-cache`) for every path outside `/api/`, `/admin/`, `/accounts/` and `/static/`; locally nothing is built and it
+answers 404.
 
 **`backend/health.py`** — `GET /api/health/`, plain Django view (not DRF, no throttle), no auth, never cached:
 runs `select 1`, counts unapplied migrations (cached once zero), returns
@@ -918,7 +938,9 @@ runs `select 1`, counts unapplied migrations (cached once zero), returns
 
 **`backend/checks.py`** — Django system checks registered with `deploy=True`, active only when
 `ENVIRONMENT == 'production'`: E001 DEBUG on; E002 default secret key; E003 console email backend; E004 the
-`ANTHROPIC_LOG` environment variable set to `debug` or `info`. `manage.py check --deploy` must pass before a release.
+`ANTHROPIC_LOG` environment variable set to `debug` or `info`; E005 (slice 69) running on Cloud Run (`K_SERVICE` or
+`CLOUD_RUN_JOB` set) with no `GS_BUCKET_NAME`, where files would stay on the instance. `manage.py check --deploy
+--fail-level WARNING` must pass before a release.
 
 **`backend/middleware.py`** — `JsonGZipMiddleware`: Django's `GZipMiddleware`, applied only when the response
 `Content-Type` starts with `application/json`. File downloads are never compressed.
@@ -5121,23 +5143,34 @@ Everything below applies to both stages; earlier slices MUST stay compatible wit
   SPA's `index.html`. WhiteNoise also serves the files under `/static/`: the pdf.js modules, whose `.mjs` files must
   be typed as JavaScript (slice 15), and the tesseract.js files for scanned pages (slice 65; E.6). LibreOffice and
   poppler stay out of this image; they live in the tools image of the parity and Recalc lanes (§12.7).
-- **Database:** Cloud SQL for PostgreSQL (version pinned explicitly), private connectivity, TLS verified.
+- **Database:** Cloud SQL for PostgreSQL (version pinned explicitly), private connectivity, TLS verified. Slice 69's
+  design (not connected): PostgreSQL 15, private IP only, reached by Direct VPC egress, `DB_SSLMODE=verify-ca` against
+  the instance's server CA mounted from Secret Manager; `CLOUD_SQL_INSTANCE` keeps the socket path available (§3.5).
 - **Files:** Cloud Storage via `django-storages`, private bucket. Downloads keep streaming through the authenticated
   endpoints; no public URLs. All code MUST use Django's storage API only (no direct filesystem paths), so local
-  `MEDIA_ROOT` and Cloud Storage are interchangeable.
-- **Secrets:** Secret Manager (pinned versions). **Images:** Artifact Registry.
-- **Migrations:** a Cloud Run Job runs `migrate` before traffic shifts.
+  `MEDIA_ROOT` and Cloud Storage are interchangeable. Slice 69: `GS_BUCKET_NAME` switches it; the bucket is uniform,
+  public access prevented, versioned; the storage's `url()` never makes a signed or public link (`backend/storage.py`).
+- **Secrets:** Secret Manager (pinned versions). **Images:** Artifact Registry,
+  `<region>-docker.pkg.dev/<project>/vantage/app:<full commit SHA>`, with a clean-up policy.
+- **Migrations:** a Cloud Run Job runs `migrate` before traffic shifts (slice 69: `start.sh migrate`, which runs
+  `check --deploy` first). Service and job definitions, the commands that create and connect the project (none run
+  yet), the release script, the release gate and the local rehearsal live in `deploy/` (deploy/README.md).
 - **Worker** (from slice 16): a separate Cloud Run worker pool, or a service with CPU always allocated and at least
   one instance, running `manage.py run_worker` from the same image (O.3.3). It runs every job lane, not only Claude's:
   reads, chats, re-checks and Rank, and also `locate` and `issue`, which builds the proposal files (slice 32). It runs
-  whether or not an API key is set. Claims skip locked rows, so a second instance is safe.
+  whether or not an API key is set. Claims skip locked rows, so a second instance is safe. Slice 69 defines it as a
+  service (`start.sh worker`: internal ingress, CPU always allocated, one instance), which answers Cloud Run's start-up
+  probe on `$PORT` from an empty folder; a worker pool runs the same image and arguments.
 - **Request and response size:** Cloud Run refuses request bodies over 32 MiB, so uploads stop at 30 MB (§3.8, OQ24).
   It also refuses a response over 32 MiB that is not streamed, so the RFP packet zip and the `.eml` drafts stream in
   chunks (K.6). Staging confirms the streaming with a large synthetic packet when slice 46 ships.
 - **Logs:** request logs (Cloud Run's and gunicorn's) and error reports must exclude `/api/portal/`, `/portal/` and
   `/b/` paths (tokens are in the URL; O.4, L.6). No PHI reaches any log (§3.8); the canary scan in §11.4 checks it.
+  Slice 69: the app's and gunicorn's logs drop them (§3.5), and a Cloud Logging exclusion on the `_Default` sink keeps
+  Cloud Run's request logs for them, matched on the URL or the Referer, out of storage.
 - Regional, contractual (BAA) and cost decisions follow the existing deployment decision record kept with the earlier
-  system (Appendix C).
+  system (Appendix C). Slice 69 follows it: region `us-east1`, budget alerts and never a spend cap, backups and
+  point-in-time recovery set explicitly; Cloud SQL stays on PostgreSQL 15 to match §3.1 (that record chose 17).
 
 ### 11.3 Release gate
 

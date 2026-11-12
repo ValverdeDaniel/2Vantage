@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
-from django.urls import include, path
+from django.urls import include, path, re_path
 
+from . import spa
 from .health import health
 from .meta import MetaView
 
@@ -19,7 +20,10 @@ urlpatterns = [
     path('api/', include('deals.urls')),
     path('api/', include('documents.urls')),
     path('api/', include('ai.urls')),
-    path('api/', include('quotes.urls')),
     path('api/', include('intake.urls')),
+    path('api/', include('quotes.urls')),
     path('api/', include('proposals.urls')),
 ]
+
+# The built SPA answers every other path (the production image; slice 69, §11.2). Last, so every route above wins.
+urlpatterns += [re_path(r'^(?!(?:api|admin|accounts|static)(?:/|$)).*$', spa.index)]

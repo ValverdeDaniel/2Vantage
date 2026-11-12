@@ -1,0 +1,4 @@
+[
+  {"name": "keep-recent-releases", "action": {"type": "Keep"}, "mostRecentVersions": {"keepCount": 20}},
+  {"name": "delete-older-images", "action": {"type": "Delete"}, "condition": {"olderThan": "30d"}}
+]

@@ -19,4 +19,7 @@ def production_settings(app_configs, **kwargs):
         errors.append(Error('Email prints to the console in production.', id='vantage.E003'))
     if os.environ.get('ANTHROPIC_LOG', '').lower() in ('debug', 'info'):
         errors.append(Error('ANTHROPIC_LOG would log document contents.', id='vantage.E004'))
+    if settings.ON_CLOUD_RUN and not settings.GS_BUCKET_NAME:
+        # Each instance has its own disk, lost when it stops, and the worker never sees the web service's (slice 69).
+        errors.append(Error('Files would be kept on a Cloud Run instance: set GS_BUCKET_NAME.', id='vantage.E005'))
     return errors

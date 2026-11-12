@@ -1,0 +1,51 @@
+# One-off management commands on staging, run with the release's image and settings (deploy/README.md):
+#   gcloud run jobs execute <MANAGE_JOB> --region <REGION> --wait --args python,manage.py,seed_golden
+#   gcloud run jobs execute <MANAGE_JOB> --region <REGION> --wait \
+#     --update-env-vars DJANGO_SUPERUSER_USERNAME=<name>,DJANGO_SUPERUSER_EMAIL=<email> \
+#     --args python,manage.py,createsuperuser,--noinput
+# The first admin's password comes from its own secret; they change it at /accounts/password_change/ on first sign-in.
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: ${MANAGE_JOB}
+  labels:
+    cloud.googleapis.com/location: ${REGION}
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/network-interfaces: '[{"network":"${VPC_NETWORK}","subnetwork":"${VPC_SUBNET}"}]'
+        run.googleapis.com/vpc-access-egress: private-ranges-only
+    spec:
+      taskCount: 1
+      template:
+        spec:
+          maxRetries: 0
+          timeoutSeconds: '1800'
+          serviceAccountName: ${RUN_SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com
+          containers:
+            - image: ${IMAGE}
+              args: [python, manage.py, check, --deploy]
+              resources:
+                limits:
+                  cpu: '1'
+                  memory: 2Gi
+              env:
+                # @include app-env.yaml
+                - name: DJANGO_SUPERUSER_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${SECRET_FIRST_ADMIN_PASSWORD}
+                      key: '${SECRET_FIRST_ADMIN_PASSWORD_VERSION}'
+              volumeMounts:
+                - name: db-ca
+                  mountPath: /secrets/db
+                  readOnly: true
+          volumes:
+            - name: db-ca
+              secret:
+                secretName: ${SECRET_DB_CA}
+                items:
+                  - key: '${SECRET_DB_CA_VERSION}'
+                    path: server-ca.pem

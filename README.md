@@ -41,5 +41,6 @@ docker compose exec frontend npm run build
 | `frontend/` | React app (one folder per deal tab under `src/deal/`) |
 | `tools/parity/` | Old Vantage beside 2Vantage, on the golden deals, for the parity lanes ([README](tools/parity/README.md)) |
 | `browser/` | The Look and Walk lanes in the installed Chrome (`npm --prefix browser ci`, then `run look` / `run walk`) |
+| `deploy/` | Staging on Google Cloud (not connected yet): the production image's rehearsal (`bash deploy/rehearse.sh`), the release gate, Cloud Run definitions ([README](deploy/README.md)) |
 
 Uploaded files live in the `media` Docker volume, never inside this folder.

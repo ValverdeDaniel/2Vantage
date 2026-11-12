@@ -13,14 +13,18 @@
 media/
 staticfiles/
 
-# The frontend is its own image locally (Dockerfile.dev); the production build stage copies it (§11).
-frontend/
+# The frontend is its own image locally (Dockerfile.dev); the production image's `spa` stage builds it (slice 69,
+# §11.2) from its sources, with its own npm ci, and drops them from the app.
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
 
 # The parity and browser harnesses run beside the app, never in its image (§3.4)
 browser/
 tools/
 
-# Docs and specs (README.md ships)
+# Docs and specs (README.md ships). `*.md` matches the root's only, so docs/ is named (slice 69).
+docs/
 *.md
 !README.md
 **/CLAUDE.md

@@ -1,0 +1,52 @@
+# The web service (plan.md §11.2): gunicorn behind Cloud Run's front end, serving the API, Django admin and the built
+# SPA on one origin. Apply with `gcloud run services replace` after deploy/render.py fills it (deploy/README.md).
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: ${WEB_SERVICE}
+  labels:
+    cloud.googleapis.com/location: ${REGION}
+  annotations:
+    # Staging is reached at its run.app address; production puts the load balancer in front (README, "Later").
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: '0'
+        autoscaling.knative.dev/maxScale: '3'
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/startup-cpu-boost: 'true'
+        run.googleapis.com/network-interfaces: '[{"network":"${VPC_NETWORK}","subnetwork":"${VPC_SUBNET}"}]'
+        run.googleapis.com/vpc-access-egress: private-ranges-only
+    spec:
+      serviceAccountName: ${RUN_SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com
+      # gunicorn's 2 workers × 4 threads (start.sh); uploads stop at 30 MB under Cloud Run's 32 MiB (§3.8).
+      containerConcurrency: 8
+      timeoutSeconds: 300
+      containers:
+        - image: ${IMAGE}
+          args: [web]
+          ports:
+            - name: http1
+              containerPort: 8080
+          resources:
+            limits:
+              cpu: '1'
+              memory: 2Gi
+          env:
+            # @include app-env.yaml
+          volumeMounts:
+            - name: db-ca
+              mountPath: /secrets/db
+              readOnly: true
+      volumes:
+        - name: db-ca
+          secret:
+            secretName: ${SECRET_DB_CA}
+            items:
+              - key: '${SECRET_DB_CA_VERSION}'
+                path: server-ca.pem
+  traffic:
+    - percent: 100
+      latestRevision: true

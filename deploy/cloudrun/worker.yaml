@@ -1,0 +1,54 @@
+# The job worker (plan.md §11.2, O.3.3): `manage.py run_worker` from the same image, as a service with its CPU always
+# allocated and one instance always up. It runs every job lane, with or without a Claude key; claims skip locked rows,
+# so maxScale may rise safely. It takes no traffic: internal ingress and no invoker. A Cloud Run worker pool, where
+# the region offers one, runs the same image and `args` for less (deploy/README.md, "Later").
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: ${WORKER_SERVICE}
+  labels:
+    cloud.googleapis.com/location: ${REGION}
+  annotations:
+    run.googleapis.com/ingress: internal
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: '1'
+        autoscaling.knative.dev/maxScale: '1'
+        run.googleapis.com/cpu-throttling: 'false'
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/network-interfaces: '[{"network":"${VPC_NETWORK}","subnetwork":"${VPC_SUBNET}"}]'
+        run.googleapis.com/vpc-access-egress: private-ranges-only
+    spec:
+      serviceAccountName: ${RUN_SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com
+      containerConcurrency: 1
+      # SIGTERM stops the worker at the running job's next step and puts the job back in the queue (§3.4).
+      timeoutSeconds: 300
+      containers:
+        - image: ${IMAGE}
+          # start.sh worker: run_worker, with an empty folder answering on $PORT for Cloud Run's start-up probe.
+          args: [worker]
+          ports:
+            - name: http1
+              containerPort: 8080
+          resources:
+            limits:
+              cpu: '1'
+              memory: 2Gi
+          env:
+            # @include app-env.yaml
+          volumeMounts:
+            - name: db-ca
+              mountPath: /secrets/db
+              readOnly: true
+      volumes:
+        - name: db-ca
+          secret:
+            secretName: ${SECRET_DB_CA}
+            items:
+              - key: '${SECRET_DB_CA_VERSION}'
+                path: server-ca.pem
+  traffic:
+    - percent: 100
+      latestRevision: true

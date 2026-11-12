@@ -1,0 +1,42 @@
+# The migrations job (plan.md §11.2, §11.3): `start.sh migrate` runs the release gate's `check --deploy`, then
+# `migrate`, with the image the services are about to run, before traffic moves. A failed check stops the release.
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: ${MIGRATE_JOB}
+  labels:
+    cloud.googleapis.com/location: ${REGION}
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/network-interfaces: '[{"network":"${VPC_NETWORK}","subnetwork":"${VPC_SUBNET}"}]'
+        run.googleapis.com/vpc-access-egress: private-ranges-only
+    spec:
+      taskCount: 1
+      template:
+        spec:
+          maxRetries: 0
+          timeoutSeconds: '900'
+          serviceAccountName: ${RUN_SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com
+          containers:
+            - image: ${IMAGE}
+              args: [migrate]
+              resources:
+                limits:
+                  cpu: '1'
+                  memory: 1Gi
+              env:
+                # @include app-env.yaml
+              volumeMounts:
+                - name: db-ca
+                  mountPath: /secrets/db
+                  readOnly: true
+          volumes:
+            - name: db-ca
+              secret:
+                secretName: ${SECRET_DB_CA}
+                items:
+                  - key: '${SECRET_DB_CA_VERSION}'
+                    path: server-ca.pem

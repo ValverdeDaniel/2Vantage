@@ -13,6 +13,11 @@ pypdf==5.7.0
 XlsxWriter==3.3.0
 # Legacy .xls workbooks, which openpyxl cannot open: viewed on Documents (E29; slice 15, the old app's 2.0.1)
 xlrd==2.0.1
+# Production serving (slice 69; §3.1, §11.2): WhiteNoise serves the built SPA and /static/ (`.mjs` as JavaScript, E.6);
+# django-storages keeps files in the private Cloud Storage bucket, and loads Google's libraries only when
+# GS_BUCKET_NAME names one (backend/storage.py)
+whitenoise==6.12.0
+django-storages[google]==1.14.6
 
 # Tests and lint
 pytest==8.4.2
@@ -35,3 +40,25 @@ grimp==3.19
 markdown-it-py==4.3.0
 mdurl==0.1.2
 rich==15.0.0
+# Pulled in by django-storages[google] (slice 69), pinned at what was resolved on 2026-11-11
+certifi==2026.10.23
+cffi==2.1.1
+charset-normalizer==3.5.2
+cryptography==50.0.2
+google-api-core==2.44.0
+google-auth==2.62.2
+google-cloud-core==2.8.0
+google-cloud-storage==3.17.1
+google-crc32c==1.9.0
+google-resumable-media==2.11.0
+googleapis-common-protos==1.76.0
+idna==3.20
+opentelemetry-api==1.45.2
+proto-plus==1.29.0
+protobuf==7.36.2
+pyasn1==0.6.5
+pyasn1_modules==0.4.2
+pycparser==3.12
+requests==2.34.2
+typing_extensions==4.16.0
+urllib3==2.8.0

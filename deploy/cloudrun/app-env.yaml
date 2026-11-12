@@ -1,0 +1,54 @@
+# The app's environment on Cloud Run: one list, included by every service and job (deploy/render.py), so the web
+# service, the worker and the jobs always run the same settings (plan.md §3.5, §11.2). Secrets come from Secret
+# Manager at a pinned version. Claude stays off on staging until ANTHROPIC_API_KEY is added here from its own secret,
+# and reads synthetic files only until the PHI gate (§11.1, OQ29).
+- name: ENVIRONMENT
+  value: production
+- name: DJANGO_DEBUG
+  value: 'False'
+- name: ALLOWED_HOSTS
+  value: ${WEB_HOST}
+- name: FRONTEND_URL
+  value: https://${WEB_HOST}
+- name: GIT_SHA
+  value: ${GIT_SHA}
+- name: DB_NAME
+  value: ${DB_NAME}
+- name: DB_USER
+  value: ${DB_USER}
+- name: DB_HOST
+  value: ${DB_PRIVATE_IP}
+- name: DB_PORT
+  value: '5432'
+# TLS verified against the instance's own server CA (Cloud SQL's per-instance CA names no IP, hence verify-ca).
+- name: DB_SSLMODE
+  value: verify-ca
+- name: DB_SSLROOTCERT
+  value: /secrets/db/server-ca.pem
+- name: GS_BUCKET_NAME
+  value: ${BUCKET}
+- name: EMAIL_HOST
+  value: ${EMAIL_HOST}
+- name: EMAIL_PORT
+  value: '${EMAIL_PORT}'
+- name: EMAIL_HOST_USER
+  value: ${EMAIL_HOST_USER}
+- name: DEFAULT_FROM_EMAIL
+  value: ${DEFAULT_FROM_EMAIL}
+- name: AGENCY_TIME_ZONE
+  value: ${AGENCY_TIME_ZONE}
+- name: DJANGO_SECRET_KEY
+  valueFrom:
+    secretKeyRef:
+      name: ${SECRET_DJANGO_KEY}
+      key: '${SECRET_DJANGO_KEY_VERSION}'
+- name: DB_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: ${SECRET_DB_PASSWORD}
+      key: '${SECRET_DB_PASSWORD_VERSION}'
+- name: EMAIL_HOST_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: ${SECRET_EMAIL_PASSWORD}
+      key: '${SECRET_EMAIL_PASSWORD_VERSION}'

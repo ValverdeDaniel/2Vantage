@@ -176,3 +176,52 @@ LOGGING = {
         },
     },
 }
+
+# ---- Production: staging on Cloud Run and every release (slice 69; plan.md §11, §3.5) -------------------------------
+# Inert locally: the dev stack keeps runserver, MEDIA_ROOT on the filesystem and its logs. On Cloud Run, Secret Manager
+# passes DJANGO_SECRET_KEY, DB_PASSWORD, EMAIL_HOST_PASSWORD and ANTHROPIC_API_KEY in as environment variables.
+# The built SPA (the root Dockerfile's `production` target): Django answers its index.html for every page path
+# (backend/spa.py), and WhiteNoise serves its assets under /static/ beside the admin's (§11.2).
+SPA_DIR = BASE_DIR / 'spa'
+if SPA_DIR.is_dir():
+    STATICFILES_DIRS = [SPA_DIR]
+# pdf.js's worker is an .mjs module and must be typed as JavaScript (E.6); Vite's hashed assets are cached for good.
+WHITENOISE_MIMETYPES = {'.mjs': 'text/javascript'}
+WHITENOISE_IMMUTABLE_FILE_TEST = r'^/static/assets/[^/]+[.-][0-9A-Za-z_-]{8,12}\.\w+$'
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+}
+# Files: MEDIA_ROOT unless a bucket is named, then the private Cloud Storage bucket (backend/storage.py), whose Google
+# libraries load only then. Objects take the bucket's IAM (uniform access, no ACL) and are never overwritten.
+GS_BUCKET_NAME = _env('GS_BUCKET_NAME')
+if GS_BUCKET_NAME:
+    STORAGES['default'] = {
+        'BACKEND': 'backend.storage.PrivateBucket',
+        'OPTIONS': {'bucket_name': GS_BUCKET_NAME, 'default_acl': None, 'file_overwrite': False},
+    }
+# Cloud SQL (§11.2): Cloud Run mounts the instance's socket under /cloudsql/ when the service names the instance. A
+# private-IP connection sets DB_HOST instead and verifies the server: DB_SSLMODE=verify-full, DB_SSLROOTCERT=<CA file>.
+CLOUD_SQL_INSTANCE = _env('CLOUD_SQL_INSTANCE')
+if CLOUD_SQL_INSTANCE:
+    DATABASES['default'].update(HOST=f'/cloudsql/{CLOUD_SQL_INSTANCE}', PORT='')
+if _env('DB_SSLMODE'):
+    DATABASES['default']['OPTIONS'] = {'sslmode': _env('DB_SSLMODE')}
+    if _env('DB_SSLROOTCERT'):
+        DATABASES['default']['OPTIONS']['sslrootcert'] = _env('DB_SSLROOTCERT')
+# Cloud Run names every service (K_SERVICE) and job (CLOUD_RUN_JOB); an instance's disk goes with it (checks.py E005).
+ON_CLOUD_RUN = bool(_env('K_SERVICE') or _env('CLOUD_RUN_JOB'))
+if ENVIRONMENT == 'production':
+    after_security = MIDDLEWARE.index('django.middleware.security.SecurityMiddleware') + 1
+    MIDDLEWARE.insert(after_security, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    STORAGES['staticfiles'] = {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'}
+    # Cloud Run ends TLS at Google's front end, which says so in X-Forwarded-Proto (§3.8).
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SECURE_REDIRECT_EXEMPT = [r'^api/health/$']
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    # Request logs and error reports drop the token paths (§3.5, §11.2); gunicorn's access log: backend/gunicorn_log.py.
+    LOGGING['filters'] = {'token_paths': {'()': 'backend.logs.DropTokenPaths'}}
+    LOGGING['handlers']['console']['filters'] = ['token_paths']

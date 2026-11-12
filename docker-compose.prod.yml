@@ -1,0 +1,90 @@
+# The local production rehearsal (slice 69; plan.md §11; deploy/README.md): the production image run as Cloud Run
+# runs it (the migrations job, then the web service and the worker), with a local Postgres for Cloud SQL and a volume
+# for the bucket. Its own Compose project and port (8014), so it never touches the dev stack (4001 / 8004 / 5436) or
+# the parity stack (4002 / 8005 / 5437). Synthetic data only.
+#   bash deploy/rehearse.sh                 build, migrate, seed_golden, the release gate and the smoke check
+#   bash deploy/rehearse.sh --gcs           the same, with files in a local Cloud Storage emulator (the bucket path)
+#   docker compose -f docker-compose.prod.yml down -v      remove it, volumes too
+name: vantage2-rehearsal
+
+x-app: &app
+  build:
+    context: .
+    target: production
+    args:
+      GIT_SHA: ${GIT_SHA:-unknown}
+  image: vantage2-rehearsal:${GIT_SHA:-unknown}
+  environment:
+    ENVIRONMENT: production
+    PORT: "8080"                        # what Cloud Run sets
+    DJANGO_DEBUG: "False"
+    DJANGO_SECRET_KEY: ${REHEARSAL_SECRET_KEY:-}   # rehearse.sh makes one, kept outside the repository
+    ALLOWED_HOSTS: localhost,127.0.0.1,web
+    FRONTEND_URL: http://localhost:${REHEARSAL_PORT:-8014}
+    DB_NAME: vantage2
+    DB_USER: vantage
+    DB_PASSWORD: rehearsal-only-not-secret
+    DB_HOST: db
+    DB_PORT: "5432"
+    MEDIA_ROOT: /data/media
+    # SMTP is configured, as staging's must be (vantage.E003), and never used: nothing sends mail yet.
+    EMAIL_HOST: smtp.invalid
+    EMAIL_HOST_USER: rehearsal
+    AGENCY_TIME_ZONE: America/New_York
+    # Empty: files on the media volume. `rehearse.sh --gcs`: the bucket path, against the emulator below.
+    GS_BUCKET_NAME: ${REHEARSAL_BUCKET:-}
+    STORAGE_EMULATOR_HOST: ${REHEARSAL_EMULATOR:-}
+  volumes: ["media:/data/media"]
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: vantage2
+      POSTGRES_USER: vantage
+      POSTGRES_PASSWORD: rehearsal-only-not-secret
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vantage -d vantage2"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  # The migrations job (§11.2): `check --deploy`, then migrate, before the web service and the worker start.
+  migrate:
+    <<: *app
+    command: ["migrate"]
+    restart: "no"
+    depends_on:
+      db: {condition: service_healthy}
+
+  web:
+    <<: *app
+    ports: ["${REHEARSAL_PORT:-8014}:8080"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/health/')"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  worker:
+    <<: *app
+    command: ["worker"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  # A local Cloud Storage emulator for `rehearse.sh --gcs`: django-storages and Google's client run their real code
+  # against it, with no Google account, credentials or network. Untested against Google itself.
+  gcs:
+    image: fsouza/fake-gcs-server:1.56.1
+    profiles: [gcs]
+    command: ["-scheme", "http", "-port", "4443", "-backend", "memory", "-public-host", "gcs:4443",
+              "-external-url", "http://gcs:4443"]
+
+volumes:
+  pgdata:
+  media:
