@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from 'react-router';
 import { useDeal } from '../../api/deals';
 import { useMeta } from '../../api/meta';
 import { errorStatus } from '../../lib/errors';
+import { dealPresence, useDocWindowPresence } from '../../viewer/docWindowLink';
 import ErrorBoundary from '../../ui/ErrorBoundary';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
@@ -38,6 +39,8 @@ export default function DealPage() {
   const header = useDeal(validId ? dealId : null);
   const meta = useMeta();
   const clientName = header.data?.client.name;
+  // The client on screen, for a file's own window (E71): it covers itself when this tab leaves the client.
+  useDocWindowPresence(dealPresence(header.data));
 
   useEffect(() => {
     if (clientName) document.title = `${clientName} — 2Vantage`;

@@ -12,11 +12,14 @@
   },
   "dependencies": {
     "@tanstack/react-query": "5.107.1",
+    "@tesseract.js-data/eng": "1.0.0",
     "axios": "1.21.1",
     "pdfjs-dist": "5.6.205",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "react-router": "7.18.5"
+    "react-router": "7.18.5",
+    "tesseract.js": "7.0.0",
+    "tesseract.js-core": "7.0.0"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

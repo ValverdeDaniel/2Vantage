@@ -25,6 +25,8 @@ export async function capture({ context, app, screen, dealId, width, dir, droppe
     await page.setViewportSize({ width, height: HEIGHT });
     const url = urlFor(app, screen, dealId);
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    // `pick`: a file tab to click once the tab has drawn (Documents' census file, slice 65); absent, nothing is clicked.
+    if (screen[app].pick) await page.getByRole('tab', { name: screen[app].pick }).first().click({ timeout: 30000 });
     const { readyFound } = await settle(page, screen.ready);
     const hidden = app === 'old' ? await hideOnOldPage(page, dropped) : [];
     const masked = await markDates(page);

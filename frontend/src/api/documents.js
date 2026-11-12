@@ -80,30 +80,40 @@ export async function findInSheet(documentId, body) {
 }
 
 /*
- * A value's full source, for ↗ (E18): served by the value's owner. `ref` is "plan:<id>:<key>" (quotes); intake,
- * census and questionnaire refs join with their slices. → {value, label, hint, what, source: {doc, page, cell, line,
- * loc, ...}}.
+ * A value's full source, for ↗ (E18): served by the value's owner (O.3.1). `ref` is "plan:<id>:<key>" (quotes),
+ * "census:<member id>:<key>" (census) or "intake:<key>" (intake, the deal's own form; slice 65). → {value, label, hint,
+ * what, source: {doc, page, cell, line, loc, ...}}. The questionnaire's refs join with its slice.
  */
 const OWNERS = {
-  plan: (id, key) => ({ url: `plans/${id}/source/`, params: { key } }),
+  plan: { url: (id) => `plans/${id}/source/` },
+  census: { url: (id) => `census/members/${id}/source/` },
+  intake: { url: (_id, dealId) => `deals/${dealId}/intake/source/`, ofDeal: true },
 };
 
 export function parseRef(ref) {
-  const [owner, id, ...rest] = String(ref || '').split(':');
-  const key = rest.join(':');
-  return OWNERS[owner] && /^\d+$/.test(id) && key ? { owner, id: Number(id), key } : null;
+  const [owner, ...rest] = String(ref || '').split(':');
+  const spec = OWNERS[owner];
+  if (!spec) return null;
+  if (spec.ofDeal) {
+    const key = rest.join(':');
+    return key ? { owner, id: null, key } : null;
+  }
+  const [id, ...more] = rest;
+  const key = more.join(':');
+  return /^\d+$/.test(id || '') && key ? { owner, id: Number(id), key } : null;
 }
 
-export function useValueSource(ref) {
+export function useValueSource(ref, dealId) {
   const parsed = parseRef(ref);
   return useQuery({
-    queryKey: ['value-source', ref],
+    queryKey: ['value-source', ref, dealId],
     queryFn: async () => {
-      const { url, params } = OWNERS[parsed.owner](parsed.id, parsed.key);
-      return (await api.get(url, { params })).data;
+      const url = OWNERS[parsed.owner].url(parsed.id, dealId);
+      return (await api.get(url, { params: { key: parsed.key } })).data;
     },
     enabled: Boolean(parsed),
     staleTime: 0,
-    retry: false,
+    // A refusal (4xx) is the answer; a dropped connection or a server error is asked again, twice.
+    retry: (count, error) => count < 2 && !(error?.response?.status < 500),
   });
 }

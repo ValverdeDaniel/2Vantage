@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
 /*
- * The PDF viewer's toolbar (plan.md §8.16; E22, E24): ‹ Prev, the page box, Next ›, − ＋ Fit, and what the find said,
- * in the old app's words and classes.
+ * The PDF viewer's toolbar (plan.md §8.16; E22, E24, E25): ‹ Prev, the page box, Next ›, − ＋ Fit, and what the find
+ * said, in the old app's words and classes (a scanned page: "Locating on the scanned image…", then "Located").
  */
 export default function PdfToolbar({ pageNum, numPages, onPage, zoom, onZoom, state, moved }) {
   const [draft, setDraft] = useState(null);
@@ -64,6 +64,10 @@ export default function PdfToolbar({ pageNum, numPages, onPage, zoom, onZoom, st
       {state === 'missing' && (
         <span className="bb-pdf-notfound-inline">⚠ Couldn&apos;t locate the exact text on this page.</span>
       )}
+      {state === 'reading' && (
+        <span className="bb-pdf-ocrnote">⏳ Locating on the scanned image… (the first time can take ~15s)</span>
+      )}
+      {state === 'ocr' && <span className="bb-pdf-foundnote">✓ Located on the scanned image</span>}
       {state === 'moved' && moved && (
         <span className="bb-pdf-foundnote">
           ✓ Found on p. {moved.found}

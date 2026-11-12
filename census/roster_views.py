@@ -1,6 +1,7 @@
 """The roster grid's API (plan.md §7.7; C4–C8, C24): people added, edited and removed by hand, clearing the roster,
-review marks, and the roster's required blanks. Thin: parse → service or selector → respond. Ids from paths and bodies
-are whole numbers (a bigger one is no row: 404); a refusal is a 409 with a sentence that never names a value.
+review marks, the roster's required blanks, and one cell's source for the Documents station (E43; slice 65). Thin:
+parse → service or selector → respond. Ids from paths and bodies are whole numbers (a bigger one is no row: 404); a
+refusal is a 409 with a sentence that never names a value.
 """
 
 from django.http import Http404
@@ -12,9 +13,10 @@ from rest_framework.views import APIView
 
 from deals.models import Deal
 
-from . import facts, selectors, services
+from . import facts, fields, selectors, services
 from .models import Member
 from .selectors.roster import cell_review, review_counts
+from .selectors.source import value_source
 from .views import MAX_ID, _body, _deal
 
 
@@ -119,3 +121,15 @@ class MissingView(APIView):
     def get(self, request, pk):
         refs = selectors.missing_refs(_deal(pk))
         return Response({'refs': refs, 'count': len(refs)})
+
+
+class MemberSourceView(APIView):
+    """GET census/members/{id}/source/?key= → {member_id, key, label, value, hint, what, source}: where one cell was
+    read, so ↗ and the Documents station open it at its own cell of the census file (E18, E43; slice 65). Read only."""
+
+    def get(self, request, member_id):
+        person = _member(member_id)
+        key = request.query_params.get('key') or ''
+        if key not in fields.BY_KEY:
+            raise ValidationError({'key': ['Give a census column.']})
+        return Response(value_source(person, key))

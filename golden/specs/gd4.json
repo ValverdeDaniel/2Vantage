@@ -135,6 +135,10 @@
       {
         "what": "Funding on every plan",
         "why": "The old app keeps funding on the deal's coverage line (CoverageLine.funding)."
+      },
+      {
+        "what": "P1's scanned SBC (golden/scanned_sbc.py, slice 65)",
+        "why": "The parity loader uploads no files into the old app: its Documents tab does not list the scan, and P1's deductible and out-of-pocket limit carry no file there."
       }
     ]
   }

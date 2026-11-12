@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import ocrFiles from './ocrFiles';
 
 // plan.md §3.4. The proxy keeps the SPA and the API on one origin, so the session cookie works unchanged (§3.8).
 const target = process.env.VITE_API_PROXY || 'http://localhost:8004';
@@ -11,7 +12,8 @@ const proxy = Object.fromEntries(
 );
 
 export default defineConfig({
-  plugins: [react()],
+  // ocrFiles: the browser OCR's worker, core and language data from our own origin (E25; slice 65).
+  plugins: [react(), ocrFiles()],
   server: {
     port: 4001,
     strictPort: true,

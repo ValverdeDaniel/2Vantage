@@ -5,6 +5,7 @@
 
 import { census41 } from './census41.mjs';
 import { documents23 } from './documents23.mjs';
+import { documents65 } from './documents65.mjs';
 import { intake39 } from './intake39.mjs';
 import { quoteFirst13 } from './quoteFirst13.mjs';
 
@@ -209,4 +210,5 @@ export const WALKS = {
   s39: { ...intake39, run: (ctx) => intake39.run(ctx, { signIn, openDeal }) }, // slice 39's done-when
   s23: { ...documents23, run: (ctx) => documents23.run(ctx, { signIn, openDeal }) }, // slice 23's done-when
   s41: { ...census41, run: (ctx) => census41.run(ctx, { signIn, openDeal }) }, // slice 41's done-when
+  s65: { ...documents65, run: (ctx) => documents65.run(ctx, { signIn, openDeal }) }, // slice 65's done-when
 };

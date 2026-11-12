@@ -1618,6 +1618,94 @@
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
+    },
+    {
+      "screen": "gd4.documents",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A6",
+      "why": "The top bar keeps Benefits, Commissions and Admin; Dashboard, P&C, Joint Ventures and the other old links are modules out of scope (A2, A22, A40), and the Calendar link waits with the Radar (I88).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd4.documents",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "M112",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd4.documents",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A21",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Questionnaire 42, RFP 44, Commission 48 (OQ9).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd4.documents",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A25",
+      "why": "The ✦ Work with Claude pill, drawer and strip (bnf-wwc-room, bnf-claude-section) are pending slice 20.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd4.documents",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "E43",
+      "why": "Slice 65's census view (E43, OQ97's default): 2Vantage's GD4 carries its census files and P1's scanned SBC, which the old parity load does not upload (the spec's parity left_out), so the old tab shows \"No documents yet\" over every plan's grid while 2V opens the client's census file with the whole roster under it, the old station's census grid, on the Census tab's own Roster.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd4.documents",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "A24",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd4.documents",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "E43",
+      "why": "The station and roster classes (bb-doc-tab*, bnf-doc-*, bnf-docs-popout-btn, bnf-file-bar*, bnf-sheet-*, the roster's bb-grid-* and bnf-census-*) draw GD4's files and its roster beside the census file (E1–E43, E69; slices 15–17, 23, 41, 65), against an old GD4 with no files; the old Grid of every plan (bnf-scan-grid, bnf-freeze) shows on a proposal file in 2V.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd4.documents",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-doc-tab",
+      "item": "E43",
+      "why": "The file tabs, the file bar, the roster header and cells exist only in 2V (the old GD4 has no files); the nav, the tab title and the scan head sit elsewhere because the header strip replaces the journey stepper (M112) and the census file and its roster fill the station.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
     }
   ]
 }

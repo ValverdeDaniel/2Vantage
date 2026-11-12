@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
+import Highlights from './Highlights';
+import useImageFind from './useImageFind';
 
 /*
- * An uploaded image (a photographed or screenshotted quote) (plan.md §8.16; E26): zoom 0.05–6×, Fit, and a status
- * line with its size. Same origin, so a plain <img> carries the session; the image is never changed. Locating a value
- * on an image needs OCR in the browser, which waits (E25, slice 65): until then a value opened here is said, not
- * boxed.
+ * An uploaded image (a photographed or screenshotted quote) (plan.md §8.16; E25, E26): zoom 0.05–6×, Fit, and a status
+ * line with its size. Same origin, so a plain <img> carries the session; the image is never changed. A value opened
+ * here is found by browser OCR, read once per image (useImageFind), and boxed; OCR only draws (data-find `ocr`).
  */
-export default function ImageViewer({ url, find = {} }) {
+export default function ImageViewer({ url, find = {}, jumpKey = 0 }) {
   const [natural, setNatural] = useState(null); // {w, h}
   const [failed, setFailed] = useState(false);
   const [zoom, setZoom] = useState(null); // null: fit the panel's width
   const [wrapW, setWrapW] = useState(0);
   const wrapRef = useRef(null);
+  const imgRef = useRef(null);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -24,6 +26,10 @@ export default function ImageViewer({ url, find = {} }) {
     return () => observer.disconnect();
   }, []);
 
+  const fit = natural && wrapW ? Math.min(2, Math.max(0.1, (wrapW - 26) / natural.w)) : 1;
+  const scale = Math.min(6, Math.max(0.05, (zoom ?? 1) * fit));
+  const located = useImageFind({ img: imgRef, url, natural, scale, find, jumpKey });
+
   if (!url) return null;
   if (failed) {
     return (
@@ -32,14 +38,11 @@ export default function ImageViewer({ url, find = {} }) {
       </div>
     );
   }
-  const fit = natural && wrapW ? Math.min(2, Math.max(0.1, (wrapW - 26) / natural.w)) : 1;
-  const scale = Math.min(6, Math.max(0.05, (zoom ?? 1) * fit));
-  const asked = Boolean(find.value || find.snippet);
   return (
     <div
       className="bb-pdf-viewer bnf-image-viewer"
       data-render={natural ? 'ready' : 'loading'}
-      data-find={asked ? 'missing' : 'idle'}
+      data-find={located.state}
     >
       <div className="bb-pdf-toolbar">
         <span className="bb-pdf-pageinfo">Image{natural ? ` · ${natural.w} × ${natural.h}` : ''}</span>
@@ -68,7 +71,13 @@ export default function ImageViewer({ url, find = {} }) {
         >
           Fit
         </button>
-        {asked && <span className="bb-pdf-ocrnote">Images are not searched yet: look for the value by eye.</span>}
+        {located.state === 'reading' && (
+          <span className="bb-pdf-ocrnote">⏳ Locating on the image… (the first time can take ~15s)</span>
+        )}
+        {located.state === 'ocr' && <span className="bb-pdf-foundnote">✓ Located on the image</span>}
+        {located.state === 'missing' && (
+          <span className="bb-pdf-notfound-inline">⚠ Couldn&apos;t locate the exact text on this image.</span>
+        )}
       </div>
       <div className="bb-pdf-canvas-wrap" ref={wrapRef}>
         <div className="bb-pdf-page">
@@ -78,6 +87,7 @@ export default function ImageViewer({ url, find = {} }) {
             </div>
           )}
           <img
+            ref={imgRef}
             src={url}
             alt="The uploaded document"
             className="bnf-image-doc"
@@ -88,6 +98,7 @@ export default function ImageViewer({ url, find = {} }) {
             }}
             onError={() => setFailed(true)}
           />
+          <Highlights boxes={located.boxes} flashKey={`${jumpKey}-image`} />
         </div>
       </div>
     </div>

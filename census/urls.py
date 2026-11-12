@@ -10,6 +10,7 @@ urlpatterns = [
     path('census/imports/<int:import_id>/discard/', views.DiscardView.as_view()),
     path('deals/<int:pk>/census/members/', roster_views.MembersView.as_view()),
     path('census/members/<int:member_id>/', roster_views.MemberView.as_view()),
+    path('census/members/<int:member_id>/source/', roster_views.MemberSourceView.as_view()),
     path('deals/<int:pk>/census/clear/', roster_views.ClearView.as_view()),
     path('deals/<int:pk>/census/marks/', roster_views.MarksView.as_view()),
     path('deals/<int:pk>/census/missing/', roster_views.MissingView.as_view()),

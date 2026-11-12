@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path('deals/<int:pk>/intake/', views.IntakeView.as_view()),
     path('deals/<int:pk>/intake/marks/', views.MarksView.as_view()),
+    path('deals/<int:pk>/intake/source/', views.SourceView.as_view()),
     path('deals/<int:pk>/intake/checklist/', views.ChecklistView.as_view()),
     path('deals/<int:pk>/intake/intent/', views.IntentView.as_view()),
     path('deals/<int:pk>/intake/intent/confirm/', views.ConfirmIntentView.as_view()),

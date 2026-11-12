@@ -4,14 +4,15 @@ import cx from '../ui/cx';
  * The viewer's file bar (plan.md §8.16; E31, D-164): which file is on screen (name · bucket · page N of M) and, when
  * a value opened it, which value ("Opened to show <row · plan>") and what "Check this file" found for it (`note`:
  * {tone, text, title}; "Not in the file" in the old staged review's rose, slice 16). With `scope` (the file the
- * station's other panels are about, when it is not this one), the way back: "← Back to <file>".
+ * station's other panels are about, when it is not this one), the way back: "← Back to <file>". `away`: the file is
+ * open in its own window (E69), which the bar says in place of the page.
  */
-export default function FileBar({ document, bucket, page, what, note, scope, onBack }) {
+export default function FileBar({ document, bucket, page, away = false, what, note, scope, onBack }) {
   if (!document) return null;
   const name = document.display_name || document.original_name;
   const elsewhere = Boolean(scope && scope.id !== document.id);
   const of = document.page_count ? ` of ${document.page_count}` : '';
-  const pages = document.shape === 'pdf' && page ? ` · page ${page}${of}` : '';
+  const pages = away ? ' · in its own window' : document.shape === 'pdf' && page ? ` · page ${page}${of}` : '';
   return (
     <div className={cx('bnf-file-bar', (what || elsewhere) && 'is-elsewhere')} data-file-bar-doc={document.id}>
       <span className="bnf-file-bar-name">📄 {name}</span>

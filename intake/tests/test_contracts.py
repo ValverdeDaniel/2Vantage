@@ -22,6 +22,7 @@ def samples(world):
     return {
         'api/deals/<int:pk>/intake/': deal,
         'api/deals/<int:pk>/intake/marks/': deal,
+        'api/deals/<int:pk>/intake/source/': {**deal, 'query': {'key': 'legal_name'}},
         'api/deals/<int:pk>/intake/checklist/': deal,
         'api/deals/<int:pk>/intake/intent/': deal,
         'api/deals/<int:pk>/intake/intent/confirm/': deal,
@@ -38,6 +39,7 @@ MATRIX = [
     ('GET', 'api/deals/<int:pk>/intake/', ALL),
     ('PATCH', 'api/deals/<int:pk>/intake/', ALL, {'answers': {'dba': 'Ex'}}),
     ('POST', 'api/deals/<int:pk>/intake/marks/', ALL, {'action': 'approve'}),
+    ('GET', 'api/deals/<int:pk>/intake/source/', ALL),
     ('PATCH', 'api/deals/<int:pk>/intake/checklist/', ALL, {'item': 'cobra', 'checked': True}),
     ('POST', 'api/deals/<int:pk>/intake/intent/', ALL, {'line': 'dental', 'has_today': True}),
     ('POST', 'api/deals/<int:pk>/intake/intent/confirm/', ALL),

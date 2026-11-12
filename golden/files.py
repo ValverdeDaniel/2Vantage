@@ -7,6 +7,10 @@ GD1 carries two:
 - "Cigna medical quote (synthetic).xlsx" (kind quote): the four Cigna alternates side by side, styled like a carrier
   workbook, with a hidden underwriting row, a hidden column and a hidden notes sheet (OQ25). Every value of those
   plans points at its own cell (`doc` and `cell`, "Medical!C10").
+GD4 carries one beside its census files (golden/census_files.py):
+- "Aetna Choice POS II SBC, scanned (synthetic).pdf" (kind sbc): P1's SBC as a scan, a picture with no text layer
+  (golden/scanned_sbc.py; slice 65, E25). P1's deductible and out-of-pocket limit point at it (`doc`); the locator
+  calls them "check by eye", and the station's browser OCR draws their boxes.
 The values are the spec's; the files only print them.
 """
 
@@ -18,6 +22,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 import synthetic_files
 from documents import services as documents
 from documents import xlsx_safe
+
+from . import scanned_sbc
 
 Attached = namedtuple('Attached', 'document cells keys')  # cells: {key: 'Sheet!A1'} or None; keys: the printed keys
 
@@ -149,7 +155,20 @@ def attach_gd1(user, deal, spec):
     return attached
 
 
-ATTACH = {'GD1': attach_gd1}
+def attach_gd4(user, deal, spec):
+    """Upload GD4's scanned SBC; {plan ref: Attached} for the plan whose values it prints (slice 65)."""
+    content, ref, keys = scanned_sbc.scanned_sbc_pdf(spec)
+    sbc = _upload(
+        user,
+        deal,
+        scanned_sbc.FILE_NAME,
+        content,
+        {'kind': 'sbc', 'role': 'current', 'carrier': 'Aetna', 'lines': ['medical']},
+    )
+    return {ref: Attached(sbc, None, keys)}
+
+
+ATTACH = {'GD1': attach_gd1, 'GD4': attach_gd4}
 
 
 def attach(user, deal, spec):

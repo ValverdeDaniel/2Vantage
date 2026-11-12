@@ -41,7 +41,7 @@ export default function DocumentViewer({ document, find = {}, jumpKey = 0, onPag
     return host(<SheetViewer key={document.id} documentId={document.id} find={find} jumpKey={jumpKey} />);
   }
   if (document.shape === 'image') {
-    return host(<ImageViewer key={document.id} url={inlineUrl(document.id)} find={find} />);
+    return host(<ImageViewer key={document.id} url={inlineUrl(document.id)} find={find} jumpKey={jumpKey} />);
   }
   const shown = document.display_name || document.original_name;
   return host(

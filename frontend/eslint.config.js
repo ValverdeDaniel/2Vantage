@@ -21,7 +21,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['vite.config.js', 'eslint.config.js'],
+    files: ['vite.config.js', 'eslint.config.js', 'ocrFiles.js'],
     languageOptions: { globals: globals.node },
   },
 ]);

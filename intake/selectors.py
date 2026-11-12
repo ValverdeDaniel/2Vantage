@@ -161,3 +161,23 @@ def checklist_item(deal_id, key):
     entry = checklist.entry_of(stored, key)
     who = get_user_model().objects.filter(pk=entry['by']).first() if entry.get('by') else None
     return checklist.item_state(key, entry, (who.get_full_name() or who.username) if who else '')
+
+
+SOURCE_ENTRY = ('origin', 'doc', 'page', 'cell', 'line', 'loc', 'low', 'mark', 'confirmed')
+
+
+def value_source(deal, key):
+    """GET deals/{id}/intake/source/?key= (E18, E44; slice 65): one answer's source, for ↗ and the Documents station's
+    intake view: {key, label, value, hint, what, source}; `source` is None for an answer no file or person gave."""
+    intake = Intake.objects.filter(deal_id=deal.id).first()
+    entry = (intake.sources if intake else {}).get(key)
+    entry = entry if isinstance(entry, dict) else None
+    label = form.GUIDANCE_QUESTION['label'] if key == form.GUIDANCE else form.BY_KEY[key]['label']
+    return {
+        'key': key,
+        'label': label,
+        'value': answers_of(deal, intake).get(key, ''),
+        'hint': '',
+        'what': label,
+        'source': {name: entry.get(name) for name in SOURCE_ENTRY} if entry else None,
+    }

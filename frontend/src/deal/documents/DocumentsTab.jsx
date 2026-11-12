@@ -28,6 +28,7 @@ import useCheckFile from './useCheckFile';
 import useFileDrop from './useFileDrop';
 import useStationModes from './useStationModes';
 import useStationState, { ALL_PROPOSALS } from './useStationState';
+import useStationWindow from './useStationWindow';
 import ViewerPane from './ViewerPane';
 
 /*
@@ -37,8 +38,9 @@ import ViewerPane from './ViewerPane';
  * viewers and ↗'s deep links; slice 16 "Check this file" (the locator, a job in the worker); slice 17 the List with
  * its strip, keys and Undo, side by side with the file at 1,100 px, and the Change history card; slice 23 the Grid,
  * Find, Review mode and ✎ Edit, where F or a value followed in Review moves the viewer to the value's own file while
- * the panel keeps its files (`?list=`, D-164) and the file bar offers "← Back to" (E31). Re-read and the Claude drawer
- * are slices 19 and 20's, the pop-out window slice 65's.
+ * the panel keeps its files (`?list=`, D-164) and the file bar offers "← Back to" (E31); slice 65 the pop-out window
+ * (useStationWindow) and census, intake and questionnaire files beside their owners' views. Re-read and the Claude
+ * drawer are slices 19 and 20's.
  */
 export default function DocumentsTab({ deal }) {
   const toast = useToast();
@@ -48,7 +50,7 @@ export default function DocumentsTab({ deal }) {
   const removedQuery = useRemovedDocuments(deal.id);
   const station = useStationState();
   const modes = useStationModes(); // List or Grid, Review mode, ✎ Edit
-  const value = useValueSource(station.ref);
+  const value = useValueSource(station.ref, deal.id);
   const upload = useUploadDocument(deal.id);
   const update = useUpdateDocument(deal.id);
   const archive = useArchiveDocument(deal.id);
@@ -82,6 +84,14 @@ export default function DocumentsTab({ deal }) {
     : station.page
       ? { page: Number(station.page) }
       : {};
+
+  // ⧉ New window (E69–E71; slice 65): the window shows what the viewer here would, and its keys act here.
+  const win = useStationWindow({
+    deal,
+    shown,
+    show: { find, what: showsValue ? value.data.what : '', scope: checking, jumpKey: station.jumpKey },
+    on: { page: (id, page) => setViewed({ id, page }), open: (docId) => showValue(docId, '') },
+  });
 
   // A link to a file the deal no longer has is said, never swapped silently (E18).
   const missingSaid = useRef('');
@@ -181,7 +191,12 @@ export default function DocumentsTab({ deal }) {
         onDone={(count) => toast.success(`Uploaded ${count} file${count === 1 ? '' : 's'}`)}
       />
       <div
-        className={cx('bb-policy-cols bnf-docs-cols', expanded && 'bnf-docs-expanded', drop.dropping && 'is-dropping')}
+        className={cx(
+          'bb-policy-cols bnf-docs-cols',
+          expanded && 'bnf-docs-expanded',
+          drop.dropping && 'is-dropping',
+          win.popped && 'bnf-docs-popped',
+        )}
         {...drop.props}
       >
         <div className={cx('bnf-docs-stack', listing && 'bnf-docs-side')}>
@@ -205,6 +220,7 @@ export default function DocumentsTab({ deal }) {
               value: showsValue ? value.data : null,
               viewedPage: viewed.id === shown?.id ? viewed.page : null,
               scopeFile: scope.file,
+              popped: win.popped,
             }}
             on={{
               select: station.select,
@@ -220,6 +236,9 @@ export default function DocumentsTab({ deal }) {
               },
               page: (page) => setViewed({ id: shown.id, page }),
               back: () => station.select(scope.file.id),
+              popOut: win.popOut,
+              showWindow: win.focus,
+              bringBack: win.bringBack,
             }}
           />
           {shown && (

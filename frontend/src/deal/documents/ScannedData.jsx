@@ -12,6 +12,7 @@ import ReviewBulkBar from '../../valuereview/ReviewBulkBar';
 import useMarks from '../../valuereview/useMarks';
 import useReviewHotkeys from '../../valuereview/useReviewHotkeys';
 import FindBar from './FindBar';
+import OwnerFileView from './OwnerFileView';
 import StationGrid from './grid/StationGrid';
 import useStationGrid from './grid/useStationGrid';
 import ScanActions from './ScanActions';
@@ -29,7 +30,8 @@ import useStationFind from './useStationFind';
  * - The keys A, I, C, U and F (E in Review) act on the List's row or the Grid's pick wherever focus is on the tab.
  * - Review mode (E65): the file follows the value you are on; E or a double-click edits (on the List, on the Grid).
  * `onShow(docId, ref, opts)` opens a value in its file and keeps this panel's scope (D-164); `viewer` is what the
- * viewer shows ({docId, page, ref}); `modes` (useStationModes) is the tab's, which lays the List beside the file. Plan values only: intake, census and questionnaire files join with their owners.
+ * viewer shows ({docId, page, ref}); `modes` (useStationModes) is the tab's, which lays the List beside the file. Plan
+ * values are listed here; a census, intake or questionnaire file shows its owner's view (OwnerFileView; slice 65).
  */
 const FOLLOW_MS = 200;
 
@@ -121,13 +123,7 @@ export default function ScannedData({ deal, meta, scope, expanded, modes, viewer
 
   let body;
   if (!proposal) {
-    body = (
-      <div className="bb-subtitle bb-mt">
-        {scope.bucket === 'census'
-          ? 'No census roster yet — map this file from the Census tab to build the grid.'
-          : 'Intake documents aren’t scanned yet — assign and preview them here; any fields traced to this file appear once available.'}
-      </div>
-    );
+    body = <OwnerFileView deal={deal} meta={meta} scope={scope} activeRef={viewer.ref} onShow={onShow} />;
   } else if (sources.isPending || (gridOn && grid.data.pending)) {
     body = <div className="bb-subtitle bb-mt">Loading the quoted plans…</div>;
   } else if (sources.isError || (gridOn && grid.data.error)) {

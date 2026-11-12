@@ -553,7 +553,7 @@ the rest). "Slice N" says when a piece arrives (§13). Untagged text in §3 is t
 | Frontend | React 19, React Router 7, Vite 6 | built | |
 | Data fetching | TanStack Query 5, axios 1 | built | |
 | Styles and fonts | The old app's stylesheets; IBM Plex Sans and IBM Plex Mono, 400–700 | slice 2 | §3.9; O.5, A.6 |
-| Viewers | pdfjs-dist 5 (legacy build, bundled worker); tesseract.js | slice 15 (OCR: 65) | One pdf.js build serves the Documents viewer and the Export viewer (E22, J105). tesseract.js is served from `/static` and only draws on scanned pages (E25) |
+| Viewers | pdfjs-dist 5 (legacy build, bundled worker); tesseract.js 7.0.0 with tesseract.js-core 7.0.0 and @tesseract.js-data/eng 1.0.0 (the old app's 7) | slice 15 (OCR: 65, built) | One pdf.js build serves the Documents viewer and the Export viewer (E22, J105). tesseract.js's worker, LSTM cores and English data are served from our own origin (`frontend/ocrFiles.js`: Vite in development, `/static/ocr/` in a build), never a CDN, and OCR only draws on scanned pages and images (E25) |
 | Tests | pytest 8, pytest-django; Vitest | built (Vitest: 6) | §12, Part Q. pytest-xdist joined in slice 39, when the serial run passed 45 s (Q.2): the whole suite runs `pytest -n 8 --dist loadfile`. Vitest covers pure frontend modules only |
 | Lint | ruff; import-linter (`lint-imports`); ESLint 9 with react-hooks; stylelint | built (import-linter: 6; stylelint: 2) | import-linter holds the chain contract (§3.3); stylelint refuses undefined custom properties (§3.9) |
 | Acceptance harnesses | `browser/`: playwright-core driving the installed Chrome. `tools/parity/`: a tools image with headless LibreOffice, poppler and the Python readers | slice 3 | The Look, Walk, Recalc and Fidelity lanes (§12; Q.2, Q.5). Never in the app image |
@@ -3854,6 +3854,7 @@ checklist. The GET answers `{answers, sources, hidden, needed, status, issues, r
 | GET / POST | `deals/{id}/coverage/` | user | `{line, carrier, funding, effective_date, renewal_date, in_force, rate_guarantee_through, notes, on_proposal, commission, commission_source}` and the renewal letter's facts (B14, J65) | list / `201 coverage row` |
 | PATCH / DELETE | `coverage/{id}/` | user | same | row / `204` · `400 {"carrier": ["Edit carrier and funding on the current plans in the Advisor."]}` when the line has current plans (§6.5) |
 | GET / POST | `deals/{id}/intake/sources/`, `deals/{id}/intake/marks/` | user | `?documents=&bucket=&page=` / `{action, ids or document_ids}` | the station's rows, counts and quality / the changed marks and the Activity id (E.6) |
+| GET | `deals/{id}/intake/source/` | user | `?key=` (a question of the form, or `client_guidance`) | `{key, label, value, hint, what, source: {origin, doc, page, cell, line, loc, low, mark, confirmed} \| null}`: one answer's source, for ↗ and the station's intake view (`intake:<key>`; E18, E44); `400` for a key the form does not ask. Built in slice 65 |
 
 Writes the later slices add. Their paths sit under `deals/{id}/intake/`, and the slice that builds each names it.
 
@@ -3891,6 +3892,7 @@ for the Documents station's census view.
 | POST | `deals/{id}/census/members/` | user | `{kind, employee_id?, values?, relay?}` | `201 {member, summary, review, activity_id}`: an employee sorts last, a dependent under its employee (C7) |
 | PATCH | `census/members/{id}/` | user | `{"values": {key: raw}, "expect"?: {key: value seen}, "relay"?: bool}` | `200 {member, changed, summary, review, activity_id}`: the changed member and its issues only (C6) · `400 {"values": …}` (an unknown key, or a masked SSN whose last four match nothing on file) · `409 {detail, keys}` when an `expect`ed value changed since |
 | DELETE | `census/members/{id}/` | user | — | `204`: a soft removal, dependents too (C7, O.6 #13) |
+| GET | `census/members/{id}/source/` | user | `?key=` (a census column) | `{member_id, key, label, value, hint, what, source: {origin, doc, page, cell, line, loc, low, mark, confirmed} \| null}`: one cell's source, for ↗ and the roster beside its file (`census:<member>:<key>`; E18, E43); the value as the roster shows it (SSNs masked), `what` the column's label, never the person (rule 10); `400` for an unknown column, `404` for a removed person. Built in slice 65 |
 | POST | `deals/{id}/census/clear/` | user | `{confirm: true}` | `204` — soft-removes every member |
 | POST | `deals/{id}/census/imports/` | user | `{document_id}` — a file just uploaded, or a client upload already on the deal | `201 import` (proposed mapping, and the pivot recipe when the file has one row per benefit, C13; a file applied before starts from its last choices) · `400 {"detail": "Could not find a header row in this file."}` |
 | GET / PATCH | `census/imports/{id}/` | user | `{"sheet_name": "Census", "header_row": 3, "first_data_row": 7, "mapping": [{"column": 0, "field": "first_name"}]}` | import, with up to 3 sample values per column read from the file for this response only (§5.3.2). Changing the sheet or header row re-proposes the mapping |
@@ -4552,6 +4554,19 @@ classes.
   census and intake only, which join the station in slice 65.
 - The pop-out window (E69–E71; slice 65; OQ99). Change history from Activity, with Revert (E73, E74).
 - Census files open beside the roster (E43; OQ97) and intake files beside their answers (E44), from slice 65.
+- **Built in slice 65 (OQ97–OQ99 defaults):** a census file's Scanned data is the Census tab's whole Roster
+  (`deal/census/RosterBeside`, Roster's `beside`: no COBRA tick, import door, ⟲ Re-map or counts), under the file as
+  the Grid is, and a cell's ↗ rings it in the workbook; an intake file's is the whole form card by card
+  (`IntakeFileView`): "N of M questions read from this file", the rest muted, "Other file", intake's badges, a row
+  read from a file opens there, then Contacts and Current coverage read-only; a questionnaire file points to the
+  Questionnaire tab (E45). The station's ↗ asks census and intake for their values (`census:<member>:<key>`,
+  `intake:<key>`; §7.6, §7.7). ⧉ New window (E69) opens `/deals/:dealId/documents/:docId/window` (no top bar), linked
+  per browser tab by a BroadcastChannel (`viewer/docWindowLink.js`): the client's name, the deal's year and the file,
+  the status pill, the file buttons, and the value F opened, boxed; A, I, C, U and F pressed there act on the tab's
+  selection (never E); the tab shows "… is open in its own window" with Show the window and Bring it back here. The
+  deal layout says which client is on screen (E71: 2 s beat, 6.5 s silence), so the window covers itself with
+  "You're no longer working on <client>" when the tab leaves and clears when it comes back. A "Check this file" that
+  lands refreshes the List too.
 - How values, marks and the locator work: §10.7.
 
 ### 8.17 Work with Claude drawer and strip
@@ -5163,6 +5178,13 @@ Part E (E.6); the screens are §8.16.
 - **The locator** (`documents/locate/`; E81–E84) is pure and reads visible cells only. Its states are found, derived,
   weak, absent and "check by eye". It runs inside every read and in **Check this file**, a `locate` job in the system
   lane (E59; slice 16). A scanned page is never "not in the file"; browser OCR only draws (E25; slice 65; OQ98).
+  Built in slice 65: a PDF page with no text layer, opened for a value on its page (page 1 when none was recorded),
+  is drawn again about 2,000 px wide and read by tesseract.js in a worker in the browser (`viewer/pdfOcr.js`, files
+  from our own origin, one read per page kept); the same matcher (`pdfFind`) boxes the value in what it read
+  (`viewer/ocrWords.js`) and the toolbar says "✓ Located on the scanned image" (`data-find="ocr"`, never `found`). An
+  image is read once the same way. Nothing is written: the locator's answer stays "check by eye" (NOCHECK
+  `no_text`), so the List and the file bar say so beside the box. GD4 carries P1's scanned SBC to show it
+  (`golden/scanned_sbc.py`).
   Built in slice 16 (`fold`, `query`, `pdf_text` with form answers, `pdf_index`, `sheet_cells`, `sheet_index`), the
   old rules ported, with one change: in a sheet the cell where the plan's words (column) and the field's words (row)
   cross wins, so one figure printed under two plans opens each plan's own cell (the old scored row or column alone).

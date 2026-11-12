@@ -4,7 +4,8 @@ import { doneText } from './reviewWords';
  * The keys, always on screen in their own line (plan.md §8.16; E55, D124, D125; the old GridReviewToolbar's
  * HotkeyLegend and ReviewDone), and what the last action did with its ↶ Undo (E54). `list` is the List's legend (↑↓
  * move); the Grid's adds ←→, Shift extends and Esc clears. `review` is Review mode (D-201, E65): a click finds the value
- * in the file and E edits, so F is not listed. `edit` is ✎ Edit's, where letters type (E67).
+ * in the file and E edits, so F is not listed. `edit` is ✎ Edit's, where letters type (E67). `relay` is the file's own
+ * window (E70; slice 65): the letters only, which it sends to the tab.
  */
 
 const Key = ({ k }) => <kbd>{k}</kbd>;
@@ -35,7 +36,7 @@ function EditLegend() {
   );
 }
 
-export function HotkeyLegend({ list = false, review = false, edit = false }) {
+export function HotkeyLegend({ list = false, review = false, edit = false, relay = false }) {
   if (edit) return <EditLegend />;
   const moves = review ? ' move and find' : ' move';
   return (
@@ -62,13 +63,15 @@ export function HotkeyLegend({ list = false, review = false, edit = false }) {
           <Key k="F" /> find in file
         </span>
       )}
-      <span>
-        <Key k="↑↓" />
-        {list ? null : <Key k="←→" />}
-        {moves}
-      </span>
-      {!list && <span>Shift extends</span>}
-      {!list && (
+      {!relay && (
+        <span>
+          <Key k="↑↓" />
+          {list ? null : <Key k="←→" />}
+          {moves}
+        </span>
+      )}
+      {!list && !relay && <span>Shift extends</span>}
+      {!list && !relay && (
         <span>
           <Key k="Esc" /> clears
         </span>

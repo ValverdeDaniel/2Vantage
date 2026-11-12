@@ -8,6 +8,7 @@
 //   new       the same for 2Vantage (/deals/<id>/<tab>), or { pending: <slice>, why } while the slice that builds
 //             it has not landed: the old side is captured and the key is reported "pending slice N"
 //   ready     a selector each app shows once the screen has drawn (optional; networkidle always applies)
+//   pick      (in old or new) a file tab, by its visible name, to click before the capture (Documents; optional)
 //   styles    key selectors whose computed font, colours, borders, radius, padding and box are compared
 //
 // Order of work: the screens that exist in both apps today first, then the old-only states later slices match.
@@ -51,6 +52,7 @@ export const SCREENS = [
   { key: 'gd3.advisor', title: 'GD3 Advisor at checkpoint A: ten quotes priced from the medical line’s typed counts, ✎ counts (slice 13; F85–F88)', deal: 'GD3', old: { tab: 'advisor' }, new: { tab: 'advisor' }, styles: [...WORKSPACE, '.bnf-pc-mark', '.bnf-advisor-boardhead .btn-secondary'] },
   { key: 'gd1.census', title: 'GD1 Census: the empty roster (slice 12; C10)', deal: 'GD1', old: { tab: 'census' }, new: { tab: 'census' }, styles: WORKSPACE },
   { key: 'gd4.census', title: 'GD4 Census: the roster grid, outside ✎ Edit (slice 41; C1–C10, C25)', deal: 'GD4', widths: 'workspace', old: { tab: 'census' }, new: { tab: 'census' }, ready: '.bb-grid-card', styles: [...WORKSPACE, '.bnf-cobra-check', '.bb-sov-toolbar', '.bb-legend-item', '.bb-sov-page .bnf-line-chips .bb-chip.active', '.bb-col-header', '.bnf-census-person', '.bb-grid-row .bb-cell', '.bnf-census-empid'] },
+  { key: 'gd4.documents', title: 'GD4 Documents: the census file beside its whole roster (slice 65; E43, OQ97)', deal: 'GD4', widths: 'workspace', old: { tab: 'documents' }, new: { tab: 'documents', pick: 'census (synthetic).xlsx' }, ready: '.bnf-scan-panel', styles: [...WORKSPACE, '.bb-doc-tab', '.bnf-doc-bucket', '.bnf-file-bar', '.bnf-scan-head', '.bb-col-header', '.bb-grid-row .bb-cell'] },
   { key: 'gd1.rfp', title: 'GD1 RFP', deal: 'GD1', old: { tab: 'carriers' }, new: { pending: 44, why: 'the RFP tab' }, styles: WORKSPACE },
   { key: 'gd1.commission', title: 'GD1 Commission', deal: 'GD1', old: { tab: 'commission' }, new: { pending: 48, why: 'the Commission tab' }, styles: WORKSPACE },
 ];

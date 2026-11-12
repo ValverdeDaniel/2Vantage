@@ -1,5 +1,6 @@
-"""Intake API (plan.md §7.6): the intake payload and the answers PATCH, the coverage rows and the intent door. Thin:
-parse → service or selector → respond. The checklist, BOR and Mark as marketed arrive in slice 40."""
+"""Intake API (plan.md §7.6): the intake payload and the answers PATCH, one answer's source (slice 65), the coverage
+rows and the intent door. Thin: parse → service or selector → respond. The checklist, BOR and Mark as marketed arrive
+in slice 40."""
 
 from django.http import Http404
 from django.shortcuts import get_object_or_404
@@ -10,7 +11,7 @@ from rest_framework.views import APIView
 
 from deals.models import Deal
 
-from . import providers, selectors, services
+from . import form, providers, selectors, services
 from .models import CurrentCoverage, Intake
 
 MAX_ID = 2**63 - 1  # a bigger id is not a row: 404, never a database error
@@ -83,6 +84,18 @@ class IntakeView(APIView):
             request.user, pk, data.get('answers'), expect=data.get('expect'), origin='relay' if relay else 'typed'
         )
         return Response(_answered(pk, answered))
+
+
+class SourceView(APIView):
+    """GET deals/{id}/intake/source/?key= → {key, label, value, hint, what, source}: where one answer was read, so ↗
+    and the Documents station's intake view open it in its file (E18, E44; slice 65). Read only."""
+
+    def get(self, request, pk):
+        deal = _deal(pk)
+        key = request.query_params.get('key') or ''
+        if key not in form.ANSWER_KEYS:
+            raise ValidationError({'key': ['Give a question of the intake form.']})
+        return Response(selectors.value_source(deal, key))
 
 
 class MarksView(APIView):

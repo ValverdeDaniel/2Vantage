@@ -10,7 +10,7 @@ import usePdfPage from './usePdfPage';
  * to box, the reader's line (drawn fainter), the plan's carrier and name (which column), and whether the server found
  * the figure once on that page. `jumpKey` re-runs the same find (a second ↗ on the same value flashes it again).
  * Takes a URL (same origin) or bytes. The root says what it is doing: data-render loading|ready|error, data-find
- * idle|searching|found|moved|missing.
+ * idle|searching|found|moved|missing, or on a scanned page reading|ocr (browser OCR drew the box; E25).
  */
 export default function PdfViewer({ url, data, find = {}, jumpKey = 0, onPageChange }) {
   const { pdf, error, progress } = usePdfDocument({ url, data });
@@ -53,7 +53,8 @@ export default function PdfViewer({ url, data, find = {}, jumpKey = 0, onPageCha
     [findKey, find.page, onPageChange],
   );
 
-  const shown = usePdfPage({ pdf, canvasRef, wrapRef, pageNum, scaleFor, find, findKey, onMove });
+  const fileKey = url || 'bytes';
+  const shown = usePdfPage({ pdf, canvasRef, wrapRef, pageNum, scaleFor, find, findKey, fileKey, onMove });
 
   function goTo(n) {
     const page = Math.min(Math.max(1, n), pdf?.numPages || 1);

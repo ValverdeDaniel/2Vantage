@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
+import { ocrBoxes } from './ocrWords';
+import { ocrPage, pageForOcr } from './pdfOcr';
 import { extractPageText, findHighlightRanges } from './pdfFind';
 import { geometryForOffsets, rectsForRange } from './pdfGeometry';
 
 /*
- * Paint one page of a PDF on the canvas and box the value on it (plan.md §10.7; E22–E24). Ported from the old
- * PdfViewer's render effect, without OCR (browser OCR is slice 65; a scanned page says it could not locate the text).
+ * Paint one page of a PDF on the canvas and box the value on it (plan.md §10.7; E22–E25). Ported from the old
+ * PdfViewer's render effect. A scanned page (no text layer) is read by browser OCR to find where to draw (E25, slice
+ * 65): only the page asked for, never on a page turned by hand, and it only draws (`ocr`, never `found`).
  *
  * When the value is not on the page asked for: with a recorded page (the reader's or the locator's), the pages ±1 and
  * ±2 are tried ("Found on p. N (recorded as p. M)"); with none, every page is tried, and among the pages that print
@@ -62,11 +65,18 @@ async function sweep(pdf, find, from, store, isCancelled) {
   return best?.n ?? null;
 }
 
+/** The boxes OCR finds for `find` on a scanned page, in the CSS pixels of `viewport`, or null. */
+async function onScan(page, fileKey, find, viewport) {
+  const read = await ocrPage(fileKey, page.pageNumber, () => pageForOcr(page));
+  return ocrBoxes(read, find, viewport.width / read.width);
+}
+
 /**
  * {highlights: {main, context}, state, foundOn, painted}. `state`: idle, searching, found (on the page asked for),
- * moved (the viewer moved itself; `onMove(n)` was called) or missing.
+ * moved (the viewer moved itself; `onMove(n)` was called), reading (OCR is reading a scanned page), ocr (OCR found
+ * where it is printed on a scanned page) or missing. `fileKey` names the file for OCR's memory of pages it read.
  */
-export default function usePdfPage({ pdf, canvasRef, wrapRef, pageNum, scaleFor, find, findKey, onMove }) {
+export default function usePdfPage({ pdf, canvasRef, wrapRef, pageNum, scaleFor, find, findKey, fileKey, onMove }) {
   const [result, setResult] = useState({ highlights: { main: [], context: [] }, state: 'idle', key: '' });
   const [paintedFor, setPaintedFor] = useState(null); // the document a page of which is on the canvas
   const textStore = useRef({ pdf: null, pages: new Map() });
@@ -120,7 +130,19 @@ export default function usePdfPage({ pdf, canvasRef, wrapRef, pageNum, scaleFor,
         return;
       }
       const from = find.page || 1;
-      if (text.text.length >= SCANNED_TEXT && target === from && swept.current !== findKey) {
+      if (text.text.length < SCANNED_TEXT) {
+        if (target !== from) return settle('missing');
+        settle('reading');
+        const boxes = await onScan(page, fileKey, find, viewport).catch(() => null);
+        if (cancelled) return;
+        if (!boxes) return settle('missing'); // OCR could not read it there, or its files did not load
+        settle('ocr', boxes);
+        if (boxes.main.length && wrapRef.current) {
+          wrapRef.current.scrollTo({ top: Math.max(0, boxes.main[0].top - 120), behavior: 'smooth' });
+        }
+        return;
+      }
+      if (target === from && swept.current !== findKey) {
         swept.current = findKey;
         const n = await sweep(pdf, find, target, store, () => cancelled);
         if (cancelled) return;
