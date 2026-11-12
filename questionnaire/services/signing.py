@@ -8,7 +8,8 @@
 - a lost deal refuses a signature (409), and a signature already on file is not overwritten (409);
 - the officer's signature freezes what the signer saw — every answer on screen still showing the live prefill is
   stored as a `prefill` value — and locks the form (G27, G52). Who signed, on whose authorization and where are kept
-  on the row and named in Activity (G53). Filing the signed copy as a protected Document is slice 43's (G135).
+  on the row and named in Activity (G53). The signed form is filed as a protected Document (G135; `filing`), and an
+  agent's signature after the officer's files a fresh copy (G50).
 
 `reopen(user, deal_id, form_key, reason)` (G54; OQ55 default: any user, with a reason): clears both signatures —
 the agent attested to the same answers — keeps `{at, by, reason}` in `reopens`, and drops the frozen prefill nobody
@@ -27,7 +28,7 @@ from documents.review_rules import is_approved
 
 from .. import forms
 from ..engine import walk
-from . import common
+from . import common, filing
 
 Signed = namedtuple('Signed', 'row who activity facts')
 WHO = ('officer', 'agent')
@@ -106,10 +107,15 @@ def sign(user, deal_id, form_key, who, name, *, authorized=False, sign_anyway=Fa
         row.agent_name, row.agent_signed_at, row.agent_signed_by = name, now, by
         fields = ['agent_name', 'agent_signed_at', 'agent_signed_by']
         summary = f'{label}: signed by the agent, {name}'
+    filed = None
+    if row.locked:  # the officer's signature, or the agent's after it: file what is now signed
+        filed = filing.file_copy(user, deal, row, facts, who)
+        fields += ['signed_document', 'signed_copies']
+        summary += '; the signed copy is filed in Documents'
     common.restamp(row, facts)
     row.save(update_fields=[*fields, 'flags', 'updated_at'])
     record = activity.record(
-        deal, user, common.AREA, 'signed', summary, revertible=False,
+        deal, user, common.AREA, 'signed', summary, revertible=False, document_id=filed.id if filed else None,
         changes=[activity.change(common.target(row), {f'{who}_signed_at': [None, now.isoformat()]})],
     )  # fmt: skip
     return Signed(row, who, record, facts)

@@ -3536,8 +3536,9 @@ or removes it; a table a later read replaced refuses the Undo (409) and Undo any
 
 ### 6.8 questionnaire
 
-Built in slice 42 (the model, `forms/`, `engine/`, values, cleaning, prefill, choice, the services and the tab); the
-PDFs, checks and the filed signed copy are slice 43's. G.6, with L.6's client entries (O.6 #14). The catalogue of forms
+Built in slice 42 (the model, `forms/`, `engine/`, values, cleaning, prefill, choice, the services and the tab) and
+slice 43 (the PDFs, the check, the filed signed copy, the RFP rules and `disclosure_state`). G.6, with L.6's client
+entries (O.6 #14). The catalogue of forms
 and choices lives in `questionnaire/forms` (served as /api/meta/ `questionnaires`), not as a copy in intake: intake
 stores the choice (`intake.services.set_form_choice`) and reads the forms through
 `intake.providers.questionnaire_items`.
@@ -4120,7 +4121,7 @@ Full list: Part F, F.6, with D.6 for Attach SBC and O.3.5 for "As quoted".
 
 ### 7.9 Questionnaire — `questionnaire/`
 
-Built in slice 42 (all but `check/`, `pdf/` and `blank/`, slice 43). The deal paths sit under
+Built in slices 42 and 43 (`check/`, `pdf/` and `blank/`). The deal paths sit under
 `deals/{id}/questionnaires/`; marks name answers `questionnaire:<form>:<slot>` (E103).
 
 | Method | Path | What it does |
@@ -5207,7 +5208,8 @@ Thank you,
 
 ### 9.12 Questionnaire PDFs (`questionnaire/pdf/`)
 
-Part G (G56–G67, G135; G.6). Slice 43; they join the RFP packet in slice 46.
+Part G (G56–G67, G135; G.6). Built in slice 43 (`questionnaire/pdf/`, `check/`, `rfp_rules.py`, `selectors/rfp.py`);
+they join the RFP packet in slice 46, which reads `selectors.rfp.rfp_files`, `sent_with` and `changed_since`.
 - **The ⬇ menu** (G56, G61): "Download PDF" (the filled form, or the filed signed copy once the officer has signed)
   and "Blank carrier PDF". "Carrier PDF (Acrobat)" is absent until the XFA copy is built (G58, deferred; OQ57).
 - **Florida Blue 51+:** a stamped flat copy over the bundled blank, placed by `stamp_place.py` (pure) and drawn by

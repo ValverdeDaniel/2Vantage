@@ -1,10 +1,10 @@
 import { progressBadge } from './formModel';
 
 /*
- * The form's header (G38, G42): its title and subtitle, "N% complete" (amber, then green) from the server, "Saving…",
- * and the Form view / Table view toggle. The ⬇ menu comes with the PDFs (G56, slice 43).
+ * The form's header (G38, G42, G56): its title and subtitle, "N% complete" (amber, then green) from the server,
+ * "Saving…", the Form view / Table view toggle, then the file doors (`children`: "Check the form ▸" and the ⬇ menu).
  */
-export default function Toolbar({ spec, progress, saving, layout, onLayout }) {
+export default function Toolbar({ spec, progress, saving, layout, onLayout, children }) {
   const badge = progressBadge(progress);
   return (
     <div className="bnf-q-toolbar">
@@ -23,6 +23,7 @@ export default function Toolbar({ spec, progress, saving, layout, onLayout }) {
             Table view
           </button>
         </div>
+        {children}
       </div>
     </div>
   );

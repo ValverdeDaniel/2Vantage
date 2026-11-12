@@ -20,7 +20,8 @@ function apiPath(url) {
   return url.startsWith('/api/') ? url.slice('/api/'.length) : url;
 }
 
-function saveBlob(blob, filename) {
+/** Saves a blob the page already holds under `filename` (a hidden link's click). */
+export function saveBlob(blob, filename) {
   const href = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = href;
@@ -33,7 +34,7 @@ function saveBlob(blob, filename) {
 }
 
 // A failed blob request carries its JSON error body as a Blob: parse it so errorText() can read it.
-async function parseBlobError(error) {
+export async function parseBlobError(error) {
   const data = error?.response?.data;
   if (data instanceof Blob && /json/i.test(data.type)) {
     try {

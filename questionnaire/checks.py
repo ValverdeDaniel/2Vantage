@@ -5,7 +5,9 @@
 - the bundled template is the one the data module was generated from (`fl_blue_51_data.SOURCE_SHA256`; G124);
 - every alias names a label the pickers offer and opens a branch of the carrier's tables (G12; a category with no
   conditions, such as Diabetes, is the carrier's own: its row shows no condition picker);
-- every form's bundled blank is present.
+- every form's bundled blank is present;
+- each AcroForm blank is the one its field map was read from (`acroform['sha256']`; slice 43, G59, G125), and the
+  stamping face is bundled (G57): a missing face would stamp in a substitute.
 """
 
 import hashlib
@@ -44,6 +46,11 @@ def problems():
     for key, spec in FORMS.items():
         if spec.get('blank_pdf') and asset_path(spec['blank_pdf']) is None:
             found.append(f'The blank of {key} is missing from assets/questionnaires.')
+        acroform = spec.get('acroform')
+        if acroform and _sha(acroform['pdf']) != acroform['sha256']:
+            found.append(f'{acroform["pdf"]} is not the form the {key} field map was read from.')
+    if asset_path(fl_blue_51_layout.FONT_FILE) is None:
+        found.append(f'The stamping font {fl_blue_51_layout.FONT_FILE} is missing from assets/questionnaires.')
     return found
 
 

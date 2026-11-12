@@ -59,3 +59,14 @@ def test_G133_Q3_GD3_typed_counts_give_the_band_and_the_census_shows_the_notice(
     assert notice['keep'] == FL and notice['text'] == 'Group size now says ≤50'
     shown = payload.form_payload(deal, FL)
     assert len(shown['rows']['plans']) == 1  # rows are kept from the first write; later plans add none
+
+
+def test_G57_GD6_the_stamped_copy_prints_the_groups_facts_and_its_current_plan_in_their_boxes(gd6):
+    from questionnaire.forms import fl_blue_51_layout as layout
+    from questionnaire.pdf import build
+
+    from .pdfs import inside
+
+    data = build.build(gd6.deal, FL)  # a build writes nothing
+    assert inside(data, layout.FIELD_BOXES['txtCoName'], gd6.spec['intake']['answers']['legal_name'])
+    assert inside(data, layout.BLOCK_BOXES['plans']['txtCurrPlanName'], current_names(gd6.spec)[0])

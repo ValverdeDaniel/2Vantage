@@ -38,7 +38,7 @@ def facts(deal_ids):
         lambda c: c.client_id,
     )
     files = _grouped(
-        Document.objects.filter(deal_id__in=ids)
+        Document.objects.filter(deal_id__in=ids, protected=False)  # as `gate.documents_of`: no copy the app filed
         .exclude(review_state='wrong')
         .order_by('id')
         .values_list('deal_id', 'id', 'kind', 'lines', 'label', 'original_name'),

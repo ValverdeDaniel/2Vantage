@@ -3,6 +3,7 @@
 - `answers`: `set_answers`, the tab's answers (typed, or relayed "From the client — entered by us"), with `cleared`;
 - `rows`: `add_row`, `remove_row` — stable row ids, min and max (G43);
 - `signing`: `sign` (officer or agent; the officer's locks the form) and `reopen` with a reason (G49–G55);
+- `filing`: the signed copy filed as a protected Document at the officer's signature (G135);
 - `picks`: `choose_form`, the checklist item's form choice (G2, G4, G9, G133);
 - `marks`: `mark_answers`, approve / ignore / needs checking / clear (E103).
 `common` holds the locks (the Deal, intake's row for a choice, then the Questionnaire row), the first write's row and

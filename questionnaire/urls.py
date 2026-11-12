@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import file_views, views
 
 DEAL = 'deals/<int:pk>/questionnaires/'
 FORM = DEAL + '<slug:form>/'
@@ -17,4 +17,7 @@ urlpatterns = [
     path(FORM + 'reopen/', views.ReopenView.as_view()),
     path(FORM + 'sources/', views.SourcesView.as_view()),
     path(FORM + 'marks/', views.MarksView.as_view()),
+    path(FORM + 'check/', file_views.CheckView.as_view()),
+    path(FORM + 'pdf/', file_views.PdfView.as_view()),
+    path(FORM + 'blank/', file_views.BlankView.as_view()),
 ]

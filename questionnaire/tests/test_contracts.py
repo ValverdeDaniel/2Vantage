@@ -40,6 +40,9 @@ def samples(deal):
         BASE + '<slug:form>/reopen/': one,
         BASE + '<slug:form>/sources/': one,
         BASE + '<slug:form>/marks/': one,
+        BASE + '<slug:form>/check/': one,
+        BASE + '<slug:form>/pdf/': one,
+        BASE + '<slug:form>/blank/': one,
     }
 
 
@@ -58,6 +61,9 @@ MATRIX = [
     ('POST', BASE + '<slug:form>/marks/', ALL, {'action': 'check', 'refs': [f'questionnaire:{FL}:txtAdd2']}),
     ('POST', BASE + '<slug:form>/sign/', ALL, {'who': 'agent', 'name': 'Dana Agent'}),
     ('POST', BASE + '<slug:form>/reopen/', NOT_SIGNED, {'reason': 'Typo'}),
+    ('GET', BASE + '<slug:form>/check/', ALL),
+    ('GET', BASE + '<slug:form>/pdf/', ALL),
+    ('GET', BASE + '<slug:form>/blank/', ALL),
 ]
 
 

@@ -3,6 +3,7 @@
 // (the server answers it `private, max-age`). Every write answers the form as it now stands, so the form's cache takes
 // the answer and nothing re-reads; the deal's other reads (the checklist, the sidebar's chips) refetch.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { downloadFile } from '../lib/download';
 import api from './client';
 import { dealKey, invalidateDeal } from './deals';
 
@@ -114,4 +115,39 @@ export function useChooseForm(dealId) {
       invalidateDeal(queryClient, dealId);
     },
   });
+}
+
+// ---- The files and their check (plan.md §9.12; G56, G61–G67, G135) ----
+
+const formPath = (dealId, form) => `deals/${dealId}/questionnaires/${form}/`;
+
+/** GET …/{form}/check/ → {form, label, ok, problems: [{code, text, count, fix: {tab, form, view?}}], ack}. */
+export async function fetchCheck(dealId, form) {
+  return (await api.get(`${formPath(dealId, form)}check/`)).data;
+}
+
+/** "Check the form ▸" (G67): the check, read fresh each time the pane opens and after every write to the deal. */
+export function useFormCheck(dealId, form, { enabled = true } = {}) {
+  return useQuery({
+    queryKey: dealKey(dealId, 'questionnaire-check', form),
+    queryFn: () => fetchCheck(dealId, form),
+    staleTime: 0,
+    enabled: Boolean(dealId && form) && enabled,
+  });
+}
+
+/** The filled form, or the filed signed copy once the officer signed, under the server's name (G62). With `ack`, a
+ * check that changed since answers 409 {detail, report}: the caller shows the fresh report (G66). */
+export function downloadFilled(dealId, form, ack) {
+  return downloadFile(`${formPath(dealId, form)}pdf/`, { params: ack ? { ack } : undefined });
+}
+
+/** The carrier's bundled blank, nothing filled in (G61). */
+export function downloadBlank(dealId, form) {
+  return downloadFile(`${formPath(dealId, form)}blank/`);
+}
+
+/** The filled form for the PDF pane (inline; logged as a view, G63). */
+export function previewUrl(dealId, form) {
+  return `/api/${formPath(dealId, form)}pdf/?inline=1`;
 }

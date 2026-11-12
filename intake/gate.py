@@ -18,9 +18,10 @@ from .values import blank
 
 def documents_of(deal_id):
     """The deal's files that count, as (id, kind, lines, name): live ones, less a file a person marked the wrong one
-    (it answers nothing, as the old checklist's `document_rows`)."""
+    (it answers nothing, as the old checklist's `document_rows`) and a copy the app filed itself (a signed form's,
+    G135): the checklist reads a form's own signature, so a reopened form is not done by its earlier copy."""
     found = (
-        Document.objects.filter(deal_id=deal_id)
+        Document.objects.filter(deal_id=deal_id, protected=False)
         .exclude(review_state='wrong')
         .order_by('id')
         .values_list('id', 'kind', 'lines', 'label', 'original_name')

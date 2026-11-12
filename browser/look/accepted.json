@@ -2339,8 +2339,8 @@
       "width": null,
       "check": "classes",
       "selector": null,
-      "item": "G56",
-      "why": "The ⬇ Download ▾ menu (Download PDF, Blank carrier PDF) comes with the questionnaire PDFs, slice 43 (G56–G67); the Acrobat item waits for G58 (deferred).",
+      "item": "G67",
+      "why": "\"Check the form ▸\" (the filled PDF beside the check) sits on the toolbar before the ⬇ Download ▾ menu: the old app showed it on the Review view, which is Review & requests' (slice 53). The menu is the old one (Download PDF, Blank carrier PDF); its Acrobat item waits for G58 (deferred).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
