@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import BuilderCard from './BuilderCard';
+import BuilderCard from '../../shared/BuilderCard';
 import { savedSteps } from './dealCardsModel';
 
 const blank = { text: '', date: '' };

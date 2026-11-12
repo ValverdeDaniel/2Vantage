@@ -1,11 +1,12 @@
-import cx from '../../../ui/cx';
+import cx from '../../ui/cx';
 import CompletedMark from './CompletedMark';
 
 /*
- * One card on the proposal builder (plan.md §8.14; J18; the old BuilderCard.jsx at 891f1b3): every card collapses and
- * can be marked completed ("I reviewed this, it is what I want"). Marking it collapses it; a completed card starts
- * collapsed for everyone on the deal. The builder owns the open state and the marks; this only draws them. The toggle
- * is a real button, so a blur on a half-typed note in the body commits before the body unmounts.
+ * One card on the proposal builder and the RFP page (plan.md §8.14, §8.12; J18, K9; the old BuilderCard.jsx at
+ * 891f1b3, which both pages drew with): every card collapses and can be marked completed ("I reviewed this, it is what
+ * I want"). Marking it collapses it; a completed card starts collapsed for everyone on the deal. The page owns the open
+ * state and the marks; this only draws them. The toggle is a real button, so a blur on a half-typed note in the body
+ * commits before the body unmounts.
  */
 export default function BuilderCard({ title, chips = null, summary = '', card, guide, className = '', children }) {
   const { done, open, busy, onToggleOpen, onToggleDone } = card;

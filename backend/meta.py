@@ -15,6 +15,7 @@ from proposals import catalog as proposal_catalog
 from questionnaire import forms as questionnaire_forms
 from quotes import board_presets, fields
 from quotes.math import enrollment as quote_enrollment
+from rfp import meta as rfp_meta
 
 
 def _pairs(choices):
@@ -44,6 +45,7 @@ class MetaView(APIView):
                 'intake': {'form': intake_form.meta(), 'coverage': intake_coverage.meta()},
                 'census': census_fields.meta(),  # the 45 columns, groups, choices, rules (§4.4)
                 'questionnaires': questionnaire_forms.meta(),  # the forms, their items and choices (G1, G3; slice 42)
+                'rfp': rfp_meta.meta(),  # the RFP tab's cards, bands, routes, funding and carriers (K.6; slice 44)
                 'proposal': proposal_catalog.meta(),  # the builder's cards, parts, layouts and limits (J.6.6; slice 25)
                 **({'ai': ai_selectors.meta()} if ai_client.available() else {}),  # only with a key (D26; slice 18)
             }

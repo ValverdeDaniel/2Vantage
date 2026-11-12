@@ -2355,6 +2355,127 @@
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A6",
+      "why": "The top bar keeps Benefits, Commissions and Admin; Dashboard, P&C, Joint Ventures and the other old links are modules out of scope (A2, A22, A40), and the Calendar link waits with the Radar (I88).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "M112",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "A24",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A21",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Commission 48 (OQ9); RFP joins with slice 44 under 1 · Get to Market, in the old place.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "K34",
+      "why": "Slice 44 builds the page shell, the census line and cards 1–3 (K1–K33); the RFP packet card (K34–K56, slices 45–46) and Emails to send (K57–K68, slice 46) are pending, so the page ends after the checklist and the toolbar counts \"✓ 0 of 3 completed\" over the cards on the page (K6), where the old counted five.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "K17",
+      "why": "The band, its count and the census line come from the one headcount (quotes' enrolled_headcount: the Advisor's medical enrollment first; K17, O.6 #24, OQ21), so GD1 reads \"Small group (2–50) · 46 enrolled\" and, with no census, \"no census yet — the band's 46 enrolled come from the Advisor\" (K8); the old read the intake's enrolled count, then the census rows, found neither and printed \"0 enrolled\" and \"0 employees · 0 dependents · 100% ready\".",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "K22",
+      "why": "Funding to quote defaults to the medical incumbent's funding, read from the current medical plans first (quotes.facts.incumbent, F144), so GD1 asks for \"Fully insured\" alone; the old read only the coverage row, found no funding and asked for fully insured and level-funded both.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "K29",
+      "why": "The commission the request form prints is shown on the card for the first time (K29, X-192: it was never shown), as \"Commission requested\"; GD1's agency has no default commission yet, so it says none is set.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "B22",
+      "why": "The questionnaire and stop-loss form pickers on the coverage card's medical row (K15, B22) come with slice 42's pickers; the checklist's ＋ Ask buttons and ＋ Add request wait for the request tray and Review's asks (K32; slices 53, 56); the checklist's tier and the renewal row read as on gd1.intake (B25).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-panel",
+      "item": "M112",
+      "why": "The first .bb-panel is 2Vantage's header strip where the old one is the coverage card; the nav, the tab title, the toolbar and the cards sit elsewhere because the header strip replaces the journey stepper and the sidebar has fewer tabs, and the page is shorter without the packet and the emails (slices 45–46).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "K34",
+      "why": "The packet's classes (bnf-rfp-packetcard, bnf-rfp-grid*, bnf-rfp-tritick*, bnf-review-note …) wait for slices 45–46; the form pickers' bnf-cvg-forms and bnf-cvg-formpick for slice 42, ＋ Add request's bnf-ask-form for 53; the header strip's bnf-ov-*, bb-stage-pill, bnf-line-chips and bb-chip are new against the old app (M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
     }
   ]
 }

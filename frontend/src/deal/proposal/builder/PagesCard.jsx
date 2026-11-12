@@ -1,4 +1,4 @@
-import BuilderCard from './BuilderCard';
+import BuilderCard from '../../shared/BuilderCard';
 import ExperienceBlock from './ExperienceBlock';
 import { pageMissing, pageStatus, pagesSummary } from './dealCardsModel';
 

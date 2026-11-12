@@ -16,6 +16,7 @@ import { market40 } from './market40.mjs';
 import { pages14 } from './pages14.mjs';
 import { pdf29 } from './pdf29.mjs';
 import { questionnaire42 } from './questionnaire42.mjs';
+import { rfp44 } from './rfp44.mjs';
 import { pptx31 } from './pptx31.mjs';
 import { sbc22 } from './sbc22.mjs';
 import { quoteDoor20 } from './quoteDoor20.mjs';
@@ -238,4 +239,5 @@ export const WALKS = {
   s38: { ...archive38, run: (ctx) => archive38.run(ctx, { signIn, openDeal }) }, // slice 38's done-when
   s40: { ...market40, run: (ctx) => market40.run(ctx, { signIn, openDeal }) }, // slice 40's done-when
   s42: { ...questionnaire42, run: (ctx) => questionnaire42.run(ctx, { signIn, openDeal }) }, // slice 42's done-when
+  s44: { ...rfp44, run: (ctx) => rfp44.run(ctx, { signIn, openDeal }) }, // slice 44's done-when (re-seed GD2 after)
 };

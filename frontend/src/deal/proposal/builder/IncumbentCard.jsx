@@ -1,5 +1,5 @@
 import { formatDate } from '../../../lib/format';
-import BuilderCard from './BuilderCard';
+import BuilderCard from '../../shared/BuilderCard';
 
 /*
  * A line kept as-is (plan.md §5.4, §8.14; J47, J52, B36; the old "On the proposal, not in the market" card at

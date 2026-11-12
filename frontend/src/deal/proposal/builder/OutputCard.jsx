@@ -1,4 +1,4 @@
-import BuilderCard from './BuilderCard';
+import BuilderCard from '../../shared/BuilderCard';
 import { outputSummary } from './dealCardsModel';
 
 /*

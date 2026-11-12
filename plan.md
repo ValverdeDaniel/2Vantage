@@ -2881,7 +2881,10 @@ ledger, waits (OQ6).
   picked"; K24).
 - **Commission request text** (one cell on the form, one line in emails): the effective commission label for each RFP
   line (§5.6), built in `deals/comp.py` (K106). If all lines share one label, print it (`5%`); otherwise group
-  lines by label, larger groups first: `5% Med · 15% Den/Vis` (short labels from §4.1).
+  lines by label, larger groups first: `5% Med · 15% Den/Vis` (short labels from §4.1). Built in slice 44 as
+  `rfp.request.commission_text(lines, rates, default)` over `deals.comp`'s parser and labels (K29): every line takes
+  `AgencySettings.default_commission` until commission's rates exist (slice 48); the builder moves to `deals/comp.py`
+  when a left app (intake's in-force commission) needs it.
 - **Group facts** (`quotes.facts.group_facts` and `rfp/printed.py`, built once per request; K101) used to fill forms,
   cover pages and emails:
 
@@ -3586,6 +3589,10 @@ reads `Deal.opened_as`: a deal opened for a prospect or a new client books as fi
 Built in slice 26: the app with only `RfpRequest` (every field below; no service writes it yet) and
 `selectors.asked_by_line(deal)` → `{line: [{id, name, on}]}` from `sends` ({} until a draft is marked sent), so the
 proposal's Markets checked can read who was asked (J63, K117). Slices 44–46 bring the rest of K.6.
+Built in slice 44 (no migration): `rfp.services.update` (the settings, carriers and funding as `{add, remove}`, the
+owning card's mark cleared in the same write, Activity coalesced as `rfp:request:<deal>`, notes key-only) and
+`set_done` (`done[card] = {by: user id, at}`); intake's `coverage_changed` takes the coverage card's mark off; the
+reverter `rfp`; `rfp/carriers.py`, `request.py`, `cleaners.py`, `page.py`, `meta.py` (`/api/meta/` `rfp`).
 
 **RfpRequest** — one per deal, created on the first write (it replaces v1.1's `RfpConfig`): `route` (blank follows the
 band until the first send pins it, `warner` or `direct`), `carriers` (JSON list of carrier keys, in registry order),
@@ -4150,7 +4157,10 @@ except H68). v1.1's `PUT deals/{id}/commission/` with a split list totalling 100
 
 ### 7.11 RFP — `rfp/`
 
-Not built (slices 44–46); slice 26 adds no endpoint (proposals reads `asked_by_line` directly).
+Slice 44 builds `GET / PATCH deals/{id}/rfp/` (the page payload; the PATCH takes route, carriers and funding as
+`{add, remove}`, other carriers, due date and notes, and answers `{changed, cleared, activity_id, request, carriers,
+done}`) and `POST deals/{id}/rfp/done/` (`{done, activity_id}`); `checks_stamp`, `include`, `form` and the other rows
+come with the packet, files and sends (slices 45–46). Slice 26 added no endpoint (proposals reads `asked_by_line`).
 
 | Method | Path | What it does |
 |---|---|---|
@@ -4576,7 +4586,8 @@ Florida Blue 51+, Warner large group and the SIIA disclosure (G1; OQ5).
 ### 8.12 RFP (`rfp`)
 
 Part K (K1–K124; K.6). Slices 44–46; slice 26 builds only the app and `asked_by_line`. The old tab key was `carriers`;
-the route is `/deals/:id/rfp` (K1).
+the route is `/deals/:id/rfp` (K1). Slice 44 builds the shell, the census line and cards 1–3 (intake's coverage card
+and checklist mounted with this page's marks; OQ60: Confirmed and Mark completed both), and the idle warm-up (K3).
 - Title and subtitle, "✓ N of M completed", the census line, and five collapsible cards with **Mark completed**
   (K4–K12).
 - Cards: 1 What we're shopping (K13–K16); 2 What we're requesting (K17–K30); 3 Marketing readiness checklist

@@ -1,6 +1,6 @@
 import { useIntake } from '../../../api/intake';
 import { CoverageIntentCard } from '../../intake';
-import CompletedMark from './CompletedMark';
+import CompletedMark from '../../shared/CompletedMark';
 
 /*
  * Coverage & marketing intent on the builder (plan.md §8.14; J46): the final check on WHICH lines the client sees —

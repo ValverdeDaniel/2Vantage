@@ -12,6 +12,7 @@ import DealHeader from './DealHeader';
 import DealSidebar from './DealSidebar';
 import { tabFor, tabLabel } from './nav';
 import { BUILT_TABS, TAB_COMPONENTS } from './tabs';
+import useWarmTabs from './useWarmTabs';
 
 function MissingDeal() {
   return (
@@ -42,6 +43,7 @@ export default function DealPage() {
   const clientName = header.data?.client.name;
   // The client on screen, for a file's own window (E71): it covers itself when this tab leaves the client.
   useDocWindowPresence(dealPresence(header.data));
+  useWarmTabs(header.data?.id); // the RFP payload, once the browser is idle (K3)
 
   useEffect(() => {
     if (clientName) document.title = `${clientName} — 2Vantage`;

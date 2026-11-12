@@ -1,4 +1,4 @@
-import BuilderCard from './BuilderCard';
+import BuilderCard from '../../shared/BuilderCard';
 import SummaryPreview from './SummaryPreview';
 import { moved } from './builderModel';
 import { blockScope, everyBlock, pinnedBlock, summaryBlocks, summaryWords, takesPin, toggledBlock } from './dealCardsModel';

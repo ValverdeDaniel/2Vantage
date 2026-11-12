@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import BuilderCard from './BuilderCard';
+import BuilderCard from '../../shared/BuilderCard';
 import CardStatsPicker from './CardStatsPicker';
 import { groupRows, rowSections, rowsSummary, toggledRows } from './builderModel';
 

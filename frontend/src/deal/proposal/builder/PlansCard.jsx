@@ -1,5 +1,5 @@
 import PagesView from '../pages/PagesView';
-import BuilderCard from './BuilderCard';
+import BuilderCard from '../../shared/BuilderCard';
 import RecommendationWords from './RecommendationWords';
 import { plansSummary } from './builderModel';
 

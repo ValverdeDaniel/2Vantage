@@ -1,4 +1,4 @@
-import { formatDate } from '../../../lib/format';
+import { formatDate } from '../../lib/format';
 
 /*
  * A card's "Mark completed" control (plan.md §8.14; J18; the old shared/CompletedMark.jsx at 891f1b3): the button, or
