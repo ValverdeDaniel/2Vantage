@@ -139,6 +139,23 @@ class QuoteFirst:
         return self._step('census')
 
 
+@pytest.fixture(scope='session')
+def gd3_packet_answer():
+    """The reply a perfect read of GD3's renewal packet gives, and the range it covers (golden/renewal_packet.py)."""
+    from golden import renewal_packet, specs
+
+    return renewal_packet.answer(specs.load('GD3')), renewal_packet.RANGE
+
+
+@pytest.fixture
+def gd3_packet(gd3, gd3_packet_answer, db):
+    """GD3's renewal packet as seeded (unread), with the perfect read's reply and range (slice 18):
+    (document, answer, range label)."""
+    from documents.models import Document
+
+    return Document.objects.get(deal=gd3.deal, kind='renewal'), *gd3_packet_answer
+
+
 @pytest.fixture
 def quote_first(user):
     """GD3 built for this test only (it writes), at checkpoint A; see QuoteFirst."""
@@ -174,6 +191,19 @@ def gd_big(django_db_setup, django_db_blocker):
     with django_db_blocker.unblock():
         big.remove(builder, deal)
         builder.delete()
+
+
+# ---- the fake Claude (plan.md §12.8, Q.6; slice 18): replays recorded replies, never calls out -----------------------
+@pytest.fixture
+def fake_claude():
+    """ai.testing.FakeTransport installed for this test: `fake_claude.record(key, data, **options)`, `.log`."""
+    from ai import client
+    from ai.testing import FakeTransport
+
+    fake = FakeTransport()
+    previous = client.install(fake)
+    yield fake
+    client.install(previous)
 
 
 # ---- the socket guard (plan.md §3.5, Q.2): a test may open only the database socket ---------------------------------

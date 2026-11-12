@@ -135,9 +135,20 @@ EMAIL_BACKEND = (
     else 'django.core.mail.backends.console.EmailBackend'
 )
 
+# Claude (plan.md §3.5, §10.3; slice 18). Empty key: no Claude, every AI door hides and nothing calls out (D26).
 ANTHROPIC_API_KEY = _env('ANTHROPIC_API_KEY')
-AI_MODEL = _env('AI_MODEL')
-AI_READ_LIMIT_USD = _env('AI_READ_LIMIT_USD')
+AI_MODEL = _env('AI_MODEL') or 'claude-sonnet-5-5'
+# Effort per job kind that calls Claude, until the golden-deal trial sets them (D.6, OQ31).
+AI_EFFORT = {
+    'turn': _env('AI_EFFORT_TURN') or 'low',
+    'read': _env('AI_EFFORT_READ') or 'high',
+    'recheck': _env('AI_EFFORT_RECHECK') or 'high',
+}
+AI_READ_LIMIT_USD = _env('AI_READ_LIMIT_USD') or '3'  # a run's cost cap (D53)
+AI_DEAL_BUDGET_USD = _env('AI_DEAL_BUDGET_USD') or '25'  # a deal's AI budget (D99)
+# The sum of every Claude call this database has recorded may not pass it; unset: no cap (production).
+AI_TOTAL_BUDGET_USD = _env('AI_TOTAL_BUDGET_USD')
+AI_READ_PARALLEL = 4  # a read's ranges in flight at once (D51)
 # On: Claude's reads leave out the pages the member-data screen flagged at upload; off, files are read whole (OQ22).
 AI_MEMBER_DATA_SCREEN = _flag('AI_MEMBER_DATA_SCREEN')
 # Jobs run in the worker service (`manage.py run_worker`, §3.4); tests run them inline, in the request (§3.5).
@@ -170,7 +181,7 @@ LOGGING = {
     'handlers': {'console': {'class': 'logging.StreamHandler', 'level': 'WARNING'}},
     'root': {'handlers': ['console'], 'level': 'WARNING'},
     'loggers': {
-        **{name: {'level': 'WARNING'} for name in ('anthropic', 'httpx', 'httpcore')},
+        **{name: {'level': 'WARNING'} for name in ('anthropic', 'httpx', 'httpcore', 'httpx2', 'httpcore2')},
         **{
             name: {'level': 'INFO'}
             for name in ('accounts', 'deals', 'documents', 'ai', 'intake', 'census', 'quotes', 'proposals')

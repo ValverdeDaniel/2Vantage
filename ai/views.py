@@ -1,4 +1,5 @@
 """The ai API (plan.md §7.5; D.6). Slice 16: the state the browser polls, "Check this file", one job, and Stop.
+Slice 18: the one read door (`deals/{id}/ai/reads/`, D39) and Discard on a waiting change set (D28, D74).
 
 The two GETs a browser polls (`deals/{id}/ai/` and `ai/jobs/{id}/`) use the `ai_poll` throttle alone, so polling
 every 2 s on two tabs never uses up the user rate (§3.5, E.6). Any signed-in person may start or stop a job on any
@@ -85,4 +86,52 @@ class CancelView(APIView):
 
     def post(self, request, job_id):
         job, _changed = services.cancel(request.user, _job(job_id).id)
+        return Response(selectors.job_payload(_job(job.id)))
+
+
+def _pages(raw):
+    if raw in (None, ''):
+        return None
+    if not isinstance(raw, list) or any(isinstance(item, bool) for item in raw):
+        raise ValidationError({'pages': ['Give a list of page numbers.']})
+    try:
+        pages = [int(item) for item in raw]
+    except (TypeError, ValueError) as exc:
+        raise ValidationError({'pages': ['Give a list of page numbers.']}) from exc
+    if any(not 0 < page <= 100_000 for page in pages):
+        raise ValidationError({'pages': ['Give a list of page numbers.']})
+    return pages
+
+
+class ReadsView(APIView):
+    """POST {document_ids, target?, pages?, model?, budget_override?}: read these files with Claude (D39) → 201 the job,
+    or 200 the same read already going. 409 without a key; 400 for files this reader does not read."""
+
+    def post(self, request, pk):
+        deal = _deal(pk)
+        ids = _ids(request.data.get('document_ids'))
+        target = request.data.get('target') or 'quotes'
+        if not isinstance(target, str):
+            raise ValidationError({'target': ['Name a reader.']})
+        model = request.data.get('model') or ''
+        if not isinstance(model, str):
+            raise ValidationError({'model': ['Name a model.']})
+        job, created = services.start_read(
+            request.user,
+            deal,
+            ids,
+            target=target,
+            pages=_pages(request.data.get('pages')),
+            model=model,
+            budget_override=request.data.get('budget_override') is True,
+        )
+        job = _job(job.id)
+        return Response(selectors.job_payload(job), status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+
+class DiscardView(APIView):
+    """POST: drop a waiting change set (D74). Nothing on the deal changes."""
+
+    def post(self, request, job_id):
+        job, _changed = services.discard(request.user, _job(job_id).id)
         return Response(selectors.job_payload(_job(job.id)))

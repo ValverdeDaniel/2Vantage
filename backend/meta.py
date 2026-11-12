@@ -3,6 +3,8 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ai import client as ai_client
+from ai import selectors as ai_selectors
 from census import fields as census_fields
 from deals import carriers, comp, lifecycle, lines, stages
 from documents import kinds, review_rules
@@ -35,5 +37,6 @@ class MetaView(APIView):
                 # the intake questions (§4.5) and the coverage card's words (B16–B21)
                 'intake': {'form': intake_form.meta(), 'coverage': intake_coverage.meta()},
                 'census': census_fields.meta(),  # the 45 columns, groups, choices, rules (§4.4)
+                **({'ai': ai_selectors.meta()} if ai_client.available() else {}),  # only with a key (D26; slice 18)
             }
         )

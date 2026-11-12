@@ -23,7 +23,7 @@ import synthetic_files
 from documents import services as documents
 from documents import xlsx_safe
 
-from . import scanned_sbc
+from . import renewal_packet, scanned_sbc
 
 Attached = namedtuple('Attached', 'document cells keys')  # cells: {key: 'Sheet!A1'} or None; keys: the printed keys
 
@@ -168,7 +168,7 @@ def attach_gd4(user, deal, spec):
     return {ref: Attached(sbc, None, keys)}
 
 
-ATTACH = {'GD1': attach_gd1, 'GD4': attach_gd4}
+ATTACH = {'GD1': attach_gd1, 'GD3': renewal_packet.attach, 'GD4': attach_gd4}  # GD3's packet: slice 18
 
 
 def attach(user, deal, spec):

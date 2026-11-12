@@ -17,6 +17,7 @@ import cx from '../../ui/cx';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import { useToast } from '../../ui/useToast';
+import { ReadReviews } from '../claude';
 import AddFilesRow from './AddFilesRow';
 import FileAsList from './FileAsList';
 import HistoryCard from './HistoryCard';
@@ -266,6 +267,7 @@ export default function DocumentsTab({ deal }) {
           )}
         </div>
       </div>
+      {shown && <ReadReviews dealId={deal.id} files={scopeFiles} />}
       <HistoryCard dealId={deal.id} fileName={fileName} />
       <ConfirmDialog
         open={Boolean(removing)}

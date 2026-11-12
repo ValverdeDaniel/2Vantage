@@ -81,3 +81,47 @@ export function useStartLocate(dealId) {
 export function useStopJob(dealId) {
   return useJobWrite(dealId, async (jobId) => (await api.post(`ai/jobs/${jobId}/cancel/`)).data);
 }
+
+/**
+ * The one read door (D39): ({documentIds, target, pages, model, budgetOverride}) → the read job (201 new, or 200 the
+ * same read already going). Without a key the server answers 409 with a sentence (D26).
+ */
+export function useStartRead(dealId) {
+  return useJobWrite(
+    dealId,
+    async ({ documentIds, target = 'quotes', pages, model, budgetOverride }) =>
+      (
+        await api.post(`deals/${dealId}/ai/reads/`, {
+          document_ids: documentIds,
+          target,
+          ...(pages ? { pages } : {}),
+          ...(model ? { model } : {}),
+          ...(budgetOverride ? { budget_override: true } : {}),
+        })
+      ).data,
+  );
+}
+
+export const jobKey = (jobId) => ['ai-job', Number(jobId)];
+
+/** One job with its change set (D28): fetched when a card shows it; it changes only by Discard (or apply, 19). */
+export function useJob(jobId, { enabled = true } = {}) {
+  return useQuery({
+    queryKey: jobKey(jobId),
+    queryFn: async () => (await api.get(`ai/jobs/${jobId}/`)).data,
+    enabled: Boolean(jobId) && enabled,
+    staleTime: 0,
+  });
+}
+
+/** Discard (D74): (jobId) → the job, its change set dropped. Nothing on the deal changes. */
+export function useDiscardRead(dealId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (jobId) => (await api.post(`ai/jobs/${jobId}/discard/`)).data,
+    onSuccess: (job) => {
+      queryClient.setQueryData(jobKey(job.id), job);
+      queryClient.invalidateQueries({ queryKey: aiKey(dealId) });
+    },
+  });
+}

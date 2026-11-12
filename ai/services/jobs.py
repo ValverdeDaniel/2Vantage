@@ -24,7 +24,12 @@ from ..models import Job
 
 FINISHED = 'This has already finished, so there is nothing to stop.'
 NO_FILES = 'Choose the files to check.'
+NO_FILES_TO_READ = 'Choose the files to read.'
 NOT_THIS_DEAL = 'Those files are not on this deal.'
+NO_READER = 'Nothing reads files for that yet.'
+NOT_READ_HERE = 'Claude reads {kinds} here; {count} of these files {verb} filed as something else.'
+NO_OVERRIDE = 'Only an admin or a direct person can run a read past its cost cap.'
+NO_OPUS = 'Opus 5.5 is kept to admins and direct people.'
 WAITING = 'Waiting to start'
 STOPPED_EARLY = 'Stopped before it started.'
 
@@ -85,3 +90,38 @@ def cancel(user, job_id):
             fields += ['status', 'resolution', 'finished_at', 'steps']
         job.save(update_fields=fields)
     return job, True
+
+
+def start_read(user, deal, document_ids, *, target='quotes', pages=None, model='', budget_override=False):
+    """A read of these files by `target`'s reader (the one read door, D39; D46, D48). Refused with a sentence when
+    Claude is not set up (409), the files are not this deal's or not of a kind the reader reads (400), or the person
+    may not pick Opus or run past the cap (403-style sentences, 409)."""
+    from .. import client, pricing, reading, registry
+
+    if not client.available():
+        raise Refused(client.NoKey.sentence)
+    reader = registry.readers.get(target)
+    if reader is None:
+        raise ValidationError({'target': [NO_READER]})
+    if not document_ids:
+        raise ValidationError({'document_ids': [NO_FILES_TO_READ]})
+    ids = list(dict.fromkeys(document_ids))
+    found = {doc.id: doc for doc in Document.objects.filter(deal=deal, pk__in=ids)}
+    if set(found) != set(ids):
+        raise ValidationError({'document_ids': [NOT_THIS_DEAL]})
+    others = [doc for doc in found.values() if doc.kind not in reader.kinds]
+    if others:
+        kinds_said = ', '.join(reader.labels.get(kind, kind) for kind in reader.kinds)
+        verb = 'is' if len(others) == 1 else 'are'
+        raise ValidationError({'document_ids': [NOT_READ_HERE.format(kinds=kinds_said, count=len(others), verb=verb)]})
+    if model and (model not in pricing.READ_MODELS or (model == pricing.OPUS and not reading.may_use_opus(user))):
+        raise Refused(NO_OPUS)
+    if budget_override and not reading.may_use_opus(user):
+        raise Refused(NO_OVERRIDE)
+    ordered = sorted(found.values(), key=lambda doc: (doc.uploaded_at, doc.id))  # upload order (D.6)
+    params = {'model': model} if model else {}
+    if pages:
+        params['pages'] = sorted(set(pages))
+    if budget_override:
+        params['budget_override'] = True
+    return start(user, deal, kinds.READ, documents=[doc.id for doc in ordered], params=params, target=target)

@@ -25,10 +25,13 @@ def samples(world):
         'api/deals/<int:pk>/ai/locate/': {'pk': deal.id},
         'api/ai/jobs/<int:job_id>/': {'job_id': job.id},
         'api/ai/jobs/<int:job_id>/cancel/': {'job_id': job.id},
+        'api/deals/<int:pk>/ai/reads/': {'pk': deal.id},
+        'api/ai/jobs/<int:job_id>/discard/': {'job_id': job.id},
     }
 
 
 ALL = {'signed_out': 401, 'producer': 200, 'admin': 200}
+REFUSED = {'signed_out': 401, 'producer': 409, 'admin': 409}
 
 
 def matrix(world):
@@ -38,6 +41,9 @@ def matrix(world):
         ('POST', 'api/deals/<int:pk>/ai/locate/', started, {'document_ids': [world['document'].id]}),
         ('GET', 'api/ai/jobs/<int:job_id>/', ALL),
         ('POST', 'api/ai/jobs/<int:job_id>/cancel/', ALL),
+        # Without a key Claude reads nothing (D26): a refusal with a sentence, never a call (slice 18)
+        ('POST', 'api/deals/<int:pk>/ai/reads/', REFUSED, {'document_ids': [world['document'].id]}),
+        ('POST', 'api/ai/jobs/<int:job_id>/discard/', REFUSED),  # a rank job is no change set waiting for review
     ]
 
 

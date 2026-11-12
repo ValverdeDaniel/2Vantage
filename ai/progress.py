@@ -32,6 +32,14 @@ class Gone(Exception):
     """The job no longer runs here (the reaper ended it)."""
 
 
+class JobFailed(Exception):  # noqa: N818
+    """The run cannot go on and kept nothing: the job fails with this sentence, which names no file and quotes none."""
+
+    def __init__(self, sentence):
+        super().__init__(sentence)
+        self.sentence = sentence
+
+
 def _line(text):
     return ' '.join(str(text).split())[: kinds.STEP_LENGTH]
 

@@ -20,6 +20,8 @@ A spec (`specs/gdN.json`) is the one description of a golden deal. `seed.py` bui
     line_enrollment optional: {line: the figure typed for the whole line}, e.g. {"telehealth": {"lives": 52}} (GD3)
     arrivals        optional: plans that arrive after the seed (GD3's renewal packet), shaped as `plans`, each with the
                     counts the packet prints; `links_after_split` {quote ref: [current refs]} (golden/quote_first.py)
+    renewal_packet  optional (GD3): the synthetic packet the arrivals come from, attached unread (file, carrier, title,
+                    each arrival's renewal rates); golden/renewal_packet.py prints it and its perfect read (slice 18)
     census          optional (GD4, GD3): the census's people by groups (golden/census_roster.py); `arrives` names the
                     checkpoint that brings it, and the seed leaves such a census out; `id_prefix` starts employee ids
     starred, recommended    refs

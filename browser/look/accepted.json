@@ -1915,6 +1915,17 @@
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
+    },
+    {
+      "screen": "gd1.documents",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "D39",
+      "why": "Slice 18: with Claude set up, under the station sits \"✦ Read with Claude\" for the files the quote reader reads (the one read door, deals/{id}/ai/reads/), standing in for the Re-read panel (E75, slice 19) and the drawer's File room (D14, slice 20); while a read runs it shows the old Claude strip, and a read waiting for review shows the staged card \"Review this scan\" there (D28, D29), with Use this scan and Apply N selected disabled until slice 19 lands reads.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
     }
   ]
 }

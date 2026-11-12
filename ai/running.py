@@ -12,7 +12,7 @@ from deals import clock
 
 from . import kinds, registry
 from .models import Job
-from .progress import Gone, Paused, Progress, Stopped
+from .progress import Gone, JobFailed, Paused, Progress, Stopped
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +70,9 @@ def run(job, stopping=None):
         return kinds.QUEUED
     except Gone:
         return None
+    except JobFailed as exc:  # the runner's own sentence: it names no file and quotes none
+        _finish(job, progress, kinds.FAILED, result=progress.result, error=exc.sentence[:300])
+        return kinds.FAILED
     except Exception as exc:  # noqa: BLE001 - any failure ends the job with a sentence, never its text
         logger.warning('Job %s (%s) failed: %s', job.id, job.kind, exc.__class__.__name__)
         _finish(job, progress, kinds.FAILED, result=progress.result, error=FAILED_SENTENCE)

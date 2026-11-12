@@ -64,6 +64,36 @@ class Job(models.Model):
         return f'{self.kind} job {self.id} ({self.status})'
 
 
+class Call(models.Model):
+    """One call to Claude, priced from the model that answered (plan.md §10.3; D8, D51, D53; slice 18). The ledger the
+    total cap reads (`AI_TOTAL_BUDGET_USD`): a call is reserved at its worst-case estimate before it is sent, then
+    settled at what it really used, so two calls at once can never pass the cap between them. A call keeps its row
+    when its deal or job goes, so the total stays true. Never a file name, its text or a value: counts and money."""
+
+    PENDING, DONE, FAILED, STOPPED = 'pending', 'done', 'failed', 'stopped'
+    STATUSES = [(PENDING, 'Sent'), (DONE, 'Answered'), (FAILED, 'Failed'), (STOPPED, 'Stopped')]
+
+    job = models.ForeignKey(Job, null=True, blank=True, on_delete=models.SET_NULL, related_name='calls')
+    deal = models.ForeignKey(Deal, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    purpose = models.CharField(max_length=20)  # read, recheck, turn, rank; eval (the Eval lane, no deal)
+    model = models.CharField(max_length=60)  # asked for; `answered` is who answered (and priced it)
+    answered = models.CharField(max_length=60, blank=True)
+    status = models.CharField(max_length=10, choices=STATUSES, default=PENDING)
+    estimate_usd = models.DecimalField(max_digits=10, decimal_places=4, default=0)  # input + max_tokens, before
+    cost_usd = models.DecimalField(max_digits=10, decimal_places=6, default=0)  # what it used, after
+    usage = models.JSONField(default=dict, blank=True)  # input, output, cache write and read tokens
+    stop_reason = models.CharField(max_length=30, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=['status'])]
+        ordering = ['-created_at', '-id']
+
+    def __str__(self):
+        return f'{self.purpose} call {self.id} ({self.status})'
+
+
 class DealAi(models.Model):
     """The deal's AI settings (D100, D104): the table lock, its budget and the next chat number. Created on the first
     write (slice 24's lock and budget); reads of a deal without one get the defaults, so a GET never writes."""

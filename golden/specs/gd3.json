@@ -349,6 +349,26 @@
       "F"
     ]
   },
+  "renewal_packet": {
+    "file": "Florida Blue 2027 renewal packet (synthetic).pdf",
+    "carrier": "Florida Blue",
+    "title": "2027 group renewal",
+    "about": "The renewal packet the arrivals come from (slice 18): a cover letter, one table printing D, D's renewal, F and F's renewal in that order with their per-plan enrolled counts, and a page carrying only the running header and footer. Read it on Documents to see the staged card.",
+    "renewals": {
+      "D": {
+        "rate_ee": "761.40",
+        "rate_es": "1598.85",
+        "rate_ec": "1408.60",
+        "rate_fam": "2284.20"
+      },
+      "F": {
+        "rate_ee": "709.85",
+        "rate_es": "1490.70",
+        "rate_ec": "1313.25",
+        "rate_fam": "2129.55"
+      }
+    }
+  },
   "census": {
     "arrives": "B",
     "id_prefix": "G3",

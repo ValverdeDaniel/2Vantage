@@ -549,7 +549,7 @@ the rest). "Slice N" says when a piece arrives (§13). Untagged text in §3 is t
 | PDF — reading | pypdf 5 | slice 15 | Page counts at upload; the locator's page text; Paper and Letter placement at 75% (J114); AcroForm read-back (G.6). No server OCR (D-122) |
 | PowerPoint | python-pptx 1.0.2 | slice 31 | Replays the PDF's recorded frames (J141) |
 | Images | Pillow | built (logo re-encoding in `deals/admin.py`); `documents/images.py`, covers and photos: slices 29 and 34 | Logo, cover and photo re-encoding, metadata stripped |
-| AI | anthropic SDK (Python) | slice 18 | Only `ai/client.py` imports it: Messages API only, streamed, structured outputs, adaptive thinking with effort per job kind; no beta features, no Files API (§10; D.6, O.3.3) |
+| AI | anthropic SDK (Python) 2.8.0 (API version 2026-10-21, httpx2) | slice 18 (built) | Only `ai/client.py` imports it: Messages API only, streamed, structured outputs, adaptive thinking with effort per job kind; no beta features, no Files API (§10; D.6, O.3.3). The client is built only from `settings.ANTHROPIC_API_KEY`, passed explicitly, so the SDK never falls back to an environment variable or an `ant` profile |
 | Frontend | React 19, React Router 7, Vite 6 | built | |
 | Data fetching | TanStack Query 5, axios 1 | built | |
 | Styles and fonts | The old app's stylesheets; IBM Plex Sans and IBM Plex Mono, 400–700 | slice 2 | §3.9; O.5, A.6 |
@@ -879,15 +879,17 @@ python tools/parity/files.py --deals all                        # Fidelity, in t
 | `CLOUD_SQL_INSTANCE` (slice 69) | empty | `project:region:instance`: connect through Cloud Run's Cloud SQL socket at `/cloudsql/<instance>` |
 | `DB_SSLMODE`, `DB_SSLROOTCERT` (slice 69) | empty | Staging's private-IP connection: `verify-ca` against the instance's server CA file (§11.2) |
 | `ANTHROPIC_API_KEY` | empty | Claude's key: only the Foobalabs organization's key (OQ29). Empty means no Claude: `/api/meta/` has no `ai` section and nothing calls out |
-| `AI_MODEL` (slice 18) | `claude-sonnet-5-5` | The default model. Reads never use Haiku; Opus 5.5 (`claude-opus-5-5`) is kept to admins and direct people (D91). The golden-deal trial sets the default (OQ31) |
-| `AI_EFFORT_<KIND>` (slice 18) | turn `low`; read and recheck `high` | Effort for each job kind that calls Claude, until the trial sets them (D.6, OQ31) |
-| `AI_READ_LIMIT_USD` (slice 18) | `3` | A run's cost cap: past it, a read keeps what it finished and waits; admins and direct people may Run anyway (D53, D24) |
-| `AI_DEAL_BUDGET_USD` (slice 18) | `25` | A deal's AI budget; admins change it per deal in the drawer (D99, D100, OQ34) |
+| `AI_MODEL` (slice 18, built) | `claude-sonnet-5-5` | The default model. Reads never use Haiku; Opus 5.5 (`claude-opus-5-5`) is kept to admins and direct people (D91). The golden-deal trial sets the default (OQ31) |
+| `AI_EFFORT_<KIND>` (slice 18, built: `AI_EFFORT_READ`, `_RECHECK`, `_TURN`) | turn `low`; read and recheck `high` | Effort for each job kind that calls Claude, until the trial sets them (D.6, OQ31) |
+| `AI_READ_LIMIT_USD` (slice 18, built) | `3` | A run's cost cap: past it, a read keeps what it finished and waits; admins and direct people may Run anyway (D53, D24) |
+| `AI_DEAL_BUDGET_USD` (slice 18, built) | `25` | A deal's AI budget; admins change it per deal in the drawer (D99, D100, OQ34) |
+| `AI_TOTAL_BUDGET_USD` (slice 18, built) | empty: no cap | The cap on the sum of every Claude call this database has recorded (`ai.Call`, the ledger): each call is reserved at its worst case (its input plus every output token it may write, at the model's rates) under one lock before it is sent, and refused with a sentence when that could pass the cap; nothing overrides it. `manage.py ai_spend` shows the total. The development stack passes `20` (Daniel's build-time rule, 2026-11-12); production leaves it unset |
 | `AI_MEMBER_DATA_SCREEN` (slice 18) | `False` | On: Claude reads leave out the pages the member-data screen flagged at upload. Off: files are read whole, as the old app does since D-225 (OQ22) |
 | `AI_PHI_READERS` (slice 47) | `False` | The PHI-gate switch: the census, intake and questionnaire readers register only while it is on, after the PHI gate (slice 47; OQ29, O.3.3) |
 
-Today `settings.py` reads `AI_MODEL` and `AI_READ_LIMIT_USD` with empty defaults and none of the other `AI_*` rows;
-slice 18 sets these defaults and replaces `.env.example`'s "Release 2 only" block.
+Built in slice 18: `settings.py` reads every `AI_*` row above with its default (the PHI-gate switch waits for slice 47),
+and `.env.example` lists them in place of its old "Release 2 only" block. Fixed settings: `AI_READ_PARALLEL = 4` (a
+read's ranges in flight at once, D51; 1 in tests) and `AI_JOBS_INLINE`.
 
 Other fixed settings: `TIME_ZONE = 'UTC'` and `USE_TZ = True` (storage and API timestamps stay UTC; dates people see use
 `AGENCY_TIME_ZONE`); default file storage is the local filesystem (Cloud Storage on Cloud Run is a settings change only,
@@ -910,15 +912,17 @@ two tabs never uses up the user rate (E.6). The portal
 applies to it (L.6). They replace the baseline's single `portal` scope (1,000/hour), which slice 54 removes.
 
 **`backend/settings_test.py`** imports settings and overrides: MD5 password hasher (fast), throttles off,
-`ANTHROPIC_API_KEY = ''`, `MEDIA_ROOT` = a temporary directory, locmem email backend, `django.request` logging at
+`ANTHROPIC_API_KEY = ''` and `AI_TOTAL_BUDGET_USD = ''` (slice 18: no test reaches Claude, even with the key in the
+container), `MEDIA_ROOT` = a temporary directory, locmem email backend, `django.request` logging at
 ERROR. `pytest.ini` points `DJANGO_SETTINGS_MODULE` at it.
 The root `conftest.py` adds a socket guard (slice 3), so a test can open only the database socket (Q.2), and jobs run
 inline with the fake Claude client of `ai/testing.py` (slice 16; Q.6): `settings.AI_JOBS_INLINE` (a fixed setting,
 False; True in `settings_test.py`) runs a started job at once in the request, and `ai.testing.run_jobs()` runs queued
-ones when a test turns it off. The fake client joins `ai/testing.py` in slice 18.
+ones when a test turns it off. The fake client joined `ai/testing.py` in slice 18: `FakeTransport`, installed by the root
+fixture `fake_claude`, stands where the SDK stands and replays recorded replies keyed by (reader, file hash, range).
 
-**Logging:** one console handler at WARNING. Loggers `anthropic`, `httpx` and `httpcore` (built), and `httpx2`, which
-the 1.x SDK uses (slice 18), pinned at WARNING: their DEBUG output contains document contents. App loggers at INFO (they
+**Logging:** one console handler at WARNING. Loggers `anthropic`, `httpx` and `httpcore`, and `httpx2` and `httpcore2`,
+which the 2.x SDK uses (built in slice 18), pinned at WARNING: their DEBUG output contains document contents. App loggers at INFO (they
 still print only WARNING and above). Never configure the `django` or `django.server` loggers. `disable_existing_loggers
 = False`. In production, request logs and error reports drop the `/api/portal/`, `/portal/` and `/b/` paths, whose URLs
 carry link tokens (§11, L.6). Built in slice 69: `backend.logs.DropTokenPaths` on the console handler drops a record
@@ -3243,6 +3247,18 @@ claimed it), `DealAi` (its fields; nothing writes it until slice 24's lock and b
 `ai.registry` (`job_kinds`, `locate_hooks`; `readers`, `context` and `tools` empty until slices 18–24), the worker and
 reaper, the `locate` job and quotes' locate hooks. Chat, ChatMessage and CarrierNote are slice 24's.
 
+Built (slice 18): the `read` job kind (`ai/reading.py`), `registry.readers` with quotes' reader, the `Call` ledger
+below, and the change set. `Job.land` is `staged` (the change set waits for review: in slice 18 every read waits) or
+`budget` (the read waits past its run cap or the deal's budget, D53); `wait_reason` says why in a sentence; Discard
+sets `resolution` to `discarded` and empties `result` to its summary and counts (D74). `Job.usage` holds the run's
+token totals and call count, `Job.cost_usd` the sum of its calls.
+
+**Call** — the ledger of Claude calls (slice 18): `job` and `deal` (null for the Eval lane; SET_NULL, so the total
+outlives them), `purpose` (read, recheck, turn, rank, eval), `model` asked and `answered`, `status` (pending, done,
+failed, stopped), `estimate_usd` (the worst case reserved before the call), `cost_usd` (priced from the model that
+answered), `usage` (tokens), `stop_reason`, times. Never a file name, a file's text or a value. The total cap reads it
+(§3.5); `manage.py ai_spend [--calls N]` and the admin show it.
+
 **Job** — one row per read, chat turn, re-check, rank, locate or issue (D.6, O.3.3; slice 16)
 
 | Field | Notes |
@@ -3272,6 +3288,17 @@ per file with counts and the document id, and no per-key changes, so a check nev
  layout, kept, left_alone, findings: [{text, hard}], failed_parts, left_out_pages,
  landed: {plan_ids, areas}}
 ```
+
+As built for quotes (slice 18): plan items (`create_plan`, `set_values`, `pick_current`) carry `plan` (the matched
+plan's id or null), `codes`, `read_ref` (the reader's key for the plan, stored when it lands), `docs`, `matched` (read,
+number, codes, name, renewal), `renews` (`{item|plan, label}`), `replaces` (`{to: [{item|plan, label}], text, tick,
+why}`), `unmapped` (rows printed with no field: `{label, printed, page, doc}`), `frozen` (a sold plan), `options` (a
+pick's current plans); each value adds `doc`, `tick` and `loc` (the locator's answer in the read's own bytes, E79).
+`summary_counts` items carry `for` (`{item|plan}`, or null for the line's figure), `counts`, `text`, `doc`, `page`;
+`add_lines` items `lines`. Left-alone values sit in `values` with `tick: false` and `why`, so there is no separate
+`left_alone`. The set adds `counts {items, values, unticked, findings}`, `model`, `cost_usd`, `estimate_usd`,
+`partial` and `halted`. `layout` is `[{doc, line, where, columns: [item ids], rows: [{label, keys, printed}]}]`, with
+no printed text for PHI kinds; slice 21 turns it into `QuoteLayout`.
 
 Ops: `create_plan`, `set_values`, `set_plan`, `pick_current`, `combine`, `summary_counts`, `add_lines`, `remove_plan`,
 `confirm`, `table_note`, `rows`. Census and intake jobs hold only a pointer.
@@ -3817,8 +3844,15 @@ job at `deals/{id}/ai/locate/` (§7.5). Full list: Part E, E.6.
 ### 7.5 AI — `ai/`
 
 Built in slice 16: GET `deals/{id}/ai/` (PATCH waits for slice 24), POST `deals/{id}/ai/locate/`, GET `ai/jobs/{id}/`
-and POST `ai/jobs/{id}/cancel/`. The state is `{deal, claude, jobs (queued and running, oldest first, each with
-queue_position), recent (finished in the last 15 minutes, newest first, at most 10), waiting: [], news: [], lock,
+and POST `ai/jobs/{id}/cancel/`. Built in slice 18: POST `deals/{id}/ai/reads/` `{document_ids, target? (quotes),
+pages?, model?, budget_override?}` → 201 the read job, or 200 the same read already going; 409 without a key (D26), for
+Opus or Run anyway by someone neither admin nor direct (D91, D24); 400 for files not this deal's or not of a kind the
+reader reads, and for ids or pages that are not ints. POST `ai/jobs/{id}/discard/` → the job (`resolution:
+discarded`; again: no change; an applied one: 409). The state's `waiting` lists change sets waiting for review on the
+deal (at most 10): `[{job_id, target, documents, summary, counts, partial, created_by, finished_at}]`, and a job adds
+`land` and `wait_reason`. `/api/meta/` serves `ai: {targets: [{key, kinds}], models: [{key, label, admins_only}],
+ladder, read_limit_usd, failed_words, left_out_words}` only when Claude is set up. The state is `{deal, claude, jobs
+(queued and running, oldest first, each with queue_position), recent (finished in the last 15 minutes, newest first, at most 10), waiting, news: [], lock,
 spend: {usd, budget_usd}, can: {direct, budget}}`; a job is `{id, kind, lane, target, status, progress, step,
 documents, stopping, queue_position, counts, landed: {areas, plan_ids}, error, resolution, activity_id, created_by,
 created_at, started_at, finished_at}`, and `ai/jobs/{id}/` adds `steps`, `params` and `result`. `locate/` takes
@@ -5098,6 +5132,14 @@ AI door hides and the manual flow is unchanged (D26). Slices 16–24 build it; 3
     a run keeps what it finished and waits;
   - admins and direct people may **Run anyway** (D24); only admins change a deal's budget (OQ34);
   - deal spend is one sum over `Job.cost_usd` (D8).
+- **Built in slice 18:** `ai/client.py` (`request`, `check`, the live transport with read timeout and wall-clock cap,
+  `install` for the fake; errors `NoKey`, `AccountError`, `CallFailed`, `Truncated`, `Refused`; `OverLimit` is
+  `ai/budget.py`'s), `ai/pricing.py`, `ai/budget.py` (the estimate, the run cap, the deal budget and the total cap over
+  the `Call` ledger, §3.5), `ai/calls.py` (each call reserved, sent, settled — Stop included). The one deviation: there
+  is no single `extract()` call site in a job, because up to four ranges stream at once in threads that only talk to
+  Claude while the job's own thread reserves, settles and beats (`calls.Runner`); `calls.extract` is the one-thread
+  form the Eval lane uses. A refusal retries once on the other of Sonnet 5.5 and Opus 5.5 only for admins and direct
+  people (D91). Every call's real usage and cost is recorded per call; `manage.py ai_spend` adds them up.
 
 ### 10.4 Readers
 
@@ -5125,6 +5167,20 @@ finding, when allowed → landing (§10.5).
   targets for the mapping dialog to show.
 - The census, intake and questionnaire readers register only behind the PHI gate (§10.8). Reading commission
   statements waits with the ledger (H82–H91; OQ6).
+- **Built in slice 18:** `ai/reading.py` (the job), `ai/read_files.py` (files in upload order, `FileIn`, the plan per
+  file), `ai/ranges.py` (header-only pages always out, screened pages out only with the switch, a range under a quarter
+  of `max_tokens`, halving), `ai/content.py`, `ai/codes.py` (F143's parser, left of quotes), and the quote reader in
+  `quotes/reader/`: `prompt.py` (one cached prompt built from the field list; the per-call note says what the file was
+  filed as, never its name), `schema.py` (row-major: `lines[{line, columns[{col, carrier, plan_name, plan_number, codes,
+  side: current|renewal|quote, renews_col, replaces, unsure}], rows[{label, key|'', cells[{col, value, page, cell,
+  unsure}]}], counts[{col|-1, tier, count, page}]}]`), `merge.py` (D57: one plan across ranges and files by codes,
+  number halves or carrier and name; a later file wins, with a finding), `match.py` (D59: by `read_ref`, plan-number
+  half, strong code, then the one plan of that carrier and name; same line and role; never a priced version),
+  `rules.py` (D58, D61: house formats, the line's fields, who wins, doubt, E93's member-data scrub of the printed
+  label), `changes.py` and `counts.py` (the change set: reading order, D117's current-plan rule, renewals' links,
+  D115's replaces, OQ30's counts, D56's lines, `kept`), `locating.py` (E79: every value found in its file before
+  review). The read door is `POST deals/{id}/ai/reads/` (D39). Not built here: `read_checks` beyond the findings the
+  rules make (D88, slice 24), the Opus step-up on a hard finding (D76, slice 20), carrier notes (D119, slice 24).
 
 ### 10.5 Landing, review and Undo
 
@@ -5142,6 +5198,10 @@ finding, when allowed → landing (§10.5).
   something changed since, it says so and offers **Undo anyway**. A plan the run created stays when someone starred,
   recommended, sold, packaged, linked or typed into it. A census import is undone through its `CensusImport`.
 - **Try again** with the next model, and **Check again** (D76).
+- **Built in slice 18:** every read waits (`land: staged`); the staged card shows on Documents under the file it read
+  (`deal/claude/ReadReviews` with `ReviewCard`, the quote body `deal/advisor/claude/QuoteReview`, `PlanDiff`,
+  `ChangeList`): Discard works (D74); "Use this scan ▸" and "Apply N selected ▸" show, disabled, until slice 19's
+  `read_apply`.
 - **Review never gates** (OQ28): a landed value Claude doubted, or one the locator cannot find, is counted and
   coloured until a person approves or ignores it; Issue, the exports, the Advisor's edits and every other door go ahead
   with values still to review.
@@ -5209,9 +5269,9 @@ Part E (E.6); the screens are §8.16.
 
 ### 10.8 Member data, PHI and the BAA
 
-- **The BAA** (2026-11-06; D.1; OQ29): only the Foobalabs key; the Messages API only, with no beta features. Until
-  Anthropic confirms in writing that tools, inline files, effort and caching are covered, Claude reads synthetic files
-  only. Real files wait for that confirmation and the PHI gate (slice 47).
+- **The BAA** (2026-11-06; D.1; OQ29): only the Foobalabs key; the Messages API only, with no beta features. OQ29
+  answered (2026-11-12): live data is allowed in this version (the BAA prerequisites are met), so the PHI-gate
+  paperwork is done; tests, seeds and the Eval corpus stay synthetic, and no build step opens a real client's file.
 - **PHI readers** (census, intake and questionnaire) register only while the PHI-gate setting is on (O.3.3).
 - **Files are read whole,** as the old app reads them since D-225 (old commit 891f1b3; O.6 #45; OQ22).
   `documents/screening.py` still runs at upload and stores `Document.screen`. `ranges.py` always leaves out pages that
@@ -5666,9 +5726,11 @@ and payroll_100 bases before slice 27 (OQ103). Q.4 lists what each key pins.
   ten alternates; a PEPM line prices from typed lives (F92) and an accident quote borrows medical's counts (OQ19). Its
   spec also holds what arrives later, which the seed leaves out: the packet's two current plans with their printed
   counts (`arrivals`, `links_after_split`) and the checkpoint-B census; `golden/quote_first.py` moves a test's copy
-  through the checkpoints (the root conftest's `quote_first`), and the Walk lane's need 6 walks them on screen. From slice 18 it carries unread synthetic files: a renewal
-  packet that brings two current plans with renewals and printed per-plan counts, an alternate quote and an SBC. Its
-  script has two checkpoints:
+  through the checkpoints (the root conftest's `quote_first`), and the Walk lane's need 6 walks them on screen. From
+  slice 18 it carries unread synthetic files: a renewal packet that brings two current plans with renewals and printed
+  per-plan counts (built: `renewal_packet` in the spec, `golden/renewal_packet.py`, attached by the seed as kind
+  renewal; the root fixtures `gd3_packet` and `gd3_packet_answer` give its perfect read), an alternate quote and an SBC
+  (not yet built). Its script has two checkpoints:
   - **A**: typed counts only; the packet lands and the counts are split; from slice 42 the Florida Blue 51+ form is
     started (52 enrolled); from slice 49 a sale is booked, which makes its client a New client.
   - **B**: a 48-person census arrives, its elections naming both current plans, so the census takes over (F91), the band
@@ -6182,8 +6244,8 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | **Slice 17: DOC-3** | | | | |
 | OQ28 | What needs approval: values Claude doubted or the locator missed (the old app), or every value Claude read? Does Claude never confirm its own value (D-119)? | "only the values claude doubted need approval, but even unapproved values shouldn't stop the user from continuing. just give a little flag saying X number of things should be reviewed" (2026-11-11). Applied: the old meaning, one rule (`review_rules.open_warning`): a value Claude read and doubted, or that the locator could not find in its file, until a person approves or ignores it, plus anything a person flagged ⚑; a typed value the file does not print is not one (§3.7, §10.7). Nothing is blocked by unreviewed values; the Advisor and the station show "N AI values to review". A person always applies; Claude never confirms its own value (D-119) | Answered | 17 |
 | **Slice 18: AI-1** | | | | |
-| OQ29 | The BAA and the key: only the Foobalabs key, and real files only after Anthropic confirms coverage in writing? | Open. Default: synthetic files until then. The question's part about statements does not apply while OQ6 is No | Open | 18; 47 |
-| OQ30 | With no census, should Claude propose a quote's printed tier counts, unticked: as the line's figure, or per current plan when printed per plan? | Open. Default: yes | Open | 18 |
+| OQ29 | The BAA and the key: only the Foobalabs key, and real files only after Anthropic confirms coverage in writing? | "live data is allowed in this version" (2026-11-12): the BAA prerequisites are met. Applied in slice 18: only `settings.ANTHROPIC_API_KEY`, the Messages API with no beta features; tests, seeds and the Eval corpus stay synthetic and no build step opens a real client's file (§10.8) | Answered | 18; 47 |
+| OQ30 | With no census, should Claude propose a quote's printed tier counts, unticked: as the line's figure, or per current plan when printed per plan? | Open. Default: yes. Built in slice 18 (`quotes/reader/counts.py`): per current plan when printed per plan, else as the line's figure, always unticked; with a census on the line they are not proposed and a finding says so | Open (default built) | 18 |
 | **Slice 20: AI-3** | | | | |
 | OQ31 | Should the golden-deal trial set the default model, read effort and cost caps, with Opus 5.5 kept to admins and direct people? (v1.1 §16 #7) | Open. Default: yes | Open | 20 |
 | **Slice 21: AI-4** | | | | |

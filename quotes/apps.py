@@ -9,7 +9,7 @@ class QuotesConfig(AppConfig):
         from deals import activity, providers, stored_counts
         from intake import providers as intake_providers
 
-        from . import facts, flags, locate_hooks, revert, revert_enrollment
+        from . import facts, flags, locate_hooks, reader, revert, revert_enrollment
         from .selectors.intake_facts import quote_lines
         from .selectors.sales import client_has_sold
         from .services import enrollment, saved_views
@@ -22,4 +22,5 @@ class QuotesConfig(AppConfig):
         intake_providers.fill('headcount', facts.headcount)  # the one headcount: tier, band, printed counts (§5.7)
         # "Check this file" (E59): which plan values came from a file, and where the locator's answers go.
         ai_registry.register_locate('quotes', locate_hooks.queries, locate_hooks.save)
+        reader.register()  # Claude's quote reader (slice 18): prompt, schema, merge and change set
         stored_counts.register('plan flags', flags.rebuild)  # Plan.flags against a rebuild (O.3.7, Q.3 #9)
