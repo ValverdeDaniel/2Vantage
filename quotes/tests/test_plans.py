@@ -123,17 +123,11 @@ def test_create_renewal_and_copy_as_alternate_copy_design_not_rates(api, deal):
     assert 'rate_ee' not in copy['values']
 
 
-def test_sold_and_recommended_any_number(api, deal):
+def test_OQ12_sold_and_recommended_any_number(api, deal):
     a = add(api, deal)
     b = add(api, deal, name='PPO')
     x = add(api, deal, role='alternate', carrier='Cigna', name='X', replaces_ids=[a['id']])
     y = add(api, deal, role='alternate', carrier='Cigna', name='Y', replaces_ids=[a['id']])
-    refused = api.post(f'/api/plans/{a["id"]}/recommend/', {'recommended': True}, format='json')
-    assert refused.status_code == 409
-    assert (
-        refused.json()['detail']
-        == "A current plan can't be recommended — recommend its renewal to keep what they have."
-    )
     for plan in (x, y):
         assert api.post(f'/api/plans/{plan["id"]}/recommend/', {'recommended': True}, format='json').json()[
             'recommended'

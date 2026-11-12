@@ -209,3 +209,23 @@ def test_O1_sold_changed_and_plans_changed_are_sent_on_commit(user, deal, crowde
         {'signal': signals.sold_changed, 'deal_id': deal.id, 'lines': ['medical'], 'user_id': user.id},
     ) in heard
     assert ('changed', {'signal': signals.plans_changed, 'deal_id': deal.id, 'lines': ['medical']}) in heard
+
+
+def test_OQ37_a_current_plan_may_be_recommended_and_takes_no_extra_column(api, user, deal, crowded):
+    currents, quotes = crowded
+    star(api, deal, quotes[:13])  # the line is full
+    response = api.post(f'/api/plans/{currents[1].id}/recommend/', {'recommended': True}, format='json')
+    assert response.status_code == 200 and response.json()['recommended'] is True
+    lines = api.get(f'/api/deals/{deal.id}/plans/lines/').json()
+    assert next(row for row in lines if row['line'] == 'medical')['room'] == 0  # still 16 columns, not 17
+
+
+def test_OQ37_keep_this_plan_answers_for_its_current_plan(api, user, deal, crowded):
+    currents, quotes = crowded
+    marks.set_recommended(user, quotes[0].id, True)  # answers for Current 0, which all the quotes replace
+    recommendation = api.get(f'/api/deals/{deal.id}/plans/?line=medical').json()['recommendation']
+    assert recommendation['missing'] == ['Current 1', 'Current 2']
+    for current in currents[1:]:
+        marks.set_recommended(user, current.id, True)
+    recommendation = api.get(f'/api/deals/{deal.id}/plans/?line=medical').json()['recommendation']
+    assert (recommendation['covered'], recommendation['missing']) == (True, [])

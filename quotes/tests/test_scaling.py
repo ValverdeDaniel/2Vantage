@@ -1,5 +1,5 @@
-"""Query scaling (plan.md §12.2, Q.3 #4): the Advisor's reads run the same queries at 10 plans and at GD-Big's 600.
-Two sizes compared, never a pinned number."""
+"""Query scaling (plan.md §12.2, Q.3 #4): the Advisor's reads and `deal_state` (one grouped read) run the same
+queries at 10 plans and at GD-Big's 600. Two sizes compared, never a pinned number."""
 
 import pytest
 from django.db import connection
@@ -27,12 +27,8 @@ def get(api, deal, path):
     return call
 
 
-@pytest.mark.parametrize('path', READS)
-def test_Q3_4_advisor_reads_run_the_same_queries_at_10_and_600_plans(api, user, gd_big, path):
+def test_Q3_4_advisor_reads_run_the_same_queries_at_10_and_600_plans(api, user, gd_big):
     small = make_big_deal(user, 10)
-    assert queries(get(api, small, path)) == queries(get(api, gd_big, path))
-
-
-def test_Q3_4_deal_state_is_one_grouped_read_at_any_size(user, gd_big):
-    small = make_big_deal(user, 10)
-    assert queries(lambda: deal_state(small)) == queries(lambda: deal_state(gd_big))
+    for path in READS:
+        assert queries(get(api, small, path)) == queries(get(api, gd_big, path)), path
+    assert queries(lambda: deal_state(small)) == queries(lambda: deal_state(gd_big)), 'deal_state'

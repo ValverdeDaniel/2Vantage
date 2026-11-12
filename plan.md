@@ -506,7 +506,7 @@ Read this once. These terms appear everywhere.
 | **Split** (party, house share) | Who shares the agency's commission on a deal. A **party** is a producer (someone on the team) or an outside partner such as a referral agent. The **house**, the agency itself, keeps its percent; partners and other producers take their shares of the rest, and the **primary producer** keeps what is left (H10–H12, H.6) |
 | **Quote-blocking** | An intake answer carriers need before they will quote |
 | **PHI** | Protected health information. In this app: anything identifying a census member (name, SSN, date of birth, address, salary), medical answers on a questionnaire, stop-loss lasers, and the files that carry such data (§3.8). Strict handling rules apply |
-| **Recommendation** ("the firm's pick") | For each current plan, the option or options the agency puts forward to replace it — sometimes two or three, for the client to choose between. "Keep what you have" is recommending the renewal; a current plan itself is never recommended. Every shopped line on an issued proposal carries one; a line kept as it is needs none (J52, OQ37; §5) |
+| **Recommendation** ("the firm's pick") | For each current plan, the option or options the agency puts forward to replace it — sometimes two or three, for the client to choose between — or the current plan itself, "Keep this plan" (OQ37, as the old app did). Every shopped line on an issued proposal carries one; a line kept as it is needs none (J52, OQ37; §5) |
 | **Star** (★) and **presented plans** | ★ puts a plan on the proposal. A line's presented plans are its current plans, its recommended plans and its starred plans, or every plan when none is starred. A line presents at most 16 columns, current plans included (`presented()`, `room()`; F50, F119, J1–J3) |
 | **Package** | A set of plans on one line that the client would buy together, totalled and compared with what they have today — only when it covers the same people (§5) |
 | **Priced version** | A copy of a quote at other terms (a % or $ concession, a bundling condition, a premium holiday), kept behind its original and priced for the same people. It shows one plan at several premiums (F76–F84) |
@@ -2384,7 +2384,8 @@ value over a read one keeps its link to the file and the read value (F141, §3.7
   its renewal and the quotes that replace it group under it (F44, F120). A line with two or more prices from per-plan
   counts or the census by plan name, never from one line-wide figure (§5.5).
 - **Roles change** only through `plans/role/` (Mark current, Remove current; F53). A sold plan or a priced version
-  never becomes current; a copy may. A plan that turns current loses its star, its recommendation and its links.
+  never becomes current; a copy may. A plan that turns current loses its star and its links; a recommendation stays
+  and now means "Keep this plan" (OQ37, as in the old app).
   Changing a role clears links that no longer apply; a current plan that stops being current turns its renewal into an
   alternate and leaves every `replaces` list. On a line with two or more current plans, "Replacing:" shows beside
   every presented quote, and "Several…" makes a consolidation (F52).
@@ -2449,17 +2450,18 @@ value over a read one keeps its link to the file and the read value (F141, §3.7
   This reverses the old app, which kept stop-loss quotes in the order added (F49, now Drop) and refused arrows and
   slot picks (J7); O.6 #26's exception goes.
 
-**Recommended** (the firm's pick; OQ37 default: Daniel's 2026-11-10 rule). A renewal or alternate may be marked
-recommended, several per line, within `room()`: the firm often puts forward two or three options for one plan,
-sometimes the same plan design at different premiums, and decides with the client (Daniel, 2026-11-10). A current plan
-cannot be recommended (its premium is this year's, which the client cannot buy for next year); "Keep this plan" on the
-Proposal recommends its renewal and prints the old words (J52). The line's **recommendation** is its recommended
-plans. A shopped line is **covered** when every current plan on it is renewed or replaced by at least one recommended
-plan (a line with no current plans: at least one recommended plan). A line the coverage intent keeps as-is needs no
+**Recommended** (the firm's pick; OQ37, answered: "allow it as the old app did"). Any plan may be marked recommended,
+several per line, within `room()`: the firm often puts forward two or three options for one plan, sometimes the same
+plan design at different premiums, and decides with the client (Daniel, 2026-11-10). A current plan may be recommended
+too, as in the old app: it means "Keep this plan", answers for itself, takes no column beyond the one it already has,
+shows no change and prints "Keep this plan" (old app 891f1b3, `proposal_ready`, `_several_recommendations_page`). The
+line's **recommendation** is its recommended plans. A shopped line is **covered** when every current plan on it is
+recommended itself or renewed or replaced by at least one recommended plan (a line with no current plans: at least one
+recommended plan). A line the coverage intent keeps as-is needs no
 pick and never blocks Issue (J52; J.5 B36). Each recommended plan shows its own premium and change against what it
 replaces (§5.5); totals for combinations come from packages made only of recommended plans (§5.5). The written reasons
 live in `ProposalConfig.reasons`, per line (J56). A recommended plan is always presented on the proposal. A slot pick
-that takes its place, or turning it current, clears the recommendation (J10, F53).
+that takes its place clears the recommendation (J10); turning it current keeps it, as "Keep this plan" (F53, OQ37).
 
 **Sold** (`quotes.set_sold`; F123, H124; OQ12 default). Any number of plans on a line may be sold, in any combination:
 three plans for three, two plans for three, two plans for one. Marking a plan sold sets `sold_at`, moves the deal to
@@ -3330,7 +3332,7 @@ the writes in a `services/` package (F.6, OQ9 b and d).
 | `census_names` | JSON list of texts, default `[]` | Current plans only: the census plan-column texts that mean this plan (§5.5 step 4; C41) |
 | `starred` | Bool, default false | ★ = on the proposal; at most 16 columns a line, through `room()` (F50, F119) |
 | `star_reason`, `starred_by`, `starred_at` | Char; FK User, null; DateTime, null | Why and by whom (F51, O.6 #9; slice 7) |
-| `recommended` | Bool, default false | Renewals and alternates only, within `room()` (§5.4, OQ37) |
+| `recommended` | Bool, default false | Any plan, within `room()`; on a current plan it means "Keep this plan" (§5.4, OQ37) |
 | `sold` | Bool, default false | Any number per line, in any combination (§5.4, OQ12). Refused on a lost deal; a sold plan cannot be deleted (H.6) |
 | `sold_at` | DateTime, null | |
 | `option_number` | PositiveInt, null | "Option n" per line, stamped at Issue in page reading order and never reused; none for current plans or priced versions. Unique per deal and line. Replaces `option_label` (J159, OQ35, OQ36; slice 25) |
@@ -3834,7 +3836,7 @@ the design; a path with no plan id sits under `deals/{id}/`.
 | `plans/enrollment/` | POST the line's whole typed set `{line, plans, whole_line, on}` | F88, F91 | built; 13 |
 | `plans/packages/`, `packages/{id}/` | Member-built packages, each with its `package()` result | §5.5 | built (today `{id, name, plan_ids}`; the results come only in the comparison) |
 | `plans/template/`, `plans/import/` | The plan template and its import (`?dry_run=1`), filed as `plan_template` | §9.3, E8 | built; 15 (kind `plan_template`; `other` today) |
-| `plans/role/`, `plans/links/` | Role and links; a plan made current loses its star, recommendation and links | F52, F53 | 7 |
+| `plans/role/`, `plans/links/` | Role and links; a plan made current loses its star and links (its recommendation means "Keep this plan", OQ37) | F52, F53 | 7 |
 | `plans/slot/` | `put_in_slot`, for Pages' picks | F48, J5–J13 | 7, 14 |
 | `plans/shortlist/clear/` | Clear the stars on one line | F55 | 7 |
 | `plans/move-line/`, `plans/delete/`, `plans/clear/` | Move to another line keeping the id; soft delete with restore; clear a line | F59–F61 | 8 |
@@ -5987,7 +5989,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | **Slice 25: PRO-1** | | | | |
 | OQ35 | Do files not yet issued carry Draft, are option numbers stamped only at Issue, and does an issue store all three files? | Open. Default: yes | Open | 25 |
 | OQ36 | Keep the old per-line "Option n" (renewals numbered; current plans and priced versions not) instead of C/R/P labels? | Open. Default: yes | Open | 25 |
-| OQ37 | Recommending a current plan: keep Daniel's 2026-11-10 rule, or allow it as the old app did? | Open. Default: Daniel's rule ("keep" means recommend the renewal; kept lines need no pick) | Open | 25 |
+| OQ37 | Recommending a current plan: keep Daniel's 2026-11-10 rule, or allow it as the old app did? | "allow it as the old app did." Applied: a current plan may be recommended; it means "Keep this plan", covers itself, uses no extra column in `room()`, shows no change and prints "Keep this plan"; a plan turned current keeps its recommendation (§5.4, as old 891f1b3). Kept lines still need no pick | Answered, changes default | 7; 25 |
 | OQ102 | v1.1's "+ Plan" prompt (is a second alternate for the same current plan an option, or bought together?) and its member-built "+ Package" dialog have no porting row; F134 leaves them to the Proposal section | Open. Default: keep both as 2V built them; slice 25 places them (F134) | Open | 25 |
 | **Slice 26: PRO-2** | | | | |
 | OQ38 | Show the carrier's renewal offer ($/yr, % change) in the renewal blocks (J65) and on the Overview chip (M20)? | Open. Default: yes | Open | 26; 62 |

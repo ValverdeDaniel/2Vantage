@@ -104,3 +104,12 @@ def test_unpriced_plans_warn(api, user, deal):
     plans.update_plan(user, renewal.id, {'values': {'rate_ee': '540'}})  # Create renewal copies no rates
     warnings = api.get(f'/api/deals/{deal.id}/proposal/').json()['warnings']
     assert warnings == ['Medical: 1 plan has no price — enter enrollment in the Advisor']
+
+
+def test_OQ37_a_recommended_current_plan_prints_keep_this_plan(api, user, deal):
+    a, *_ = setup_line(user, deal)
+    plans.set_recommended(user, a.id, True)
+    body = api.get(f'/api/deals/{deal.id}/proposal/').json()
+    group = medical(api, deal)['preview']['summary']['groups'][0]
+    assert group['options'][0]['plan_id'] == a.id and group['options'][0]['note'] == 'Keep this plan'
+    assert body['issue_blockers'] == [] and body['can_issue'] is True

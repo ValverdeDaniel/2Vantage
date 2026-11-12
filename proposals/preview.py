@@ -162,8 +162,16 @@ def summary(plans, results, packages, recommendation, labels, reason_text):
             'note': f"Part of {result['part_of']}'s enrollment" if result['part_of'] else '',
         }
 
+    def kept(plan):
+        """A recommended current plan: "Keep this plan", as the old app printed it (OQ37)."""
+        return {**option(plan), 'kept': True, 'note': 'Keep this plan'}
+
     groups = [
-        {'current': p.name, 'options': [option(r) for r in recommended if p.id in results[r.id]['base_ids']]}
+        {
+            'current': p.name,
+            'options': ([kept(p)] if p.recommended else [])
+            + [option(r) for r in recommended if p.id in results[r.id]['base_ids']],
+        }
         for p in plans
         if p.role == 'current'
     ]

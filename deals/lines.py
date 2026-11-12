@@ -267,7 +267,7 @@ FUNDING = [
     ('self_funded', 'Self-funded'),
 ]
 
-# Rate bases built so far (§5.5). Release 1 prices the composite basis and the quoted premium.
+# Typed enrollment by rate basis (§5.5): tier counts, benefit volume or payroll, or lives. quotes/math reads it.
 ENROLLMENT_KEYS = {
     'composite': TIER_CODES,
     'volume_1000': ['volume'],

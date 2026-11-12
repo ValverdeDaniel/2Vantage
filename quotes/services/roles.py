@@ -1,7 +1,8 @@
 """Roles and links, each through its own door (plan.md §5.4; F52, F53, J12): `plans/role/` and `plans/links/`.
 
-- `current` is in force today and has no links. A plan that turns current loses its star, its recommendation and
-  its links, and joins the end of the line's current plans. A sold plan or a priced version never becomes current.
+- `current` is in force today and has no links. A plan that turns current loses its star and its links, and joins
+  the end of the line's current plans; a recommendation stays, meaning "Keep this plan" (OQ37, as in the old app).
+  A sold plan or a priced version never becomes current.
 - `renewal` renews one current plan on the same line, at most one renewal each; it leads that plan's group.
 - `alternate` replaces none, one or several current plans on the same line (several: a consolidation).
 - A current plan that stops being current turns its renewal into an alternate and leaves every `replaces` list.
@@ -79,7 +80,6 @@ def _turn_current(rows, plan):
     if plan.derived_from_id and plan.derived.get('kind') != 'duplicate':
         raise activity.Refused(refusals['version'])
     plan.starred, plan.star_reason, plan.starred_by_id, plan.starred_at = False, '', None, None
-    plan.recommended = False
     plan.sort_order = max(p.sort_order for p in rows.values()) + 1  # last among the current plans
 
 

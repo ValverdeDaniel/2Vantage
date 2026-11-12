@@ -28,13 +28,14 @@ def links_of(plan):
     return sorted(Plan.objects.get(pk=plan.id).replaces.values_list('id', flat=True))
 
 
-def test_F53_done_when_a_starred_quote_made_current_loses_its_star_recommendation_and_links(api, user, deal, line):
+def test_F53_done_when_a_starred_quote_made_current_loses_its_star_and_links(api, user, deal, line):
     quote = line['quote']
     services.star(user, deal, [quote.id], True)
     services.set_recommended(user, quote.id, True)
     body = role(api, deal, [quote], 'current').json()
     after = Plan.objects.get(pk=quote.id)
-    assert (after.role, after.starred, after.star_reason, after.recommended) == ('current', False, '', False)
+    assert (after.role, after.starred, after.star_reason) == ('current', False, '')
+    assert after.recommended  # OQ37: a recommended plan made current means "Keep this plan", as in the old app
     assert links_of(quote) == [] and after.renews_id is None
     current_ids = list(
         Plan.objects.filter(deal=deal, role='current').order_by('sort_order').values_list('id', flat=True)

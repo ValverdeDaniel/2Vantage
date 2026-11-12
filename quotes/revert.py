@@ -89,7 +89,7 @@ def _broken(line_key, rows, held_before):
     """Why the line's plans, as the revert would leave them, break §5.4's rules; None when they hold."""
     renewed = {}
     for plan in rows.values():
-        if plan.role == 'current' and (plan.starred or plan.recommended or plan.renews_id or plan.replaces_ids):
+        if plan.role == 'current' and (plan.starred or plan.renews_id or plan.replaces_ids):
             return f'{plan.carrier} {plan.name} is a current plan now, and a current plan takes no star or link.'
         if plan.role == 'renewal':
             current = rows.get(plan.renews_id)

@@ -6,7 +6,8 @@
   star on an unlinked quote, on a line with two or more current plans, links it to the nearest current plan
   (`closeness`) in the same write (F51).
 - `clear_shortlist`: one line's stars, one Activity row, revertible (F55).
-- `set_recommended`: renewals and alternates only, within `room()` (§5.4, OQ37).
+- `set_recommended`: any plan, within `room()`; a recommended current plan is "Keep this plan" and takes no extra
+  column, as in the old app (§5.4; OQ37, answered: "allow it as the old app did").
 - `set_sold`: any number of plans a line (OQ12); a lost deal refuses it (H124). The sale moves the deal to Sold and
   calls `deals.services.sale_changed` in the same transaction; un-selling the last sold plan returns the deal to
   Proposal with its own Activity row (§5.1). Locks the Deal, then the Plan, then (in `sale_changed`) the Client.
@@ -117,9 +118,7 @@ def set_recommended(user, plan_id, recommended):
     plan.activity_id = None
     if bool(recommended) == plan.recommended:
         return plan
-    if recommended and plan.role == 'current':
-        raise activity.Refused("A current plan can't be recommended — recommend its renewal to keep what they have.")
-    if recommended and not plan.starred:
+    if recommended and not presented.is_held(plan):  # a current or starred plan already has its column
         refusal = presented.refusal(data, lines.label(plan.line), 1, 'unstar one before recommending another')
         if refusal:
             raise activity.Refused(refusal)

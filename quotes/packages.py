@@ -137,12 +137,14 @@ def line_packages(line, results, member_packages=()):
 
 
 def coverage(line):
-    """(covered, [names of current plans nothing recommended renews or replaces]); a line with no current plans is
-    covered by any recommended plan (§5.4). Reads links only, so it needs no prices."""
+    """(covered, [names of current plans with no answer]); a current plan is answered by a recommended plan that renews
+    or replaces it, or by being recommended itself ("Keep this plan", OQ37); a line with no current plans is covered by
+    any recommended plan (§5.4). Reads links only, so it needs no prices."""
     recommended = [p for p in line.plans if p.recommended]
     if not line.current:
         return bool(recommended), [] if recommended else ['this line']
-    covered = {pid for p in recommended for pid in line.base_ids(p)}
+    kept = {p.id for p in recommended if p.role == 'current'}
+    covered = {pid for p in recommended for pid in line.base_ids(p)} | kept
     missing = [p.label for p in line.current if p.id not in covered]
     return not missing, missing
 
