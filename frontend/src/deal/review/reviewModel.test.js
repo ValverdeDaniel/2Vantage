@@ -7,7 +7,8 @@ describe('the View row (L1)', () => {
   it('opens the Board unless a built view is asked', () => {
     expect(viewOf(new URLSearchParams(''))).toBe('board');
     expect(viewOf(new URLSearchParams('view=request'))).toBe('request');
-    expect(viewOf(new URLSearchParams('view=queue'))).toBe('board');
+    expect(viewOf(new URLSearchParams('view=queue'))).toBe('queue'); // the Review queue (slice 55)
+    expect(viewOf(new URLSearchParams('view=tray'))).toBe('board');
   });
 
   it('counts what is to send and to review on the pills', () => {

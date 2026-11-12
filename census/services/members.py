@@ -5,6 +5,7 @@
   `deals.values.apply`: an unchanged value writes nothing, '' clears. `expect` ({key: the value the person saw}) refuses
   the whole write with a 409 naming the columns that changed since, so Undo never writes over someone else (O.6 #33).
   A masked SSN (`***-**-1234`) stands for the number on file when its last four agree, as in an import (C16).
+  A changed cell closes the client's answer waiting on it as `replaced` (Ch. 13d; slice 55).
 - `add_member`: ＋ Add employee, or ＋ Dep under an employee with the relationship picked (C7).
 - `remove_member`: × — a soft removal, the dependents with their employee (O.6 #13); `clear_roster` removes everyone.
 Lock order: the Deal, then the people by id, then CensusFacts (O.3.7), rewritten in the same transaction. Activity
@@ -21,6 +22,7 @@ from rest_framework.exceptions import ValidationError
 from deals import activity, clock
 from deals.values import apply as apply_values
 from deals.values import source
+from intake import client_entries
 
 from .. import facts, fields
 from ..models import Member
@@ -127,7 +129,9 @@ def edit_values(user, member_id, raw, *, expect=None, origin='typed'):
     if not changed:
         return Edited(member, [], None)
     member.values, member.sources = values, sources
-    member.save(update_fields=['values', 'sources', 'updated_at'])
+    # A person's edit closes a client answer waiting on the same cell as `replaced` (L.6 Ch. 13d; slice 55).
+    member.client = client_entries.replaced(member.client, changed, getattr(user, 'id', None), clock.now().isoformat())
+    member.save(update_fields=['values', 'sources', 'client', 'updated_at'])
     facts.refresh(deal.id)
     summary, noun = SUMMARY[origin]
     row = activity.record(

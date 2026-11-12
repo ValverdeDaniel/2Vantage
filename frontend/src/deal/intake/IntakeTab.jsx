@@ -6,6 +6,7 @@ import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import ReviewBulkBar from '../../valuereview/ReviewBulkBar';
 import { claudeDoor } from '../claude';
+import { SectionBar } from '../review';
 import { isBlank } from '../shared/fieldValue';
 import AuthorizationsCard from './AuthorizationsCard';
 import ChecklistCard from './ChecklistCard';
@@ -77,6 +78,8 @@ export default function IntakeTab({ deal }) {
 
   return (
     <div className="bb-tab-page" ref={pageRef}>
+      {/* Review & requests' section bar (L14; slice 55), above the pills as the old tab had it. */}
+      <SectionBar dealId={deal.id} surface="intake" label="Intake" />
       <IntakeViews view={view} onPick={pick} />
       <div className="bnf-intake-head">
         <div>

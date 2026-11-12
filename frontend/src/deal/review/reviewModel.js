@@ -2,7 +2,7 @@
 // says about a link (old Vantage 891f1b3 `DealReviewTab.jsx`, `RequestCard.jsx`, `LinkStatus.jsx`). The labels of
 // states, levels and close reasons come from /api/meta/ `review` (rule 1); the server says each link's state.
 
-// The View row (D-171): Board · Request · N to send · Review · N. The Review queue arrives with slice 55.
+// The View row (D-171): Board · Request · N to send · Review · N. The Review queue is slice 55's.
 export const VIEWS = [
   {
     key: 'board',
@@ -17,8 +17,8 @@ export const VIEWS = [
     title: 'The review queue: every section’s client answers and AI reads, one section at a time, approve or send back',
   },
 ];
-export const BUILT = new Set(['board', 'request']);
-export const LATER = 'the review queue arrives in a later version';
+export const BUILT = new Set(['board', 'request', 'queue']);
+export const LATER = 'arrives in a later version';
 
 /** The view `?view=` asks for, when built; else the Board. */
 export function viewOf(params) {

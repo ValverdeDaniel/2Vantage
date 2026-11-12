@@ -1055,8 +1055,9 @@ Rules:
 - **Client answers wait.** A client's answer waits in the row's `client` JSON,
   `{value, confirm, link, at, status, by, decided_at}`, with status pending, approved, rejected or replaced; census and
   questionnaire entries add `prior`. Only approval moves an answer into the values, with origin `client`, and a typed
-  write closes a pending entry as `replaced`. Rollups, readiness, exports and printed PDFs read approved values only
-  (O.3.1, L.6).
+  write closes a pending entry as `replaced`. An approved entry keeps the value it replaced, `prior` and its source
+  entry `prior_source`, on intake too, so the approval can be taken back value for value (slice 55). Rollups,
+  readiness, exports and printed PDFs read approved values only (O.3.1, L.6).
 - Values are stored as strings, normalized by the field's type on write (§5).
 - **Status is computed on read:** `missing` (required and blank, with no client answer pending) · `blank` (optional
   and blank) · `to_check` (an open warning: a person marked it "check", or Claude read it and doubted it (`low`) or
@@ -2987,6 +2988,19 @@ through the owners' doors `intake.services.save_client` / `sign_from_link` and `
 `add_people`. Contacts, coverage and lines wait as pending entries (OQ84); nothing prints a pending answer (OQ85); the
 portal keeps link stamps and key-only Activity rows, and an IP only on a BOR signed there (OQ86).
 
+**Built (slice 55):** the decisions and the queues. Each owner has `approve_client`, `reject_client` and
+`revert_approval` (`intake.services.approvals`, `census.services.approvals`; `review/owners.py` is their table) and
+`review.services.decisions` calls them in one transaction, the Deal locked first. An approved answer lands through
+`deals.values.apply()` with source `{origin: client, by: the approver, link}`; the entry becomes `approved` and keeps
+the value it replaced (`prior`, `prior_source`), so Undo puts it back while the value is still the approved one.
+Contacts and coverage land through their own services (edited or added, never removed), the lines to shop through
+`set_intent(shop=True)` (added, never taken off). "Keep ours" is the reject. A person's typed or relayed edit closes a
+waiting answer as `replaced` (Claude's edits do not). An answer is ready when its link was submitted after its last
+save, or that save is 24 hours old (`rules/items.py`); "Approve N ready ✓" takes the submitted answers, an idle link's
+only with its tick, never one that blanks a value. Intake approvals keep before and after and Revert reopens the
+answer; census approvals are key-only. rfp's export check reads review's lines through `rfp.check.providers` (L120:
+the client's census answers waiting, still typed, going back; "not in the file until approved").
+
 **Full rules:** Part L (L.3; L.6: models, the owner contract, `rules/`, portal security) and O.3.4. **Slices:** 53–59.
 
 ### 5.9 Next step and agenda — `agenda/steps/`, `agenda/rows.py`
@@ -4379,6 +4393,23 @@ new_pin. The rest with slices 54–59 and 64.
 - `POST …/requests/{rid}/close/` `{reason}` → `{request, changed, activity_id}`; `PATCH links/{lid}/` `{action,
   copied?}` → `{link, request, changed, activity_id, pin?}`; refusals are 409 with a sentence.
 
+Built in slice 55: the queue and the decisions, and the Board's `lanes.to_review` and `sections`.
+- `GET …/review/board/` adds `lanes.to_review: [{key: census | intake | documents, section, count, questions, label,
+  fix: {tab, view?, section?}}]` and `sections: {intake | census: {to_review, in_progress, ready, ready_submitted,
+  ready_idle, names, questions, in_tray, missing}}` (the section bars' numbers).
+- `GET deals/{id}/review/queue/?surface=intake|census&phase=to_review|in_progress&group=&page=` → `{surface, phase,
+  idle_hours, phases: {to_review, in_progress}, groups: [{key, label, change, count}], items, ids: [ref] (the picked
+  group's, at most 5,000), page: {page, page_count, row_count, has_prev, has_next}, in_progress: [{link_id, name,
+  last_saved_at, ready_at}]}`, 50 a page, `private, no-store`; an item `{ref, kind: answer | block | person, label,
+  section?, person?, ours, theirs (text, or a block's lines), change: changed | added | filled | cleared | same,
+  phase, ready_why: submitted | idle | '', idle_days, link_id, via, at, group, group_label, required?, blocks?,
+  details?, editable}`. 400 for an unknown surface, phase or page.
+- `POST deals/{id}/review/approve/` `{refs}` or `{surface, ready_only?, include_idle?}` → `{approved: [ref],
+  activity_ids}`; `POST …/reject/` `{refs}` → `{rejected, activity_ids}`; `POST …/undo/` `{refs}` → `{undone,
+  activity_ids}`, 409 `{detail, keys}` after a later edit or for a block. A ref is `intake:<key>`,
+  `intake:block:<contacts|coverage|lines>`, `census:<member>:<column>` or `census:<member>:*` (a person a client
+  added); 400 `{refs: [refused]}`. A ref already decided is skipped. `undo/` is new beside v1.1's list.
+
 | Method | Path | What it does |
 |---|---|---|
 | GET | `deals/{id}/review/badges/`, `…/board/?scope=` | Counts; lanes, Next and questions (L1, L2) |
@@ -4732,6 +4763,11 @@ strip and the Next banner (L2–L4); the Missing, Waiting and To review lanes (L
 (L49–L54); requests and links with the builder, the Ask card and the link settings card (L55–L75). The same Board,
 Request and Review views serve Intake, Census and Questionnaire, scoped by `SectionHost`, with a section bar on each
 (L14, L45). The tab's counts come in its own payload from slice 53 (O.6 #3).
+Built in slice 55: the Review view (`?view=queue&section=`) with its section chips, phase tabs, group chips with
+"Approve all N ✓" and the keyboard queue (A approve, U keep ours, E correct, R later, J/K, ?; X send back greyed until
+the tray, slice 56) in `src/valuereview/ReviewQueue.jsx`; the To review lane; the section bar at the top of Intake and
+Census with "Approve N ready ✓" and its idle tick (L14, C34). The Next line, the Missing lane and the sections' own
+Board, Request and Review views come with slices 56–57.
 
 ### 8.9 Intake (`intake`)
 
@@ -6999,6 +7035,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | OQ84 | Do the client's contacts, coverage and lines wait for staff approval, or land directly as before? | Open. Default: wait | Open | 54 |
 | OQ85 | Never print unapproved answers on carrier files or questionnaire PDFs? | Open. Default: never | Open | 54 |
 | OQ86 | Before real PHI, must every portal open, save and submit be logged with IP and browser? | Open. Default: link stamps and Activity rows; IP only on the BOR signature | Open | 54 |
+| OQ111 | On an ordinary (not blank) link, a client sees pending answers from any link on the deal, flagged "Updated by someone else on your team", not only from the same request. Limit it to the same request? | Open. Default: any link of the deal (as built in slice 54) | Open | 54 |
 | **Slice 56: REV-4** | | | | |
 | OQ87 | Does a new custom ask ("＋ Add request") wait in the tray rather than reach the portal at once? | Open. Default: yes | Open | 56 |
 | **Slice 57: REV-5** | | | | |

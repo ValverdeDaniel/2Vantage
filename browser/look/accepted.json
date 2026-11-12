@@ -836,7 +836,7 @@
       "signed_on": null,
       "check": "pixels",
       "item": "B1",
-      "why": "Slices 11 and 39 build the view pills (B36), the four question cards (B1–B8), the \"Required to market\" banner (B9), \"These came from the client\" and ☑ Select fields (B10), the coverage card, Current coverage and Lines to quote. Slice 40 builds the ready badge and Market anyway ▸ (B33, B34), the Marketing readiness checklist (B25–B27), Contacts (B13) and Compliance & authorizations (B29, B31). Pending: the questionnaire and stop-loss form pickers on the medical row and the checklist (B22, slice 42); ＋ Ask on the checklist rows, the census row's ＋ Ask ▸ and ＋ Ask all N (the request tray, slice 56); ＋ Add request (Review's asks, slice 53); the section bar with Review & requests (slices 53–56). The Goals card ends with Client guidance (§4.5 †). GD1 has no intake answers, so every needed question reads Missing on both sides."
+      "why": "Slices 11 and 39 build the view pills (B36), the four question cards (B1–B8), the \"Required to market\" banner (B9), \"These came from the client\" and ☑ Select fields (B10), the coverage card, Current coverage and Lines to quote. Slice 40 builds the ready badge and Market anyway ▸ (B33, B34), the Marketing readiness checklist (B25–B27), Contacts (B13) and Compliance & authorizations (B29, B31). Pending: the questionnaire and stop-loss form pickers on the medical row and the checklist (B22, slice 42); ＋ Ask on the checklist rows, the census row's ＋ Ask ▸ and ＋ Ask all N (the request tray, slice 56); ＋ Add request (Review's asks, slice 53); the section bar's Next line (L3, L4; slice 56). The section bar itself is built (L14; slice 55): its \"N missing\" counts the questions needed to market plus the checklist documents not in yet, as the old did, one more here because Legal Company Name is not prefilled (M.5 B34). The Goals card ends with Client guidance (§4.5 †). GD1 has no intake answers, so every needed question reads Missing on both sides."
     },
     {
       "screen": "gd1.intake",
@@ -847,7 +847,7 @@
       "signed_on": null,
       "check": "classes",
       "item": "B1",
-      "why": "The checklist, contacts, authorizations and ready badge are built (slice 40; bnf-marketing-*, bnf-ready-badge, bnf-esign-*, bnf-compliance-row); still missing: the form pickers' bnf-cvg-forms, bnf-cvg-formpick, bnf-q-formpick and bnf-q-formselect (B22, slice 42), ＋ Add request's bnf-ask-form (Review's asks, slice 53), and the section bar's rr-* with Review & requests (53)."
+      "why": "The checklist, contacts, authorizations and ready badge are built (slice 40; bnf-marketing-*, bnf-ready-badge, bnf-esign-*, bnf-compliance-row); still missing: the form pickers' bnf-cvg-forms, bnf-cvg-formpick, bnf-q-formpick and bnf-q-formselect (B22, slice 42), ＋ Add request's bnf-ask-form (Review's asks, slice 53), and the section bar's Next line (rr-sbar-next*, rr-sbar-why, rr-sbar-actions; L3, L4, slice 56); the bar's counts line is built (L14; slice 55)."
     },
     {
       "screen": "gd1.intake",
@@ -1108,7 +1108,7 @@
       "check": "pixels",
       "selector": null,
       "item": "B36",
-      "why": "The section bar (\"0 to review · 0 waiting on the client · 2 missing\", \"Review & requests · all sections ▸\") and the Review pill's count come with Review & requests (slices 53–56); until then Board, Request and Review are drawn and cannot be picked.",
+      "why": "The section bar (\"0 to review · 0 waiting on the client · N missing\", \"Review & requests · all sections ▸\") is built (L14; slice 55) and stands where the old one does; the view pills' Board, Request and Review, with the Review pill's count, are drawn and cannot be picked until the section views arrive (B36, L45; slices 56–57).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1130,7 +1130,7 @@
       "check": "classes",
       "selector": null,
       "item": "B1",
-      "why": "The checklist, contacts, authorizations and ready badge are built (slice 40); still missing: the form pickers' bnf-cvg-forms, bnf-cvg-formpick, bnf-q-formpick and bnf-q-formselect (B22, slice 42), ＋ Add request's bnf-ask-form (slice 53), the section bar's rr-sbar-* (53) and the sidebar badges and readiness chip (bb-nav-badge*, bnf-ready-badge-sm; slice 61).",
+      "why": "The checklist, contacts, authorizations and ready badge are built (slice 40); still missing: the form pickers' bnf-cvg-forms, bnf-cvg-formpick, bnf-q-formpick and bnf-q-formselect (B22, slice 42), ＋ Add request's bnf-ask-form (slice 53) and the sidebar badges and readiness chip (bb-nav-badge*, bnf-ready-badge-sm; slice 61).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1251,7 +1251,7 @@
       "check": "pixels",
       "selector": null,
       "item": "C34",
-      "why": "The section bar (\"0 to review · 0 waiting on the client · N missing\", \"Review & requests · all sections ▸\") and the view pills Roster · Board · Request · Review come with Review & requests and the census board (C27, C30, C32–C34; slices 53 and 57), so the roster starts higher.",
+      "why": "The section bar (\"0 to review · 0 waiting on the client · N missing\", \"Review & requests · all sections ▸\") is built (L14, C34; slice 55); the view pills Roster · Board · Request · Review come with the census board (C27, C30; slice 57), so the roster starts higher.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1273,7 +1273,7 @@
       "check": "pixels",
       "selector": null,
       "item": "OQ16",
-      "why": "SSN is optional (OQ16, plan.md §4.4): the old roster requires every person's SSN, so its SSN column reads a red ＋ Add on all 160 people (\"169 missing\" in its section bar); 2Vantage's reads —, and its only required blanks are the medical, dental and vision tiers of G4-098 to G4-100.",
+      "why": "SSN is optional (OQ16, plan.md §4.4): the old roster requires every person's SSN, so its SSN column reads a red ＋ Add on all 160 people (\"169 missing\" in its section bar, \"9 missing\" in 2Vantage's); 2Vantage's reads —, and its only required blanks are the medical, dental and vision tiers of G4-098 to G4-100.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1317,7 +1317,7 @@
       "check": "classes",
       "selector": null,
       "item": "C3",
-      "why": "2Vantage's cells carry their source file (bnf-has-src, the ↗ pin; C3) because GD4 was imported from its file, which the old parity load does not upload; bnf-census-empty-actions, bb-panel, bb-panel-title, bnf-compare-table and bnf-benefit-col are the import door and the census counts under the roster (C12, C39; slice 12); the header strip's are M112's, and the section bar's (rr-sbar-*) wait for slice 53.",
+      "why": "2Vantage's cells carry their source file (bnf-has-src, the ↗ pin; C3) because GD4 was imported from its file, which the old parity load does not upload; bnf-census-empty-actions, bb-panel, bb-panel-title, bnf-compare-table and bnf-benefit-col are the import door and the census counts under the roster (C12, C39; slice 12); the header strip's are M112's, and the view pills' (bnf-advisor-views, bnf-viewtab) wait for the census board (C27; slice 57); the section bar is built (L14, C34; slice 55).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1328,7 +1328,7 @@
       "check": "style",
       "selector": ".bb-nav",
       "item": "M112",
-      "why": "The nav, the tab title, the COBRA tick, the toolbar, the chips and the grid sit higher: the header strip replaces the journey stepper, the section bar and the view pills wait for slices 53 and 57, and the sidebar has fewer tabs; the page is taller with the import door and the census counts under the roster (slice 12).",
+      "why": "The nav, the tab title, the COBRA tick, the toolbar, the chips and the grid sit higher: the header strip replaces the journey stepper, the view pills wait for slice 57, and the sidebar has fewer tabs; the page is taller with the import door and the census counts under the roster (slice 12).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1394,7 +1394,7 @@
       "check": "pixels",
       "selector": null,
       "item": "C34",
-      "why": "The section bar (\"0 to review · 0 waiting on the client · N missing\", \"Review & requests · all sections ▸\") and the view pills Roster · Board · Request · Review come with Review & requests and the census board (C27, C30, C32–C34; slices 53 and 57), so the roster starts higher.",
+      "why": "The section bar (\"0 to review · 0 waiting on the client · N missing\", \"Review & requests · all sections ▸\") is built (L14, C34; slice 55); the view pills Roster · Board · Request · Review come with the census board (C27, C30; slice 57), so the page starts higher.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1416,7 +1416,7 @@
       "check": "classes",
       "selector": null,
       "item": "M112",
-      "why": "The header strip's classes (bnf-ov-*, bb-stage-pill, its Lines chips bnf-line-chips and bb-chip) are new against the old app; the section bar's (rr-sbar-*) wait for slice 53 and the Work with Claude room's for slice 20.",
+      "why": "The header strip's classes (bnf-ov-*, bb-stage-pill, its Lines chips bnf-line-chips and bb-chip) are new against the old app; the view pills' (bnf-advisor-views, bnf-viewtab) wait for the census board (C27; slice 57) and the Work with Claude room's for slice 20.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1427,7 +1427,7 @@
       "check": "style",
       "selector": ".bb-nav",
       "item": "M112",
-      "why": "The nav and the tab title sit higher: the header strip replaces the journey stepper, the section bar and the view pills wait for slices 53 and 57, and the sidebar has fewer tabs; the old .bb-panel is the Work with Claude drawer (slice 20), 2Vantage's the header strip, and the page is shorter without the drawer.",
+      "why": "The nav and the tab title sit higher: the header strip replaces the journey stepper, the view pills wait for slice 57, and the sidebar has fewer tabs; the old .bb-panel is the Work with Claude drawer (slice 20), 2Vantage's the header strip, and the page is shorter without the drawer.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2824,7 +2824,7 @@
       "check": "pixels",
       "selector": null,
       "item": "L3",
-      "why": "Slice 53 builds the Board’s head with its readiness strip (L2), the View row with its own counts (L1, L28) and the Waiting lane (L7, L8); the Next banner (L3, L4), the client’s questions (L5), the Missing lane (L6) and the To review lane (L9, L10, L135) arrive with slices 55–56, so Waiting stands alone in the lanes row.",
+      "why": "Slice 53 builds the Board’s head with its readiness strip (L2), the View row with its own counts (L1, L28) and the Waiting lane (L7, L8); slice 55 adds the To review lane (L9); the Next banner (L3, L4), the client’s questions (L5) and the Missing lane (L6) arrive with slices 56–57, so Waiting and To review stand in the first two columns of the lanes row, where the old has Missing, Waiting and To review.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2857,7 +2857,7 @@
       "check": "classes",
       "selector": null,
       "item": "L3",
-      "why": "The Next banner’s and the Missing lane’s classes (bnf-board-next*, bnf-board-lane-rose, bnf-board-card*, bnf-board-section) wait for slices 55–56 (L3–L6); the header strip’s bnf-ov-*, bb-stage-pill, bnf-select, bnf-archive-*, bnf-line-chips and bb-chip are new (M112).",
+      "why": "The Next banner’s and the Missing lane’s classes (bnf-board-next*, bnf-board-lane-rose, bnf-board-card*, bnf-board-section) wait for slices 56–57 (L3–L6; GD1 has nothing back, so the To review lane draws no card either); the header strip’s bnf-ov-*, bb-stage-pill, bnf-select, bnf-archive-*, bnf-line-chips and bb-chip are new (M112).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2868,7 +2868,7 @@
       "check": "style",
       "selector": "body",
       "item": "L3",
-      "why": "The page is shorter: the Next banner and the Missing and To review lanes wait for slices 55–56 (L3–L10).",
+      "why": "The page is shorter: the Next banner and the Missing lane wait for slices 56–57 (L3–L6).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2879,7 +2879,7 @@
       "check": "style",
       "selector": ".btn-primary",
       "item": "L3",
-      "why": "The old page’s one primary button is the Next banner’s Go ▸ (L3, L4), which waits for slices 55–56.",
+      "why": "The old page’s one primary button is the Next banner’s Go ▸ (L3, L4), which waits for slices 56–57.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2989,7 +2989,7 @@
       "check": "style",
       "selector": ".bnf-board-lane-head",
       "item": "L3",
-      "why": "The lanes sit lower (the header strip, M112) though there is no Next banner above them yet (L3, slices 55–56).",
+      "why": "The lanes sit lower (the header strip, M112) though there is no Next banner above them yet (L3, slices 56–57).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -3000,7 +3000,7 @@
       "check": "style",
       "selector": ".bnf-board-empty",
       "item": "L3",
-      "why": "The first empty lane is Waiting’s, the first lane on the page until Missing joins it (L6, slices 55–56); the old’s first empty lane is Waiting’s too, in the second column.",
+      "why": "The first empty lane is Waiting’s, the first lane on the page until Missing joins it (L6, slice 57); the old’s first empty lane is Waiting’s too, in the second column.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

@@ -7,6 +7,7 @@ import { errorText } from '../../lib/errors';
 import Button from '../../ui/Button';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
+import { SectionBar } from '../review';
 import { CensusLens } from '../rfp';
 import { useToast } from '../../ui/useToast';
 import ClaudeCensusDoor from './ClaudeCensusDoor';
@@ -37,6 +38,7 @@ function RosterPage({ deal, meta, census, waiting, onReview, onPage, refetch }) 
   const { summary } = census;
   return (
     <div className="bb-tab-page bb-sov-page">
+      <SectionBar dealId={deal.id} surface="census" label="Census" />
       <div className="bb-sov-header">
         <div>
           <div className="bb-tab-title">Roster</div>
@@ -160,6 +162,8 @@ export default function CensusTab({ deal }) {
   }
   return (
     <div className="bb-tab-page">
+      {/* Review & requests' section bar (L14, C34; slice 55), at the top of every view, as the old tab had it. */}
+      <SectionBar dealId={deal.id} surface="census" label="Census" />
       <div className="bb-tab-title">Census</div>
       <div className="bb-subtitle bb-mb-lg">
         Bring in the client&apos;s census — any layout. Its columns are mapped to the canonical schema, validated, and

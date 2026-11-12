@@ -12,6 +12,8 @@
   columns with the mapping assist's proposals), and the read's own Use and Discard through the import (slice 51).
 - `client`: a client's answers and added people through a portal link — `save_client`, `add_people` (pending entries
   and people who wait whole; C35, L88–L90; slice 54).
+- `approvals`: a person's decision on them — `approve_client`, `reject_client`, `revert_approval` (review's queues
+  call them through `review.owners`; C28, C32, C34; slice 55).
 Every write locks what it changes, records Activity in area `census` with keys only (never a value), writes nothing
 when nothing changes, and rewrites `CensusFacts` in its transaction (`census.facts.refresh`). Hand edits, people added
 by hand and removal arrived with the grid (slice 41); `set_rules` joins in slice 57.

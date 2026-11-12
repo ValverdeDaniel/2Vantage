@@ -15,6 +15,8 @@
   `confirm_intent` / `reopen_intent` (B20).
 - `client`: a client's answers through a portal link — `save_client` (pending entries, OQ84) and `sign_from_link`
   (the BOR typed on the portal, with its link, IP and browser; L86, OQ86), slice 54.
+- `approvals`: a person's decision on those answers — `approve_client`, `reject_client`, `revert_approval`; an
+  approved block lands through its owner (`client_blocks`: contacts, coverage, `set_intent`), slice 55.
 `rows` holds the locks (the Deal, the Intake row, then coverage rows by id) and the Activity entries they share.
 Every write records Activity (area `intake`) with before and after, writes nothing when nothing changes, and returns
 only what changed.

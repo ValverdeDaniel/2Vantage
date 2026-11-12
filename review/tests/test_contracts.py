@@ -26,6 +26,10 @@ def samples(deal, made):
     token = made.links[0][1].rsplit('/', 1)[1]
     return {
         'api/deals/<int:pk>/review/board/': {'pk': deal.id},
+        'api/deals/<int:pk>/review/queue/': {'pk': deal.id},
+        'api/deals/<int:pk>/review/approve/': {'pk': deal.id},
+        'api/deals/<int:pk>/review/reject/': {'pk': deal.id},
+        'api/deals/<int:pk>/review/undo/': {'pk': deal.id},
         'api/deals/<int:pk>/review/requests/': {'pk': deal.id},
         'api/deals/<int:pk>/review/requests/<int:rid>/close/': {'pk': deal.id, 'rid': made.request.id},
         'api/links/<int:lid>/': {'lid': made.links[0][0].id},
@@ -51,6 +55,10 @@ PORTAL = [
 ]
 MATRIX = [
     ('GET', 'api/deals/<int:pk>/review/board/', ALL),
+    ('GET', 'api/deals/<int:pk>/review/queue/', ALL),
+    ('POST', 'api/deals/<int:pk>/review/approve/', ALL, {'refs': ['intake:fein']}),
+    ('POST', 'api/deals/<int:pk>/review/reject/', ALL, {'refs': ['intake:fein']}),
+    ('POST', 'api/deals/<int:pk>/review/undo/', ALL, {'refs': ['intake:fein']}),
     ('POST', 'api/deals/<int:pk>/review/requests/', {**ALL, 'producer': 201, 'admin': 201}, ASK),
     ('POST', 'api/deals/<int:pk>/review/requests/<int:rid>/close/', ALL, {'reason': 'cancelled'}),
     ('PATCH', 'api/links/<int:lid>/', ALL, {'action': 'mark_sent', 'copied': True}),

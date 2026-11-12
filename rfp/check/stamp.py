@@ -1,8 +1,9 @@
 """`checks_stamp` (K.6; K52): a short hash of everything the check reads, so the page asks for the pills again only when
 it moves. It covers the census (its people's last change and number, its stored counts), the questionnaires, intake's
 answers and coverage rows, the deal's documents, what the deal prints (effective date, lines, owner, agent), the
-headcount the band uses, and the request's funding, carriers, other carriers, route, form and ticks. Marks, sends,
-notes and the due date do not change it. Reads only, in a fixed number of queries.
+headcount the band uses, and the request's funding, carriers, other carriers, route, form and ticks, and what the
+registered providers' lines read (`providers.stamps`; slice 55). Marks, sends, notes and the due date do not change
+it. Reads only, in a fixed number of queries.
 """
 
 import hashlib
@@ -14,6 +15,8 @@ from census.models import CensusFacts, Member
 from documents.models import Document
 from intake.models import CurrentCoverage, Intake
 from questionnaire.models import Questionnaire
+
+from . import providers
 
 PARTS = ('funding', 'carriers', 'other_carriers', 'route', 'form', 'include')
 
@@ -39,6 +42,7 @@ def stamp(ctx):
         'deal': [deal.effective_date, sorted(deal.requested_lines or []), deal.owner_id, deal.agent_of_record],
         'count': [ctx.count, bool(ctx.check.get('differ'))],
         'request': [ctx.stored[key] for key in PARTS],
+        'providers': providers.stamps(deal),  # what the registered lines read (L120; slice 55)
     }
     text = json.dumps(found, sort_keys=True, default=str)
     return hashlib.sha256(text.encode('utf-8')).hexdigest()[:16]

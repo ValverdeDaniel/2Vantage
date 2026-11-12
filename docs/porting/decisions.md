@@ -191,6 +191,7 @@ A. allow it as as the old app did
 - **OQ84 Client contacts, coverage and lines.** Wait for staff approval, or land directly as before? *Default:* wait. [L-Q3]
 - **OQ85 Unapproved answers.** Never print them on carrier files or questionnaire PDFs (the old app did, with a warning)? *Default:* never. [L-Q11]
 - **OQ86 Portal logging.** Before real PHI, must every portal open, save and submit be logged with IP and browser? *Default:* link stamps and Activity rows; IP only on the BOR signature. [L-Q10]
+- **OQ111 Pending answers across requests.** On an ordinary (not blank) link, a client sees pending answers from any link on the deal, flagged "Updated by someone else on your team", not only from the same request. Limit it to the same request? *Default:* any link of the deal (as built in slice 54). [slice 54 report; L82, L106]
 
 **Slice 56 (REV-4)**
 - **OQ87 "＋ Add request".** Should a new custom ask wait in the tray rather than reach the portal at once? *Default:* yes. [M-Q6]

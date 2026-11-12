@@ -13,6 +13,10 @@ rule for the version a page holds (`base`), which census reads from here (it sit
   value; on a blank link only the link's own answer.
 - `next_entry(...)`: what a save does to a slot: an answer equal to the stored value drops the pending one, a new one
   replaces it (plan.md §5.8: "a newer save replaces the pending one").
+- `decided(entry, status, by, at, ...)` and `replaced(client, keys, by, at)` (slice 55): a person's decision on an
+  entry. Approving keeps the value it replaced (`prior`, with its source entry `prior_source`), so the approval can be
+  undone value for value without Activity holding a census value; a staff edit of the slot closes a pending answer as
+  `replaced` (Ch. 13d), so the portal never reads it as rejected.
 """
 
 import hashlib
@@ -74,3 +78,35 @@ def same(a, b):
     if a in (None, '', []) and b in (None, '', []):
         return True
     return a == b
+
+
+def approved(entry):
+    return isinstance(entry, dict) and entry.get('status') == APPROVED
+
+
+def decided(entry, status, by, at, *, prior=None, prior_source=None):
+    """The entry once a person decided it (`by` a user id or None). Approving records what it replaced; a decision
+    taken back (`status` pending) drops the decision's stamps."""
+    out = {**entry, 'status': status, 'by': by, 'decided_at': at}
+    if status == PENDING:
+        out.update(by=None, decided_at=None)
+        out.pop('prior_source', None)
+    if status == APPROVED:
+        out['prior'] = prior if prior is not None else ''
+        if prior_source:
+            out['prior_source'] = prior_source
+        else:
+            out.pop('prior_source', None)
+    return out
+
+
+def replaced(client, keys, by, at):
+    """`client` with every pending answer among `keys` closed as `replaced` (a staff edit of the slot); the same dict
+    when none was pending."""
+    hit = [key for key in keys if pending((client or {}).get(key))]
+    if not hit:
+        return client
+    out = dict(client)
+    for key in hit:
+        out[key] = decided(out[key], REPLACED, by, at)
+    return out

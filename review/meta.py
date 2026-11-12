@@ -1,8 +1,9 @@
 """Review's vocabularies for /api/meta/ as `review` (rule 1; plan.md §7.1): the security levels, request and link
-states, close reasons, the readiness chip's words, and the fixed link rules (OQ81, OQ83: code constants)."""
+states, close reasons, the readiness chip's words, the fixed link rules (OQ81, OQ83: code constants), and the review
+queue's words: what an answer did, its phases, the queue's sections and the idle hours (slice 55)."""
 
 from . import words
-from .rules import asks, policy
+from .rules import asks, items, policy
 
 
 def _pairs(choices):
@@ -26,4 +27,8 @@ def meta():
         'pin_digits': policy.PIN_DIGITS,
         'message_limit': policy.MESSAGE_LIMIT,
         'max_people': policy.MAX_PEOPLE,
+        'changes': _pairs(words.CHANGES),
+        'phases': [{'key': key, 'label': label, 'title': title} for key, label, title in words.PHASES],
+        'queue_sections': _pairs(words.QUEUE_SECTIONS),
+        'idle_hours': int(items.IDLE.total_seconds() // 3600),
     }

@@ -20,7 +20,7 @@ from deals.values import source
 from . import checklist as checklist_rules
 from . import flags, form
 from .models import CurrentCoverage
-from .services import bor, checklist, marketed, marks, rows
+from .services import approvals, bor, checklist, marketed, marks, rows
 from .signals import announce
 
 LABELS = {
@@ -41,6 +41,7 @@ LABELS = {
     'marketed_by': 'Sent to market',
 }
 TOUCHED_SINCE = 'This coverage line was changed after this, so this change cannot be reverted.'
+APPROVE_AGAIN = 'Taking back an approval is not reverted: approve the answer again from the review queue.'
 DOORS = {'checklist': checklist.revert, 'bor': bor.revert, 'marketed': marketed.revert}  # slice 40's gate
 
 
@@ -144,9 +145,26 @@ def _date_back(deal_id, before, user):
     return changed
 
 
+def _reopen(deal_id, row):
+    """An approval of the client's answers undone (slice 55): those answers wait for review again."""
+    keys = [key for entry in row.changes if entry['t'].partition(':')[0] in ('intake', 'deal') for key in entry['k']]
+    intake = rows.lock_intake(deal_id)
+    approvals.reopen(intake, [form.EFFECTIVE_DATE if key == 'effective_date' else key for key in keys])
+    intake.save(update_fields=['client', 'updated_at'])
+
+
 def revert(row, user):
     if row.action == marks.MARKED:
         return marks.revert(row, user)  # review marks: back where the answer is still as the row left it (E88)
+    if row.action == approvals.UNAPPROVED:
+        raise activity.Refused(APPROVE_AGAIN)
+    written = _revert(row, user)
+    if row.action == approvals.APPROVED:
+        _reopen(row.deal_id, row)
+    return written
+
+
+def _revert(row, user):
     _refuse_later(row)
     deal_id = row.deal_id
     kinds = {entry['t'].partition(':')[0] for entry in row.changes}

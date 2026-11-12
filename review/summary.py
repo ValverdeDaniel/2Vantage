@@ -1,7 +1,7 @@
 """Review's facts for the tab's counts, Agenda and the Overview (plan.md §5.10, O.2; L118, L119; L.6 selectors):
 `facts(deal_ids) -> {deal_id: dict}`, counts, dates and names only, the same for every viewer, in a fixed number of
 queries however many deals, requests and links are asked (Q.3 #4): the deals, the requests, the links, the notes, the
-intake rows' client entries, the census counts and the client's files.
+waiting client entries (the intake rows, the people holding one), the census counts and the client's files.
 
 Per deal:
 - `requests`: {state: count} over every request; `open`: how many are still out (draft, partly sent, waiting);
@@ -12,8 +12,11 @@ Per deal:
 - `first_sent_at` (the oldest send on an open request), `last_sent_at`, `last_response_at`;
 - `response`: the newest sent request's {state: waiting | answering | answered, at, link_id, name}, or None;
 - `pending`: client answers waiting on the owners: {intake, census, people, documents, total} (Ch. 14b: census's
-  come from its stored counts); `ready`: {intake}, those whose link is ready (submitted after its last save, or idle
-  24 h; census's per-link counts join with the queues, slice 55);
+  come from its stored counts); `ready`: {intake, census}, those whose link is ready (submitted after its last save,
+  or idle 24 h; census's counts the people a client added);
+- `sections` (slice 55): per surface (intake, census) what came back — {to_review, in_progress, ready,
+  ready_submitted, ready_idle, names} (`rules.sections`), plus `questions` and `in_tray` from the notes, and the
+  census's `missing` (its required blanks, from its stored counts): the section bars and the To review lane;
 - `questions`: {open, oldest_at}; `tray`: asks and send-backs not yet sent; `nudges`: reminders due today (L69).
 
 Questionnaire answers join with slice 58, when the questionnaire's `client` entries are written.
@@ -27,12 +30,12 @@ from census.models import CensusFacts
 from deals import clock
 from deals.models import Deal
 from documents.models import Document
-from intake.models import Intake
-from intake.status import pending_keys
 
 from .models import ASK_KINDS, ReviewNote
 from .rules import policy
 from .rules import requests as request_rules
+from .rules import sections as section_rules
+from .selectors import entries as entry_rows
 from .selectors import requests as request_rows
 
 
@@ -41,37 +44,56 @@ def _iso(moment):
 
 
 def _notes(ids):
+    """{deal_id: {questions, oldest, tray, by_surface: {surface: {questions, in_tray}}}}: one grouped count."""
     counted = (
         ReviewNote.objects.filter(deal_id__in=ids, resolved_at__isnull=True)
-        .values('deal_id')
+        .values('deal_id', 'surface')
         .annotate(
             questions=Count('id', filter=Q(kind='question')),
             oldest=Min('at', filter=Q(kind='question')),
             tray=Count('id', filter=Q(kind__in=ASK_KINDS, sent_at__isnull=True)),
         )
     )
-    return {entry['deal_id']: entry for entry in counted}
+    out = {}
+    for entry in counted:
+        found = out.setdefault(entry['deal_id'], {'questions': 0, 'oldest': None, 'tray': 0, 'by_surface': {}})
+        found['questions'] += entry['questions']
+        found['tray'] += entry['tray']
+        if entry['oldest'] and (found['oldest'] is None or entry['oldest'] < found['oldest']):
+            found['oldest'] = entry['oldest']
+        found['by_surface'][entry['surface']] = {'questions': entry['questions'], 'in_tray': entry['tray']}
+    return out
 
 
-def _pending(ids, links, now):
-    """{deal_id: (pending, ready)} from the intake rows, the census counts and the client's files."""
-    out = defaultdict(lambda: ({'intake': 0, 'census': 0, 'people': 0, 'documents': 0}, {'intake': 0}))
-    for deal_id, client in Intake.objects.filter(deal_id__in=ids).values_list('deal_id', 'client'):
-        keys = pending_keys(client)
-        out[deal_id][0]['intake'] = len(keys)
-        out[deal_id][1]['intake'] = sum(
-            1
-            for key in keys
-            if (link := links.get(client[key].get('link'))) is not None and request_rules.ready(link, now)
-        )
-    for deal_id, answers, added in CensusFacts.objects.filter(deal_id__in=ids).values_list(
-        'deal_id', 'pending_answers', 'pending_people'
+def _pending(ids, waiting, links, now):
+    """{deal_id: (pending, ready, sections)} from the waiting entries, the census counts and the client's files."""
+    out = {}
+    for deal_id in ids:
+        entries = waiting.get(deal_id, [])
+        sections = section_rules.counts(entries, links, now)
+        intake = sum(1 for entry in entries if entry.surface == 'intake')
+        pending = {'intake': intake, 'census': 0, 'people': 0, 'documents': 0}
+        ready = {surface: sections[surface]['to_review'] for surface in section_rules.SURFACES}
+        out[deal_id] = (pending, ready, sections)
+    for deal_id, answers, added, missing in CensusFacts.objects.filter(deal_id__in=ids).values_list(
+        'deal_id', 'pending_answers', 'pending_people', 'missing'
     ):
         out[deal_id][0].update(census=answers, people=added)
+        out[deal_id][2]['census']['missing'] = sum((missing or {}).values())
     files = Document.objects.filter(deal_id__in=ids, source='client', review_state='').values('deal_id')
     for entry in files.annotate(n=Count('id')):
         out[entry['deal_id']][0]['documents'] = entry['n']
     return out
+
+
+def _sections(found, notes):
+    """The section counts with each surface's notes (questions, drafts in the tray)."""
+    by_surface = notes.get('by_surface', {})
+    for surface, counts in found.items():
+        counts.setdefault('missing', 0)
+        counts['questions'] = (by_surface.get(surface) or {}).get('questions', 0)
+        counts['in_tray'] = (by_surface.get(surface) or {}).get('in_tray', 0)
+    return found
 
 
 def _response(rows):
@@ -141,6 +163,7 @@ def _deal_facts(rows, links, pending, notes, now, today, lost):
         'response': _response(waiting + [row for row in rows if row['state'] == request_rules.ANSWERED]),
         'pending': {**pending[0], 'total': sum(pending[0].values())},
         'ready': pending[1],
+        'sections': _sections(pending[2], notes),
         'questions': {'open': notes.get('questions', 0), 'oldest_at': _iso(notes.get('oldest'))},
         'tray': notes.get('tray', 0),
         'nudges': nudges,
@@ -159,7 +182,7 @@ def collect(deal_ids, now=None):
         deal_id: [request_rows.row(request, links.get(request.id, []), now) for request in found.get(deal_id, [])]
         for deal_id in ids
     }
-    pending = _pending(ids, by_id, now)
+    pending = _pending(ids, entry_rows.waiting(ids), by_id, now)
     notes = _notes(ids)
     deal_links = defaultdict(list)
     for request_list in found.values():

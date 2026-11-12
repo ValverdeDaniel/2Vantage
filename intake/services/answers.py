@@ -11,6 +11,8 @@ first write that changes something, never by a read.
 - `expect` ({key: the value the person last saw}) refuses the whole write with a 409 naming the questions that
   changed since (O.6 #33).
 - `origin` is `typed`, or `relay` when a person enters the client's answers for them ("These came from the client").
+  Either closes a client's answer still waiting on the same question as `replaced` (L.6 Ch. 13d, slice 55), so the
+  portal never reads it as rejected; Claude's edits leave it waiting.
 Lock order: the Deal, then the Intake row (O.3.7). One Activity row (area `intake`), coalescing a burst of edits
 ("Edited 3 intake answers"); intake's reverter puts it back. `Intake.flags` is rewritten in the same transaction.
 """
@@ -21,12 +23,12 @@ from collections import namedtuple
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
-from deals import activity
+from deals import activity, clock
 from deals.services import set_effective_date
 from deals.values import apply as apply_values
 from deals.values import source
 
-from .. import flags, form, values
+from .. import client_entries, flags, form, values
 from ..models import Intake
 from . import rows
 
@@ -101,8 +103,11 @@ def update_answers(user, deal_id, raw, *, expect=None, origin='typed', by_claude
         intake = Intake.objects.create(deal_id=deal_id)
     intake.answers = {key: value for key, value in answers.items() if key != form.EFFECTIVE_DATE}
     intake.sources = sources
+    if not by_claude:  # a person's edit closes a client answer waiting on the same question (Ch. 13d)
+        by, at = getattr(user, 'id', None), clock.now().isoformat()
+        intake.client = client_entries.replaced(intake.client, changed, by, at)
     flags.stamp(deal, intake)
-    intake.save(update_fields=['answers', 'sources', 'flags', 'updated_at'])
+    intake.save(update_fields=['answers', 'sources', 'flags', 'client', 'updated_at'])
     kept = {key: pair for key, pair in changed.items() if key != form.EFFECTIVE_DATE}
     if kept:
         entries.insert(0, activity.change(rows.intake_target(deal_id), kept))

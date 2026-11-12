@@ -90,3 +90,17 @@ BAD_PERSON = 'Send each person as {contact_id} or {name, email}.'
 BAD_REASON = 'Close it as one of: {reasons}.'
 CELLS_ELSEWHERE = 'Some of those census values are not on this deal: {ids}.'
 UNKNOWN_ACTION = 'Send an action: {actions}.'
+
+# The review queue (slice 55; old 891f1b3 `reviewrequest/vocab.py` CHANGE_KINDS, `CensusClientReview.jsx` phases).
+CHANGES = [
+    ('changed', 'Changed'),
+    ('added', 'New person'),
+    ('filled', 'Filled in'),
+    ('cleared', 'Cleared'),
+    ('same', 'Confirmed as is'),
+]
+PHASES = [
+    ('to_review', 'To review', 'Answers the client submitted, waiting on your decision'),
+    ('in_progress', 'Not submitted yet', 'What the client has typed but not submitted yet: read only until they do'),
+]
+QUEUE_SECTIONS = [('census', 'Census · client'), ('intake', 'Intake')]

@@ -10,8 +10,11 @@ class ReviewConfig(AppConfig):
 
     def ready(self):
         from deals import activity
+        from rfp.check import providers
 
-        from . import revert
+        from . import export_check, revert
         from .services import common
 
         activity.reverters[common.AREA] = revert.revert  # sent, unsent, extended, turned off and on, closed
+        # The client's census answers in every file's check (L120; slice 55): rfp never imports review (O.3.4).
+        providers.register('review', export_check.problems, export_check.stamp)

@@ -3,7 +3,7 @@
 // write can move a request in or out of the Waiting lane and change the pills' counts.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from './client';
-import { dealKey } from './deals';
+import { dealKey, invalidateDeal } from './deals';
 
 export const reviewKey = (dealId, ...rest) => dealKey(dealId, 'review', ...rest);
 
@@ -84,5 +84,38 @@ export function useCloseRequest(dealId) {
     mutationFn: async ({ requestId, reason }) =>
       (await api.post(`deals/${dealId}/review/requests/${requestId}/close/`, { reason })).data,
     onSettled: () => queryClient.invalidateQueries({ queryKey: reviewKey(dealId, 'board') }),
+  });
+}
+
+/**
+ * GET deals/{id}/review/queue/?surface=intake|census&phase=to_review|in_progress&group=&page= (L11, L16, L20; slice
+ * 55) → {surface, phase, idle_hours, phases: {to_review, in_progress}, groups: [{key, label, change, count}], items:
+ * [item], ids: [ref] (the picked group's, for "Approve all N ✓"), page: {page, page_count, row_count, has_prev,
+ * has_next}, in_progress: [{link_id, name, last_saved_at, ready_at}]}. item = {ref, kind: answer | block | person,
+ * label, section?, person?, ours, theirs (text, or a list of lines for a block), change, phase, ready_why, idle_days,
+ * link_id, via, at, group, group_label, required?, blocks?: [carrier], details?: [{label, value}], editable}.
+ */
+export function useReviewQueue(dealId, { surface, phase = 'to_review', group = '', page = 1 }, enabled = true) {
+  return useQuery({
+    queryKey: reviewKey(dealId, 'queue', surface, phase, group, page),
+    queryFn: async () =>
+      (await api.get(`deals/${dealId}/review/queue/`, { params: { surface, phase, group: group || undefined, page } }))
+        .data,
+    staleTime: 0,
+    enabled: Boolean(surface) && enabled,
+  });
+}
+
+/**
+ * mutateAsync({door, ...body}) — POST deals/{id}/review/{door}/ (L17, L43, C28, C34; slice 55): door approve with
+ * {refs} or {surface, ready_only, include_idle}; reject (Keep ours) and undo with {refs} → {approved | rejected |
+ * undone: [ref], activity_ids}. 400 {refs: [refused]}; 409 {detail, keys} (undo after a later edit). A decision moves
+ * the owners' values, so every deal query reads again (the Board, the queue, Intake, Census, the RFP's check).
+ */
+export function useDecide(dealId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ door, ...body }) => (await api.post(`deals/${dealId}/review/${door}/`, body)).data,
+    onSettled: () => invalidateDeal(queryClient, dealId),
   });
 }
