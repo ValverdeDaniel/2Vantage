@@ -4898,6 +4898,15 @@ Part D (D1–D45, D134; D.6). Slices 18–20, 24 and 66. Shown only when a key i
   and "＋ Add files" hand their files to the drawer when Claude is set up (else the tab files them itself). Not built
   here: chats and the composer (D7, D19, D25; slice 24), the lock switch and guidance box (D5's lock, D6; slice 24),
   the mic (D20; slice 66), ＋ Add SBCs and Attach SBC… (slice 22), Check again (D93; slice 22).
+- **Built in slice 66** (`src/voice/`; D20 simplified): the mic beside the composer's Send dictates through Chrome's
+  on-device speech recognition only (`processLocally`, the old D-065 rule): the voice never leaves the computer, nothing
+  is recorded or uploaded, and the words wait in the composer, like typed ones, until Send. `localSpeech.js` is the
+  only file that names the browser's speech API; `MicButton` shows only in desktop Chrome on a secure page whose model
+  is available or downloadable (asked when the drawer opens), and the first click on a computer without the speech
+  pack starts its one-time download ("Downloading Chrome's speech model…", then "Voice is ready…"), with no setup,
+  progress or help cards. Listening shows "Listening… click to stop" and the phrase being heard in grey; each finished
+  phrase joins the words after a space; a blocked microphone or silence says so in the old words; a fatal error hides
+  the mic for the session. Send (or Enter) stops the mic first, and Escape stops it before it closes the drawer (D4).
 
 ### 8.18 Commissions page (`/commissions`)
 

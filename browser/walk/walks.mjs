@@ -32,6 +32,7 @@ import { quoteDoor20 } from './quoteDoor20.mjs';
 import { quoteFirst13 } from './quoteFirst13.mjs';
 import { scanQuotes19 } from './scanQuotes19.mjs';
 import { stopLoss36 } from './stopLoss36.mjs';
+import { voice66 } from './voice66.mjs';
 
 const signIn = async ({ page, step, base, user }) => {
   await step('the sign-in page asks for a username and password', async () => {
@@ -260,4 +261,5 @@ export const WALKS = {
   s46: { ...rfp46, run: (ctx) => rfp46.run(ctx, { signIn, openDeal }) }, // slice 46's done-when (fresh GD6; re-seed after)
   s48: { ...commission48, run: (ctx) => commission48.run(ctx, { signIn, openDeal }) }, // slice 48's done-when (re-seed GD1 after)
   s53: { ...review53, run: (ctx) => review53.run(ctx, { signIn, openDeal }) }, // slice 53's done-when (re-seed GD4 after)
+  s66: { ...voice66, run: (ctx) => voice66.run(ctx, { signIn, openDeal }) }, // slice 66's done-when (a fake recognizer; no Claude, no writes)
 };

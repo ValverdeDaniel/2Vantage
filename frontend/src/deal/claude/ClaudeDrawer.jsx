@@ -1,18 +1,19 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { stopActiveDictation } from '../../voice/localSpeech';
 
 /*
  * The Work with Claude drawer (plan.md §8.17; D4; the old ScanDrawer): a right panel over the page, with no scrim, so
  * the table behind stays usable; min(560 px, 94 vw), widening to 880 px while a review card shows (the stylesheet's
  * `:has(.bnf-staged-review)`). Not the modal kit drawer (`ui/Drawer`). Escape closes it, unless a dialog is open
- * over it (the dialog takes its own Escape); the microphone it would stop first is slice 66's. `headerExtra` sits in
- * the head (the "Reading" picker, D5).
+ * over it (the dialog takes its own Escape); while the mic is dictating, Escape stops the mic first (D4, D20).
+ * `headerExtra` sits in the head (the "Reading" picker, D5).
  */
 export default function ClaudeDrawer({ title = 'Work with Claude', headerExtra = null, onClose, children }) {
   useEffect(() => {
     const onKey = (event) => {
       if (event.key !== 'Escape' || document.querySelector('[aria-modal="true"]')) return;
-      onClose?.();
+      if (!stopActiveDictation()) onClose?.();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
