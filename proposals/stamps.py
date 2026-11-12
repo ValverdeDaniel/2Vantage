@@ -4,8 +4,8 @@ previews on, so a preview is built again only when something a client file print
 - `files` moves with the deal's latest recorded write (rule 4: every write is in Activity), and at midnight (the files
   print today's date). A completed mark moves nothing (J107: "marks ignored"), nor do downloads and views, which
   change no file. A superset of "something a client file prints changed": any recorded write to the deal moves it.
-- `firm` moves with the agency settings (logo, colour, contact, producer), the firm pages and the team, which Django
-  admin edits without an Activity row.
+- `firm` moves with the agency settings (logo, colour, contact, producer), the firm pages, the team and the cover
+  images (slice 34's drawer and uploads; firm rows carry no deal, so they never move `files`).
 Reads only: a fixed number of queries whatever the deal holds (Q.3 #4).
 """
 
@@ -15,7 +15,7 @@ from deals import clock
 from deals.activity import ACCESS
 from deals.models import Activity, AgencySettings
 
-from .models import FirmPages, TeamMember
+from .models import CoverImage, FirmPages, TeamMember
 from .services import AREA, MARKED
 
 AGENCY_FIELDS = ('name', 'address', 'city_state_zip', 'phone', 'email', 'brand_color', 'logo', 'producer_name')
@@ -42,7 +42,8 @@ def firm():
     agency = AgencySettings.objects.filter(pk=1).values_list(*AGENCY_FIELDS).first()
     pages = FirmPages.objects.values_list('about_text', 'about_stats', 'service_calendar', 'updated_at').first()
     team = list(TeamMember.objects.order_by('id').values_list(*TEAM_FIELDS))
-    return _digest(agency, pages, team)
+    covers = list(CoverImage.objects.order_by('id').values_list('id', 'image'))
+    return _digest(agency, pages, team, covers)
 
 
 def stamps(deal):

@@ -118,8 +118,9 @@ def test_J18_J19_marks_count_the_cards_on_screen_and_an_edit_clears_only_its_own
     medical = {'quotes': stamp, 'rows': stamp, 'markets': stamp}
     stored = {'cover': stamp, 'pages': stamp, 'lines': {'medical': medical, 'dental': {'quotes': stamp}}}
     counted = marks.counted(['medical', 'dental'])
-    assert ('cover', None) not in counted and ('pages', None) not in counted  # not on screen yet / optional
-    assert marks.done(stored, ['medical', 'dental']) == {'done': 4, 'total': len(counted)}
+    assert ('cover', None) in counted and ('pages', None) not in counted  # on screen since slice 34 / optional
+    assert ('pictures', None) not in counted  # optional
+    assert marks.done(stored, ['medical', 'dental']) == {'done': 5, 'total': len(counted)}
     assert marks.line_done(stored, 'medical') and not marks.line_done(stored, 'dental')
     owners = {('rows', 'medical'), ('rows', 'dental')}
     assert marks.cleared_by(stored, owners) == ['marks.lines.medical.rows']  # dental's rows card was never marked

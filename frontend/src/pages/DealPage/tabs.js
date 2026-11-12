@@ -10,7 +10,7 @@ export const TAB_COMPONENTS = {
   rfp: lazy(() => import('../../deal/rfp')), // the RFP tab (K1; slices 44–46)
   commission: lazy(() => import('../../deal/commission')), // rates, expected revenue and the split (H1–H24; slice 48)
   advisor: lazy(() => import('../../deal/advisor')),
-  proposal: lazy(() => import('../../deal/proposal')),
+  proposal: lazy(() => import('./ProposalRoute')), // the packet card over the Advisor's board, composed here (J.3.6)
   documents: lazy(() => import('../../deal/documents')),
 };
 

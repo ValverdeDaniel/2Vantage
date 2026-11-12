@@ -82,6 +82,7 @@ export function runningTitle(job) {
     return `Waiting for the job ahead (${job.queue_position === 1 ? 'next' : `${job.queue_position} in line`})`;
   }
   if (job.kind === 'locate') return 'Checking the values against the files';
+  if (job.kind === 'issue') return 'Building the proposal files'; // Issue to client (slice 32): not Claude's
   if (job.kind === 'turn') return 'Answering your message';
   const files = job.documents.length === 1 ? 'the file' : `${job.documents.length} files`;
   return `Reading ${files}`;
@@ -90,6 +91,7 @@ export function runningTitle(job) {
 /** The strip's line while Claude works (D34): "Claude is reading the quotes · 40%". */
 export function stripDoing(job) {
   if (job.kind === 'locate') return `Claude is checking the values against the files · ${job.progress || 0}%`;
+  if (job.kind === 'issue') return `Building the proposal files · ${job.progress || 0}%`;
   if (job.kind === 'turn') return job.status === 'queued' ? 'Claude will answer after the job ahead' : 'Claude is answering a message';
   const where = job.status === 'queued' ? 'waiting to start' : `${job.progress || 0}%`;
   return `Claude is reading ${job.documents.length === 1 ? 'the file' : 'the files'} · ${where}`;

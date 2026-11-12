@@ -4,15 +4,16 @@ J47–J67; J.6.5).
 {config, marks: {done, total, stored}, lines: [line block], ready: {ok, missing, sentence, draft}, checks: [item],
  output: {layout, package_summary, compare_tabs, disclaimers, compare_slots, pages: {page: bool}}, experience:
  {summary, rows}, next_steps, summary: {on, picked, standard, blocks, medicare}, markets: {has_asks, auto, override,
- on, lines}, ledger: [page], best_only: sentence | null, issues: [], stamps: {files, firm}}
+ on, lines}, ledger: [page], best_only: sentence | null, issues: [issue], stamps: {files, firm}}
 
 The builder's lines are the lines holding plans plus the lines the intent keeps as-is (their incumbent stands as the
 recommendation, J47), in the producer's order (`config.order`, J31), each laid out as the files print it
 (`line_layout`, so its option numbers are the ones Pages shows and Issue stamps). A line the intent keeps off stays in
 the list with its notice (J30) and prints nowhere. The deal cards (`deal_cards`) read the lines on the proposal.
 Reads only, in a fixed number of queries whatever the plan count (Q.3 #2, #4): `deal_state`, the intent, the config
-row, the option-number tops, the census's ages, who the RFP asked and the firm's pages (the ledger, slice 29). The
-issues list arrives with Issue (slice 32). `stamps` keys the Export viewer's previews (slice 28; `stamps.py`).
+row, the option-number tops, the census's ages, who the RFP asked and the firm's pages (the ledger, slice 29), and
+the issued versions (`issues.selectors`, slice 32; the packet card's Issued list). `stamps` keys the Export viewer's
+previews (slice 28; `stamps.py`).
 """
 
 from deals import rules
@@ -25,6 +26,7 @@ from rfp.selectors import asked_by_line
 
 from . import checks, config, deal_cards, line_block, line_layout, marks, ready, stamps
 from . import summary_read as read
+from .issues import selectors as issue_list
 from .models import ProposalConfig
 from .story import firm_read
 
@@ -36,7 +38,7 @@ def best_only(sheets):
     return f'Pick a recommendation on {", ".join(waiting)} first' if waiting else None
 
 
-def _stored(deal):
+def stored_rows(deal):
     row = ProposalConfig.objects.filter(deal=deal).values_list('config', 'marks').first()
     return row or ({}, {})
 
@@ -50,8 +52,9 @@ def proposal_lines(deal, states=None):
     return [*states, *kept], line_states, off, states
 
 
-def payload(deal):
-    stored, stored_marks = _stored(deal)
+def laid_lines(deal, stored, stored_marks):
+    """(builder line blocks, fact sheets, deal-card entries) in the producer's order: the lines as the files print
+    them. Issue's gate reads the same sheets (`issues.gate`), so the builder's banner and Issue never disagree."""
     keys, line_states, off, states = proposal_lines(deal)
     keys = config.ordered(stored, keys)
     tops = line_layout.tops(deal, keys)
@@ -74,6 +77,12 @@ def payload(deal):
         sheets.append(line_block.facts(line, state, laid, ctx))
         if line not in off:
             entries.append((line, state, laid, line_states.get(line, ''), intent_rows.get(line)))
+    return blocks, sheets, entries
+
+
+def payload(deal):
+    stored, stored_marks = stored_rows(deal)
+    blocks, sheets, entries = laid_lines(deal, stored, stored_marks)
     on = [entry[0] for entry in entries]
     gate = ready.ready(sheets)
     cards = deal_cards.cards(
@@ -110,6 +119,6 @@ def payload(deal):
         'markets': cards['markets'],
         'ledger': cards['ledger'],
         'best_only': best_only(sheets),
-        'issues': [],
+        'issues': issue_list.issues(deal),
         'stamps': stamps.stamps(deal),
     }

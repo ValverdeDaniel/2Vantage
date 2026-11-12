@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { useDeal } from '../../../api/deals';
 import { useProposal } from '../../../api/proposals';
 import InlineError from '../../../ui/InlineError';
 import Loading from '../../../ui/Loading';
 import BuilderToolbar from './BuilderToolbar';
+import CoverCard from './CoverCard';
 import CoverageCard from './CoverageCard';
 import EnrollmentStrip from './EnrollmentStrip';
+import FirmPagesDrawer from './FirmPagesDrawer';
 import IncumbentCard from './IncumbentCard';
 import LineTabs from './LineTabs';
 import MarketsCard from './MarketsCard';
@@ -12,6 +15,8 @@ import NextStepsCard from './NextStepsCard';
 import OffNotice from './OffNotice';
 import OutputCard from './OutputCard';
 import PagesCard from './PagesCard';
+import { LayoutTemplates, RowsTemplates, SummaryTemplates } from './PartTemplates';
+import PicturesCard from './PicturesCard';
 import PlansCard from './PlansCard';
 import RowsCard from './RowsCard';
 import SummaryCard from './SummaryCard';
@@ -24,10 +29,11 @@ const storage = () => (typeof window === 'undefined' ? null : window.localStorag
 /*
  * The proposal builder, the Advisor's "Proposal builder" view (plan.md §8.14; J17–J20, J23, J27–J31, J38–J67; the old
  * ProposalBuilder.jsx at 891f1b3, split by responsibility), in the old card order: the toolbar (marks, checks, the
- * readiness banner); the deal cards How the documents look, Presentation pages (with plan experience) and Coverage &
- * marketing intent; the line tabs, and per line the Plans card (or a kept line's incumbent card) with the
- * EnrollmentStrip and the rows card; then the Executive summary, Next steps and the line's Markets checked. The cover,
- * pictures, team and templates join with slice 34.
+ * readiness banner); the deal cards Cover, Pictures, How the documents look, Presentation pages (with team picks and
+ * plan experience) and Coverage & marketing intent; the line tabs, and per line the Plans card (or a kept line's
+ * incumbent card) with the EnrollmentStrip and the rows card; then the Executive summary, Next steps and the line's
+ * Markets checked. The layout, rows and summary cards carry their TEMPLATE bars (J68); the Firm pages drawer (J155)
+ * opens from the Presentation pages card and a firm page's Fix ▸ (slice 34).
  *
  * "Open proposal ▸" calls `onExport`: the Advisor shows its Export viewer (J27; slice 28); "See the slides ▸" on the
  * Plans card calls `onSlides`: the viewer on the PowerPoint, at the line's first plan set (J58; slice 30).
@@ -48,7 +54,9 @@ export default function ProposalBuilder({
 }) {
   const proposal = useProposal(dealId);
   const writes = useBuilderWrites(dealId);
+  const client = useDeal(dealId).data?.client?.name ?? '';
   const [showChecks, setShowChecks] = useState(false);
+  const [firmOpen, setFirmOpen] = useState(false);
   const [rowsMode, setRowsMode] = useState(() => readRowsPref(storage()));
   const [picked, setPicked] = useState(null); // a kept line with no plans is the builder's alone, so it keeps its own
   const data = proposal.data;
@@ -101,6 +109,8 @@ export default function ProposalBuilder({
     setRowsMode(mode);
     writeRowsPref(storage(), mode);
   };
+  const fix = (item) => (item.fix?.drawer === 'firm' ? setFirmOpen(true) : cards.fix(item));
+  const writing = { busy: writes.busy, onApply: writes.setPaths };
 
   return (
     <div className="bnf-build" data-guide="proposal-builder">
@@ -115,6 +125,23 @@ export default function ProposalBuilder({
         onFix={cards.fix}
         onOpenProposal={onExport}
       />
+      <CoverCard
+        output={data.output}
+        words={{ title: data.config.title ?? '', intro: data.config.intro ?? '' }}
+        client={client}
+        meta={proposalMeta}
+        card={cards.props('cover')}
+        busy={writes.busy}
+        onSet={set}
+      />
+      <PicturesCard
+        output={data.output}
+        meta={proposalMeta}
+        card={cards.props('pictures')}
+        busy={writes.busy}
+        onSet={set}
+        onSetMany={writes.setPaths}
+      />
       <OutputCard
         output={data.output}
         meta={proposalMeta}
@@ -122,17 +149,21 @@ export default function ProposalBuilder({
         card={cards.props('output')}
         busy={writes.busy}
         onSet={set}
+        templates={<LayoutTemplates output={data.output} {...writing} />}
       />
       <PagesCard
         ledger={data.ledger}
         output={data.output}
         experience={data.experience}
+        team={data.config.team ?? null}
         meta={proposalMeta}
         card={cards.props('pages')}
         busy={writes.busy}
         onSet={set}
-        onFix={cards.fix}
+        onFix={fix}
+        onFirm={() => setFirmOpen(true)}
       />
+      <FirmPagesDrawer open={firmOpen} meta={proposalMeta} onClose={() => setFirmOpen(false)} />
       <CoverageCard dealId={dealId} meta={meta} card={cards.props('coverage')} />
       <LineTabs
         lines={data.lines}
@@ -171,7 +202,14 @@ export default function ProposalBuilder({
           actions={actions}
         />
       )}
-      <RowsCard line={line} card={cards.props('rows')} meta={proposalMeta} busy={writes.busy} onSet={set} />
+      <RowsCard
+        line={line}
+        card={cards.props('rows')}
+        meta={proposalMeta}
+        busy={writes.busy}
+        onSet={set}
+        templates={<RowsTemplates key={key} line={line} {...writing} />}
+      />
       <SummaryCard
         summary={data.summary}
         lines={data.lines}
@@ -181,6 +219,7 @@ export default function ProposalBuilder({
         card={cards.props('summary')}
         busy={writes.busy}
         onSet={set}
+        templates={<SummaryTemplates summary={data.summary} {...writing} />}
       />
       <NextStepsCard
         key={JSON.stringify(data.next_steps)}

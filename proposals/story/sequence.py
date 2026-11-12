@@ -65,11 +65,12 @@ def _sections(facts, colours):
 
 
 def story(facts):
-    """[[flowable]]: the cover, then every page in order, ending with the important information."""
+    """[[flowable]]: the cover (unless the producer switched it off, J34), then every page in order, ending with the
+    important information."""
     colours = look.colours_of(facts)
     sections, on = _sections(facts, colours)
     pictures, draft = facts['pictures'], facts['draft']
-    out = [opening.cover(facts)]
+    out = [opening.cover(facts)] if facts.get('cover_on', True) else []
     framed = on('agenda') and len(sections) >= 3
     if framed:
         entries = [{'title': section['title'], 'sub': section['sub']} for section in sections]

@@ -1,7 +1,8 @@
 """Revert of a proposal Activity row (plan.md §3.7, O.3.2; J.6.10): a setting's earlier value, a card's mark.
 Registered as `activity.reverters['proposal']` in ProposalsConfig.ready().
 
-`deals.activity.revert` has already locked the Deal; this locks the config row. It refuses after a later write to the
+`deals.activity.revert` has already locked the Deal; this locks the config row. An issue's rows (slice 32: a version
+that could not be built) are refused: what was issued is kept. It refuses after a later write to the
 same path (naming it), and otherwise puts each path's "before" back — a setting into `config`, a mark into `marks`
 (paths "marks.…"). Returns the changes it wrote.
 """
@@ -27,8 +28,12 @@ WORDS = {
     'summary.on': "The executive summary's Show it",
     'summary.blocks': "The executive summary's figures",
     'markets.on': "Markets checked's Show it",
+    'output.cover.on': 'The cover page switch',
+    'output.cover.image': 'The cover picture',
+    'team': "Who is on this client's team",
 }
 PAGE_LABELS = dict(catalog.PAGES)
+PLACE_LABELS = dict(catalog.PICTURE_PLACES)
 
 
 def label(path):
@@ -45,13 +50,22 @@ def label(path):
         return f'{lines.label(parts[1])}: {parts[2].replace("_", " ")}'
     if parts[:2] == ['output', 'pages']:
         return f'The switch for the {PAGE_LABELS.get(parts[2], parts[2])} page'
+    if parts[:2] == ['output', 'pictures']:
+        return f'The picture on the {PLACE_LABELS.get(parts[2], parts[2])}'
     if parts[:2] == ['markets', 'lines']:
         what = 'the hidden carriers' if parts[3] == 'hidden' else "a carrier's note"
         return f'Markets checked on {lines.label(parts[2])}: {what}'
     return path
 
 
+ISSUED = (
+    'An issued proposal is kept as the client was sent it, so this cannot be reverted. Issue a new version instead.'
+)
+
+
 def revert(row, user):  # noqa: ARG001 (the reverters' signature)
+    if any(not entry['t'].startswith('proposal:') for entry in row.changes):
+        raise activity.Refused(ISSUED)  # an issue's own rows (slice 32): never put back
     later = activity.later_keys(row)
     if later:
         keys = sorted(later)

@@ -8,9 +8,10 @@ import { groupRows, rowSections, rowsSummary, toggledRows } from './builderModel
  * comparison, Cost summary, Recommendation), the client-facing stop-loss row set, the note under the table (≤4 lines,
  * 600 characters, saved on blur), the plan cards' stats, and the benefit rows by group with all / none. Each control
  * writes one path of the line's settings (`lines.<line>.…`); `rows` null is every row with a value (the default) and
- * [] is "show no benefit rows". Only rows a client file may print are offered (no lasers, J.5 B3).
+ * [] is "show no benefit rows". Only rows a client file may print are offered (no lasers, J.5 B3). `templates` is the
+ * line's row-set TEMPLATE bar (J68; slice 34).
  */
-export default function RowsCard({ line, card, meta, busy, onSet }) {
+export default function RowsCard({ line, card, meta, busy, onSet, templates = null }) {
   const [note, setNote] = useState(null);
   const spec = line.spec;
   const keys = line.rows.map((row) => row.key);
@@ -65,6 +66,7 @@ export default function RowsCard({ line, card, meta, busy, onSet }) {
           }}
         />
       </label>
+      {templates}
       <CardStatsPicker line={line} max={meta.limits.card_stats} busy={busy} onChange={(next) => set('card_stats', next)} />
       <div className="bnf-build-rowshead">
         <span className="bnf-build-rowgroup-title">Benefit rows</span>

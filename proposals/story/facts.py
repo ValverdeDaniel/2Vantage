@@ -3,16 +3,17 @@
 
 Reads, in a fixed number of queries whatever the plan count: the builder's lines (`builder.proposal_lines`: quotes'
 `deal_state`, the intent), each line laid out as Pages and Issue lay it out (`line_layout`), the config row, the
-deal cards' summary and Markets checked (`deal_cards`), the agency settings, the firm's pages and team. Pictures
-and photos travel as bytes in `sources`, never as paths (J.5 B12). Firm pages print nothing until written (OQ41):
+deal cards' summary and Markets checked (`deal_cards`), the agency settings, the firm's pages and team, and the
+firm's uploads the deal's pictures name (`pictures`, slice 34). Uploads and photos travel as bytes in `sources`,
+never as paths (J.5 B12). Firm pages print nothing until written (OQ41):
 blank About, figures, calendar and team stay blank here.
 
 {client, title, kind, year, renewal, effective, prepared_on, prepared_by, draft, version, agency {name, phone,
  email, brand, logo}, intro, recommendation, pages {agenda, about, team, experience, calendar, bios}, layout,
  package_summary, firm {about, stats, calendar}, team [{id, name, title, group, phone, email, bio, photo}],
- experience {summary, rows [{period, premium, claims, ratio}]}, next_steps, pictures {cover, agenda, sections,
- closing}, summary {on, blocks}, markets {on, lines}, glance_facts (the summary's line facts), lines [line Facts],
- kept [kept line], sources {src: bytes}}
+ experience {summary, rows [{period, premium, claims, ratio}]}, next_steps, cover_on, pictures {cover, agenda,
+ sections, closing}, summary {on, blocks}, markets {on, lines}, glance_facts (the summary's line facts),
+ lines [line Facts], kept [kept line], sources {src: bytes}}
 """
 
 from deals import clock, rules
@@ -24,7 +25,7 @@ from quotes import math as m
 from quotes.selectors.state import empty
 from rfp.selectors import asked_by_line
 
-from .. import builder, catalog, config, deal_cards, line_block, line_layout, ready
+from .. import builder, config, deal_cards, line_block, line_layout, pictures, ready
 from .. import summary_read as read
 from . import firm_read, line_facts
 
@@ -137,7 +138,8 @@ def facts(deal):
         'team': firm_read.team(stored, sources),
         'experience': experience(stored),
         'next_steps': [s for s in config.get(stored, 'next_steps') if (s.get('text') or '').strip()],
-        'pictures': catalog.picture_sources(catalog.default_pictures()),
+        'cover_on': output['cover']['on'],
+        'pictures': pictures.sources_for(stored, sources),
         'summary': {
             'on': cards['summary']['on'],
             'blocks': [block for block in cards['summary']['blocks'] if block.get('available')],

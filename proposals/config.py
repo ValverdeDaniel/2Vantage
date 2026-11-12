@@ -6,9 +6,10 @@ stored config (`merge`) so two people writing different paths never undo each ot
 (`card_of`), whose completed mark the write clears (J19). Ported from old Vantage 891f1b3 `pipeline/composition.py`
 (`clean_composition`, `merge_config`): the old one-key-at-a-time merge becomes a merge by path.
 
-A path not listed here is not a setting yet: it answers 400 until the slice that owns its card adds it (the cover,
-pictures and team, slice 34; `lines.<line>.merged`, slice 33). Values left at their default are removed from the
-stored config, so "unset" and "default" never differ.
+A path not listed here is not a setting yet: it answers 400 until the slice that owns its card adds it
+(`lines.<line>.merged`, slice 33). The cover (`output.cover.{on, image}`), the pictures (`output.pictures.<place>`) and
+the team picks (`team`) came with slice 34. Values left at their default are removed from the stored config, so
+"unset" and "default" never differ.
 """
 
 import copy
@@ -39,6 +40,12 @@ def _output(path, rest, value):
         return c.compare_slots(path, value)
     if len(rest) == 2 and rest[0] == 'pages' and rest[1] in catalog.PAGE_KEYS:
         return c.switch(path, value)
+    if rest == ['cover', 'on']:
+        return c.switch(path, value)
+    if rest == ['cover', 'image']:
+        return c.cover_image(path, value)
+    if len(rest) == 2 and rest[0] == 'pictures' and rest[1] in catalog.PICTURE_PLACE_KEYS:
+        return c.picture(path, rest[1], value)
     raise _unknown(path)
 
 
@@ -85,6 +92,8 @@ def clean(path, value):
         return path, c.order(path, value)
     if path == 'next_steps':
         return path, c.next_steps(path, value)
+    if path == 'team':
+        return path, c.team(path, value)
     if path == 'experience.summary':
         return path, c.text(path, value, catalog.MAX_TEXT)
     if path == 'experience.rows':
@@ -107,6 +116,10 @@ def default(path):
     parts = path.split('.')
     if path in ('order', 'next_steps', 'experience.rows', 'summary.blocks'):
         return []
+    if path in ('team', 'output.cover.image', 'markets.on'):
+        return None
+    if parts[:2] == ['output', 'pictures'] and len(parts) == 3:
+        return catalog.DEFAULT_PICTURES.get(parts[2])
     if path == 'summary.on' or (parts[0] == 'output' and (parts[-1] in catalog.OUTPUT_SWITCHES or len(parts) == 3)):
         return True
     if parts[0] == 'lines' and len(parts) == 4 and parts[2] == 'parts':
@@ -117,8 +130,6 @@ def default(path):
         return pages.DEFAULT_LAYOUT
     if path == 'output.compare_slots':
         return catalog.DEFAULT_COMPARE_SLOTS
-    if path == 'markets.on':
-        return None
     if parts[0] == 'markets' and parts[-1] == 'hidden':
         return []
     return ''
@@ -202,7 +213,11 @@ CARD_BY_HEAD = {
     'next_steps': 'next_steps',
     'summary': 'summary',
     'experience': 'pages',
+    'team': 'pages',  # who is on this client's team sits on the Presentation pages card (J43)
 }
+
+
+OUTPUT_CARDS = {'pages': 'pages', 'cover': 'cover', 'pictures': 'pictures'}
 
 
 def card_of(path):
@@ -217,7 +232,7 @@ def card_of(path):
     if head == 'lines':
         return 'rows', parts[1]
     if head == 'output':
-        return ('pages' if parts[1:2] == ['pages'] else 'output'), None
+        return OUTPUT_CARDS.get(parts[1] if len(parts) > 1 else '', 'output'), None
     if head == 'markets':
         return 'markets', parts[2] if parts[1:2] == ['lines'] else EVERY_LINE
     return None
@@ -242,13 +257,29 @@ def ordered(stored, keys):
 
 
 def output(stored):
-    """The output settings with their defaults filled in: what How the documents look and the page switches show."""
+    """The output settings with their defaults filled in: what How the documents look, the page switches, the Cover
+    card and the Pictures card show."""
     return {
         'layout': get(stored, 'output.layout'),
         **{key: get(stored, f'output.{key}') for key in catalog.OUTPUT_SWITCHES},
         'compare_slots': get(stored, 'output.compare_slots'),
         'pages': {key: get(stored, f'output.pages.{key}') for key in catalog.PAGE_KEYS},
+        'cover': {'on': get(stored, 'output.cover.on'), 'image': get(stored, 'output.cover.image')},
+        'pictures': {place: get(stored, f'output.pictures.{place}') for place in catalog.PICTURE_PLACE_KEYS},
     }
+
+
+def output_paths():
+    """Every `output` path, in the card's order: what a layout template holds (J68)."""
+    return [
+        'output.layout',
+        *(f'output.{key}' for key in catalog.OUTPUT_SWITCHES),
+        'output.compare_slots',
+        *(f'output.pages.{key}' for key in catalog.PAGE_KEYS),
+        'output.cover.on',
+        'output.cover.image',
+        *(f'output.pictures.{place}' for place in catalog.PICTURE_PLACE_KEYS),
+    ]
 
 
 def experience(stored):

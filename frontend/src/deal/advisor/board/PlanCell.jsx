@@ -9,7 +9,8 @@ import ReplacingPicker from './ReplacingPicker';
  * The Plan cell (plan.md §8.14; F43, F44, F52, F62; the old AdvisorTab's `carrier` column): its chips, the arrows
  * while the board reads in the client's order (▲▼ down the rows, ◀▶ transposed; OQ13: on every line), the carrier
  * and name with the compliance chip, the star's reason, "Replacing:", and under a priced version what must sell and
- * when it was priced. The ⋯ menu keeps 2V's plan actions until their slices place them (F134).
+ * when it was priced. The ⋯ menu keeps 2V's plan actions until their slices place them (F134). The Proposal tab's
+ * board (presented mode, slice 32) draws no "Replacing:", as the old Plan comparison did not (`ui.replacing` false).
  */
 export default function PlanCell({ plan, board, ui }) {
   const { order, currents } = board;
@@ -53,7 +54,9 @@ export default function PlanCell({ plan, board, ui }) {
         )}
       </div>
       {plan.starred && plan.star?.reason && <div className="bnf-shortlist-reason">{plan.star.reason}</div>}
-      <ReplacingPicker plan={plan} currents={currents} busy={ui.linking} onChange={ui.actions.link} />
+      {ui.replacing !== false && (
+        <ReplacingPicker plan={plan} currents={currents} busy={ui.linking} onChange={ui.actions.link} />
+      )}
       {requires && <div className="bnf-conc-requires">requires {requires}</div>}
       {priced && plan.derived?.at && <div className="bnf-conc-updated">updated {formatDate(plan.derived.at)}</div>}
     </>

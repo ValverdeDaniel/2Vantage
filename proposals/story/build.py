@@ -33,8 +33,12 @@ def lay_out(found):
     return record.lay_out(sequence.story(found), chrome_of(found))
 
 
-def deck(deal):
+def deck(deal, version=None):
+    """`version`: the issued version being built (Issue's job, slice 32): no Draft mark, "Version n" in the footer
+    (J102; OQ35). A draft (None) is every other build."""
     found = client_facts.facts(deal)
+    if version:
+        found.update(draft=False, version=version)
     return {
         'title': f'{found["client"]} — Employee Benefits Proposal',
         'pages': lay_out(found),

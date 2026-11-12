@@ -2,6 +2,7 @@
 // ['deal', id, 'proposal', 'pages', line, preset]; the Export viewer's previews ['proposal-preview', id, file, tab,
 // files stamp, firm stamp] (slice 28), outside ['deal', id] so a deal write does not rebuild them: their stamps do.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { aiKey, watchJob } from './ai';
 import api from './client';
 import { dealKey, invalidateDeal } from './deals';
 
@@ -11,7 +12,9 @@ export const proposalKey = (dealId) => dealKey(dealId, 'proposal');
  * The builder (J.6.5): {config, marks: {done, total, stored}, lines: [{line, label, state, chip, off, done, rate_basis,
  * currents, incumbent, quotes, starred, presented_ids, pages, room, recommendation: {covered, missing, needs_pick,
  * plans, groups, sold, renewals, keepable}, reasons, enrollment, spec, rows, card_stats, card_stats_standard,
- * preset}], ready: {ok, missing, sentence, draft}, checks: [{code, level, line, line_label, text, fix}], issues}.
+ * preset}], ready: {ok, missing, sentence, draft}, checks: [{code, level, line, line_label, text, fix}], issues: [{version,
+ * state: building | issued | failed, error, created_at, created_by, issued_at, issued_by, job: {id, status, progress,
+ * step} | null, files: [{key, label, document_id, name, size}]}] (slice 32, newest first).
  * Every deal write refetches it (invalidateDeal), so a star or a pick shows here at once.
  */
 export function useProposal(dealId) {
@@ -106,4 +109,36 @@ export function lastPreview(queryClient, dealId, file) {
     .filter((query) => query.state.data)
     .sort((a, b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt);
   return found[0]?.state.data;
+}
+
+/**
+ * Issue to client (slice 32; J103): `POST deals/{id}/proposal/issue/` → 202 the new version, building, its `job_id`
+ * (200: the version already building) · 409 {detail, blockers}. The `issue` job is watched like any job: the deal's
+ * AI poll (useAiState) follows it, and when it lands it refetches the proposal, the documents and the header (the
+ * stage moves to Proposal), its `landed.areas`.
+ */
+function useIssueWrite(dealId, path) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (version) => (await api.post(`deals/${dealId}/proposal/${path(version)}`, {})).data,
+    onSuccess: (issue) => {
+      if (issue.job_id) watchJob(dealId, { id: issue.job_id });
+      queryClient.invalidateQueries({ queryKey: aiKey(dealId) });
+      invalidateDeal(queryClient, dealId, { header: true });
+    },
+  });
+}
+
+export function useIssue(dealId) {
+  return useIssueWrite(dealId, () => 'issue/');
+}
+
+/** Retry a failed version (J103): (version) → 202 the version building again · 409 for an issued one. */
+export function useRetryIssue(dealId) {
+  return useIssueWrite(dealId, (version) => `issues/${version}/retry/`);
+}
+
+/** An issued version's stored file (`pdf`, `pptx`, `xlsx`), its Letter PDF (`letter`) or its zip (`packet`). */
+export function issuedFileUrl(dealId, version, file) {
+  return `deals/${dealId}/proposal/issues/${version}/${file}/`;
 }

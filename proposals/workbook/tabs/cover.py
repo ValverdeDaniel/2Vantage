@@ -7,7 +7,8 @@ between two groups is a short row written only when something follows it. Never 
 "Prepared by" is the agency, with the deal's agent (`deals.rules.agent_name`: its agent of record, else its owner,
 else the agency producer; OQ41) and the agency's phone and email under it. The words under "Our recommendation" are
 `why.why_for`'s, line by line (J57): a line's own words under its name, or the deal-wide words once when no line has
-its own. The cover image banner waits for the covers (slice 34).
+its own. Row 1 carries the cover's upload as a banner across B to H when the proposal has one (old `_banner`, COV-1c;
+slice 34): a stock picture never reaches the spreadsheet; with none the row stays a spacer.
 """
 
 import io
@@ -22,6 +23,7 @@ from . import common
 FIRST, LAST = 2, 8
 LOGO_HEIGHT_PX = 80
 LOGO_ROW_PT = 62
+BANNER_ROW_PT = 149  # 198 px, the banner's height (old `BANNER_ROW_PT`)
 PARA_LIMIT = 1200
 SNAPSHOT = 'Figures as of this download; they do not recalculate when counts or rates are edited.'
 _DASHES = frozenset('-–—')
@@ -88,6 +90,16 @@ class _Cover:
 
     def agency_name(self):
         return self.facts.agency['name'] or 'Vantage Risk Solutions'
+
+    def banner(self, row):
+        """The cover's upload across B to H (`pictures.banner`: cropped to twice 790 × 198 px, shown at half)."""
+        data = getattr(self.facts, 'banner', None)
+        if not data:
+            return
+        self.sheet.images.append(
+            {'row': row, 'col': FIRST, 'data': data, 'name': 'cover.jpg', 'x_scale': 0.5, 'y_scale': 0.5}
+        )
+        self.sheet.heights[row] = BANNER_ROW_PT
 
     def logo(self, row):
         data = self.facts.logo
@@ -191,6 +203,7 @@ class _Cover:
         for col in range(FIRST, LAST + 1):
             sheet.widths[col] = 15.5
         cells.spacer(sheet, 1)
+        self.banner(1)
         self.logo(2)
         cells.spacer(sheet, 3)
         self.merged(

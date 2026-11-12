@@ -6,10 +6,10 @@ import { outputSummary } from './dealCardsModel';
  * (a page per carrier, every option side by side, or the recommendation only, which waits for every pick), the
  * package summary, and the client spreadsheet's Compare tabs, Disclaimers tab and Compare columns. Each control writes
  * one path of `output` (J20); `output` arrives with its defaults filled in. The Format (Presentation / Classic) and the
- * share link's period wait (J36, J37, J40; OQ8); layout templates come with slice 34 (J68). Every word of a choice is
- * the server's (`/api/meta/` proposal).
+ * share link's period wait (J36, J37, J40; OQ8). `templates` is the layout's TEMPLATE bar (J68; slice 34). Every word of
+ * a choice is the server's (`/api/meta/` proposal).
  */
-export default function OutputCard({ output, meta, bestOnly, card, busy, onSet }) {
+export default function OutputCard({ output, meta, bestOnly, card, busy, onSet, templates = null }) {
   const value = (key) => output[key];
   const set = (key, next) => onSet(`output.${key}`, next);
   const comparing = value('compare_tabs');
@@ -93,6 +93,7 @@ export default function OutputCard({ output, meta, bestOnly, card, busy, onSet }
           </div>
           <span className="bnf-output-hint">side by side; the drop-down lists every quote</span>
         </div>
+        {templates}
       </div>
     </BuilderCard>
   );

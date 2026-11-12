@@ -2,3 +2,5 @@
 export { default } from './AdvisorTab';
 // The quote reader's body for the staged review card, which deal/claude/ mounts on Documents (D28; slice 18).
 export { default as QuoteReview } from './claude/QuoteReview';
+// The board in presented mode, which the route puts under the Proposal tab's packet card (J70–J94; slice 32).
+export { default as PresentedBoard } from './presented/PresentedBoard';

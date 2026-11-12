@@ -3,8 +3,8 @@
 The client's name is the hero on the dark ground, the firm's logo above it; under the rule what the document is (the
 producer's own title, else "2027 Benefits Renewal" or "… Proposal"), then when coverage starts and who prepared it
 and when ("Prepared by" is the agent-name rule: the agent of record, else the deal's owner, else the agency's
-producer; OQ41). The stock picture stands in its frame (J35's default until slice 34's Pictures card); Draft until
-the proposal is issued (OQ35). A Classic cover (white) waits with Classic (J143).
+producer; OQ41). The picture in its frame is the cover's upload, else its stock pick (J33, J35; `pictures`); Draft
+until the proposal is issued (OQ35). The six white Classic designs wait with Classic (J143).
 """
 
 from ..layout import flowables, furniture

@@ -10,9 +10,9 @@ import { blockScope, everyBlock, pinnedBlock, summaryBlocks, summaryWords, takes
  * pin for a per-line figure; and the live preview with the reason a figure is unavailable. While nothing is picked the
  * deal's standard set shows, and every edit builds on it, so unticking one standard figure keeps the others. Each edit
  * writes `summary.blocks` or `summary.on` (J20). The catalogue is `/api/meta/` proposal.summary; every figure and
- * reason is the server's (`summary.blocks`). Templates come with slice 34 (J68).
+ * reason is the server's (`summary.blocks`). `templates` is the summary's TEMPLATE bar (J68; slice 34).
  */
-export default function SummaryCard({ summary, lines, lineLabel, newGroup, meta, card, busy, onSet }) {
+export default function SummaryCard({ summary, lines, lineLabel, newGroup, meta, card, busy, onSet, templates = null }) {
   const catalog = meta.summary.blocks;
   const blocks = summaryBlocks(summary);
   const chosen = new Set(blocks.map((block) => block.key));
@@ -36,6 +36,7 @@ export default function SummaryCard({ summary, lines, lineLabel, newGroup, meta,
           The standard set for a new group leads with first-year cost and what is being proposed.
         </div>
       )}
+      {templates}
       <div className="bnf-build-rowshead">
         <span className="bnf-build-rowgroup-title">Figures</span>
         <span className="bnf-build-selectall">

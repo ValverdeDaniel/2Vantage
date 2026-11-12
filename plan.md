@@ -315,7 +315,7 @@ recording its funding (§4.3).
 | User | Who | What they do |
 |---|---|---|
 | Producer | Account managers / producers on the benefits team (3–10 people) | Everything in the workflow |
-| Admin | One or two senior producers (`is_staff`) | Everything producers do, plus manage users, their flags and agency settings in Django admin (`/admin/`), with carrier notes for Claude (D119) and, until slice 34 brings them into the app, the firm pages and team (J155) |
+| Admin | One or two senior producers (`is_staff`) | Everything producers do, plus manage users, their flags and agency settings in Django admin (`/admin/`), with carrier notes for Claude (D119); the firm pages, team and cover images are edited in the app since slice 34 (J155) |
 | Client contact | Someone at the employer (HR, owner) | No account. Opens a secure link to answer intake questions and census cells, upload files, sign the BOR, and fill and sign a medical questionnaire as the company's officer (Part L). A phoned PIN is asked where the link shows people or medical information (OQ80) |
 
 Each person has two flags on `accounts.Profile`, set in Django admin (A3):
@@ -548,7 +548,7 @@ the rest). "Slice N" says when a piece arrives (§13). Untagged text in §3 is t
 | PDF — writing | reportlab 4.2.5 | slice 29 | The client PDF, through platypus's public API with our own flowables (J122); `deals/pdfkit.py` (letterhead, RFP cover); questionnaire stamps (G.6) |
 | PDF — reading | pypdf 5 | slice 15 | Page counts at upload; the locator's page text; Paper and Letter placement at 75% (J114); AcroForm read-back (G.6). No server OCR (D-122) |
 | PowerPoint | python-pptx 1.0.2 | slice 31 | Replays the PDF's recorded frames (J141) |
-| Images | Pillow | built (logo re-encoding in `deals/admin.py`); `documents/images.py`, covers and photos: slices 29 and 34 | Logo, cover and photo re-encoding, metadata stripped |
+| Images | Pillow | built (logo re-encoding in `deals/admin.py`; `documents/images.py` for covers and photos, slice 34) | Logo, cover and photo re-encoding, metadata stripped |
 | AI | anthropic SDK (Python) 2.8.0 (API version 2026-10-21, httpx2) | slice 18 (built) | Only `ai/client.py` imports it: Messages API only, streamed, structured outputs, adaptive thinking with effort per job kind; no beta features, no Files API (§10; D.6, O.3.3). The client is built only from `settings.ANTHROPIC_API_KEY`, passed explicitly, so the SDK never falls back to an environment variable or an `ant` profile |
 | Frontend | React 19, React Router 7, Vite 6 | built | |
 | Data fetching | TanStack Query 5, axios 1 | built | |
@@ -3636,11 +3636,19 @@ Built (slices 25, 26): `ProposalConfig(deal, config, marks, updated_by, updated_
 are `title`, `intro`, `recommendation`, `reasons.<line>`, `order`, `next_steps`, `experience.{summary, rows}`,
 `summary.{on, blocks}`, `markets.on`, `markets.lines.<line>.{notes.<carrier id>, hidden}`, `output.{layout,
 package_summary, compare_tabs, disclaimers, compare_slots, pages.<page>}` and `lines.<line>.{parts.<part>, rows,
-card_stats, table_note}`; the cover, pictures and team (slice 34) and `merged` (slice 33) join with their slices);
+card_stats, table_note}`; slice 34 adds `output.cover.{on, image}`, `output.pictures.<place>` and `team`, and
+`merged` (slice 33) joins with its slice);
 `marks` is its own column so that what prints and the bookkeeping never mix. `markets.on` is deal-wide on a line card:
 writing it takes the Markets checked mark off every line. Presentation pages (`output.pages`, `experience`) is an
-optional card like Pictures: it takes a mark that never counts toward "n of N completed". There is no `ProposalIssue` yet; slices 29, 32 and
-34 add the rest (J.6.2).
+optional card like Pictures: it takes a mark that never counts toward "n of N completed". `ProposalIssue` is built in
+slice 32 (below); slices 29 and 34 add the rest (J.6.2). Built (slice 34, migration `0006_cover_image_template`):
+`CoverImage` and `ProposalTemplate` below; `output.cover.image` is an upload's id (null for the Presentation cover's
+stock pick), `output.pictures.<place>` a stock key, "upload:<id>" (any place but the cover) or null for no picture
+(unset reads its default), `team` a list of member ids (null: everyone on by default). A deleted upload falls back
+when a file is built (`proposals/pictures.py`): the cover to its stock pick, any other place to no picture. The firm's
+rows are written by `firm_services` (pages, team, photos), `cover_services` (uploads) and `template_services`, each a
+firm Activity row (no deal; areas `firm` and `proposal_templates`, with reverters for an edit); the Django admin forms
+of slice 29 are gone.
 
 **ProposalConfig** — one per deal, created on the first write; a GET reads the defaults. `notes` becomes `intro`.
 `lines` holds per-line settings, never membership or pairs: `presented()` decides what prints (F119), and a pair is
@@ -3651,16 +3659,21 @@ optional card like Pictures: it takes a mark that never counts toward "n of N co
 `{card: {by, at}, lines: {line: {card: {by, at}}}}`.
 
 **ProposalIssue** — `deal`, `version` (unique per deal), `state` (`building`, `issued` or `failed`), `pdf`, `pptx` and
-`xlsx` (each FK Document, PROTECT, null), `issued_by`, `issued_at` (slice 32). Issued files are immutable — a record
-of what the client was sent. It is not version history: no snapshots of deal data, no diffs, no restore (§15).
+`xlsx` (each FK Document, RESTRICT, null), `issued_by`, `issued_at` (slice 32). Issued files are immutable — a record
+of what the client was sent. It is not version history: no snapshots of deal data, no diffs, no restore (§15). Built
+(slice 32) with `job` (the `issue` job, SET_NULL), `error` (a failed build's sentence) and `created_by`/`created_at`.
+RESTRICT, not PROTECT: a file an issue holds cannot be deleted alone, but the whole deal (its issues with it) can, so
+`seed_golden` rebuilds an issued deal (`delete_client` deletes the unprotected files one by one and lets the cascade
+take the rest). A version still `building` whose job has ended reads `failed` (worked out on read).
 
 **ProposalTemplate** — `name`, `description`, `kind` (`layout`, `rows` or `summary`), `line` (blank = any), `config`
 (cleaned by `config.clean`), `shared`, `owner`, `sort_order` (J68; slice 34).
 
 **FirmPages** (one row) — `about_text` (≤ 900), `about_stats` (≤ 6), `service_calendar` (≤ 8). **TeamMember** (≤ 40) —
 `name`, `title`, `group`, `phone`, `email`, `bio` (≤ 1,400), `photo`, `on_by_default`, `sort_order`. Both arrive in
-slice 29, edited in Django admin until slice 34 brings the firm-pages drawer (J155). **CoverImage** (≤ 24; slice 34) —
-a JPEG with a long side ≤ 2,400 px and a thumbnail ≤ 600 px, no metadata; `label`, `width`, `height`, `uploaded_by`.
+slice 29; slice 34's Firm pages drawer edits them (J155). **CoverImage** (≤ 24; slice 34) — a JPEG with a long side
+≤ 2,400 px and a thumbnail ≤ 600 px, no metadata (`documents.images`: PNG or JPEG only, ≤ 10 MB, ≤ 6,000 px a side);
+`label`, `width`, `height`, `uploaded_by`. A person's photo goes through the same helper (≤ 5 MB, stored ≤ 800 px).
 
 ### 6.12 review
 
@@ -4244,7 +4257,11 @@ slides: [{n, title, kind: cover | table | page, line, continued, notes, chart, f
 inner}, pdf}`, `pdf` the download's own bytes as base64, `fit` on a plan set's first slide the recorder's fit log plus
 `{slides, money_slide, tall_rows}`; writes nothing) and `GET …/proposal/files/letter/` (the client PDF on US Letter,
 `paint/paper.letter`; `<Client> - <year> Benefits Proposal-DRAFT Letter.pdf`; it writes only its `downloaded` row).
-The "Not printing" chips read the builder payload's `ledger`, not the preview's.
+The "Not printing" chips read the builder payload's `ledger`, not the preview's. Slice 34: the firm-level routes
+below, plus `GET proposal/cover-images/{id}/thumb/` (the ≤ 600 px thumbnail), `GET proposal/pictures/{key}/thumb/`
+(a stock picture's tile) and `GET, POST, DELETE proposal/team/{id}/photo/` (multipart `photo`); `proposal/covers/`
+takes `?picture=` only (Classic's orientation waits, J143) and pages the Presentation cover, then each upload; the
+ledger's firm rows carry `fix: {drawer: 'firm'}`; `/api/meta/` proposal gains `pictures`, `templates` and `firm`.
 
 | Method | Path | What it does |
 |---|---|---|
@@ -4272,6 +4289,18 @@ quotes' plan template (J98).
    `advance(deal, 'proposal')` and logs "Issued proposal vN". A failure marks vN `failed`, with Retry.
 
 The issued file is never regenerated: downloading v1 after v2 exists returns v1's stored bytes.
+
+Built (slice 32; `proposals/issues/`, `issue_views.py`): `POST …/proposal/issue/` → 202 the version (`{version, state,
+error, created_at, created_by, issued_at, issued_by, job, files: [{key, label, document_id, name, size}], job_id}`; 200
+with the version already building) · 409 `{detail, blockers}` (the builder's `ready` sentence, the 16-column sentence,
+"No plans on this proposal yet…"); `GET …/issues/` → [version], newest first (also the builder payload's `issues`);
+`POST …/issues/{v}/retry/` (a failed version, same number; 409 for an issued one); `GET …/issues/{v}/{pdf,pptx,xlsx}/`
+(stored bytes), `…/letter/` (`paint.paper.letter` of the stored PDF), `…/packet/?include=pdf,pptx,xlsx` (the stored
+files in one zip); each writes only its `downloaded` row ("the client PDF (v1)"). Step 1 records the numbers it stamps
+in an Activity row of its own ("Stamped n option numbers for proposal vN"; quotes' stamp records none); the job reads
+the deal when it runs (it does not carry the Facts, which hold dates and picture bytes) and asks the gate again;
+step 3 records "Issued proposal vN" (or "Proposal vN could not be built"), never reverted. Issued files print no Draft
+and "Version n" in the deck's footer; their names drop -DRAFT (J104).
 
 Full list: Part J, J.6.6.
 
@@ -4779,6 +4808,11 @@ presented mode plus the packet card, composed by the route, so neither folder im
   PowerPoint and workbook as protected documents and offers the Letter PDF (J102, J103); the issued list with its states
   and Retry.
 - Florida Blue 5182 and 5183 print as one column from slice 33 (J15; OQ42).
+- Built (slice 32): `pages/DealPage/ProposalRoute.jsx` composes `deal/proposal`'s tab (title, `packet/PacketCard`,
+  `IssuedList`, `ChecksList`) with `deal/advisor`'s `PresentedBoard` (the board's own transposed table, hooks and menu
+  in Proposal order, every row of the line, the shortlist = what the proposal presents until Show all, no
+  "Replacing:" in the heads). The packet card starts closed, as the old one; its ticks and open state are kept per
+  browser (`vantage.bnf.proposalPacket`). BookingSummaryModal waits for commission's booking (H; slice 48 on).
 - **Gap: 2V's ＋ Plan and ＋ Package dialogs.** v1.1's ＋ Plan dialog (with its "option or bought together" question)
   and ＋ Package dialog have no old twin; F134 gives them to this tab, and Part J has no row for them. Until §16 decides,
   they stay as built, on old classes, and the Look lane lists them as intended differences.
@@ -4882,8 +4916,8 @@ Booked records (H45); the unconfirmed-defaults banner (H47); tabs by `?tab=` (H4
 
 - **Django admin** (`/admin/`) holds users and their Profile flags (`claude_direct`, `commissions_access`; A3, H101);
   agency settings (the logo, re-encoded on save, brand colour, contact, `producer_name`, `producer_npn` and
-  `rfp_return_email`; J155, OQ41, OQ65); carrier notes for Claude (D119); the firm pages, team and cover images until
-  slice 34 (J155); and a read-only list of client links (L134). An admin cannot deactivate or demote themselves there
+  `rfp_return_email`; J155, OQ41, OQ65); carrier notes for Claude (D119); and a read-only list of client links
+  (L134). The firm pages, team and cover images left Django admin with slice 34 (J155). An admin cannot deactivate or demote themselves there
   (a `ModelAdmin` check).
 - **In the app:** the Firm pages drawer, open to every user (J155; slice 34), and the Producers & partners and Settings
   tabs of `/commissions` (H95–H101; slice 48).
@@ -6667,7 +6701,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | **Slice 27: PRO-3** | | | | |
 | OQ39 | Does a carrier hidden on Markets checked also leave Compare and All Plans, labelled on screen? | Open. Default: yes. Built in slice 27: its unpresented quotes leave All Plans and the drop-downs, counted in an All Plans note; the Markets card says so | Open | 27 |
 | OQ40 | Stephanie's Excel review: her marked-up rows and colours, the disclaimer wording, and whether plan notes, telehealth and Rx mail order print (v1.1 §16 #3–#5) | Open. Default: the old formats. Built in slice 27 as the old app printed them: the old rows (telehealth, mail order and the worksite Notes rows print), colours and the old disclaimer paragraphs | Open (Stephanie) | 27 |
-| OQ41 | Firm pages: logo, colour and contact in Django admin; About, figures, calendar and team in an in-app drawer; "Prepared by" from the agent-name rule? | Open. Default: yes. Slice 27's Cover prints the agency's logo, name, phone and email from Django admin, with `deals.rules.agent_name` on the contact line | Open | 27; 29, 34 |
+| OQ41 | Firm pages: logo, colour and contact in Django admin; About, figures, calendar and team in an in-app drawer; "Prepared by" from the agent-name rule? | Open. Default: yes. Slice 27's Cover prints the agency's logo, name, phone and email from Django admin, with `deals.rules.agent_name` on the contact line; slice 34 built the Firm pages drawer (About, figures, calendar, team with photos) and took them out of Django admin | Open | 27; 29, 34 |
 | OQ104 | Lasers on client files: print laser liability as amounts and list lasers by position, never the claimant ids or initials in `sl_lasers`, which the old stop-loss sheet printed? | Open. Default: yes (§3.8, §4.3, §9.13). Built in slice 36 with the default: the workbook and the board name lasers by position; Activity keeps a laser's key only (`deals.activity.key_only_values`) | Open | 27; 36 |
 | **Slice 33: PRO-9** | | | | |
 | OQ42 | Florida Blue 5182 and 5183 under D-219: should the in-network single deductible print "EE $2,500 / PP $5,000" or "$2,500"? | Open. Default: both figures | Open | 33 |

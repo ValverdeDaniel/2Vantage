@@ -9,12 +9,14 @@ import { boardClaude24 } from './boardClaude24.mjs';
 import { builder25 } from './builder25.mjs';
 import { builder26 } from './builder26.mjs';
 import { commission48 } from './commission48.mjs';
+import { cover34 } from './cover34.mjs';
 import { census41 } from './census41.mjs';
 import { deck30 } from './deck30.mjs';
 import { documents23 } from './documents23.mjs';
 import { documents65 } from './documents65.mjs';
 import { export28 } from './export28.mjs';
 import { intake39 } from './intake39.mjs';
+import { issue32 } from './issue32.mjs';
 import { market40 } from './market40.mjs';
 import { pages14 } from './pages14.mjs';
 import { pdf29 } from './pdf29.mjs';
@@ -244,6 +246,8 @@ export const WALKS = {
   s26: { ...builder26, run: (ctx) => builder26.run(ctx, { signIn, openDeal }) }, // slice 26's done-when
   s29: { ...pdf29, run: (ctx) => pdf29.run(ctx, { signIn, openDeal }) }, // slice 29's done-when
   s31: { ...pptx31, run: (ctx) => pptx31.run(ctx, { signIn, openDeal }) }, // slice 31's done-when
+  s34: { ...cover34, run: (ctx) => cover34.run(ctx, { signIn, openDeal }) }, // slice 34's done-when
+  s32: { ...issue32, run: (ctx) => issue32.run(ctx, { signIn, openDeal }) }, // slice 32's done-when, need 12 (re-seed GD1 after)
   11: { ...export28, run: (ctx) => export28.run(ctx, { signIn, openDeal }) }, // the Export viewer; slice 28's done-when
   '11d': { ...deck30, run: (ctx) => deck30.run(ctx, { signIn, openDeal }) }, // need 11's deck files; slice 30's done-when
   s38: { ...archive38, run: (ctx) => archive38.run(ctx, { signIn, openDeal }) }, // slice 38's done-when

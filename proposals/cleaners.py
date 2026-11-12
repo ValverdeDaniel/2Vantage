@@ -183,3 +183,39 @@ def compare_slots(path, value):
     if value not in catalog.COMPARE_SLOTS or isinstance(value, bool):
         raise Invalid(path, f'Compare holds {", ".join(str(n) for n in catalog.COMPARE_SLOTS)} columns.')
     return value
+
+
+def cover_image(path, value):
+    """The cover's upload: a CoverImage id, or None for the stock picture. Whether it still exists is asked when a
+    file is built (a deleted upload falls back), never here (old `composition.clean_output`)."""
+    if value is None or value == '':
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise Invalid(path, "Send the cover image's id, or null.")
+    return value
+
+
+def picture(path, place, value):
+    """A dark page's picture: a stock key, "upload:<id>" (any place but the cover, whose upload is
+    `output.cover.image`), or None for no picture (J35; old `stock_images.clean_pictures`)."""
+    if value is None or value in catalog.STOCK_KEYS:
+        return value
+    if place != 'cover' and catalog.upload_id(value):
+        return f'{catalog.UPLOAD_PREFIX}{catalog.upload_id(value)}'
+    raise Invalid(path, 'Pick one of the pictures, an upload, or none.')
+
+
+def team(path, value):
+    """The people on this client's team, in order: member ids (≤40), or None for everyone on by default (J43). An id
+    no longer on the firm's team is left out when the files are built."""
+    if value is None:
+        return None
+    if not isinstance(value, list):
+        raise Invalid(path, "Send the team as a list of people's ids, or null.")
+    out = []
+    for item in value[: catalog.MAX_TEAM]:
+        if isinstance(item, bool) or not isinstance(item, int) or item <= 0:
+            raise Invalid(path, "Send the team as a list of people's ids, or null.")
+        if item not in out:
+            out.append(item)
+    return out

@@ -33,9 +33,9 @@ CARD_TITLES = {
     'rows': 'What this section shows',
     'markets': 'Markets checked',
 }
-# The cards the builder draws so far; the cover and pictures join with slice 34. "n of N completed" counts these,
-# the optional ones apart.
-ON_SCREEN = ('output', 'pages', 'coverage', 'quotes', 'rows', 'summary', 'next_steps', 'markets')
+# The cards the builder draws (the cover and pictures since slice 34). "n of N completed" counts these, the optional
+# ones apart.
+ON_SCREEN = ('cover', 'pictures', 'output', 'pages', 'coverage', 'quotes', 'rows', 'summary', 'next_steps', 'markets')
 
 # How the documents look (J38, J39, J41): the layout's words, the spreadsheet's Dynamic Compare columns, and the
 # switches that default on. The Format (Presentation / Classic, J36, J37) and the share link's period (J40) wait (OQ8).
@@ -62,7 +62,10 @@ PAGE_KEYS = tuple(key for key, _label in PAGES)
 
 # The stock pictures the deck's dark pages wear (J35, D-190; old `stock_images.LIBRARY` at 891f1b3), cropped once to
 # the boxes they fill (J.5 B12): `assets/images/stock_images/<key>.jpg` for a dark page's frame, `<key>-agenda.jpg` for
-# the agenda's panel. A place the deal never touched reads its default; slice 34's Pictures card picks per place.
+# the agenda's panel. A place the deal never touched reads its default; the Pictures card picks per place
+# (`output.pictures.<place>`: a stock key, "upload:<id>" for one of the firm's uploads, or None for no picture). The
+# cover's upload is `output.cover.image` instead, because the spreadsheet's banner reads that alone (J35; old
+# `stock_images.clean_pictures`).
 STOCK_PICTURES = (
     ('blue_light', 'Blue light'),
     ('at_the_table', 'At the table'),
@@ -79,6 +82,12 @@ PICTURE_PLACES = (
     ('closing', 'Thank-you page'),
 )
 DEFAULT_PICTURES = {'cover': 'blue_light', 'closing': 'at_the_table'}
+PICTURE_PLACE_KEYS = tuple(key for key, _label in PICTURE_PLACES)
+STOCK_KEYS = tuple(key for key, _label in STOCK_PICTURES)
+UPLOAD_PREFIX = 'upload:'
+
+# Saved parts of a proposal (J68): the kinds, as `ProposalTemplate.KINDS`; the paths each kind holds are config's.
+TEMPLATE_KINDS = (('layout', 'Layout'), ('rows', 'Row set'), ('summary', 'Executive summary'))
 
 # A line section's parts, in print order (not configurable: a cost table before the plans it prices helps nobody).
 PARTS = (('comparison', 'Plan comparison'), ('cost', 'Cost summary'), ('recommendation', 'Recommendation'))
@@ -191,6 +200,7 @@ MAX_EXPERIENCE_ROWS = 6
 MAX_PERIOD = 80
 MAX_MARKET_NOTE = 120
 MAX_HIDDEN = 40
+MAX_TEAM = 40  # TeamMember.MAX_MEMBERS: a deal's team picks (`team`, J43)
 
 
 def field_set(line):
@@ -235,6 +245,14 @@ def default_pictures():
     return {place: DEFAULT_PICTURES.get(place) for place, _label in PICTURE_PLACES}
 
 
+def upload_id(key):
+    """The CoverImage id an "upload:<id>" key names, else None."""
+    if not isinstance(key, str) or not key.startswith(UPLOAD_PREFIX):
+        return None
+    digits = key[len(UPLOAD_PREFIX) :]
+    return int(digits) if digits.isascii() and digits.isdigit() and int(digits) > 0 else None
+
+
 def picture_sources(picks):
     """{place: the image src a page draws, or None}: the agenda's panel has its own crop."""
     keys = dict(STOCK_PICTURES)
@@ -244,8 +262,25 @@ def picture_sources(picks):
     }
 
 
+def _firm_limits():
+    """The firm pages' limits (§6.11), for the drawer's inputs; the server cleans to the same."""
+    from .models import CoverImage, FirmPages, TeamMember  # this module must not read the models at import
+
+    return {
+        'about': FirmPages.MAX_ABOUT,
+        'stats': FirmPages.MAX_STATS,
+        'calendar': FirmPages.MAX_CALENDAR,
+        'bio': TeamMember.MAX_BIO,
+        'team': TeamMember.MAX_MEMBERS,
+        'cover_images': CoverImage.MAX_IMAGES,
+        'cover_mb': CoverImage.MAX_BYTES // (1024 * 1024),
+    }
+
+
 def meta():
     """/api/meta/ `proposal`."""
+    from .issues import catalog as issue_catalog  # it reads the models, which this module must not at import
+
     return {
         'cards': [
             {'key': key, 'title': CARD_TITLES[key], 'line': key in LINE_CARDS, 'optional': key in OPTIONAL_CARDS}
@@ -270,4 +305,12 @@ def meta():
             'market_note': MAX_MARKET_NOTE,
         },
         'key_preset': KEY_PRESET,
+        'pictures': {
+            'places': [{'key': key, 'label': label} for key, label in PICTURE_PLACES],
+            'defaults': default_pictures(),
+            'stock': [{'key': key, 'label': label} for key, label in STOCK_PICTURES],
+        },
+        'templates': {'kinds': [{'key': key, 'label': label} for key, label in TEMPLATE_KINDS]},
+        'firm': _firm_limits(),
+        'issue': issue_catalog.meta(),  # the issue's states and files (slice 32; J96, J103)
     }

@@ -14,10 +14,11 @@ CLIENT_FIELDS = ('name', 'notes')
 
 
 @transaction.atomic
-def create_client(user, *, name, relationship=lifecycle.PROSPECT, effective_date=None, owner=None):
+def create_client(user, *, name, relationship=lifecycle.PROSPECT, effective_date=None, owner=None, first_deal=True):
     """The client and its first deal. A client starts as a Prospect or an Existing client (CL6); its deal opens as
     that status, so a deal for an Existing client is a Renewal (`rules.deal_type`). Its lines to quote are written
-    afterwards through intake's `set_intent`, their only writer (B17; slice 11)."""
+    afterwards through intake's `set_intent`, their only writer (B17; slice 11). `first_deal=False` makes a client with
+    no deal (commission's Add to book, H58; review 22): (client, None), its Activity a firm row about the client."""
     name = (name or '').strip()
     if not name:
         raise ValidationError({'name': ['Client name is required.']})
@@ -26,6 +27,9 @@ def create_client(user, *, name, relationship=lifecycle.PROSPECT, effective_date
         raise ValidationError({'relationship': [refusal]})
     owner = owner or user
     client = Client.objects.create(name=name[:200], relationship=relationship, owner=owner, created_by=user)
+    if not first_deal:
+        activity.record(None, user, 'deal', 'created', f'Created {client.name}', subject=f'client:{client.id}')
+        return client, None
     deal = Deal.objects.create(
         client=client,
         effective_date=effective_date,
@@ -69,6 +73,8 @@ def delete_client(user, client_id):
     M104, OQ47)."""
     client = locked(Client, client_id)
     for deal in client.deals.all():
-        for document in deal.documents.all():
+        # Protected files (an issued proposal, a signed form) go with the client below, in one cascade: an issued
+        # version holds its files under RESTRICT, which refuses a file deleted alone (slice 32).
+        for document in deal.documents.filter(protected=False):
             document.delete()
     client.delete()

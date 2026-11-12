@@ -22,7 +22,7 @@ from quotes import fields
 from quotes import math as m
 from rfp.selectors import asked_by_line
 
-from .. import builder, catalog, config, deal_cards, line_block, line_layout, ready, why
+from .. import builder, catalog, config, deal_cards, line_block, line_layout, pictures, ready, why
 from .. import summary_read as read
 
 UNKNOWN_CARRIER = 'Unknown carrier'
@@ -77,6 +77,7 @@ class Facts:
     output: dict
     lines: list
     draft: str
+    banner: bytes | None = None  # the cover's upload as the Cover tab's banner (J145; slice 34, `pictures.banner`)
 
 
 def _values(plan):
@@ -245,4 +246,5 @@ def read_deal(deal):
         output=config.output(stored),
         lines=out_lines,
         draft=ready.DRAFT_MARK,
+        banner=pictures.banner(stored),
     )

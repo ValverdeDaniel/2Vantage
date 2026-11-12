@@ -4,23 +4,25 @@
 A ledger, never a gate: a page with nothing to say does not print, and nothing here stops a download. Each row is
 {key, label, switchable, ready, why, fix}: `ready` is whether the page has its facts (None where only the story can
 tell), `why` what is missing when it has not, and `fix` where to put it right, in the shape of a check's Fix ▸
-({card} or {tab}; None while that place does not exist). The switches are the card's own (`output.pages`); the
-ledger never reads them, so a toggle needs no re-read.
+({card} or {tab}, or {drawer: 'firm'} for the Firm pages drawer; None while that place does not exist). The
+switches are the card's own (`output.pages`); the ledger never reads them, so a toggle needs no re-read.
 
-The firm's pages (About, the team, the calendar, bios) read from FirmPages and the team (`firm_read.ledger`), edited
-in Django admin since slice 29 until the Firm pages drawer (slice 34, J155) gives them a Fix ▸; until then a page not
-written has none. Renewal history waits with past plan years (J44, deferred).
+The firm's pages (About, the team, the calendar, bios) read from FirmPages and the team (`firm_read.ledger`); their
+Fix ▸ opens the Firm pages drawer (slice 34, J155). Renewal history waits with past plan years (J44, deferred).
 """
 
+FIRM = {'drawer': 'firm'}
 
-def _row(key, label, ready, why='', switchable=True, card=None):
+
+def _row(key, label, ready, why='', switchable=True, card=None, fix=None):
+    fix = fix or ({'card': card} if card else None)
     return {
         'key': key,
         'label': label,
         'switchable': switchable,
         'ready': ready,
         'why': '' if ready else why,
-        'fix': {'card': card} if card and ready is False else None,
+        'fix': fix if ready is False else None,
     }
 
 
@@ -34,8 +36,8 @@ def rows(*, renewal, recommended, negotiated, experience, next_steps, firm=None)
     told = bool((experience.get('summary') or '').strip() or experience.get('rows'))
     return [
         _row('agenda', 'Agenda and section pages', None, 'prints with three or more sections'),
-        _row('about', 'About the firm', bool(firm.get('about')), "the firm's story is not written yet"),
-        _row('team', 'Your team', bool(team), 'nobody on the team yet'),
+        _row('about', 'About the firm', bool(firm.get('about')), "the firm's story is not written yet", fix=FIRM),
+        _row('team', 'Your team', bool(team), 'nobody on the team yet', fix=FIRM),
         _row(
             'overview',
             'Renewal overview' if renewal else 'Recommendation at a glance',
@@ -54,6 +56,12 @@ def rows(*, renewal, recommended, negotiated, experience, next_steps, firm=None)
         ),
         _row('experience', 'Plan experience', told, 'nothing typed yet', card='pages'),
         _row('next_steps', 'Next steps', bool(next_steps), 'no next steps yet', switchable=False, card='next_steps'),
-        _row('calendar', 'Meeting calendar', bool(firm.get('calendar')), 'no meeting calendar yet'),
-        _row('bios', 'Team bios', any((member.get('bio') or '').strip() for member in team), 'no bios written yet'),
+        _row('calendar', 'Meeting calendar', bool(firm.get('calendar')), 'no meeting calendar yet', fix=FIRM),
+        _row(
+            'bios',
+            'Team bios',
+            any((member.get('bio') or '').strip() for member in team),
+            'no bios written yet',
+            fix=FIRM,
+        ),
     ]
