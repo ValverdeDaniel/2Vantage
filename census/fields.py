@@ -430,6 +430,54 @@ CHOICES = {
     'work_state': [(code, code) for code in STATE_CODES],
 }
 
+# The grid's column widths in pixels (C2; the old registry's `BenefitFieldDef.width`): a floor the header widens.
+WIDTHS = {
+    'ext_emp_id': 80,
+    'first_name': 120,
+    'middle_name': 90,
+    'last_name': 130,
+    'relationship': 100,
+    'subscriber_ssn': 110,
+    'dob': 110,
+    'ssn': 110,
+    'gender': 70,
+    'address1': 190,
+    'address2': 120,
+    'city': 120,
+    'state': 46,
+    'zip': 70,
+    'county': 110,
+    'phone': 110,
+    'email': 170,
+    'division': 100,
+    'emp_class': 90,
+    'job_title': 130,
+    'hire_date': 105,
+    'employment_status': 110,
+    'hours_per_week': 90,
+    'annual_salary': 110,
+    'work_state': 60,
+    'term_date': 110,
+    'rehire_date': 110,
+    'medical_plan': 150,
+    'medical_tier': 80,
+    'effective_date': 115,
+    'waiver_reason': 160,
+    'dental_plan': 150,
+    'dental_tier': 80,
+    'dental_effective_date': 115,
+    'vision_plan': 150,
+    'vision_tier': 80,
+    'vision_effective_date': 115,
+    'basic_life_amount': 120,
+    'basic_life_effective_date': 115,
+    'vol_life_amount': 120,
+    'vol_life_effective_date': 115,
+    'std_amount': 120,
+    'std_effective_date': 115,
+    'ltd_amount': 120,
+    'ltd_effective_date': 115,
+}
 BY_KEY = {field['key']: field for field in FIELDS}
 KEYS = [field['key'] for field in FIELDS]
 TIER_KEYS = [field['key'] for field in FIELDS if field['type'] == 'tier']
@@ -519,7 +567,12 @@ def meta():
     return {
         'groups': [{'key': key, 'label': name} for key, name in GROUPS],
         'fields': [
-            {**field, 'choices': [{'value': v, 'label': t} for v, t in choices(field['key'])]} for field in FIELDS
+            {
+                **field,
+                'choices': [{'value': v, 'label': t} for v, t in choices(field['key'])],
+                'width': WIDTHS[field['key']],
+            }
+            for field in FIELDS
         ],
         'group_lines': GROUP_LINES,
         'rules': [{'key': key, 'label': name} for key, name in RULES],

@@ -1,16 +1,15 @@
 import { useState } from 'react';
-import { useCensus, useCensusImport, useStartImport } from '../../api/census';
+import { addMember, useCensus, useCensusImport } from '../../api/census';
 import { useMeta } from '../../api/meta';
 import { errorText } from '../../lib/errors';
 import Button from '../../ui/Button';
-import EmptyState from '../../ui/EmptyState';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import { useToast } from '../../ui/useToast';
-import CensusCounts from './CensusCounts';
 import ImportDoor from './ImportDoor';
 import MappingDialog from './MappingDialog';
-import { lastApplied, waitingImport } from './mapping';
+import { waitingImport } from './mapping';
+import Roster from './Roster';
 
 function ImportReview({ deal, meta, importId, hasRoster, onClose }) {
   const imp = useCensusImport(deal.id, importId);
@@ -28,11 +27,8 @@ function ImportReview({ deal, meta, importId, hasRoster, onClose }) {
   );
 }
 
-function Roster({ deal, meta, census, waiting, onReview }) {
-  const toast = useToast();
-  const remap = useStartImport(deal.id);
+function RosterPage({ deal, meta, census, waiting, onReview, onPage, refetch }) {
   const { summary } = census;
-  const applied = lastApplied(census.imports);
   return (
     <div className="bb-tab-page bb-sov-page">
       <div className="bb-sov-header">
@@ -40,27 +36,10 @@ function Roster({ deal, meta, census, waiting, onReview }) {
           <div className="bb-tab-title">Roster</div>
           <div className="bb-subtitle">
             {summary.employees} employees · {summary.dependents} dependents · {summary.readiness_pct}% ready
-            {summary.ok ? ' · Census OK' : ` · ${summary.missing_required} required cells blank`}
+            {summary.ok ? ' · Census OK' : ` · ${summary.missing_required} required cells blank`} · press ✎ Edit to
+            change values, then work it like a spreadsheet: click a cell and type, Tab moves right, Enter moves down.
+            Red underlines are validation errors, amber are warnings.
           </div>
-        </div>
-        <div className="bb-toolbar-actions">
-          {applied && (
-            <Button
-              size="sm"
-              busy={remap.isPending}
-              onClick={() =>
-                remap.mutate(
-                  { documentId: applied.document_id },
-                  {
-                    onSuccess: (imp) => onReview(imp.id),
-                    onError: (error) => toast.error(errorText(error)),
-                  },
-                )
-              }
-            >
-              ⟲ Re-map source file
-            </Button>
-          )}
         </div>
       </div>
       {summary.errors > 0 && (
@@ -70,7 +49,7 @@ function Roster({ deal, meta, census, waiting, onReview }) {
             <b>
               {summary.errors} validation error{summary.errors === 1 ? '' : 's'}
             </b>{' '}
-            in the census. Carriers will reject these rows.
+            in the census — hover a red cell to see why. Carriers will reject these rows.
           </div>
         </div>
       )}
@@ -84,19 +63,32 @@ function Roster({ deal, meta, census, waiting, onReview }) {
           </button>
         </div>
       )}
-      <ImportDoor
-        dealId={deal.id}
-        meta={meta}
-        onStarted={(imp) => onReview(imp.id)}
-        label="Import another census file ▸"
-        primary={false}
-      />
-      <CensusCounts meta={meta} rollup={census.rollup} derived={census.derived} />
-      {/* The roster grid (paged by employee, line chips, ✎ Edit, marks and asks) arrives with slice 41. */}
-      <EmptyState title="The roster grid is on its way.">
-        The people are on file and counted above; editing them person by person, cell by cell, comes next.
-      </EmptyState>
+      <Roster deal={deal} meta={meta} census={census} onPage={onPage} onReview={onReview} refetch={refetch} />
     </div>
+  );
+}
+
+function FirstByHand({ dealId, onAdded }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      size="sm"
+      busy={busy}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          await addMember(dealId, { kind: 'employee' });
+          await onAdded();
+        } catch (error) {
+          toast.error(errorText(error));
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      ＋ Add the first employee by hand
+    </Button>
   );
 }
 
@@ -105,11 +97,13 @@ function Roster({ deal, meta, census, waiting, onReview }) {
  * file gets in — the import door, the mapping dialog with its reformat banner and the dry run (C12–C17) — and the
  * counts the old tab showed above its roster: people, readiness, validation errors and a mapped file waiting. A waiting
  * mapping takes over the tab on an empty roster, as the old one did; with a roster it waits behind its banner. The
- * roster grid, its pills (Roster · Board · Request · Review), COBRA and the template are slices 41, 57 and 53.
+ * roster grid (Roster.jsx: ✎ Edit, Excel keys, marks, COBRA, the template and export) is slice 41's; its pills
+ * (Roster · Board · Request · Review) are slices 53 and 57. An empty roster offers the import door and hand entry.
  */
 export default function CensusTab({ deal }) {
   const meta = useMeta().data;
-  const census = useCensus(deal.id);
+  const [page, setPage] = useState(1);
+  const census = useCensus(deal.id, { page });
   const [reviewing, setReviewing] = useState(null);
   const [setAside, setSetAside] = useState(null);
   if (census.isPending) return <Loading label="Loading the census…" />;
@@ -124,7 +118,19 @@ export default function CensusTab({ deal }) {
     setReviewing(null);
   };
   if (open) return <ImportReview deal={deal} meta={meta} importId={open} hasRoster={hasRoster} onClose={close} />;
-  if (hasRoster) return <Roster deal={deal} meta={meta} census={data} waiting={waiting} onReview={setReviewing} />;
+  if (hasRoster) {
+    return (
+      <RosterPage
+        deal={deal}
+        meta={meta}
+        census={data}
+        waiting={waiting}
+        onReview={setReviewing}
+        onPage={setPage}
+        refetch={() => census.refetch()}
+      />
+    );
+  }
   return (
     <div className="bb-tab-page">
       <div className="bb-tab-title">Census</div>
@@ -133,6 +139,9 @@ export default function CensusTab({ deal }) {
         made exportable to any carrier template.
       </div>
       <ImportDoor dealId={deal.id} meta={meta} onStarted={(imp) => setReviewing(imp.id)} />
+      <div className="bnf-census-empty-actions">
+        <FirstByHand dealId={deal.id} onAdded={() => census.refetch()} />
+      </div>
     </div>
   );
 }

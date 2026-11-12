@@ -27,6 +27,8 @@ def test_F14_the_index_lists_every_line_with_the_texts_the_finder_searches(user)
         'current': True,
         'carrier': 'aetna',
         'texts': ['HMO 1000', 'Aetna', 'Aetna HMO', 'HMO'],
+        'name': 'HMO 1000',  # slice 35: the bundle's picker names the quote that has to sell
+        'carrier_name': 'Aetna',
     }
     assert by_id[quote.id]['carrier'] == 'unitedhealthcare'  # the one matcher, deals.carriers.match
     assert by_id[quote.id]['texts'] == ['Choice Plus 1500', 'H1234-001', 'UHC Level-Funded', 'PPO']

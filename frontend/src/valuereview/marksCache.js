@@ -1,11 +1,15 @@
 /*
  * Review marks on the Advisor's compact comparison (plan.md §7.8, §10.7; E53, F63–F65). Pure.
  *
- * A comparison cell carries `s` ('to_check' while the value is an open warning, the server's one rule, OQ28) and `m`
- * (the mark it shows: 'check', or 'ignored' / 'approved' where they settle a doubt). The browser never decides what
- * needs review: it counts the server's flags and lays a review's answer over the cached cells, so the board agrees
- * with the station without a refetch (E53).
+ * A comparison cell carries `s` ('to_check' while the value is an open warning, the server's one rule, OQ28), `m`
+ * (the mark it shows: 'check', or 'ignored' / 'approved' where they settle a doubt) and `p` (a potential error that is
+ * not an open warning: the locator could not find or pin it down and nobody dealt with it; E50, D123). The browser
+ * never decides what needs review: it counts the server's flags and lays a review's answer over the cached cells, so
+ * the board agrees with the station without a refetch (E53).
  */
+
+/** A potential error (E50, D123; the server's `potential_error`): an open warning, or `p`. */
+export const isPotential = (cell) => cell?.s === 'to_check' || Boolean(cell?.p);
 
 /** {open, check, unflagged} over compact cells: "⚠ N to review · ⚑ k" and the strip's buttons. */
 export function cellCounts(cells) {
@@ -32,9 +36,11 @@ export function flaggedKeys(plan, keys) {
 function patchedCell(cell, change) {
   const next = { ...(cell ?? {}) };
   delete next.m;
+  delete next.p;
   if (next.s === 'to_check') delete next.s;
   if (change.cell?.s) next.s = change.cell.s;
   if (change.cell?.m) next.m = change.cell.m;
+  if (change.cell?.p) next.p = change.cell.p;
   return next;
 }
 

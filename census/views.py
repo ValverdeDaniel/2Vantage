@@ -1,6 +1,7 @@
 """Census API (plan.md §7.7): the census page and the import door. Thin: parse → service or selector → respond.
 
-The roster's own writes (members, clear), the template, the export, sources and marks arrive with the grid, slice 41.
+The roster grid's writes, marks and required blanks are `roster_views` (slice 41); the template and the export are
+`file_views`. The station's census rows (`census/sources/`) wait for the Documents station's census view.
 Opening an import reads the stored census file (its samples), so it is a view of a file with member data and writes
 its `viewed` row (§3.8, E99).
 """
@@ -26,7 +27,7 @@ MAX_ID = 2**63 - 1  # a bigger id is not a row: 404, never a database error
 def _deal(pk):
     if pk > MAX_ID:
         raise Http404
-    return get_object_or_404(Deal, pk=pk)
+    return get_object_or_404(Deal.objects.select_related('client'), pk=pk)
 
 
 def _import(import_id):

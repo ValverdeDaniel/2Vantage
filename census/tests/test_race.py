@@ -58,3 +58,38 @@ def test_C17_Q3_two_applies_at_once_queue_and_match(user):
     for first_name in ('Avery', 'Blake'):  # whichever ran first, Smith and Blake exist once
         assert Member.all_objects.filter(deal=deal, values__first_name=first_name).count() == 1
     assert facts.differences(deal.id) == {}
+
+
+def test_Q3_8_two_hand_edits_on_two_people_at_once_both_survive(user):
+    deal = make_deal(user, requested_lines=('medical',))
+    first = import_file(user, deal, xlsx(roster(family('E1', 'Smith'), family('E3', 'Lee', first='Robin'))))
+    services.apply_import(user, first.id)
+    avery, robin = (
+        Member.objects.get(deal=deal, values__first_name='Avery'),
+        Member.objects.get(deal=deal, values__first_name='Robin'),
+    )
+    failures = []
+    start = threading.Barrier(2)
+
+    def run(member_id, values):
+        try:
+            start.wait()
+            services.edit_values(user, member_id, values)
+        except Exception as error:  # noqa: BLE001 - a deadlock or a lost write fails the test below
+            failures.append(repr(error))
+        finally:
+            connection.close()
+
+    threads = [
+        threading.Thread(target=run, args=(avery.id, {'zip': '02139'})),
+        threading.Thread(target=run, args=(robin.id, {'hours_per_week': '20'})),
+    ]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert failures == []
+    avery.refresh_from_db()
+    robin.refresh_from_db()
+    assert (avery.values['zip'], robin.values['hours_per_week']) == ('02139', '20')
+    assert facts.differences(deal.id) == {}

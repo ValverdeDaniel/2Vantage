@@ -10,45 +10,10 @@
  * board's sentence (F17).
  */
 
-import { findFields, findWords, lettersAndDigits, wordMatches } from '../../../lib/findText';
+import { carrierForms, findFields, findTerms, termMatches } from '../../../lib/findText';
 
-const squash = (text) => lettersAndDigits(String(text ?? '').toLowerCase());
-
-/** {squashed form: carrier key} from meta's carriers: each one's key, name and aliases. */
-export function carrierForms(carriers = []) {
-  const forms = new Map();
-  for (const carrier of carriers) {
-    for (const form of [carrier.key, carrier.name, ...(carrier.aliases ?? [])]) {
-      const squashed = squash(form);
-      if (squashed && !forms.has(squashed)) forms.set(squashed, carrier.key);
-    }
-  }
-  return forms;
-}
-
-/**
- * The query as terms: [{word, carrier?}]. The longest run of words, from each word on, that squashes to a carrier's
- * name or alias becomes one carrier term ("blue cross blue shield"); every other word stays a word.
- */
-export function findTerms(query, forms = new Map()) {
-  const words = findWords(query);
-  const terms = [];
-  let at = 0;
-  while (at < words.length) {
-    let end = words.length;
-    for (; end > at; end -= 1) {
-      if (forms.has(words.slice(at, end).map(squash).join(''))) break;
-    }
-    if (end > at) {
-      terms.push({ word: words.slice(at, end).join(' '), carrier: forms.get(words.slice(at, end).map(squash).join('')) });
-      at = end;
-    } else {
-      terms.push({ word: words[at] });
-      at += 1;
-    }
-  }
-  return terms;
-}
+// The carrier fold is the shared word rule's (src/lib/findText.js), so Documents' Find folds "UHC" the same way.
+export { carrierForms, findTerms };
 
 /** The index ready to search: each entry's texts as find fields. */
 export function prepareIndex(plans = []) {
@@ -57,7 +22,7 @@ export function prepareIndex(plans = []) {
 
 /** Does one prepared entry answer every term? */
 export function entryMatches(entry, terms) {
-  return terms.every((term) => (term.carrier && entry.carrier === term.carrier) || wordMatches(entry.fields, term.word));
+  return terms.every((term) => termMatches(entry, term));
 }
 
 /**

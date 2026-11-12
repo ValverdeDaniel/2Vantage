@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chooseFile, firstDataFile, inUploadOrder, proposalFiles } from './stationFiles';
+import { chooseFile, firstDataFile, inUploadOrder, proposalFiles, scopeParam, stationScope } from './stationFiles';
 
 const file = (id, bucket, uploaded_at) => ({ id, bucket, uploaded_at });
 const invoice = file(1, 'intake', '2026-11-01T10:00:00Z');
@@ -36,5 +36,18 @@ describe('E1 the station files', () => {
     expect(chooseFile({ asked: '', files, sourceDoc: 4 }).file.id).toBe(4);
     expect(chooseFile({ asked: '9', files, removed }).file.id).toBe(9);
     expect(chooseFile({ asked: '77', files, removed })).toEqual({ file: quote, all: false, missing: true });
+  });
+
+  it('D-164 keeps the Scanned data on its files while the viewer opens a value read elsewhere', () => {
+    const files = inUploadOrder(newestFirst);
+    const one = stationScope({ shown: renewal, list: '3', files });
+    expect(one.file.id).toBe(3);
+    expect(scopeParam(one, 4)).toBe('3');
+    expect(scopeParam(one, 3)).toBe('');
+    const all = stationScope({ shown: quote, list: 'proposals', files });
+    expect(all.files.map((f) => f.id)).toEqual([3, 4]);
+    expect(scopeParam(all, 1)).toBe('proposals');
+    expect(stationScope({ shown: quote, list: 'proposals', files: [invoice, quote] }).all).toBe(false);
+    expect(stationScope({ shown: census, files }).files).toEqual([census]);
   });
 });

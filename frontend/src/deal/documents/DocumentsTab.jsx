@@ -22,10 +22,11 @@ import FileAsList from './FileAsList';
 import HistoryCard from './HistoryCard';
 import RemovedFiles from './RemovedFiles';
 import ScannedData from './ScannedData';
-import { chooseFile, inUploadOrder, proposalFiles } from './stationFiles';
+import { chooseFile, inUploadOrder, proposalFiles, scopeParam, stationScope } from './stationFiles';
 import { sourceDocument, viewerFind } from './sourceTarget';
 import useCheckFile from './useCheckFile';
 import useFileDrop from './useFileDrop';
+import useStationModes from './useStationModes';
 import useStationState, { ALL_PROPOSALS } from './useStationState';
 import ViewerPane from './ViewerPane';
 
@@ -34,8 +35,10 @@ import ViewerPane from './ViewerPane';
  * its figure boxed (E1–E32), and beside it the Scanned data panel, where people check what was read from it (E34–E58;
  * slice 17). Slice 15 builds the file row, the File panel, Remove and "Show removed files", "File as" by drop, the
  * viewers and ↗'s deep links; slice 16 "Check this file" (the locator, a job in the worker); slice 17 the List with
- * its strip, keys and Undo, side by side with the file at 1,100 px, and the Change history card. The Grid, Find and
- * Review mode are slice 23's, Re-read and the Claude drawer slices 19 and 20's, the pop-out window slice 65's.
+ * its strip, keys and Undo, side by side with the file at 1,100 px, and the Change history card; slice 23 the Grid,
+ * Find, Review mode and ✎ Edit, where F or a value followed in Review moves the viewer to the value's own file while
+ * the panel keeps its files (`?list=`, D-164) and the file bar offers "← Back to" (E31). Re-read and the Claude drawer
+ * are slices 19 and 20's, the pop-out window slice 65's.
  */
 export default function DocumentsTab({ deal }) {
   const toast = useToast();
@@ -44,6 +47,7 @@ export default function DocumentsTab({ deal }) {
   const documents = useDocuments(deal.id);
   const removedQuery = useRemovedDocuments(deal.id);
   const station = useStationState();
+  const modes = useStationModes(); // List or Grid, Review mode, ✎ Edit
   const value = useValueSource(station.ref);
   const upload = useUploadDocument(deal.id);
   const update = useUpdateDocument(deal.id);
@@ -63,10 +67,14 @@ export default function DocumentsTab({ deal }) {
   const choice = chooseFile({ asked: station.doc, files, removed, sourceDoc: sourceDocument(source), allKey: ALL_PROPOSALS });
   const shown = choice.file;
   const proposals = proposalFiles(files);
-  // The List covers 📚 All proposals while the viewer shows the one file a value opened (D-164).
-  const listAll = choice.all || (station.list === ALL_PROPOSALS && proposals.length > 1);
-  const scopeFiles = listAll ? proposals : shown ? [shown] : [];
+  // The Scanned data covers 📚 All proposals, or its own file, while the viewer shows the file a value opened (D-164).
+  const scope = stationScope({ shown, all: choice.all, list: station.list, files, removed, allKey: ALL_PROPOSALS });
+  const listAll = scope.all;
+  const scopeFiles = scope.files;
   const checking = scopeFiles.map((file) => file.id);
+  /** Open a value in its own file; the panel stays on its files (F, Enter, Review mode following a value). */
+  const showValue = (docId, ref, options = {}) =>
+    station.show(docId, ref, { ...options, list: scopeParam(scope, docId, ALL_PROPOSALS) });
   const check = useCheckFile(deal.id, checking);
   const showsValue = Boolean(shown && source && sourceDocument(source) === shown.id);
   const find = showsValue
@@ -103,7 +111,7 @@ export default function DocumentsTab({ deal }) {
     );
   }
 
-  const bucket = listAll ? 'proposal' : shown?.bucket;
+  const bucket = listAll ? 'proposal' : (scope.file ?? shown)?.bucket;
   const fileName = (id) => [...files, ...removed].find((file) => file.id === id)?.display_name || '';
 
   async function download() {
@@ -146,7 +154,8 @@ export default function DocumentsTab({ deal }) {
     }
   }
 
-  const listing = Boolean(shown && bucket === 'proposal');
+  // Side by side with the file in List view only, as the old station: the Grid takes the full width below (D-122).
+  const listing = Boolean(shown && bucket === 'proposal' && modes.view === 'list' && !modes.editing);
   return (
     <div className="bb-tab-page">
       {station.back && (
@@ -195,6 +204,7 @@ export default function DocumentsTab({ deal }) {
               jumpKey: station.jumpKey,
               value: showsValue ? value.data : null,
               viewedPage: viewed.id === shown?.id ? viewed.page : null,
+              scopeFile: scope.file,
             }}
             on={{
               select: station.select,
@@ -209,6 +219,7 @@ export default function DocumentsTab({ deal }) {
                 setEditing(false);
               },
               page: (page) => setViewed({ id: shown.id, page }),
+              back: () => station.select(scope.file.id),
             }}
           />
           {shown && (
@@ -221,12 +232,17 @@ export default function DocumentsTab({ deal }) {
                 files: scopeFiles,
                 bucket,
                 label: labelOf(meta.document_buckets, bucket),
-                name: shown.display_name,
+                name: (scope.file ?? shown).display_name,
               }}
               expanded={expanded}
-              activeRef={station.ref}
-              onOpen={(row) => station.show(row.doc, row.ref, { list: listAll ? ALL_PROPOSALS : '' })}
-              check={shown.archived_at ? null : check}
+              modes={modes}
+              viewer={{
+                docId: shown.id,
+                page: (viewed.id === shown.id && viewed.page) || station.page || '',
+                ref: station.ref,
+              }}
+              onShow={showValue}
+              check={(scope.file ?? shown).archived_at ? null : check}
             />
           )}
         </div>

@@ -14,21 +14,27 @@ from .plans import Documents, base, cells
 from .state import line_state
 
 
+def premium(result):
+    """A plan's premium as the API sends it, from its priced result (`packages.evaluate`)."""
+    return {
+        'monthly': result['monthly'],
+        'annual': result['annual'],
+        'reason': result['reason'],
+        'quoted': result['quoted'],
+        'reason_words': m.REASON_WORDS.get(result['reason']) if result['reason'] else None,
+    }
+
+
 def _priced(plan, result, data):
     renewal_of = data.by_id.get(plan.renews_id) if plan.role == 'renewal' else None
     return {
         'base_ids': result['base_ids'],
         'enrollment_used': result['enrollment_used'],
         'enrollment_source': result['enrollment_source'],
-        'premium': {
-            'monthly': result['monthly'],
-            'annual': result['annual'],
-            'reason': result['reason'],
-            'quoted': result['quoted'],
-            'reason_words': m.REASON_WORDS.get(result['reason']) if result['reason'] else None,
-        },
+        'premium': premium(result),
         'change': result['change'],
         'part_of': result['part_of'],
+        'credit': result['credit'],  # a premium holiday's credit and the net after it (F80; slice 35)
         'employee_cost': m.employee_cost(data.by_id[plan.id]) if data.rate_basis == 'composite' else None,
         'tier_rate_change': (
             m.tier_rate_change(data.by_id[plan.id], renewal_of)

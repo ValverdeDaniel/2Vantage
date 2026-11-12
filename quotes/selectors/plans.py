@@ -1,9 +1,10 @@
 """One plan as the API sends it (plan.md §7.8, F.6): its own fields, and its cells' compact flags.
 
-The comparison is compact (F.6, C23): a cell carries only what it has to say, as `{s, o, d, m}`: its status
+The comparison is compact (F.6, C23): a cell carries only what it has to say, as `{s, o, d, m, p}`: its status
 (`missing` or `to_check`; blank and ok are left out), its origin when not typed, the index of its document in the
-payload's `documents` list (listed once), and its review mark `m` (`mark_word`: ⚑ check always; ignored or approved
-only where they change what the value shows, E92). A value's full source comes on ↗ (`plans/{id}/source/`).
+payload's `documents` list (listed once), its review mark `m` (`mark_word`: ⚑ check always; ignored or approved
+only where they change what the value shows, E92), and `p` when it is a potential error but not an open warning
+(`look_again`; the station's Grid, E50). A value's full source comes on ↗ (`plans/{id}/source/`).
 """
 
 from documents import review_rules
@@ -41,8 +42,14 @@ def mark_word(entry):
     return 'approved' if review_rules.is_approved(entry) else None
 
 
+def look_again(entry):
+    """A potential error that is not an open warning (E50, D123): the locator could not find or pin the value down in
+    its file and nobody dealt with it. The station's Grid filters and counts on it; the Advisor colours only `s`."""
+    return review_rules.potential_error(entry) and not review_rules.open_warning(entry)
+
+
 def cells(plan, status, documents):
-    """{key: {s?, o?, d?, m?}} for the keys with something to say."""
+    """{key: {s?, o?, d?, m?, p?}} for the keys with something to say."""
     out = {}
     for key, source in plan.sources.items():
         if key not in plan.values or not isinstance(source, dict):
@@ -55,6 +62,8 @@ def cells(plan, status, documents):
         mark = mark_word(source)
         if mark:
             cell['m'] = mark
+        if look_again(source):
+            cell['p'] = 1
         if cell:
             out[key] = cell
     for key, state in status.items():
@@ -92,6 +101,7 @@ def base(plan):
         # A copy or priced version names its original; the board's chips and arrows read both (F62, F43).
         'derived_from': plan.derived_from_id,
         'derived': plan.derived or None,
+        'bundling': plan.bundling,  # the carrier's rates already include the bundle, or not (F78; slice 35)
     }
 
 

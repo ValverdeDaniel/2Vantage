@@ -134,3 +134,24 @@ def test_Q8_GD4_canaries_stay_on_the_roster(golden):
         *CensusImport.objects.filter(deal=deal).values(),
     ]
     assert not [canary for canary in canaries if canary in str(stored)]
+
+
+def test_Q9_41_C6_C38_GD4_a_fix_answers_one_person_and_its_template_comes_back_unchanged(user, api, deal, golden):
+    from census import template
+
+    gd4, _refs, spec = golden['GD4']
+    name = spec['census']['file']
+    services.apply_import(user, services.create_import(user, deal.id, upload(user, deal, _file(gd4, name), name).id).id)
+    blank = next(m for m in Member.objects.filter(deal=deal, kind='employee') if not m.values.get('medical_tier'))
+    before = facts.summary(facts.stored(deal.id))['missing_required']
+    answer = api.patch(f'/api/census/members/{blank.id}/', {'values': {'medical_tier': 'ee'}}, format='json').json()
+    assert answer['member']['id'] == blank.id and 'members' not in answer
+    assert answer['member']['values']['medical_tier'] == 'EE' and 'medical_tier' not in answer['member']['missing']
+    assert answer['summary']['missing_required'] == before - 1
+    filled, people = template.template(deal)
+    assert people == Member.objects.filter(deal=deal).count()
+    returned = services.create_import(user, deal.id, upload(user, deal, filled, 'census template (returned).xlsx').id)
+    assert not [item['header'] for item in returned.mapping if item['low'] or not item['field']]
+    again = services.dry_run(returned.id)
+    assert again['added'] == again['changed'] == again['removed'] == again['kept'] == []
+    assert again['counts']['unchanged'] == people

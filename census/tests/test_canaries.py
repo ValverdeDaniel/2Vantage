@@ -96,3 +96,41 @@ def test_Q8_OQ16_the_census_page_shows_ssns_masked(user, api, deal):
     assert '123-45-6780' not in page and '***-**-6780' in page
     sample = api.get(f'/api/census/imports/{imp.id}/').content.decode()
     assert '123-45-6780' not in sample
+
+
+def test_Q8_C6_C7_hand_edits_files_and_refusals_carry_no_canary(user, api, deal, caplog):
+    caplog.set_level(logging.DEBUG)
+    imp = import_file(user, deal, census_file())
+    services.apply_import(user, imp.id)
+    from census.models import Member
+
+    employee = Member.objects.get(deal=deal, kind='employee')
+    url = f'/api/census/members/{employee.id}/'
+    bodies = [
+        api.patch(url, {'values': {'city': 'Canarytown'}, 'expect': {'city': 'Nowhere'}}, format='json'),  # 409
+        api.patch(url, {'values': {'ssn': '***-**-0000'}}, format='json'),  # 400: a mask not on file
+        api.patch(url, {'values': {'Quillonia': 'x'}}, format='json'),  # 400: not a column (cut, never a value)
+    ]
+    assert [answer.status_code for answer in bodies] == [409, 400, 400]
+    assert (
+        api.patch(url, {'values': {'email': 'zz@canary.test', 'dob': '03/15/1957'}}, format='json').status_code == 200
+    )
+    made = api.post(
+        f'/api/deals/{deal.id}/census/members/',
+        {'kind': 'dependent', 'employee_id': employee.id, 'values': {'first_name': 'Canarella', 'dob': '01/02/2010'}},
+        format='json',
+    ).json()['member']
+    api.post(
+        f'/api/deals/{deal.id}/census/marks/', {'action': 'check', 'refs': [f'census:{made["id"]}:dob']}, format='json'
+    )
+    api.delete(f'/api/census/members/{made["id"]}/')
+    files = [api.get(f'/api/deals/{deal.id}/census/template/'), api.get(f'/api/deals/{deal.id}/census/export/')]
+    extra = ['Canarytown', 'zz@canary.test', '1957-03-15', 'Canarella', '2010-01-02']
+    for row in Activity.objects.filter(deal=deal).values('summary', 'changes'):
+        assert leaked(row) == [] and not [word for word in extra if word in str(row)], row
+    for answer in bodies:
+        assert leaked(answer.content.decode()) == []
+        assert not [word for word in extra if word in answer.content.decode()]
+    for answer in files:
+        assert leaked(answer['Content-Disposition']) == []
+    assert leaked(caplog.text) == [] and not [word for word in extra if word in caplog.text]

@@ -3,6 +3,7 @@
 // restyling slices. Each walk: { title, deal, run(ctx) }, where ctx = { page, step, base, user, spec }.
 // Needs 1–12 arrive with the slices that build them (Q.9); 0 is the example the lane started with.
 
+import { documents23 } from './documents23.mjs';
 import { intake39 } from './intake39.mjs';
 
 const signIn = async ({ page, step, base, user }) => {
@@ -203,4 +204,5 @@ export const WALKS = {
     },
   },
   s39: { ...intake39, run: (ctx) => intake39.run(ctx, { signIn, openDeal }) }, // slice 39's done-when
+  s23: { ...documents23, run: (ctx) => documents23.run(ctx, { signIn, openDeal }) }, // slice 23's done-when
 };

@@ -67,3 +67,19 @@ export function pickedCells(R, C, picks) {
 export function allKeys(R, C) {
   return R.length && C.length ? rectKeys(R, C, { r: R[0], c: C[0] }, { r: R[R.length - 1], c: C[C.length - 1] }) : [];
 }
+
+/** "Only potential errors": the pick narrowed to the cells `keep(r, c)` keeps. */
+export function narrowKeys(picks, keep) {
+  const next = new Set();
+  for (const key of picks) {
+    const { r, c } = cellOf(key);
+    if (keep(r, c)) next.add(key);
+  }
+  return next;
+}
+
+/** The cell F opens: the active one while it is picked and on screen, else the first picked cell on screen. */
+export function activeOrFirst(R, C, picks, active) {
+  if (onGrid(R, C, active) && picks.has(keyOf(active.r, active.c))) return { r: String(active.r), c: String(active.c) };
+  return pickedCells(R, C, picks)[0] || null;
+}

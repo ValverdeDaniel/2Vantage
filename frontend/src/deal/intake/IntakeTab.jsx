@@ -9,7 +9,7 @@ import { isBlank } from '../shared/fieldValue';
 import CoverageIntentCard from './CoverageIntentCard';
 import CurrentCoverageCard from './CurrentCoverageCard';
 import { allRows, missingKeys } from './formModel';
-import FromClientToggle from './FromClientToggle';
+import FromClientToggle from '../shared/FromClientToggle';
 import IntakeNotes from './IntakeNotes';
 import IntakeSelectBar from './IntakeSelectBar';
 import IntakeViews from './IntakeViews';

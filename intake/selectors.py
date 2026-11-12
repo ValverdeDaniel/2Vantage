@@ -7,7 +7,7 @@ from deals import clock, comp, lines
 from deals.models import Deal
 from documents.models import Document
 
-from . import coverage, form, providers, status, validation, values
+from . import checklist, coverage, form, providers, status, validation, values
 from .models import CurrentCoverage, Intake
 
 _UNSET = object()
@@ -150,3 +150,14 @@ def intake_payload(deal):
         'coverage': [coverage_row(row, (quote_lines.get(row.line) or {}).get('current')) for row in rows],
         'intent': card(deal, rows, quote_lines, intake),
     }
+
+
+def checklist_item(deal_id, key):
+    """One checklist item as a screen shows it (`checklist.item_state`): the door the Census tab reads the COBRA tick
+    through (C25, O.6 #2). A deal with no Intake row reads unchecked."""
+    from django.contrib.auth import get_user_model
+
+    stored = Intake.objects.filter(deal_id=deal_id).values_list('checklist', flat=True).first()
+    entry = checklist.entry_of(stored, key)
+    who = get_user_model().objects.filter(pk=entry['by']).first() if entry.get('by') else None
+    return checklist.item_state(key, entry, (who.get_full_name() or who.username) if who else '')

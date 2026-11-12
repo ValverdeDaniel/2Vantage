@@ -19,7 +19,7 @@ from deals.values import source
 
 from . import flags, form
 from .models import CurrentCoverage
-from .services import marks, rows
+from .services import checklist, marks, rows
 from .signals import announce
 
 LABELS = {
@@ -32,6 +32,7 @@ LABELS = {
     'effective_date': 'Effective date',
     'commission_source': 'Commission source',
     'line': 'The coverage line',
+    'cobra': 'The COBRA check',
 }
 TOUCHED_SINCE = 'This coverage line was changed after this, so this change cannot be reverted.'
 
@@ -140,7 +141,7 @@ def revert(row, user):
     _refuse_later(row)
     deal_id = row.deal_id
     kinds = {entry['t'].partition(':')[0] for entry in row.changes}
-    if 'intake' in kinds:
+    if 'intake' in kinds or 'checklist' in kinds:
         rows.lock_intake(deal_id)  # lock order: the Deal (already), the Intake row, then coverage rows by id
     ids = [int(entry['t'].partition(':')[2]) for entry in row.changes if entry['t'].startswith('coverage:')]
     if ids:
@@ -168,6 +169,10 @@ def revert(row, user):
             answered = {key: pair for key, pair in entry['k'].items() if key != 'intent_confirmed'}
             if answered:
                 diff.update(_answers_back(deal_id, intake, answered, user))
+            if diff:
+                written.append(activity.change(entry['t'], diff))
+        elif kind == 'checklist':
+            diff = checklist.revert(deal_id, entry['k'])  # a checklist tick (slice 41: COBRA, C25)
             if diff:
                 written.append(activity.change(entry['t'], diff))
         elif kind == 'coverage':

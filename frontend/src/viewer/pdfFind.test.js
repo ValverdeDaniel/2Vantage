@@ -49,4 +49,15 @@ describe('E23 pdfFind', () => {
     expect(match.ranges[0][0]).toBe(pageText.lastIndexOf('25'));
     expect(findHighlightRanges(pageText, '', '25')).toBe(null);
   });
+
+  it('E23 with the line not printed whole, picks the repeated figure on the row with most of its words', () => {
+    const { pageText, offsets } = page(
+      ['Deductible', 72, 700],
+      ['$1,500', 300, 700],
+      ['OOP max', 72, 684],
+      ['$1,500', 300, 684],
+    );
+    const match = findHighlightRanges(pageText, 'In-network OOP max per person', '1500', geometryForOffsets(offsets));
+    expect(match.ranges[0][0]).toBe(pageText.lastIndexOf('$1,500'));
+  });
 });

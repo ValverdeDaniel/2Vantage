@@ -187,3 +187,27 @@ def test_17_GD1_a_flag_on_a_value_from_the_cigna_file_shows_on_both_screens_and_
     assert admin_api.post(f'/api/activity/{row.id}/revert/').status_code == 200
     assert Plan.objects.get(pk=gd1.refs['CG2']).flags == 0
     assert admin_api.post(f'/api/activity/{row.id}/revert/').status_code == 409
+
+
+def test_F76_F87_GD1_five_percent_off_previews_its_total_and_commits_a_copy_behind_its_original(gd1, user):
+    """Slice 35's done-when: "5% off" CG2 previews its total, and commits a copy right behind CG2 that prices the same
+    people (A's 10·3·2·5). By hand: 454.29 × 10 + 976.72 × 3 + 851.33 × 2 + 1,401.39 × 5 = $16,182.67 → $16,183 a
+    month; against A's $18,251 a month, −11.3%. GD1's medical line has stars and room, so the version is starred
+    (F83)."""
+    from quotes.services import priced
+
+    refs, deal = gd1.refs, gd1.deal
+    five_off = {'kind': 'concession', 'all': {'op': 'pct_off', 'value': 5}}
+    (draft,) = priced.price(user, deal, [refs['CG2']], five_off, dry_run=True).drafts
+    assert (draft['premium']['monthly'], draft['change']['pct']) == (16183, -11.3)
+    before = line_state(deal, 'medical')
+    (version,) = priced.price(user, deal, [refs['CG2']], five_off).plans
+    after = line_state(deal, 'medical')
+    ids = [plan.id for plan in after.plans]
+    assert ids.index(version.id) == ids.index(refs['CG2']) + 1
+    assert [plan_id for plan_id in ids if plan_id != version.id] == [plan.id for plan in before.plans]  # none moved
+    result = after.results[version.id]
+    assert (result['monthly'], result['change']) == (draft['premium']['monthly'], draft['change'])
+    people = {'EE': 10, 'ES': 3, 'EC': 2, 'FAM': 5}
+    assert result['enrollment_used'] == before.results[refs['CG2']]['enrollment_used'] == people
+    assert Plan.objects.get(pk=version.id).starred

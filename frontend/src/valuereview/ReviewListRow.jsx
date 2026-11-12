@@ -4,7 +4,8 @@ import cx from '../ui/cx';
 /*
  * One value in the List (plan.md §8.16; E56, D122; the old FileReviewList row): its bucket's word in its tone, the
  * field and the plan it is on (never a person: plan values only), the value as the member reads it, where it is in the
- * file (p. 2, Medical B11) and a person's mark. `file` names the file under 📚 All proposals.
+ * file (p. 2, Medical B11) and a person's mark. `file` names the file under 📚 All proposals; `found` and `current`
+ * are Find's marks (E63); `review` words the hover for Review mode (E65).
  */
 
 const by = (stamp) =>
@@ -35,17 +36,30 @@ function MarkChip({ row }) {
   return null;
 }
 
-export default function ReviewListRow({ row, bucket, value, file, selected, open, onClick, onDoubleClick }) {
+function tip(open, review) {
+  if (review) return 'Click to see it in the file; E or a double-click edits it';
+  return open ? 'Open in the file' : 'Press F (or double-click) to see it in the file';
+}
+
+export default function ReviewListRow(props) {
+  const { row, bucket, value, file, selected, open, found, current, review, onClick, onDoubleClick } = props;
   return (
     <div
       id={`frl-${row.ref}`}
       role="option"
       aria-selected={selected}
-      className={cx('bnf-frl-row', selected && 'is-active', open && 'is-open', row.dealt && 'is-dealt')}
+      className={cx(
+        'bnf-frl-row',
+        selected && 'is-active',
+        open && 'is-open',
+        row.dealt && 'is-dealt',
+        found && 'is-found',
+        current && 'is-found-current',
+      )}
       data-ref={row.ref}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
-      title={open ? 'Open in the file' : 'Press F (or double-click) to see it in the file'}
+      title={tip(open, review)}
     >
       <span className={`bnf-frl-state bnf-frl-tone-${bucket?.tone ?? 'grey'}`} title={bucket?.help}>
         {bucket?.label ?? row.bucket}

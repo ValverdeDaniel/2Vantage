@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cellCounts, flaggedKeys, patchComparison, planCounts } from './marksCache';
+import { cellCounts, flaggedKeys, isPotential, patchComparison, planCounts } from './marksCache';
 
 const plan = (id, cells, facts = { flags: 0, incomplete: false }) => ({ id, cells, facts, values: {} });
 
@@ -38,5 +38,15 @@ describe('review marks on the compact comparison (F63–F65, E53)', () => {
   it('E53 returns the same data when the answer changed nothing', () => {
     const data = { groups: [], plans: [plan(1, {})] };
     expect(patchComparison(data, { values: [], plans: [] })).toBe(data);
+  });
+
+  it('E50 a potential error is an open warning or a value the locator could not find, as the server flags it', () => {
+    expect(isPotential({ s: 'to_check' })).toBe(true);
+    expect(isPotential({ p: 1, d: 0 })).toBe(true);
+    expect(isPotential({ s: 'missing' })).toBe(false);
+    expect(isPotential(undefined)).toBe(false);
+    const data = { groups: [], plans: [plan(1, { rate_ee: { p: 1, d: 0 } })] };
+    const approved = patchComparison(data, { values: [{ plan_id: 1, key: 'rate_ee', cell: { m: 'approved' } }] });
+    expect(approved.plans[0].cells.rate_ee).toEqual({ d: 0, m: 'approved' });
   });
 });

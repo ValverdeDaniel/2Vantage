@@ -95,6 +95,19 @@ def clean(key, raw):
     return cleaner(text) if cleaner else text
 
 
+def shown(key, text):
+    """A stored value as the grid and the files show it (§5.3.1): a date `MM/DD/YYYY`, anything else as stored. A
+    date that could not be read stays as typed."""
+    text = str(text or '')
+    if text and fields.BY_KEY[key]['type'] == 'date':
+        try:
+            parsed = date.fromisoformat(text)
+        except ValueError:
+            return text
+        return f'{parsed.month:02d}/{parsed.day:02d}/{parsed.year:04d}'
+    return text
+
+
 def age_on(born, on):
     """Whole years from `born` to `on` (dates), or None when either is missing."""
     if not isinstance(born, date) or not isinstance(on, date):

@@ -4,18 +4,21 @@ The summary and the rollup are the stored counts (`CensusFacts`); validation iss
 on read over the whole census (duplicates need it), and only one page of people is returned: employees, each followed
 by their dependents, unlinked dependents on the last page. `show=issues` keeps families where someone has an issue,
 `show=missing` those with a missing required cell; `q` matches a first or last name. SSNs are shown masked (OQ16).
-The full roster grid that reads this page is slice 41's.
+The roster grid (slice 41) reads it: each person as `roster.person_row` draws them, the roster's review counts (E48)
+and the COBRA tick, read through intake's door (`intake.selectors.checklist_item`; C25, O.6 #2).
 """
 
 from math import ceil
 
 from deals import clock
+from intake.checklist import COBRA
 from intake.models import Intake
+from intake.selectors import checklist_item
 
 from .. import facts, fields, rollup, validation
 from ..models import CensusImport
-from ..values import mask_ssn
 from .imports import import_row
+from .roster import issues_by_person, person_row, review_counts
 
 PAGE_SIZE, MAX_PAGE_SIZE = 100, 500
 SHOWS = ('all', 'issues', 'missing')
@@ -53,15 +56,7 @@ def derived(deal, found):
     }
 
 
-def _shown(person):
-    values = dict(person['values'])
-    for key in fields.SSN_KEYS:
-        if values.get(key):
-            values[key] = mask_ssn(values[key])
-    return values
-
-
-def _families(found):
+def family_groups(found):
     """[[employee, its dependents…]] in roster order, unlinked dependents last, each alone."""
     by_employee = {}
     for person in found:
@@ -92,13 +87,11 @@ def census_page(deal, page=1, page_size=PAGE_SIZE, show='all', query=''):
     issues = validation.validate(found, clock.today())
     needed = facts.needed(deal)
     missing = {person['id']: facts.missing_keys(person, needed[person['kind']]) for person in found}
-    families = [f for f in _families(found) if _keep(f, show, query.strip().lower(), issues, missing)]
+    families = [f for f in family_groups(found) if _keep(f, show, query.strip().lower(), issues, missing)]
     pages = max(1, ceil(len(families) / page_size))
     number = min(max(1, page), pages)
     shown = [person for family in families[(number - 1) * page_size : number * page_size] for person in family]
-    by_person = {}
-    for (person_id, key), listed in issues.items():
-        by_person.setdefault(person_id, {})[key] = listed
+    by_person = issues_by_person(issues)
     return {
         'summary': facts.summary(stored),
         'rollup': line_rollups(deal, stored['rollup']),
@@ -107,16 +100,7 @@ def census_page(deal, page=1, page_size=PAGE_SIZE, show='all', query=''):
         'imports': [import_row(imp) for imp in CensusImport.objects.filter(deal=deal).select_related('document__deal')],
         'last_import_at': stored['last_import_at'].isoformat() if stored['last_import_at'] else None,
         'page': {'number': number, 'pages': pages, 'page_size': page_size, 'employees': len(families)},
-        'members': [
-            {
-                'id': person['id'],
-                'kind': person['kind'],
-                'employee_id': person['employee_id'],
-                'values': _shown(person),
-                'sources': person['sources'],
-                'issues': by_person.get(person['id'], {}),
-                'missing': missing[person['id']],
-            }
-            for person in shown
-        ],
+        'members': [person_row(person, by_person.get(person['id'], {}), missing[person['id']]) for person in shown],
+        'review': review_counts(found),
+        'cobra': checklist_item(deal.id, COBRA),
     }

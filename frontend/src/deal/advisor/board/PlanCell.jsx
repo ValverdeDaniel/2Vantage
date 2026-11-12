@@ -17,7 +17,7 @@ export default function PlanCell({ plan, board, ui }) {
   const requires = requiresText(plan, ui.namesById);
   const priced = pricedKind(plan);
   const arrows = board.inProposal && canMove(plan, order) ? arrowsFor(plan, ui.shownIds, order) : null;
-  const chips = planChips(plan, { currents, supersededIds: ui.supersededIds });
+  const chips = planChips(plan, { currents, supersededIds: ui.supersededIds, families: ui.families });
   return (
     <>
       <div className="bnf-plan-head">

@@ -24,12 +24,19 @@ export function useAdvisorLines(dealId) {
  */
 export function useComparison(dealId, line) {
   return useQuery({
-    queryKey: advisorKey(dealId, line),
-    queryFn: async () => (await api.get(`deals/${dealId}/plans/`, { params: { line } })).data,
+    ...comparisonQuery(dealId, line),
     enabled: Boolean(line),
-    staleTime: 0,
     placeholderData: (previous) => (previous?.line === line ? previous : undefined),
   });
+}
+
+/** One line's comparison as a query (the Advisor's board, and the Documents station's Grid over several lines, E36). */
+export function comparisonQuery(dealId, line) {
+  return {
+    queryKey: advisorKey(dealId, line),
+    queryFn: async () => (await api.get(`deals/${dealId}/plans/`, { params: { line } })).data,
+    staleTime: 0,
+  };
 }
 
 /**

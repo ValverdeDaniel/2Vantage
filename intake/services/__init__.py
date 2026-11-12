@@ -4,6 +4,8 @@
 - `answers`: the form's answers — `update_answers`, the one writer of `Intake.answers` and their sources, and the
   door onto the deal's effective date (B1, B4);
 - `marks`: review marks on the answers — `mark_answers` (approve, ignore, needs checking, clear; B10, B11);
+- `checklist`: the marketing checklist's ticks — `set_checklist_item` (slice 41: the COBRA tick the Census tab shows,
+  C25, O.6 #2; slice 40 adds the other items);
 - `intent`: the coverage intent — `set_intent`, the only writer of the lines to quote (B16–B18, B32), and
   `confirm_intent` / `reopen_intent` (B20).
 `rows` holds the locks (the Deal, the Intake row, then coverage rows by id) and the Activity entries they share.
@@ -12,6 +14,7 @@ only what changed. The checklist, the BOR and Mark as marketed (slice 40) join t
 """
 
 from .answers import update_answers
+from .checklist import set_checklist_item
 from .coverage import create_coverage, delete_coverage, update_coverage
 from .intent import confirm_intent, reopen_intent, set_intent
 from .marks import mark_answers
@@ -22,6 +25,7 @@ __all__ = [
     'delete_coverage',
     'mark_answers',
     'reopen_intent',
+    'set_checklist_item',
     'set_intent',
     'update_answers',
     'update_coverage',

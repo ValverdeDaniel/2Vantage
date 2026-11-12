@@ -16,7 +16,7 @@ field a line does not have is dropped from that line's columns, as the old board
 
 from deals import lines
 
-from . import fields
+from . import fields, priced_kinds
 
 PRESETS = [
     ('primary', 'Primary'),
@@ -247,4 +247,5 @@ def meta():
         'rule_ops': RULE_OPS,
         'max_rules': MAX_RULES,
         'compliance': COMPLIANCE,
+        'priced': priced_kinds.meta(),  # the priced-version composer's kinds, operations and words (F76–F84; s35)
     }

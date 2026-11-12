@@ -38,6 +38,15 @@ export async function postMarks(dealId, body) {
 }
 
 /**
+ * PATCH deals/{id}/intake/checklist/ — tick one checklist item (slice 41: the COBRA tick the Census tab shows, C25,
+ * O.6 #2; slice 40 adds the rest). body: {item, checked} → {item: {key, label, checked, by, by_name, at,
+ * requirement}, activity_id}.
+ */
+export async function setChecklistItem(dealId, body) {
+  return (await api.patch(`deals/${dealId}/intake/checklist/`, body)).data;
+}
+
+/**
  * POST deals/{id}/intake/intent/ — the one writer of the lines to quote (B17, B32). body: {line | lines,
  * has_today?, this_year? (market | keep | off), shop?, remove?} → {intent, coverage, requested_lines, activity_id}.
  */

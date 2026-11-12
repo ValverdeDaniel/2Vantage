@@ -11,10 +11,12 @@ import FileTabs from './FileTabs';
 /*
  * The file side of the station (plan.md §8.16; E1–E3, E10–E18, E21–E32, E59): the file row with 📚 All proposals,
  * "Show removed files", the file's controls, what "Check this file" is doing, the File panel, the file bar and the
- * viewer. `station` holds the files and what is on screen; `on` the handlers DocumentsTab owns.
+ * viewer. `station` holds the files and what is on screen; `on` the handlers DocumentsTab owns. When a value read from
+ * another file moved the viewer, the file bar says so and offers "← Back to <file>" (E31, D-164).
  */
 export default function ViewerPane({ station, meta, removedList, on }) {
   const { files, shown, allOn, proposals, editing, expanded, update, check, checking, value, find, viewedPage } = station;
+  const { scopeFile } = station;
   const bucketLabel = (key) => labelOf(meta.document_buckets, key);
   const isRemoved = Boolean(shown?.archived_at);
   if (!shown) {
@@ -64,6 +66,8 @@ export default function ViewerPane({ station, meta, removedList, on }) {
         page={viewedPage || find.page || 1}
         what={value ? value.what : ''}
         note={value ? locWords(value.source.loc) : null}
+        scope={scopeFile}
+        onBack={on.back}
       />
       <DocumentViewer
         document={shown}

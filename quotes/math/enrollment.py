@@ -3,9 +3,9 @@
 The shape follows the line's rate basis (`deals.lines.ENROLLMENT_KEYS`): tier counts `{EE, ES, EC, FAM}` for composite
 lines, `{volume}` for volume_1000, weekly_10 and payroll_100, `{lives}` for pepm and stop_loss. Figures are Decimals.
 
-Built today: step 1 (the plan's own typed counts), step 3 (a renewal's or replaced plans' typed counts) and step 5
-(two or more current plans stop). Priced versions, the census, the line figure and borrowing arrive with slices 13
-and 35 (`LineEnrollment`, the census rollup).
+Built today: step 1 (the plan's own typed counts), step 2 (a priced version prices its original's people, so "5% off"
+prices the same people; F87, slice 35), step 3 (a renewal's or replaced plans' typed counts) and step 5 (two or more
+current plans stop). The census, the line figure and borrowing arrive with slice 13 (`LineEnrollment`, the rollup).
 """
 
 from decimal import Decimal
@@ -34,12 +34,19 @@ def total(enrollments, keys):
     return {key: sum((e[key] for e in enrollments), Decimal(0)) for key in keys}
 
 
+ORIGINAL = 'from original plan'
+
+
 def enrollment_for(plan, line):
     """(figures, source) or (None, reason)."""
     keys = enrollment_keys(line.rate_basis)
     own = typed(plan, keys)
     if own:
         return own, 'typed'
+    original = line.by_id.get(plan.version_of)
+    if original is not None and original.id != plan.id:
+        figures, how = enrollment_for(original, line)
+        return (figures, ORIGINAL) if figures is not None else (None, how)
     bases = [line.by_id[pid] for pid in line.base_ids(plan)]
     if plan.role in ('renewal', 'alternate') and bases:
         figures = [typed(base, keys) for base in bases]

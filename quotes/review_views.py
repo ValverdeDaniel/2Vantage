@@ -17,7 +17,7 @@ from deals.models import Deal
 from documents import review_rules
 
 from . import facts
-from .selectors.plans import mark_word
+from .selectors.plans import look_again, mark_word
 from .selectors.review import source_rows
 from .services import review
 
@@ -62,6 +62,8 @@ def _value(plan, key, status):
         cell['s'] = status[key]
     if mark_word(entry):
         cell['m'] = mark_word(entry)
+    if look_again(entry):
+        cell['p'] = 1
     return {
         'ref': f'plan:{plan.id}:{key}',
         'plan_id': plan.id,

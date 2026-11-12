@@ -27,7 +27,8 @@ def world(user):
     deal = make_deal(user, requested_lines=('medical',))
     imported(user, deal, xlsx(roster(SMITH)))
     waiting = import_file(user, deal, xlsx(roster(SMITH, LEE)))
-    return {'deal': deal, 'import': waiting, 'file': upload(user, deal, xlsx(roster(LEE)))}
+    person = Member.objects.get(deal=deal, kind='employee')
+    return {'deal': deal, 'import': waiting, 'file': upload(user, deal, xlsx(roster(LEE))), 'member': person}
 
 
 def samples(world):
@@ -38,6 +39,13 @@ def samples(world):
         'api/census/imports/<int:import_id>/': imp,
         'api/census/imports/<int:import_id>/apply/': imp,
         'api/census/imports/<int:import_id>/discard/': imp,
+        'api/deals/<int:pk>/census/members/': deal,
+        'api/census/members/<int:member_id>/': {'member_id': world['member'].id},
+        'api/deals/<int:pk>/census/clear/': deal,
+        'api/deals/<int:pk>/census/marks/': deal,
+        'api/deals/<int:pk>/census/missing/': deal,
+        'api/deals/<int:pk>/census/template/': deal,
+        'api/deals/<int:pk>/census/export/': deal,
     }
 
 
@@ -54,6 +62,14 @@ def matrix(world):
         ('PATCH', 'api/census/imports/<int:import_id>/', ALL, {'first_data_row': 3}),
         ('POST', 'api/census/imports/<int:import_id>/apply/', ALL),
         ('POST', 'api/census/imports/<int:import_id>/discard/', GONE),
+        ('POST', 'api/deals/<int:pk>/census/members/', MADE, {'kind': 'employee', 'values': {'first_name': 'Quinn'}}),
+        ('PATCH', 'api/census/members/<int:member_id>/', ALL, {'values': {'first_name': 'Quinn'}}),
+        ('DELETE', 'api/census/members/<int:member_id>/', GONE),
+        ('POST', 'api/deals/<int:pk>/census/clear/', GONE, {'confirm': True}),
+        ('POST', 'api/deals/<int:pk>/census/marks/', ALL, {'action': 'approve'}),
+        ('GET', 'api/deals/<int:pk>/census/missing/', ALL),
+        ('GET', 'api/deals/<int:pk>/census/template/', ALL),
+        ('GET', 'api/deals/<int:pk>/census/export/', ALL),
     ]
 
 

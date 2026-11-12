@@ -1,8 +1,9 @@
 /*
  * What the Plan cell says about a plan (plan.md §8.14; F62, D-051; the old AdvisorTab's chips). Pure, from plan
  * fields, `derived` and the server's `facts`; the compliance words come from `/api/meta/` (board.compliance).
- * - CURRENT, numbered when the line has several (its slot);
- * - a priced version's chip (its label, or its kind), and "superseded" on a quote a priced version replaces;
+ * - CURRENT, numbered when the line has several (its slot); BUNDLED on a quote whose rates already include the
+ *   bundling discount (F78);
+ * - a priced version's chip (its family's glyph and its label), and "superseded" on a quote a priced version replaces;
  * - "⚠ MV · Part D" for the compliance tests the carrier says the plan fails, with the reasons as its title;
  * - "requires …" (what has to sell for a bundled price) and "updated <date>" under a priced version.
  * A duplicate (D-049) is a peer and wears no chip.
@@ -33,9 +34,9 @@ export function complianceTitle(failures) {
 
 /**
  * The chips above the carrier: [{key, className, text, title}]. `currents` are the line's current plans in slot
- * order; `supersededIds` the quotes a priced version was made from.
+ * order; `supersededIds` the quotes a priced version was made from; `families` meta's priced-version families.
  */
-export function planChips(plan, { currents = [], supersededIds = new Set() } = {}) {
+export function planChips(plan, { currents = [], supersededIds = new Set(), families = [] } = {}) {
   const chips = [];
   if (plan.role === 'current') {
     const slot = currents.findIndex((p) => p.id === plan.id) + 1;
@@ -45,14 +46,24 @@ export function planChips(plan, { currents = [], supersededIds = new Set() } = {
       text: currents.length > 1 && slot > 0 ? `CURRENT ${slot}` : 'CURRENT',
     });
   }
+  if (plan.bundling === 'included') {
+    chips.push({
+      key: 'bundled',
+      className: 'bnf-plan-chip bnf-chip-bundled',
+      text: 'BUNDLED',
+      title:
+        'The carrier confirmed these quoted rates already include the bundling discount — a bundled version is refused on this quote',
+    });
+  }
   const kind = pricedKind(plan);
   if (kind) {
-    const label = plan.derived?.label || kind; // the version's own name (slice 35 writes it)
+    const family = families.find((f) => f.key === kind);
+    const label = plan.derived?.label || kind;
     chips.push({
       key: 'priced',
       className: 'bnf-plan-chip bnf-chip-concession',
-      text: String(label).toUpperCase(),
-      title: [plan.derived?.note].filter(Boolean).join(' — '),
+      text: `${family?.glyph ? `${family.glyph} ` : ''}${String(label).toUpperCase()}`,
+      title: [family?.label, plan.derived?.note].filter(Boolean).join(' — '),
     });
   }
   if (plan.role !== 'current' && supersededIds.has(plan.id)) {
@@ -71,8 +82,20 @@ export function supersededIds(plans) {
   return new Set(plans.filter((plan) => pricedKind(plan)).map((plan) => plan.derived_from));
 }
 
-/** "requires Aetna HMO 1000 + VSP Choice": the plans a bundled price needs sold, or ''. */
+/**
+ * "requires Aetna Dental PPO + any Cigna vision": what a bundled price needs sold, or ''. Each part names its quote as
+ * it was when priced (the server keeps the label beside the id), else a plan on this line by id, else the carrier.
+ */
 export function requiresText(plan, namesById) {
-  const ids = pricedKind(plan) ? (plan.derived?.requires ?? []) : [];
-  return ids.map((id) => namesById.get(id)).filter(Boolean).join(' + ');
+  if (pricedKind(plan) !== 'bundle') return '';
+  const parts = plan.derived?.parts ?? (plan.derived?.requires ?? []).map((id) => ({ plan_id: id }));
+  return parts
+    .map(
+      (part) =>
+        part.plan_label ||
+        namesById.get(part.plan_id) ||
+        (part.carrier ? `any ${part.carrier} ${String(part.line).replace(/_/g, ' ')}` : ''),
+    )
+    .filter(Boolean)
+    .join(' + ');
 }

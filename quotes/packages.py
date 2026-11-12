@@ -6,6 +6,7 @@ comparison of enrollment is made in Decimal.
 """
 
 from . import math as m
+from .math import pricing
 
 
 def _people(result):
@@ -42,7 +43,17 @@ def evaluate(line):
             result['change'] = m.change(result['annual'], sum(results[pid]['annual'] for pid in bases))
         else:
             result['part_of'] = ' + '.join(line.by_id[pid].label for pid in bases)
+    for plan in line.plans:
+        results[plan.id]['credit'] = _credit(plan, results) if plan.credit else None
     return results
+
+
+def _credit(plan, results):
+    """A premium holiday's credit and the net after it (F80), its change against the base shown only where the
+    plan's own change is (the same people)."""
+    result = results[plan.id]
+    base = sum(results[pid]['annual'] for pid in result['base_ids']) if result['change'] is not None else None
+    return pricing.net_after_credit(plan.credit, result['monthly'], result['annual'], base)
 
 
 def _words(value):

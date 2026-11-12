@@ -110,6 +110,23 @@ class MarksView(APIView):
         )
 
 
+class ChecklistView(APIView):
+    """PATCH deals/{id}/intake/checklist/ {item, checked} — tick one checklist item (slice 41: `cobra`, from the
+    Census tab, C25; slice 40 adds the rest) → {item: {key, label, checked, by, by_name, at, requirement},
+    activity_id}."""
+
+    def patch(self, request, pk):
+        _deal(pk)
+        data = _body(request)
+        ticked = services.set_checklist_item(request.user, pk, data.get('item'), checked=data.get('checked'))
+        return Response(
+            {
+                'item': selectors.checklist_item(pk, ticked.item),
+                'activity_id': ticked.activity.id if ticked.activity else None,
+            }
+        )
+
+
 class IntentView(APIView):
     """POST deals/{id}/intake/intent/ {line | lines, has_today?, this_year?, shop?, remove?} (B16–B19, B32)."""
 

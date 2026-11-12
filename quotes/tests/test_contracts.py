@@ -65,7 +65,12 @@ def samples(world):
         'api/saved-views/<int:view_id>/': {'view_id': world['saved'].id},  # slice 10: saved setups (F28)
         'api/deals/<int:pk>/plans/sources/': deal,  # slice 17: the station's List (E56)
         'api/deals/<int:pk>/plans/marks/': deal,  # slice 17: approve, ignore, check, clear (E85)
+        'api/deals/<int:pk>/plans/priced/': deal,  # slice 35: priced versions (F76)
+        'api/plans/<int:plan_id>/priced/': {'plan_id': world['alternate'].id},  # slice 35: ✎ re-price (F82)
     }
+
+
+FIVE_OFF = {'kind': 'concession', 'all': {'op': 'pct_off', 'value': 5}}
 
 
 def ok(code=200):
@@ -123,6 +128,9 @@ def matrix(world):
         # slice 17: the station's List and the marks door (E56, E85); no open warning here, so nothing changes
         ('GET', 'api/deals/<int:pk>/plans/sources/', ok()),
         ('POST', 'api/deals/<int:pk>/plans/marks/', ok(), {'action': 'approve', 'plan_ids': [alternate.id]}),
+        # slice 35: a priced version of a quote; ✎ on a plan that is not a version answers 409 past the permission check
+        ('POST', 'api/deals/<int:pk>/plans/priced/', ok(201), {'plan_ids': [alternate.id], **FIVE_OFF}),
+        ('POST', 'api/plans/<int:plan_id>/priced/', ok(409), {**FIVE_OFF, 'dry_run': True}),
     ]
 
 

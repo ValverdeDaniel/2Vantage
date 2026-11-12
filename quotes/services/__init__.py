@@ -7,12 +7,13 @@
 - `ordering`: move, swap, reset and `put_in_slot`;
 - `enrollment`: typed counts; `packages`: member-built packages; `imports`: applying the plan template;
 - `saved_views`: the Advisor's saved board setups (firm rows, not plans; F28);
+- `priced`: priced versions, with their dry run (`price`, ✎ `reprice`; F76–F84);
 - `review`: approve, ignore, needs checking and clear on plan values (`mark_values`; E85–E89, F63–F67).
 `locks` (the Deal, then plans by id) and `batch` (one bulk_update, before and after) serve them. Every write records
 Activity with before and after, writes nothing when nothing changes, and returns only what changed.
 """
 
-from . import review, saved_views  # modules: services.review.mark_values; services.saved_views.create, update…
+from . import priced, review, saved_views  # modules: services.review.mark_values; services.saved_views.create, update…
 from .copies import copy_plan, create_renewal
 from .enrollment import set_enrollment
 from .imports import apply_template
@@ -41,6 +42,7 @@ __all__ = [
     'delete_plans',
     'merge_plans',
     'move_line',
+    'priced',
     'put_in_slot',
     'review',
     'saved_views',

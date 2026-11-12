@@ -1,57 +1,123 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePlanSources } from '../../api/planReview';
+import useClipTip from '../../grid/useClipTip';
+import useGridSizes from '../../grid/useGridSizes';
 import { displayValue } from '../../lib/fieldValue';
 import cx from '../../ui/cx';
 import InlineError from '../../ui/InlineError';
 import { useToast } from '../../ui/useToast';
+import { REVIEW_KEYS, REVIEW_MODE_KEYS } from '../../valuereview/keys';
+import { listHits } from '../../valuereview/listFind';
 import ReviewBulkBar from '../../valuereview/ReviewBulkBar';
-import ReviewList from '../../valuereview/ReviewList';
 import useMarks from '../../valuereview/useMarks';
 import useReviewHotkeys from '../../valuereview/useReviewHotkeys';
-import { checkLabel } from './checkWords';
+import FindBar from './FindBar';
+import StationGrid from './grid/StationGrid';
+import useStationGrid from './grid/useStationGrid';
+import ScanActions from './ScanActions';
+import ScanHead from './ScanHead';
+import ScanList from './ScanList';
+import useStationFind from './useStationFind';
 
 /*
- * The Scanned data panel beside the file (plan.md §8.16, §10.7; E34, E35, E47, E48, E54–E58, D121, D122, D124; the
- * old DocumentsTab's scan panel): what was read from this file (or every proposal file), as the List, worst first.
- * - The head: "Scanned data · Proposal · all N files" and the quality headline with its high / review / missing chips,
- *   counted by the server over the plans the files gave (E34); Hide while the station is expanded (E32).
- * - The file strip: "N AI values to review · M need checking" with Approve, Ignore and Needs checking on this file's
- *   open warnings (E48). Only values Claude doubted, or the locator could not find, are counted (OQ28), and nothing
- *   waits on them. The old app drew it over the Grid only; with no Grid until slice 23 it sits over the List.
- * - The List (ReviewList) with its bulk bar, "Check this file", the keys and ↶ Undo.
- * The keys A, I, C, U and F act on the List's selected value wherever focus is on the tab (useReviewHotkeys). Plan
- * values only: intake, census and questionnaire files join with their owners' `sources/` (slices 39, 65, 43).
+ * The Scanned data panel beside the file (plan.md §8.16, §10.7; E34–E68, D121–D129; the old DocumentsTab's scan
+ * panel): what was read from this file (or every proposal file) as the List, worst first (slice 17), or the Grid, side
+ * by side (slice 23), with Find over either, Review mode and ✎ Edit.
+ * - The head: "Scanned data · Proposal · all N files", the quality headline (E34) and the buttons (ScanActions).
+ * - Find (E60–E64): Ctrl+F, "N of M", Enter steps, Only matches, Esc selects the match; carrier nicknames fold.
+ * - The file strip over the Grid (E48): Approve, Ignore, Needs checking on these files' open warnings (OQ28).
+ * - The keys A, I, C, U and F (E in Review) act on the List's row or the Grid's pick wherever focus is on the tab.
+ * - Review mode (E65): the file follows the value you are on; E or a double-click edits (on the List, on the Grid).
+ * `onShow(docId, ref, opts)` opens a value in its file and keeps this panel's scope (D-164); `viewer` is what the
+ * viewer shows ({docId, page, ref}); `modes` (useStationModes) is the tab's, which lays the List beside the file. Plan values only: intake, census and questionnaire files join with their owners.
  */
-export default function ScannedData({ deal, meta, scope, expanded, activeRef, onOpen, check }) {
+const FOLLOW_MS = 200;
+
+export default function ScannedData({ deal, meta, scope, expanded, modes, viewer, onShow, check }) {
   const toast = useToast();
   const [bucket, setBucket] = useState('');
   const [hidden, setHidden] = useState(false);
+  const [planFilter, setPlanFilter] = useState('all');
+  const [rowsOnly, setRowsOnly] = useState(false);
+  const [ask, setAsk] = useState(null); // a List value handed to the Grid for editing (E65)
   const listRef = useRef(null);
+  const gridRef = useRef(null);
+  const scrollRef = useRef(null);
+  const followTimer = useRef(null);
+  useEffect(() => () => clearTimeout(followTimer.current), []);
   const proposal = scope.bucket === 'proposal';
   const sources = usePlanSources(deal.id, { documentIds: scope.ids, bucket, enabled: proposal });
   const marks = useMarks(deal.id);
-  const fields = useMemo(
-    () => Object.fromEntries((meta.plans?.fields ?? []).map((field) => [field.key, field])),
-    [meta.plans],
-  );
-  const names = useMemo(() => new Map(scope.files.map((file) => [file.id, file.display_name])), [scope.files]);
-  const pages = sources.data?.pages ?? [];
-  const head = pages[0] ?? null;
-  const rows = pages.flatMap((page) => page.rows);
-  const listed = proposal && (head?.all.open || head?.all.done);
+  const find = useStationFind(meta.carriers);
+  const fields = useMemo(() => Object.fromEntries((meta.plans?.fields ?? []).map((f) => [f.key, f])), [meta.plans]);
+  const pages = sources.data?.pages;
+  const head = pages?.[0] ?? null;
+  const rows = useMemo(() => (pages ?? []).flatMap((page) => page.rows), [pages]);
+  const listed = Boolean(proposal && (head?.all.open || head?.all.done));
   const words = scope.ids.length > 1 ? 'these files' : 'this file';
+  const gridOn = listed && (modes.view === 'grid' || modes.editing);
+  const grid = useStationGrid({
+    dealId: deal.id,
+    plansMeta: meta.plans,
+    scopeIds: scope.ids,
+    enabled: gridOn,
+    terms: find.terms,
+    only: find.only,
+    filters: { errorsOnly: planFilter === 'errors', rowsOnly },
+  });
+  const sizes = useGridSizes({ grid: 'proposal', scrollRef });
+  const clipTip = useClipTip();
+  const gridPlans = gridOn && !grid.data.pending && !grid.data.error && grid.model.plans.length > 0;
+
+  // Find: the Grid's hits, or the List's loaded rows; a new view or filter starts again at match 1.
+  const valueOf = (row) => displayValue(fields[row.key], row.value);
+  const listFound = useMemo(
+    () =>
+      gridOn
+        ? []
+        : listHits(rows, find.terms, {
+            valueOf: (row) => displayValue(fields[row.key], row.value),
+            carrierOf: (row) => grid.data.index.get(row.plan_id)?.carrier ?? null,
+          }),
+    [gridOn, rows, find.terms, fields, grid.data.index],
+  );
+  const hits = gridOn ? grid.found.hits : listFound;
+  const at = find.cursor(hits, [gridOn, planFilter, rowsOnly, bucket].join('~'));
+  const step = (dir) => {
+    const hit = find.step(at, dir, hits);
+    if (gridOn) gridRef.current?.selectHit(hit);
+  };
+  const leave = () => {
+    if (gridOn) {
+      gridRef.current?.selectHit(at.current);
+      gridRef.current?.focus();
+    } else listRef.current?.focus();
+    find.setQuery('');
+  };
 
   useReviewHotkeys({
-    enabled: Boolean(listed) && !(expanded && hidden),
+    enabled: listed && !modes.editing && !(expanded && hidden),
+    keys: modes.review ? REVIEW_MODE_KEYS : REVIEW_KEYS,
     onKey: (action) => {
-      if (!listRef.current?.act(action)) toast.info('Select a value first: click it in the list');
+      if (gridOn) gridRef.current?.act(action);
+      else if (!listRef.current?.act(action)) toast.info('Select a value first: click it in the list');
     },
   });
 
-  const one = (action, row) => marks.run(action, { refs: [row.ref] }, { where: 'that value' });
-  const many = (action, list) =>
-    marks.run(action, { refs: list.map((row) => row.ref) }, { where: bucket ? 'the values shown' : words });
+  const open = (row) => onShow(row.doc, row.ref, { replace: modes.review });
+  const followRow = (row) => {
+    clearTimeout(followTimer.current);
+    followTimer.current = setTimeout(() => onShow(row.doc, row.ref, { replace: true }), FOLLOW_MS);
+  };
+  const editRow = (row) => {
+    modes.pickView('grid');
+    setAsk((now) => ({ ref: row.ref, n: (now?.n ?? 0) + 1 }));
+  };
   const strip = (action) => marks.run(action, { document_ids: scope.ids }, { where: words });
+  const toggleReview = () => {
+    modes.setReview(!modes.review);
+    (gridOn ? gridRef.current : listRef.current)?.focus();
+  };
 
   let body;
   if (!proposal) {
@@ -62,98 +128,110 @@ export default function ScannedData({ deal, meta, scope, expanded, activeRef, on
           : 'Intake documents aren’t scanned yet — assign and preview them here; any fields traced to this file appear once available.'}
       </div>
     );
-  } else if (sources.isPending) {
+  } else if (sources.isPending || (gridOn && grid.data.pending)) {
     body = <div className="bb-subtitle bb-mt">Loading the quoted plans…</div>;
-  } else if (sources.isError) {
+  } else if (sources.isError || (gridOn && grid.data.error)) {
+    const failed = sources.isError ? sources : grid.data;
     body = (
-      <InlineError
-        compact
-        title="Could not load the values."
-        error={sources.error}
-        onRetry={() => sources.refetch()}
-        retrying={sources.isFetching}
-      />
+      <InlineError compact title="Could not load the values." error={failed.error} onRetry={() => failed.refetch()} />
     );
-  } else if (!listed) {
+  } else if (!listed || (gridOn && !gridPlans)) {
     body = (
       <div className="bb-subtitle bb-mt">
         Nothing read from {words} is on the grid yet — read it with ✦ Work with Claude, and the plans it finds show here.
       </div>
     );
+  } else if (gridOn) {
+    body = (
+      <StationGrid
+        ref={gridRef}
+        deal={deal}
+        grid={grid}
+        filter={{
+          mode: planFilter === 'errors' && grid.model.issues.size ? 'errors' : 'all',
+          plans: grid.model.plans.length,
+          errorPlans: grid.model.issues.size,
+          rowsOnly: rowsOnly && grid.model.issues.size > 0,
+          onMode: setPlanFilter,
+          onRowsOnly: setRowsOnly,
+        }}
+        modes={modes}
+        find={{ current: at.current, nonce: find.nonce }}
+        scrollRef={scrollRef}
+        sizes={sizes}
+        clipTip={clipTip}
+        onShow={onShow}
+        viewer={viewer}
+        ask={ask}
+        onEditDone={() => modes.setEditing(false)}
+      />
+    );
   } else {
     body = (
-      <>
-        <ReviewBulkBar counts={head.warnings} target={words} busy={marks.busy} onAction={strip} />
-        <ReviewList
-          ref={listRef}
-          rows={rows}
-          head={head}
-          buckets={meta.review_buckets ?? []}
-          filter={bucket}
-          onFilter={setBucket}
-          scopeWords={scope.ids.length > 1 ? 'these files' : `“${scope.name}”`}
-          valueOf={(row) => displayValue(fields[row.key], row.value)}
-          fileOf={(row) => (scope.ids.length > 1 ? names.get(row.doc) || '' : '')}
-          activeRef={activeRef}
-          onOpen={onOpen}
-          onMark={many}
-          onMarkOne={one}
-          busy={marks.busy}
-          done={marks.last}
-          onUndo={marks.undo}
-          undoing={marks.undoing}
-          more={{
-            has: Boolean(sources.hasNextPage),
-            loading: sources.isFetchingNextPage,
-            load: () => sources.fetchNextPage(),
-            pageSize: head.page_size,
-          }}
-          check={check && { busy: check.busy, run: check.check, label: checkLabel(scope.ids.length, false) }}
-        />
-      </>
+      <ScanList
+        ref={listRef}
+        meta={meta}
+        scope={scope}
+        head={head}
+        rows={rows}
+        sources={sources}
+        bucket={bucket}
+        onBucket={setBucket}
+        marks={marks}
+        valueOf={valueOf}
+        activeRef={viewer.ref}
+        check={check}
+        review={modes.review}
+        find={{ hits: listFound, current: at.current, only: find.only, nonce: find.nonce, words: find.words }}
+        onOpen={open}
+        onFollow={followRow}
+        onEdit={editRow}
+      />
     );
   }
 
-  const quality = head?.quality;
   return (
-    <div className={cx('bb-panel bnf-scan-panel', expanded && hidden && 'bnf-docs-hidden')} data-scanned-data>
+    <div
+      className={cx('bb-panel bnf-scan-panel', expanded && hidden && 'bnf-docs-hidden', modes.editing && 'bnf-scan-editing')}
+      data-scanned-data
+    >
       {expanded && hidden && (
         <button type="button" className="bnf-docs-showdata" onClick={() => setHidden(false)} title="Bring the scanned data back">
           ▴ Scanned data
         </button>
       )}
-      <div className="bnf-scan-head">
-        <div className="bb-panel-title">
-          Scanned data
-          {scope.label && <span className="bnf-scan-sub"> · {scope.label}</span>}
-          {scope.ids.length > 1 && <span className="bnf-scan-sub"> · all {scope.ids.length} files</span>}
+      <ScanHead scope={scope} head={proposal ? head : null}>
+        <ScanActions
+          view={gridOn ? 'grid' : 'list'}
+          onView={listed && !modes.editing ? modes.pickView : null}
+          resetSizes={gridPlans && sizes.custom ? sizes.reset : null}
+          onHide={expanded && !hidden ? () => setHidden(true) : null}
+          review={modes.review}
+          onReview={listed && !modes.editing ? toggleReview : null}
+          onEdit={listed && !modes.editing ? () => modes.setEditing(true) : null}
+        />
+      </ScanHead>
+      {listed && (
+        <FindBar
+          query={find.query}
+          onQuery={find.setQuery}
+          total={at.total}
+          at={at.index}
+          onStep={step}
+          only={find.rawOnly}
+          onOnly={find.setOnly}
+          onLeave={leave}
+        />
+      )}
+      {gridPlans && !modes.editing && (
+        <ReviewBulkBar counts={head.warnings} target={words} busy={marks.busy} onAction={strip} />
+      )}
+      <div className={cx('bnf-scan-body', gridPlans && 'bnf-scan-fill')}>{body}</div>
+      {clipTip.tip && (
+        <div className="bb-tooltip" style={{ left: `${clipTip.tip.x}px`, top: `${clipTip.tip.y}px` }}>
+          <div className="bb-tooltip-line bnf-tip-full">{clipTip.tip.text}</div>
         </div>
-        {proposal && head && (
-          <div className="bnf-quality">
-            <span className={`bnf-quality-label bb-${head.headline.tone}`}>{head.headline.label}</span>
-            {(quality.high > 0 || quality.low > 0 || quality.missing > 0) && (
-              <span className="bnf-quality-chips">
-                {quality.high > 0 && <span className="bb-badge bb-badge-green">{quality.high} high</span>}
-                {quality.low > 0 && <span className="bb-badge bb-badge-amber">{quality.low} review</span>}
-                {quality.missing > 0 && <span className="bb-badge bb-badge-rose">{quality.missing} missing</span>}
-              </span>
-            )}
-          </div>
-        )}
-        <div className="bnf-scan-actions">
-          {expanded && !hidden && (
-            <button
-              type="button"
-              className="bnf-docs-hidedata"
-              onClick={() => setHidden(true)}
-              title="Collapse this panel so the document fills the screen"
-            >
-              Hide ▾
-            </button>
-          )}
-        </div>
-      </div>
-      <div className="bnf-scan-body">{body}</div>
+      )}
     </div>
   );
 }

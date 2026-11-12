@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { allKeys, cellOf, dragPick, keyOf, lineKeys, pickedCells, rectKeys, stepCell } from './cellPick';
+import {
+  activeOrFirst,
+  allKeys,
+  cellOf,
+  dragPick,
+  keyOf,
+  lineKeys,
+  narrowKeys,
+  pickedCells,
+  rectKeys,
+  stepCell,
+} from './cellPick';
 
 const R = ['rate_ee', 'rate_es', 'rate_fam'];
 const C = ['41', '42', '43'];
@@ -43,5 +54,18 @@ describe('E51 picking cells', () => {
       { r: 'rate_fam', c: '41' },
     ]);
     expect(cellOf(keyOf('plan:41', 'a|b'))).toEqual({ r: 'plan:41', c: 'a|b' });
+  });
+
+  it('E52 "Only potential errors" keeps the picked cells a test keeps', () => {
+    const picks = new Set(['rate_ee|41', 'rate_es|41', 'rate_fam|42']);
+    expect([...narrowKeys(picks, (r) => r !== 'rate_es')].sort()).toEqual(['rate_ee|41', 'rate_fam|42']);
+    expect(narrowKeys(picks, () => false).size).toBe(0);
+  });
+
+  it('F opens the active cell while it is picked, else the first picked cell on screen', () => {
+    const picks = new Set(['rate_es|42', 'rate_fam|43']);
+    expect(activeOrFirst(R, C, picks, { r: 'rate_fam', c: '43' })).toEqual({ r: 'rate_fam', c: '43' });
+    expect(activeOrFirst(R, C, picks, { r: 'rate_ee', c: '41' })).toEqual({ r: 'rate_es', c: '42' });
+    expect(activeOrFirst(R, C, new Set(), null)).toBe(null);
   });
 });

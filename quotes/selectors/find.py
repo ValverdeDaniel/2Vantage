@@ -25,7 +25,7 @@ def _codes(raw):
 
 
 def find_index(deal):
-    """[{id, line, current, carrier, texts}] for the deal's live plans, in line and plan order."""
+    """[{id, line, current, carrier, texts, name, carrier_name}] for the deal's live plans, in line and plan order."""
     rows = (
         Plan.objects.filter(deal=deal)
         .annotate(network=KeyTextTransform('network', 'values'), plan_type=KeyTextTransform('plan_type', 'values'))
@@ -38,5 +38,6 @@ def find_index(deal):
         if carrier not in keys:
             keys[carrier] = carriers.match(carrier)
         texts = [text for text in (name, number, carrier, network, plan_type, *_codes(codes)) if text]
-        out.append({'id': pid, 'line': line, 'current': role == 'current', 'carrier': keys[carrier], 'texts': texts})
+        entry = {'id': pid, 'line': line, 'current': role == 'current', 'carrier': keys[carrier], 'texts': texts}
+        out.append({**entry, 'name': name, 'carrier_name': carrier})  # for pickers: a bundle's quote to sell (s35)
     return out

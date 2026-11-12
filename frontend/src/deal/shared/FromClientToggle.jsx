@@ -1,7 +1,8 @@
 /*
- * "These came from the client" (plan.md §3.7; B10; D-060), the old `reviewrequest/FromClientToggle.jsx`: while it is
- * on, each answer typed is saved as the client's, entered by you (origin `relay`). Off by default; the tab owns it, so
- * leaving the tab turns it off and a later edit never inherits it.
+ * "These came from the client" (plan.md §3.7; B10, C4; D-060), the old `reviewrequest/FromClientToggle.jsx`: while it
+ * is on, each answer typed is saved as the client's, entered by you (origin `relay`). Off by default; the tab owns it,
+ * so leaving the tab (or the roster's ✎ Edit) turns it off and a later edit never inherits it. Intake and the Census
+ * roster mount it.
  */
 export default function FromClientToggle({ checked, onChange }) {
   return (

@@ -1176,7 +1176,7 @@ Rules:
 
 - **Routing:** `BrowserRouter`; every page component is lazy-loaded (`React.lazy`), so each tab is its own bundle.
   Tabs live in the path (`/deals/:id/:tab`); in-tab state lives in the query string (`?view=`, `?line=`, `?file=`,
-  `?doc=&ref=&page=&back=`, `?focus=`, `?form=`, `?claude=read&docs=…`, and the Advisor board's config:
+  `?doc=&ref=&page=&back=&list=`, `?focus=`, `?form=`, `?claude=read&docs=…`, and the Advisor board's config:
   `?find=&budget=&rule=&slider=&preset=&sort=…`, slice 10). §8.1 lists the routes (O.4).
 - **API client** (`src/api/client.js`): one axios instance with `baseURL: '/api'` and `withCredentials: true`, using
   axios's built-in `xsrfCookieName: 'csrftoken'` / `xsrfHeaderName: 'X-CSRFToken'`. The app calls `GET auth/csrf/`
@@ -2442,7 +2442,22 @@ value over a read one keeps its link to the file and the read value (F141, §3.7
   months) is a copy of a quote with its rates, then the operations, with `derived_from` and a `derived` record. This
   is how one plan is shown at several premiums, e.g. as quoted and as negotiated. A version rides right behind its
   original on every screen (F120), prices its original's people (§5.5; F87), takes no option number, and never becomes
-  current. Its dry run equals the commit (F76). Bundle templates wait (F79).
+  current. Its dry run equals the commit (F76). Bundle templates wait (F79). Built in slice 35, as in the old app:
+  - only the premium moves: the line's rate keys and the quoted group premium (`priced_kinds.premium_keys`); a % on
+    all rates also reaches the quoted premium, a $ amount or a set-to does not; a bundle composes as
+    rate × (1 − pct/100) − flat, its dollars never on the quoted premium; rates round half up to the cent, a unit rate
+    to the decimals it was stated in (two to four); a rate below zero is refused (`math/pricing.py`);
+  - a changed rate takes a typed source without the file; every other value keeps its original's source, without
+    marks, approvals or a read value; a star, a recommendation and a sale never ride;
+  - the in-force plan takes only a premium holiday; a sold plan none; a bundle is refused on a quote whose rates
+    already include it (`Plan.bundling`, set by PATCH); a dollar credit belongs to one plan (free months batch);
+  - one request may price several plans of one line (a bundle opens on every quote of the carrier), one Activity row;
+    a new version is starred when its line has stars and room (F83), never on a line with no stars (the old bug 17),
+    and past the room it is added unstarred with a warning;
+  - ✎ re-prices a version from its original (cells typed on it since are replaced), keeping its kind; ✕ removes it
+    through the delete door, and Undo restores it;
+  - a credit in free months is that many months of the version's own premium, worked out on read (the old app froze
+    it at creation), so it follows the people; the net after the credit is `credit` on the comparison (F80).
 - **Move to another line** (`move_line`; F59): the plan keeps its id; values outside the new line's fields are dropped
   (kept in Activity); its star, recommendation, links, enrollment and packages clear (a renewal arrives as an
   alternate); the plans it leaves lose their link to it, as when a plan stops being current; a current plan joins the
@@ -2592,7 +2607,8 @@ def round_decimal(amount, places=0):
 or a reason), for every basis. The first step that gives figures wins (O.6 #24):
 
 1. The plan's own typed counts → `typed`.
-2. A **priced version**: its original's enrollment, so "5% off" prices the same people (F87).
+2. A **priced version**: its original's enrollment, so "5% off" prices the same people (F87) → `from original plan`
+   (built in slice 35).
 3. A **renewal**: its current plan's typed counts → `from current plan`. An **alternate** with a comparison base: the
    sum of its base plans' typed counts → `from replaced plan` (a consolidation carries the people of every plan it
    replaces). Plans **bought together** in place of one plan must have their own counts typed (step 1), splitting the
@@ -3399,8 +3415,8 @@ the writes in a `services/` package (F.6, OQ9 b and d).
 | `sold_at` | DateTime, null | |
 | `option_number` | PositiveInt, null | "Option n" per line, stamped at Issue in page reading order and never reused; none for current plans or priced versions. Unique per deal and line. Replaces `option_label` (J159, OQ35, OQ36; slice 25) |
 | `pair_of` | Plan, null | The other half of a pair printed as one column (D-219, O.6 #4; slice 33) |
-| `derived_from`, `derived` | FK self, null, SET_NULL; JSON | A priced version and how it was made: `{kind: concession, bundle, holiday or duplicate; label, note, ops: [{key, op, value}], credit: {annual} or {months}, requires: [plan ids], conditional, by, at}` (F76–F84; slice 35) |
-| `bundling` | Char: blank, `included` or `unbundled` | F.6; slice 35 |
+| `derived_from`, `derived` | FK self, null, SET_NULL; JSON | A priced version and how it was made: `{kind: concession, bundle, holiday or duplicate; label, note, ops: [{key, op, value}], credit: {annual} or {months}, requires: [plan ids], conditional, by, at}` (F76–F84; built in slice 35). A concession also keeps the request it was made from, `all` and `each` (✎ reopens it); a bundle keeps `parts: [{line, op, value, plan_id, plan_label} or {line, op, value, carrier}]` (the label frozen beside the id, so a requirement still reads after a rename) and its totals `pct` and `flat` |
+| `bundling` | Char: blank, `included` or `unbundled` | Whether the carrier's quoted rates already include the bundling discount; set by PATCH; an `included` quote takes no bundled version (F78; built in slice 35) |
 | `flags` | stored count | Open warnings (`review_rules.open_warning`, OQ28), rewritten with each write: `Plan.save()` stamps it, bulk writes stamp it themselves; `rebuild_facts` checks it (O.3.7; built in slice 17) |
 | `source_document` | FK Document, null, SET_NULL | The file it was read from, if any |
 | `notes` | Text, blank | Internal |
@@ -3908,7 +3924,7 @@ the design; a path with no plan id sits under `deals/{id}/`.
 |---|---|---|---|
 | `plans/lines/` | GET: per-line counts in one grouped query | F.5 #37 | built; 7 |
 | `plans/` | GET `?line=`: the comparison (below) · POST: create a plan | F.6 | built |
-| `plans/{id}/` | PATCH only `carrier`, `name`, `plan_number`, `client_name`, `notes` and `values`, with `expect`; role, links and stars have their own doors | F71, J14 | built; 7 |
+| `plans/{id}/` | PATCH only `carrier`, `name`, `plan_number`, `client_name`, `notes`, `bundling` (blank, `unbundled` or `included`; slice 35) and `values`, with `expect`; role, links and stars have their own doors | F71, J14, F78 | built; 7, 35 |
 | `plans/{id}/renewal/` | POST: Create renewal | §5.4 | built |
 | `plans/{id}/copy/` | POST `{name?}`: `copy_plan`, keeping the rates → the copy (201) | F81 | built; 8 |
 | `plans/{id}/recommend/` | POST `{recommended}`, within `room()` | §5.4, OQ37 | built; 7 |
@@ -3923,21 +3939,23 @@ the design; a path with no plan id sits under `deals/{id}/`.
 | `plans/shortlist/clear/` | Clear the stars on one line | F55 | 7 |
 | `plans/move-line/`, `plans/delete/`, `plans/clear/` | Move to another line keeping the id, `{plan_ids, line}` → `{line, plans, activity_id}`; soft delete, `{plan_ids}`, and clear a line, `{line}`, each → `{removed, kept, note, plans, activity_id}` (Restore is Revert of `activity_id`). `plans/{id}/` takes no DELETE | F59–F61 | built; 8 |
 | `plans/board-export/` | GET `?line=&plans=<ids in the order drawn>&columns=<keys>&orientation=rows\|cols`: the board as Excel, equal to the screen; every figure from the comparison payload; current plans ride along; unknown ids and keys dropped; written with XlsxWriter through `xlsx_safe`; printing `sl_lasers` writes a `downloaded` row | F93, J167 | built; 9 |
-| `plans/find/` | GET: the finder's index, every line in one query: `{plans: [{id, line, current, carrier, texts}]}` (texts: name, plan number, carrier, network, plan type, codes; `carrier` is the key `deals.carriers.match` gives). The browser's pure `finder` matches the words and folds the carrier aliases `/api/meta/` serves ("UHC"), so typing never waits on the server and "Also matches N on Dental" needs no second read | F14–F17, OQ14 | built; 10 |
+| `plans/find/` | GET: the finder's index, every line in one query: `{plans: [{id, line, current, carrier, texts, name, carrier_name}]}` (texts: name, plan number, carrier, network, plan type, codes; `carrier` is the key `deals.carriers.match` gives; `name` and `carrier_name` as typed, for pickers such as a bundle's quote to sell, slice 35). The browser's pure `finder` matches the words and folds the carrier aliases `/api/meta/` serves ("UHC"), so typing never waits on the server and "Also matches N on Dental" needs no second read | F14–F17, OQ14 | built; 10 |
 | `saved-views/`, `saved-views/{id}/` | Saved board and stop-loss setups, Mine and Shared. GET `?view=&line=`: mine and the shared ones offered on that line; POST `{name, description, view, line, shared, config}` → 201; GET/PATCH/DELETE `{id}`: others' private views answer 404, Update and Delete are for the owner or an admin (403 with the sentence). The config goes through `board.clean_config` (an unknown key or value is a 400 naming it) | F28, F29 | built (quotes view); 10, 36 |
-| `plans/sources/`, `plans/marks/` | The station's values and marks (F.6's `plans/review/`). GET `sources/?documents=1,2&bucket=&page=` (no `documents`: every value with a file) → `{rows: [{ref, plan_id, key, label, sub, value, bucket, where, doc, origin, low, loc, mark, confirmed (each with by_name), open, potential, dealt, hint, what}], page, pages, total, page_size: 200, counts: {bucket: {open, done}}, all: {open, done}, warnings: {open, check, unflagged}, quality: {high, low, missing}, headline: {label, tone}}`, worst first (`review_rules.review_bucket`), dealt values last in their bucket, then board order. POST `marks/` `{action: approve\|ignore\|check\|clear, refs: ["plan:41:rate_ee"] \| plan_ids \| document_ids}`: refs name exactly those values; plans and files take only their open warnings (for clear, their marks); nothing named takes the whole deal; → `{action, changed, activity_id, truncated, values: [{ref, plan_id, key, cell: {s?, m?}, mark, confirmed, open, potential, dealt, bucket}], plans: [{id, flags, incomplete}]}` (no `values` past 2,000: refetch). One Activity row (`marked`, never merged) with each value's marks before and after under `mark.<key>`, never the value; Revert (Undo) restores the values still as it left them and is refused, naming them, when none is | E.6, F63–F67 | built; 17 |
+| `plans/sources/`, `plans/marks/` | The station's values and marks (F.6's `plans/review/`). GET `sources/?documents=1,2&bucket=&page=` (no `documents`: every value with a file) → `{rows: [{ref, plan_id, key, label, sub, value, bucket, where, doc, origin, low, loc, mark, confirmed (each with by_name), open, potential, dealt, hint, what}], page, pages, total, page_size: 200, counts: {bucket: {open, done}}, all: {open, done}, warnings: {open, check, unflagged}, quality: {high, low, missing}, headline: {label, tone}}`, worst first (`review_rules.review_bucket`), dealt values last in their bucket, then board order. POST `marks/` `{action: approve\|ignore\|check\|clear, refs: ["plan:41:rate_ee"] \| plan_ids \| document_ids}`: refs name exactly those values; plans and files take only their open warnings (for clear, their marks); nothing named takes the whole deal; → `{action, changed, activity_id, truncated, values: [{ref, plan_id, key, cell: {s?, m?, p?}, mark, confirmed, open, potential, dealt, bucket}], plans: [{id, flags, incomplete}]}` (no `values` past 2,000: refetch). One Activity row (`marked`, never merged) with each value's marks before and after under `mark.<key>`, never the value; Revert (Undo) restores the values still as it left them and is refused, naming them, when none is | E.6, F63–F67 | built; 17 |
 | `plans/{id}/source/?key=` | One value's full source, for ↗: `{plan_id, key, label, value, hint, what, source: {origin, doc, page, cell, line, loc, low, mark, confirmed}}`; read only | F.6, E18 | built; 15 |
 | `plans/as-quoted/?document=&line=` | "As quoted", from `QuoteLayout` | F42, E42 | 21 |
 | `plans/{id}/sbc/` | Attach SBC: a staged read of design values | D47 | 22 |
 | `plans/pair/` | Pair two halves into one printed column, or split them | J15, O.6 #4 | 33 |
-| `plans/priced/`, `plans/{id}/priced/` | Priced versions: a dry-run preview, then the commit | F76–F84 | 35 |
+| `plans/priced/`, `plans/{id}/priced/` | Priced versions: a dry-run preview, then the commit. POST `deals/{id}/plans/priced/` `{plan_ids, kind: concession\|bundle\|holiday, all?: {op, value}, each?: {rate key: {op, value} \| "keep"}, parts?: [{line, op, value, plan_id? \| carrier?}], conditional?, credit?: {annual} \| {months}, note?, name?, dry_run?}` → 201 (200 for a dry run) `{dry_run, drafts: [{original_id, name, label, derived, starred, changes: {key: value}, premium, change, part_of, credit, enrollment_used, enrollment_source}], plans: [the versions written], warning, activity_id}`; one version per plan named, all on one line, one `created` row. POST `plans/{id}/priced/` (✎) takes the same body on a version and re-prices it from its original (one revertible `updated` row; the same body again writes nothing). `op`: `pct_off`, `pct_up`, `flat_off`, `flat_up`, `set` (a bundle has no `set`). Malformed → 400 with the sentence; refusals → 409 (a sold plan, a concession or bundle on the in-force plan, a bundle on an `included` quote, a rate below zero, a dollar credit across several plans, two lines, a version's kind, an original gone). Remove a version with `plans/delete/` (Undo restores it). The board's words are `/api/meta/` `board.priced` | F76–F84 | built; 35 |
 | `plans/stop-loss/`, `plans/stop-loss/workbook/` | Stop-loss analysis and its five-tab workbook | F98–F107, J166 | 36 |
 
 There is no merge endpoint: the reader's `combine` and Claude's `merge_plans` call the one merge service (O.6 #32).
 Rank starts at `deals/{id}/ai/rank/` (§7.5); the page split is proposals' `deals/{id}/proposal/pages/` (§7.12).
 
-The comparison is compact (F.6): cells carry flags (status, mark, origin, document index), documents are listed once,
-and a value's full source comes on ↗. Each plan's `facts` are `incomplete` (a key field blank or to check; a missing
+The comparison is compact (F.6): cells carry flags (status, mark, origin, document index, and `p` on a potential
+error that is not an open warning — a value its file does not print or pin down that nobody dealt with, E50, slice
+23), documents are listed once, and a value's full source comes on ↗. The Documents station's Grid reads these same
+cached comparisons, every line with plans, so a Grid opened from the Advisor draws at once (E36; slice 23). Each plan's `facts` are `incomplete` (a key field blank or to check; a missing
 total is not incomplete, F22, the filter card names it instead, F140), `flags`, `compliance` and `numbers` (its
 numeric values read once, strictly, for the board's sliders, caps and rules; F21; slice 10). Budget: 600 plans in ≤ 3 MB raw and ≤ 2.5 s (Q.7). Plans come in
 `order.layout`'s order (F120).
@@ -4178,7 +4196,7 @@ other old links belong to modules out of scope (A2, A22, A40).
 | `/b/:token` | "This link has moved", for the old app's links (L136) | no | 54 |
 | anything else | "Page not found" with a link to the home page | yes | built |
 
-In-tab state lives in the query string (O.4): `?view=`, `?line=`, `?file=`, `?doc=&ref=&page=&back=`, `?focus=`,
+In-tab state lives in the query string (O.4): `?view=`, `?line=`, `?file=`, `?doc=&ref=&page=&back=&list=`, `?focus=`,
 `?form=`, `?claude=1` and `?claude=read&docs=…`. Signed-out visitors to a staff page go to `/login`, then back to where
 they were going.
 
@@ -4444,7 +4462,10 @@ The view and the line are kept per browser, and `?view=` and `?line=` win (F1, F
   F49 and J7).
 - Cells with flags, marks and ↗ to the source (F62–F67, F141); ✎ Edit mode with Excel keys and Ctrl+Z (F68–F73).
 - Priced versions: the composer for concessions, bundles, premium holidays and named copies (F76–F78, F80–F84;
-  slice 35; OQ7). Bundle templates wait (F79).
+  slice 35; OQ7). In ✎ Edit, ＋ on a plan opens a live draft under it (the source pink, a blue row of the changes, the
+  violet draft priced by the server's dry run; transposed, columns), edited in the row or docked above the table (⌸,
+  kept per browser); ✎ reopens a version, ✕ removes it. Chips: the family's glyph and label, "superseded" on the
+  original, BUNDLED, "requires …" and "updated <date>". Bundle templates wait (F79).
 - Enrollment: "＋ Add summary medical tiers", the counts card with the split, and the census notice "Priced from the
   census now · Keep my typed counts" (F85–F92; need 6; slice 13; OQ18–OQ21).
 - ⤓ Export, Import from template, ＋ Add SBCs and ＋ Add quotes (F93–F96).
@@ -4500,7 +4521,17 @@ classes.
   for a scanned quote (E42; slice 21).
 - Reviewing values: the file strip and bulk bar, the A, I, C, U and F keys, picks and Undo (E48–E58, D121–D126;
   slice 17); **Check this file** (E59; slice 16).
-- Find with aliases, Review mode and Edit (E60–E68; slice 23).
+- Find with aliases, Review mode and Edit (E60–E68; slice 23). Built: ▦ Grid beside ☰ List (kept per browser; the
+  List alone sits beside the file, the Grid takes the width below it), the station grid on `src/grid/` over the
+  Advisor's cached comparisons (E36–E41: the scope files' plans in the Advisor's order, fields in group bands, frozen
+  panes, the Proposal's sizes, columns windowed above 40 plans), "⚠ Potential errors" and "Only rows with potential
+  errors" (E50), Excel picks with the pick bar, its keys and Undo (E51–E55, D123); Find over the Grid or the List with
+  the finder's word rule and carrier nicknames ("UHC", OQ14), "N of M", Enter, Only matches, Esc (E60–E64, D127);
+  Review mode, where a click or an arrow finds the value in its file and E or a double-click edits it, and ✎ Edit with
+  Excel's keys, each value through the plan PATCH with `expect`, Ctrl+Z and Done ✓ (E65–E67, D125). F or a followed
+  value moves only the viewer, to the value's own file; `?list=` keeps the panel on its file(s) and the file bar offers
+  "← Back to" (D129, E31). E68 ("These came from the client") has no plan-value surface: the old app offered it on
+  census and intake only, which join the station in slice 65.
 - The pop-out window (E69–E71; slice 65; OQ99). Change history from Activity, with Revert (E73, E74).
 - Census files open beside the roster (E43; OQ97) and intake files beside their answers (E44), from slice 65.
 - How values, marks and the locator work: §10.7.

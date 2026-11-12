@@ -1,5 +1,15 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { allKeys, keyOf, lineKeys, onGrid, pickedCells, rectKeys, stepCell } from './cellPick';
+import {
+  activeOrFirst,
+  allKeys,
+  keyOf,
+  lineKeys,
+  narrowKeys,
+  onGrid,
+  pickedCells,
+  rectKeys,
+  stepCell,
+} from './cellPick';
 import useDragPick from './useDragPick';
 
 /*
@@ -9,15 +19,29 @@ import useDragPick from './useDragPick';
  * label the row. The arrows move the active cell and Shift+arrows stretch; Ctrl/Cmd+A picks every cell on screen;
  * Escape drops the pick. A double-click asks for the cell's source (`onFind`). View mode only: ✎ Edit is
  * useGridKeys'. Cells are (row key, column key) strings over `rows` and `cols`, the keys on screen in their order.
+ *
+ * Picking never moves the file (D-125), except in the station's Review mode (D-201, E65), which opts in with
+ * `onFollow(r, c, how)` — a plain click, a Ctrl+click that adds a cell or an arrow ('click' | 'key') — and
+ * `onEdit(r, c)`, called after `onFind` on a double-click. `setOnly`, `activeCell` and `narrow` serve the pick bar,
+ * Find's steps and the review keys (E52, E63).
  */
-export default function useGridSelection({ enabled, rows, cols, containerRef, onFind, onFollow = null, reveal }) {
+export default function useGridSelection({
+  enabled,
+  rows,
+  cols,
+  containerRef,
+  onFind,
+  onFollow = null,
+  onEdit = null,
+  reveal,
+}) {
   const on = Boolean(enabled);
   const [state, setState] = useState({ on, picks: new Set(), anchor: null, focus: null, active: null });
   if (state.on !== on) setState({ on, picks: new Set(), anchor: null, focus: null, active: null });
   const shape = useMemo(() => ({ R: rows.map(String), C: cols.map(String) }), [rows, cols]);
-  const live = useRef({ state, shape, onFind, onFollow, reveal });
+  const live = useRef({ state, shape, onFind, onFollow, onEdit, reveal });
   useLayoutEffect(() => {
-    live.current = { state, shape, onFind, onFollow, reveal };
+    live.current = { state, shape, onFind, onFollow, onEdit, reveal };
   });
   const gesture = useRef(null);
 
@@ -91,7 +115,20 @@ export default function useGridSelection({ enabled, rows, cols, containerRef, on
     const pos = { r: String(r), c: String(c) };
     commit(new Set([keyOf(pos.r, pos.c)]), { anchor: pos, focus: pos, active: pos });
     live.current.onFind?.(pos.r, pos.c);
+    live.current.onEdit?.(pos.r, pos.c);
   };
+
+  /** Pick exactly one cell and make it the active one (a Find step, an editor closed with Enter in Review). */
+  const setOnly = useCallback(
+    (r, c) => {
+      const pos = { r: String(r), c: String(c) };
+      commit(new Set([keyOf(pos.r, pos.c)]), { anchor: pos, focus: pos, active: pos });
+    },
+    [commit],
+  );
+
+  /** "Only potential errors": the pick narrowed to the cells `keep(r, c)` keeps. */
+  const narrow = useCallback((keep) => setState((s) => ({ ...s, picks: narrowKeys(s.picks, keep) })), []);
 
   const pickLine = (keys, at, event) => {
     if (!on || !keys.length) return;
@@ -188,7 +225,11 @@ export default function useGridSelection({ enabled, rows, cols, containerRef, on
     isPicked: (r, c) => picks.has(keyOf(r, c)),
     isActive: (r, c) => Boolean(active) && active.r === String(r) && active.c === String(c),
     picked: () => pickedCells(shape.R, shape.C, picks),
+    /** The cell F and E act on: the active one while picked and on screen, else the first picked one. */
+    activeCell: () => (on ? activeOrFirst(shape.R, shape.C, picks, state.active) : null),
     count: picks.size,
     clear,
+    setOnly,
+    narrow,
   };
 }

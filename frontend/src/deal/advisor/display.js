@@ -18,7 +18,12 @@ export function enrollmentText(enrollment, keys) {
   return keys.map((key) => enrollment[key] ?? 0).join('·');
 }
 
-export const SOURCE_WORDS = { typed: 'typed', 'from current plan': 'from current', 'from replaced plan': 'from replaced' };
+export const SOURCE_WORDS = {
+  typed: 'typed',
+  'from current plan': 'from current',
+  'from replaced plan': 'from replaced',
+  'from original plan': 'for the plan it was priced from', // a priced version prices its original's people (F87)
+};
 
 export function enrollmentKeys(rateBasis) {
   if (rateBasis === 'composite') return ['EE', 'ES', 'EC', 'FAM'];

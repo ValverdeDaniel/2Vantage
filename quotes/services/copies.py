@@ -26,7 +26,9 @@ from .plans import next_number, placed
 COPY_DROPS = ('read_value', 'mark', 'confirmed')
 
 
-def _copied_source(original):
+def copied_source(original):
+    """The source entry a copy takes for each key: its original's, without marks, approvals or a read value."""
+
     def make(key):
         entry = dict(original.sources.get(key) or {'origin': 'typed'})
         for name in COPY_DROPS:
@@ -36,7 +38,8 @@ def _copied_source(original):
     return make
 
 
-def _new(deal, original, role, **extra):
+def new_plan(deal, original, role, **extra):
+    """An unsaved plan with its original's carrier, names and line, last in the line's hand order."""
     shared = {
         'carrier': original.carrier,
         'name': original.name,
@@ -47,7 +50,7 @@ def _new(deal, original, role, **extra):
 
 
 def _save(plan, original, values, replaces=()):
-    diff = apply_values(plan.values, plan.sources, values, _copied_source(original))
+    diff = apply_values(plan.values, plan.sources, values, copied_source(original))
     plan.save()
     plan.replaces.set(replaces)
     plan.replaces_ids = sorted(replaces)
@@ -65,13 +68,23 @@ def create_renewal(user, plan_id):
     design = {
         k: v for k, v in current.values.items() if fields.BY_KEY.get(k, {}).get('group') not in fields.PRICE_GROUPS
     }
-    plan = _new(deal, current, 'renewal', renews_id=current.id)
+    plan = new_plan(deal, current, 'renewal', renews_id=current.id)
     diff = _save(plan, current, design)
     changes = [activity.change(f'plan:{plan.id}', diff), *placed(deal, plan)]
     summary = f'Created the renewal of {current.carrier} {current.name}'
     activity.record(deal, user, 'quotes', 'created', summary, changes=changes)
     signals.changed(deal.id, [plan.line])
     return plan
+
+
+def replaces_of(original):
+    """What a copy or priced version replaces: a current plan's copy that plan, a renewal's copy its current plan, an
+    alternate's copy what the alternate replaces (`original.replaces_ids` set)."""
+    if original.role == 'current':
+        return [original.id]
+    if original.role == 'renewal':
+        return [original.renews_id] if original.renews_id else []
+    return list(original.replaces_ids)
 
 
 def copy_name(original, name=''):
@@ -99,14 +112,9 @@ def copy_plan(user, plan_id, name=''):
     deal = locks.plan_deal(plan_id)
     rows, _data = locks.line(deal, Plan.objects.values_list('line', flat=True).get(pk=plan_id))
     original = rows[plan_id]
-    if original.role == 'current':
-        replaces = [original.id]
-    elif original.role == 'renewal':
-        replaces = [original.renews_id] if original.renews_id else []
-    else:
-        replaces = list(original.replaces_ids)
+    replaces = replaces_of(original)
     derived = {'kind': 'duplicate', 'by': getattr(user, 'id', None), 'at': clock.now().isoformat()}
-    plan = _new(
+    plan = new_plan(
         deal,
         original,
         'alternate',

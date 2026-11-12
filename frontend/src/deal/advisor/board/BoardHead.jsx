@@ -4,8 +4,8 @@ import LineTabs from '../LineTabs';
 /*
  * The board header (plan.md §8.14; F5, F9–F11, F68, F73, F93–F96; the old `bnf-advisor-boardhead`): this line's tabs
  * and count on the left, its actions on the right. Outside ✎ Edit: ⤓ Export, the summary tiers card, ⤒ Import from
- * template with ⬇ Template, ✎ Edit. In Edit (a screen mode only, F68): ＋ Add plan, Clear all plans, ↶ Undo and
- * Done ✓, and the banner whose "change history ▸" opens Activity. With stars: View shortlist in proposal ▸ and
+ * template with ⬇ Template, ✎ Edit. In Edit (a screen mode only, F68): ＋ Add plan, Clear all plans, where a priced
+ * version's editor sits (⌸, slice 35), ↶ Undo and Done ✓, and the banner whose "change history ▸" opens Activity. With stars: View shortlist in proposal ▸ and
  * Clear shortlist (this line only, F55).
  */
 export default function BoardHead({ dealId, lines, line, onLine, count, editing, starred, ui }) {
@@ -89,6 +89,20 @@ export default function BoardHead({ dealId, lines, line, onLine, count, editing,
               >
                 Clear all plans
               </button>
+              {edit.priced && (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  title={
+                    edit.priced.mode === 'row'
+                      ? 'A priced version is edited in the table, under its plan. Switch to the box above the table — the draft rows stay either way.'
+                      : 'A priced version is edited in the box above the table. Switch back to editing under the plan itself.'
+                  }
+                  onClick={edit.priced.toggleMode}
+                >
+                  {edit.priced.mode === 'row' ? '⌸ Editing in the table' : '⌸ Editing above the table'}
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"

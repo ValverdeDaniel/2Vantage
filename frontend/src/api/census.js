@@ -1,21 +1,35 @@
-// Census (plan.md §7.7). Query keys: ['deal', id, 'census'] (the page: summary, rollup, imports; staleTime 0, a deal
-// tab) and ['deal', id, 'census', 'import', importId] (the mapping dialog: samples read from the file for that answer
-// only, never stored). Writes refetch the census page; the dry run writes nothing and is not cached.
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+// Census (plan.md §7.7). Query keys: ['deal', id, 'census', 'page', {page, page_size, show, q}] (the census page:
+// summary, rollup, imports and one page of the roster; staleTime 0, a deal tab) and ['deal', id, 'census', 'import',
+// importId] (the mapping dialog: samples read from the file for that answer only, never stored). Writes refetch the
+// census pages (`refreshCensus`); the dry run writes nothing and is not cached.
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from './client';
 import { dealKey, invalidateDeal } from './deals';
 import { documentsKey } from './documents';
 
 export const censusKey = (dealId) => dealKey(dealId, 'census');
+export const censusPagesKey = (dealId) => dealKey(dealId, 'census', 'page');
 export const importKey = (dealId, importId) => dealKey(dealId, 'census', 'import', Number(importId));
 
-/** GET deals/{id}/census/ → {summary, rollup, derived, columns, imports, last_import_at, page, members}. */
-export function useCensus(dealId) {
+export const PAGE_SIZE = 100;
+
+/** Refetch every census page of the deal (not the open mapping dialog). */
+export function refreshCensus(queryClient, dealId) {
+  return queryClient.invalidateQueries({ queryKey: censusPagesKey(dealId) });
+}
+
+/**
+ * GET deals/{id}/census/ → {summary, rollup, derived, columns, imports, last_import_at, page, members, review, cobra}.
+ * `page`, `show` (all · issues · missing) and `q` (a first or last name) pick the roster page; the counts are the
+ * whole census. The page on screen stays while the next one loads.
+ */
+export function useCensus(dealId, { page = 1, pageSize = PAGE_SIZE, show = 'all', q = '' } = {}) {
+  const params = { page, page_size: pageSize, show, q };
   return useQuery({
-    queryKey: censusKey(dealId),
-    // The roster grid is slice 41's; until then the tab reads the counts and one person (page_size=1).
-    queryFn: async () => (await api.get(`deals/${dealId}/census/`, { params: { page_size: 1 } })).data,
+    queryKey: [...censusPagesKey(dealId), params],
+    queryFn: async () => (await api.get(`deals/${dealId}/census/`, { params })).data,
     staleTime: 0,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -49,10 +63,7 @@ export function useStartImport(dealId) {
     },
     onSuccess: (imp) => {
       queryClient.setQueryData(importKey(dealId, imp.id), imp);
-      queryClient.invalidateQueries({
-        queryKey: censusKey(dealId),
-        exact: true,
-      });
+      refreshCensus(queryClient, dealId);
       queryClient.invalidateQueries({ queryKey: documentsKey(dealId) });
     },
   });
@@ -86,10 +97,48 @@ export function useDiscardImport(dealId, importId) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => (await api.post(`census/imports/${importId}/discard/`)).data,
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: censusKey(dealId),
-        exact: true,
-      }),
+    onSuccess: () => refreshCensus(queryClient, dealId),
   });
 }
+
+// ---- the roster grid (slice 41) ---------------------------------------------------------------------------------
+
+/**
+ * PATCH census/members/{id}/ {values: {key: text}, expect?: {key: seen}, relay?} → {member, changed, summary, review,
+ * activity_id}: the changed person and their issues only (C6); 409 {detail, keys} when a cell changed since.
+ */
+export async function patchMember(memberId, body) {
+  return (await api.patch(`census/members/${memberId}/`, body)).data;
+}
+
+/** POST deals/{id}/census/members/ {kind, employee_id?, values?, relay?} → 201 {member, summary, review, activity_id}. */
+export async function addMember(dealId, body) {
+  return (await api.post(`deals/${dealId}/census/members/`, body)).data;
+}
+
+/** DELETE census/members/{id}/ → 204: a soft removal, an employee's dependents too. */
+export async function removeMember(memberId) {
+  await api.delete(`census/members/${memberId}/`);
+}
+
+/** POST deals/{id}/census/clear/ {confirm: true} → 204: everyone removed, softly. */
+export async function clearRoster(dealId) {
+  await api.post(`deals/${dealId}/census/clear/`, { confirm: true });
+}
+
+/**
+ * POST deals/{id}/census/marks/ {action, refs?: ["census:<member id>:<key>"]} → {action, changed, activity_id, cells:
+ * [{ref, review}], review}. With no refs: every open warning on the roster (for clear, every mark).
+ */
+export async function postCensusMarks(dealId, body) {
+  return (await api.post(`deals/${dealId}/census/marks/`, body)).data;
+}
+
+/** GET deals/{id}/census/missing/ → {refs, count}: every required blank on the roster, whatever page is shown. */
+export async function getMissing(dealId) {
+  return (await api.get(`deals/${dealId}/census/missing/`)).data;
+}
+
+/** The census template (§9.1: prefilled when the roster has people) and the census export (§9.2). */
+export const censusTemplatePath = (dealId) => `deals/${dealId}/census/template/`;
+export const censusExportPath = (dealId) => `deals/${dealId}/census/export/`;

@@ -25,6 +25,8 @@ class PlanData:
     # The plan this one is a priced version of (it rides right behind it; F120, slice 35); None for every other plan,
     # copies included (a copy is a standalone peer, D-049).
     version_of: int | None = None
+    # A premium holiday's credit, {annual} or {months} (F80); None for every other plan.
+    credit: dict | None = None
 
     @property
     def label(self):

@@ -28,6 +28,8 @@ COLUMNS = {
     'plan.removed_at': 'removed_at',
     'plan.codes': 'codes',
     'plan.source_document': 'source_document_id',
+    'plan.derived': 'derived',  # a priced version's record, re-priced by ✎ (F82; slice 35)
+    'plan.bundling': 'bundling',  # the quote's rates already include the bundle (F78; slice 35)
 }
 REPLACES = 'plan.replaces_ids'
 PACKAGES = 'plan.package_ids'

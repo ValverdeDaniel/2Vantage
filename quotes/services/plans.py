@@ -1,9 +1,10 @@
 """Creating and editing plans (plan.md §5.4, §7.8; F71, F141).
 
 - `create_plan`: under the Deal lock, last on its line (a renewal first in its plan's group, F120).
-- `update_plan` (PATCH): only the carrier, name, plan number, client name, notes and values; roles, links, stars,
-  recommendations, order and the sale each have their own door (F71, J14). `expect` holds the values the person last
-  saw: a stored value that differs refuses the whole write (409 naming the keys; J74, O.6 #33). Locks only its plan.
+- `update_plan` (PATCH): only the carrier, name, plan number, client name, notes, bundling (F78) and values; roles,
+  links, stars, recommendations, order and the sale each have their own door (F71, J14). `expect` holds the values
+  the person last saw: a stored value that differs refuses the whole write (409 naming the keys; J74, O.6 #33).
+  Locks only its plan.
 - Copies (Create renewal, Duplicate) are `copies.py`; removing plans `removal.py`; moving them `moves.py`; merging
   two into one `merge.py`.
 Values only ever change through `deals.values.apply`; every write records Activity with before and after.
@@ -24,7 +25,8 @@ from . import locks
 from .roles import check_role, lead_renewals, links_for
 
 DETAILS = ('carrier', 'name', 'plan_number', 'client_name', 'notes')
-PATCHABLE = {*DETAILS, 'values', 'expect'}
+BUNDLING = 'bundling'  # whether the quoted rates already include the bundling discount (F78; slice 35)
+PATCHABLE = {*DETAILS, BUNDLING, 'values', 'expect'}
 STALE = '{names} changed since you last saw {it}, so nothing was saved. Reload to see the new {value}.'
 
 
@@ -155,7 +157,7 @@ def update_plan(user, plan_id, data, source_origin='typed', document=None, cells
         stale = _stale(plan, data['expect'])
         if stale:
             _refuse_stale(stale)
-    keys = [f'plan.{key}' for key in DETAILS]
+    keys = [f'plan.{key}' for key in (*DETAILS, BUNDLING)]
     before = columns.snapshot(plan, keys)
     for key, label in (('carrier', 'Carrier'), ('name', 'Plan name')):
         if key in data:
@@ -166,6 +168,10 @@ def update_plan(user, plan_id, data, source_origin='typed', document=None, cells
         plan.client_name = _text('client_name', data['client_name'], 'Name on client documents', required=False)
     if 'notes' in data:
         plan.notes = str(data['notes'] or '')
+    if BUNDLING in data:
+        if data[BUNDLING] not in dict(Plan.BUNDLING):
+            raise ValidationError({BUNDLING: ['Bundling is blank, "unbundled" or "included".']})
+        plan.bundling = data[BUNDLING]
     changed = {}
     if 'values' in data:
         cleaned = clean_values(plan.line, data['values'])

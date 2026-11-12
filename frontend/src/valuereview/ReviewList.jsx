@@ -1,6 +1,7 @@
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import cx from '../ui/cx';
 import { HotkeyLegend, ReviewDone } from './HotkeyLegend';
+import { listShown } from './listFind';
 import ReviewListRow from './ReviewListRow';
 
 /*
@@ -12,6 +13,10 @@ import ReviewListRow from './ReviewListRow';
  * - the keys' legend with the last action and its ↶ Undo (E54, D124);
  * - the rows: a click or ↑/↓ (J/K) selects, never moving the file; F, Enter or a double-click opens the value in the
  *   file; A, I, C and U come from the tab's keys through `act` (ref). After an action the selection keeps its place.
+ * - Find (E63, D127): `find` = {hits (refs, in this order), current, only, nonce, words} marks the loaded rows that
+ *   match; a step selects the current one, and "Only matches" lists just those, so the bulk bar acts on them.
+ * - Review mode (D-201, E65): a click opens the value in the file at once and the arrows follow a beat later
+ *   (`onFollow`); the List has no editor, so E or a double-click hands the value to the Grid (`onEdit`).
  */
 export default function ReviewList({
   ref,
@@ -33,26 +38,43 @@ export default function ReviewList({
   undoing,
   more,
   check,
+  find = null,
+  review = false,
+  onFollow = null,
+  onEdit = null,
 }) {
   const listRef = useRef(null);
   // The selected row follows its value while it is listed; once an action moves it out of the filter, the selection
   // keeps its place in the list, so nothing jumps under the reader.
+  const hits = find?.hits ?? [];
+  const visible = listShown(rows, hits, find?.only);
+  const matched = new Set(hits);
   const [pick, setPick] = useState({ ref: null, place: -1 });
-  const found = rows.findIndex((row) => row.ref === pick.ref);
-  const at = found >= 0 ? found : pick.place >= 0 && rows.length ? Math.min(pick.place, rows.length - 1) : -1;
-  const selected = at >= 0 ? rows[at].ref : null;
-  const choose = (index) => setPick({ ref: rows[index].ref, place: index });
+  // Find's step (or its first match, as the words settle) selects that row.
+  const findSig = find?.current ? `${find.current}~${find.nonce}` : '';
+  const [seenFind, setSeenFind] = useState('');
+  if (findSig !== seenFind) {
+    setSeenFind(findSig);
+    const place = visible.findIndex((row) => row.ref === find?.current);
+    if (place >= 0) setPick({ ref: find.current, place });
+  }
+  const found = visible.findIndex((row) => row.ref === pick.ref);
+  const at = found >= 0 ? found : pick.place >= 0 && visible.length ? Math.min(pick.place, visible.length - 1) : -1;
+  const selected = at >= 0 ? visible[at].ref : null;
+  const choose = (index) => setPick({ ref: visible[index].ref, place: index });
   const byKey = Object.fromEntries(buckets.map((bucket) => [bucket.key, bucket]));
   const counts = head?.counts ?? {};
   const all = head?.all ?? { open: 0, done: 0 };
 
   useEffect(() => {
     listRef.current?.querySelector('.bnf-frl-row.is-active')?.scrollIntoView?.({ block: 'nearest' });
-  }, [selected]);
+  }, [selected, find?.nonce]);
 
   const move = (step) => {
-    if (!rows.length) return;
-    choose(at < 0 ? 0 : Math.min(rows.length - 1, Math.max(0, at + step)));
+    if (!visible.length) return;
+    const next = at < 0 ? 0 : Math.min(visible.length - 1, Math.max(0, at + step));
+    choose(next);
+    if (review) onFollow?.(visible[next]);
   };
 
   useImperativeHandle(
@@ -60,15 +82,16 @@ export default function ReviewList({
     () => ({
       /** A key from the tab: 'approve' | 'ignore' | 'check' | 'clear' | 'find'. False when nothing is selected. */
       act(action) {
-        const row = at >= 0 ? rows[at] : null;
+        const row = at >= 0 ? visible[at] : null;
         if (!row) return false;
         if (action === 'find') onOpen(row);
+        else if (action === 'edit') onEdit?.(row);
         else onMarkOne(action, row);
         return true;
       },
       focus: () => listRef.current?.focus(),
     }),
-    [at, rows, onOpen, onMarkOne],
+    [at, visible, onOpen, onEdit, onMarkOne],
   );
 
   const onKeyDown = (event) => {
@@ -81,11 +104,17 @@ export default function ReviewList({
     } else if (key === 'Enter' && at >= 0) {
       event.preventDefault();
       event.stopPropagation();
-      onOpen(rows[at]);
+      onOpen(visible[at]);
     }
   };
 
-  const shownWord = filter ? byKey[filter]?.label : `Every value from ${scopeWords}`;
+  const narrowed = visible !== rows;
+  const inBucket = filter ? ` in ${byKey[filter]?.label}` : '';
+  const shownWord = narrowed
+    ? `Matching “${find?.words ?? ''}”${inBucket}`
+    : filter
+      ? byKey[filter]?.label
+      : `Every value from ${scopeWords}`;
   const total = head?.total ?? rows.length;
   const unchecked = counts.unchecked?.open ?? 0;
   return (
@@ -112,22 +141,22 @@ export default function ReviewList({
       </div>
       <div className="bnf-frl-bulk">
         <span className="bnf-frl-bulk-what">
-          {shownWord}: {rows.length < total ? `${rows.length} of ${total} shown` : total}
+          {shownWord}: {narrowed ? visible.length : rows.length < total ? `${rows.length} of ${total} shown` : total}
         </span>
         <button
           type="button"
           className="btn btn-sm btn-secondary"
-          disabled={Boolean(busy) || !rows.length}
-          onClick={() => onMark('approve', rows)}
+          disabled={Boolean(busy) || !visible.length}
+          onClick={() => onMark('approve', visible)}
           title="Approve exactly the values listed: you looked, and they are right"
         >
-          {busy === 'approve' ? 'Approving…' : `✓ Approve ${rows.length}`}
+          {busy === 'approve' ? 'Approving…' : `✓ Approve ${visible.length}`}
         </button>
         <button
           type="button"
           className="btn btn-sm btn-secondary"
-          disabled={Boolean(busy) || !rows.length}
-          onClick={() => onMark('ignore', rows)}
+          disabled={Boolean(busy) || !visible.length}
+          onClick={() => onMark('ignore', visible)}
           title="Ignore the AI's warning on exactly the values listed"
         >
           {busy === 'ignore' ? 'Saving…' : 'Ignore'}
@@ -135,8 +164,8 @@ export default function ReviewList({
         <button
           type="button"
           className="btn btn-sm btn-secondary"
-          disabled={Boolean(busy) || !rows.length}
-          onClick={() => onMark('check', rows)}
+          disabled={Boolean(busy) || !visible.length}
+          onClick={() => onMark('check', visible)}
           title="Flag exactly the values listed for someone to check"
         >
           {busy === 'check' ? 'Saving…' : '⚑ Needs checking'}
@@ -156,19 +185,19 @@ export default function ReviewList({
       </div>
       <div className="gs-legend-row">
         <ReviewDone done={done} onUndo={onUndo} undoing={undoing} />
-        <HotkeyLegend list />
+        <HotkeyLegend list review={review} />
       </div>
-      {rows.length ? (
+      {visible.length ? (
         <div
           ref={listRef}
           className="bnf-frl-list"
           role="listbox"
           tabIndex={0}
           aria-label="Values read from this file. Arrow keys move; A approves, I ignores, C flags, U clears, F shows it in the file."
-          aria-activedescendant={at >= 0 ? `frl-${rows[at].ref}` : undefined}
+          aria-activedescendant={at >= 0 ? `frl-${visible[at].ref}` : undefined}
           onKeyDown={onKeyDown}
         >
-          {rows.map((row, index) => (
+          {visible.map((row, index) => (
             <ReviewListRow
               key={row.ref}
               row={row}
@@ -177,14 +206,18 @@ export default function ReviewList({
               file={fileOf(row)}
               selected={row.ref === selected}
               open={row.ref === activeRef}
-              onClick={() => {
+              found={matched.has(row.ref)}
+              current={row.ref === find?.current}
+              review={review}
+              onClick={(event) => {
                 choose(index);
                 listRef.current?.focus();
+                if (review && event.detail < 2) onOpen(row);
               }}
-              onDoubleClick={() => onOpen(row)}
+              onDoubleClick={() => (review ? onEdit?.(row) : onOpen(row))}
             />
           ))}
-          {more?.has && (
+          {more?.has && !narrowed && (
             <button type="button" className="bnf-linklike bnf-frl-more" disabled={more.loading} onClick={more.load}>
               {more.loading ? 'Loading…' : `Show ${Math.min(more.pageSize, total - rows.length)} more of ${total - rows.length}`}
             </button>

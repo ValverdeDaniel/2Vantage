@@ -11,6 +11,8 @@ import ConfirmDialog from '../../../ui/ConfirmDialog';
 import cx from '../../../ui/cx';
 import { useToast } from '../../../ui/useToast';
 import ReviewBulkBar from '../../../valuereview/ReviewBulkBar';
+import PricedComposer from '../priced/PricedComposer';
+import usePricedDraft from '../priced/usePricedDraft';
 import BoardHead from './BoardHead';
 import FilterCard from './FilterCard';
 import { emptyNote, hitsOn } from './finder';
@@ -38,7 +40,8 @@ import useTicks from './useTicks';
  * the URL (useBoardConfig) that narrows the quotes before they are drawn. The config and ✎ Edit carry across line
  * switches; ticks do not. While ✎ Edit is on and a column sort is set, the rows hold their order until the person
  * changes the sort or a filter (F33). Under the board header, the review strip: "N AI values to review" on the ticked,
- * filtered or line's plans, with Approve, Ignore and Needs checking (F65; slice 17).
+ * filtered or line's plans, with Approve, Ignore and Needs checking (F65; slice 17). In ✎ Edit, ＋ on a plan prices a
+ * version of it (slice 35, F76–F84): the draft lives in the table, or docked above it in PricedComposer.
  */
 export default function QuoteBoard({ deal, meta, lines, line, onLine, data, prefs, onDialog }) {
   const toast = useToast();
@@ -76,6 +79,8 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
 
   const writes = useCellWrites(deal.id, editing);
   const actions = useBoardActions(deal.id, line, lineLabel);
+  const pricedKit = { dealId: deal.id, line, plans: board.plans, meta, rateBasis: data.rate_basis, fields: board.fields };
+  const priced = usePricedDraft({ ...pricedKit, lineLabel });
   const scrollRef = useRef(null);
   const bodyRef = useRef(null);
   const { grid, win, prompt } = useBoardGrid({
@@ -122,6 +127,7 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
     } finally {
       setLeaving(false);
       setEditing(false);
+      priced.cancel();
     }
   };
   const exportBoard = async () => {
@@ -140,6 +146,7 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
     errorOf: writes.errorOf,
     documents: data.documents,
     compliance: boardMeta.compliance,
+    families: boardMeta.priced?.families, // the priced-version chip's glyph (F62, F84)
     namesById: new Map(board.plans.map((p) => [p.id, `${p.carrier} ${p.name}`])),
     supersededIds: supersededIds(board.plans),
     shownIds: drawn.map((p) => p.id),
@@ -151,6 +158,7 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
     sortBy: (key) => set((now) => ({ sort: nextSort(now.sort, key) })),
     ticks,
     review, // the flags chip's menu (F63)
+    priced: editing ? priced : null, // ＋ / ✎ / ✕ and the draft's stack (F76–F84; slice 35)
     // Drawn only when no quote is (F17): why nothing shows.
     emptyNote: quotes.length
       ? null
@@ -196,7 +204,7 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
               addPlan: () => onDialog({ kind: 'plan', plan: null }),
               clearLine: () => setConfirm({ kind: 'clear' }),
             },
-            edit: { enter: () => setEditing(true), undo: grid.undo, canUndo: writes.canUndo, done, leaving },
+            edit: { enter: () => setEditing(true), undo: grid.undo, canUndo: writes.canUndo, done, leaving, priced },
             actions: {
               exportBoard,
               clearShortlist: actions.clearShortlist,
@@ -227,6 +235,7 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
           onDelete={(ids) => setConfirm({ kind: 'delete', ids, ticks: true })}
           onClear={ticks.clear}
         />
+        {editing && priced.draft?.expanded && <PricedComposer kit={priced} />}
         <div className="bb-grid-card">
           <TableBar
             board={boardMeta}

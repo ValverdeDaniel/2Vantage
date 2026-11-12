@@ -14,7 +14,8 @@ import { changed, cursorAction, editorAction, rowEdge, step } from './gridKeys';
  * anything on a click into a source link marked KEEP_EDITOR. A click into another cell commits, as in Excel.
  *
  * `editAt(r, c)` is the edit prompt's Yes (F72): it opens that cell now, or the moment the grid turns on.
- * A grid that draws only the rows on screen passes `reveal(pos, then)`.
+ * A grid that draws only the rows on screen passes `reveal(pos, then)`. `onMove(r, c)` hears every move the keys make
+ * (an arrow, Home/End, an editor closed with Enter or Tab), so the Documents station's file can follow the cursor (E65).
  */
 
 const cellId = (r, c) => `${r}|${c}`;
@@ -30,6 +31,7 @@ export default function useGridKeys({
   valueAt,
   onCommit,
   onUndo,
+  onMove = null,
   containerRef,
   reveal,
 }) {
@@ -61,7 +63,7 @@ export default function useGridKeys({
   // The newest props and state for handlers that outlive their render (a blur after a re-render, a key race).
   const live = useRef(null);
   useLayoutEffect(() => {
-    live.current = { on, shape, isEditable, valueAt, onCommit, onUndo, reveal, edit, cursor };
+    live.current = { on, shape, isEditable, valueAt, onCommit, onUndo, onMove, reveal, edit, cursor };
   });
   const editRef = useRef(null);
   useLayoutEffect(() => {
@@ -108,6 +110,7 @@ export default function useGridKeys({
       if (move) {
         const next = step(L.shape.R, L.shape.C, open, move[0], move[1], move[2]);
         select(next.r, next.c);
+        L.onMove?.(next.r, next.c);
       }
       if (move || !save) focusGrid();
     },
@@ -157,10 +160,12 @@ export default function useGridKeys({
       handled();
       const next = step(R, C, pos, action.dr, action.dc, action.wrap);
       select(next.r, next.c);
+      L.onMove?.(next.r, next.c);
     } else if (action.type === 'home' || action.type === 'end') {
       handled();
       const next = rowEdge(C, pos, action.type === 'end');
       select(next.r, next.c);
+      L.onMove?.(next.r, next.c);
     } else if (action.type === 'deselect') {
       handled();
       setState((s) => ({ ...s, sel: null }));

@@ -86,6 +86,20 @@ function Total({ plan }) {
   );
 }
 
+/** A premium holiday's change after its credit, under the billed change (F80; the server's `credit.change`). */
+function NetAfterCredit({ plan }) {
+  const net = plan.credit?.change?.pct;
+  if (net == null) return null;
+  return (
+    <span
+      className="bnf-delta-net"
+      title="The change in what the client pays this year, after the premium-holiday credit"
+    >
+      net {formatPercent(net)} after credit
+    </span>
+  );
+}
+
 function Delta({ plan }) {
   if (plan.role === 'current') return <span className="bnf-delta-base">baseline</span>;
   const pct = plan.change?.pct;
@@ -93,7 +107,12 @@ function Delta({ plan }) {
     const title = plan.part_of ? `Part of ${plan.part_of}'s enrollment — see the packages` : undefined;
     return <span title={title}>—</span>;
   }
-  return <span className={cx('bnf-delta', pct > 0 ? 'bnf-delta-pos' : 'bnf-delta-neg')}>{formatPercent(pct)}</span>;
+  return (
+    <>
+      <span className={cx('bnf-delta', pct > 0 ? 'bnf-delta-pos' : 'bnf-delta-neg')}>{formatPercent(pct)}</span>
+      <NetAfterCredit plan={plan} />
+    </>
+  );
 }
 
 /** A derived column's cell (F41); the Flags column is the review chip (F63). */
