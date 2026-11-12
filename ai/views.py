@@ -1,5 +1,6 @@
 """The ai API (plan.md §7.5; D.6). Slice 16: the state the browser polls, "Check this file", one job, and Stop.
 Slice 18: the one read door (`deals/{id}/ai/reads/`, D39) and Discard on a waiting change set (D28, D74).
+Slice 19: using a read (`ai/jobs/{id}/apply/`, D72) and ↶ Undo this run (`ai/jobs/{id}/undo/`, D73).
 
 The two GETs a browser polls (`deals/{id}/ai/` and `ai/jobs/{id}/`) use the `ai_poll` throttle alone, so polling
 every 2 s on two tabs never uses up the user rate (§3.5, E.6). Any signed-in person may start or stop a job on any
@@ -135,3 +136,25 @@ class DiscardView(APIView):
     def post(self, request, job_id):
         job, _changed = services.discard(request.user, _job(job_id).id)
         return Response(selectors.job_payload(_job(job.id)))
+
+
+class ApplyView(APIView):
+    """POST {select?, picks?}: use a waiting read (D72) → {job, landed}. No `select` is "Use this scan" (the read as
+    proposed); `select` is "Apply N selected" (item ids, "<item>:<key>" for a value that arrived unticked);
+    `picks` {item id: plan id | "new" | "alternate"} places a "Which current plan?" item (D117). 409 when the read is
+    not waiting or was used; 400 for an unknown item or pick."""
+
+    def post(self, request, job_id):
+        select = request.data.get('select')
+        picks = request.data.get('picks')
+        job, landed = services.apply(request.user, _job(job_id).id, select=select, picks=picks)
+        return Response({'job': selectors.job_payload(_job(job.id)), 'landed': landed})
+
+
+class UndoView(APIView):
+    """POST {force?}: ↶ Undo this run (D73) → {job, undone}. 409 with `can_force` when something changed since."""
+
+    def post(self, request, job_id):
+        job, _changed = services.undo(request.user, _job(job_id).id, force=request.data.get('force') is True)
+        job = _job(job.id)
+        return Response({'job': selectors.job_payload(job), 'undone': (job.result.get('landed') or {}).get('undone')})

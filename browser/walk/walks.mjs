@@ -10,6 +10,7 @@ import { documents65 } from './documents65.mjs';
 import { intake39 } from './intake39.mjs';
 import { pages14 } from './pages14.mjs';
 import { quoteFirst13 } from './quoteFirst13.mjs';
+import { scanQuotes19 } from './scanQuotes19.mjs';
 
 const signIn = async ({ page, step, base, user }) => {
   await step('the sign-in page asks for a username and password', async () => {
@@ -52,6 +53,7 @@ export const WALKS = {
       });
     },
   },
+  1: { ...scanQuotes19, run: (ctx) => scanQuotes19.run(ctx, { signIn, openDeal }) }, // scan quotes; slice 19 (one real read)
   4: {
     title: 'Search plans by name: "UHC" finds the UnitedHealthcare quotes on every line (F14–F17, OQ14)',
     deal: 'GD1',

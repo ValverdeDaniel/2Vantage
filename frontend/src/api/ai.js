@@ -7,7 +7,7 @@
 import { useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from './client';
-import { dealKey } from './deals';
+import { dealKey, invalidateDeal } from './deals';
 import { finishedJobs, pollInterval, stillWatched } from './aiPolling';
 
 export const aiKey = (dealId) => dealKey(dealId, 'ai');
@@ -104,7 +104,7 @@ export function useStartRead(dealId) {
 
 export const jobKey = (jobId) => ['ai-job', Number(jobId)];
 
-/** One job with its change set (D28): fetched when a card shows it; it changes only by Discard (or apply, 19). */
+/** One job with its change set (D28): fetched when a card shows it; it changes only by Discard, apply or Undo. */
 export function useJob(jobId, { enabled = true } = {}) {
   return useQuery({
     queryKey: jobKey(jobId),
@@ -124,4 +124,42 @@ export function useDiscardRead(dealId) {
       queryClient.invalidateQueries({ queryKey: aiKey(dealId) });
     },
   });
+}
+
+/** After a read is used or undone: the job as answered, and every query of the deal (plans, counts, stage, history). */
+function useLanding(dealId, mutationFn) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: ({ job }) => {
+      queryClient.setQueryData(jobKey(job.id), job);
+      invalidateDeal(queryClient, dealId, { header: true });
+      queryClient.invalidateQueries({ queryKey: ['value-source'] });
+    },
+  });
+}
+
+/**
+ * "Use this scan ▸" / "Apply N selected ▸" (D72): ({jobId, select, picks}) → {job, landed}. No `select` uses the read
+ * as proposed; `select` names the items (and "<item>:<key>" values) to use; `picks` places "Which current plan?" items.
+ */
+export function useApplyRead(dealId) {
+  return useLanding(
+    dealId,
+    async ({ jobId, select, picks }) =>
+      (
+        await api.post(`ai/jobs/${jobId}/apply/`, {
+          ...(select ? { select } : {}),
+          ...(picks && Object.keys(picks).length ? { picks } : {}),
+        })
+      ).data,
+  );
+}
+
+/** ↶ Undo this run (D73): ({jobId, force}) → {job, undone}. A 409 with `can_force` offers "Undo anyway". */
+export function useUndoRead(dealId) {
+  return useLanding(
+    dealId,
+    async ({ jobId, force = false }) => (await api.post(`ai/jobs/${jobId}/undo/`, force ? { force: true } : {})).data,
+  );
 }

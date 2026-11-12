@@ -18,13 +18,15 @@ import useStationGrid from './grid/useStationGrid';
 import ScanActions from './ScanActions';
 import ScanHead from './ScanHead';
 import ScanList from './ScanList';
+import StagedBanner from './StagedBanner';
 import useStationFind from './useStationFind';
 
 /*
  * The Scanned data panel beside the file (plan.md §8.16, §10.7; E34–E68, D121–D129; the old DocumentsTab's scan
  * panel): what was read from this file (or every proposal file) as the List, worst first (slice 17), or the Grid, side
  * by side (slice 23), with Find over either, Review mode and ✎ Edit.
- * - The head: "Scanned data · Proposal · all N files", the quality headline (E34) and the buttons (ScanActions).
+ * - The head: "Scanned data · Proposal · all N files", the quality headline (E34) and the buttons (ScanActions); under
+ *   it, while Claude's read of these files waits for review, the staged banner (E78; slice 19).
  * - Find (E60–E64): Ctrl+F, "N of M", Enter steps, Only matches, Esc selects the match; carrier nicknames fold.
  * - The file strip over the Grid (E48): Approve, Ignore, Needs checking on these files' open warnings (OQ28).
  * - The keys A, I, C, U and F (E in Review) act on the List's row or the Grid's pick wherever focus is on the tab.
@@ -207,6 +209,7 @@ export default function ScannedData({ deal, meta, scope, expanded, modes, viewer
           onEdit={listed && !modes.editing ? () => modes.setEditing(true) : null}
         />
       </ScanHead>
+      {proposal && <StagedBanner dealId={deal.id} ids={scope.ids} />}
       {listed && (
         <FindBar
           query={find.query}

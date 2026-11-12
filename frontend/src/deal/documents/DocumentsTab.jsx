@@ -40,8 +40,8 @@ import ViewerPane from './ViewerPane';
  * its strip, keys and Undo, side by side with the file at 1,100 px, and the Change history card; slice 23 the Grid,
  * Find, Review mode and ✎ Edit, where F or a value followed in Review moves the viewer to the value's own file while
  * the panel keeps its files (`?list=`, D-164) and the file bar offers "← Back to" (E31); slice 65 the pop-out window
- * (useStationWindow) and census, intake and questionnaire files beside their owners' views. Re-read and the Claude
- * drawer are slices 19 and 20's.
+ * (useStationWindow) and census, intake and questionnaire files beside their owners' views; slice 19 ↻ Re-read… and
+ * Claude's waiting reads under the station, used or undone here. The Claude drawer is slice 20's.
  */
 export default function DocumentsTab({ deal }) {
   const toast = useToast();
@@ -207,6 +207,7 @@ export default function DocumentsTab({ deal }) {
               <RemovedFiles files={removed} busy={restore.isPending} onOpen={station.select} onRestore={putBack} />
             }
             station={{
+              dealId: deal.id,
               files,
               shown,
               allOn: listAll,
@@ -267,7 +268,9 @@ export default function DocumentsTab({ deal }) {
           )}
         </div>
       </div>
-      {shown && <ReadReviews dealId={deal.id} files={scopeFiles} />}
+      {shown && (
+        <ReadReviews dealId={deal.id} files={scopeFiles} onOpen={(docId, page) => showValue(docId, '', { page })} />
+      )}
       <HistoryCard dealId={deal.id} fileName={fileName} />
       <ConfirmDialog
         open={Boolean(removing)}

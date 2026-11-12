@@ -101,3 +101,37 @@ export function linkText(item, items) {
 export function pickedCount(picks, changeSet) {
   return (changeSet?.items || []).filter((item) => picks.has(item.id)).length;
 }
+
+/** A value's own tick in the picks: "<item>:<key>" (one that arrived unticked, which the person wants anyway). */
+export const valueRef = (item, key) => `${item.id}:${key}`;
+
+/** The picks after ticking or unticking one item or value; ticking a value ticks its plan too. */
+export function togglePick(picks, id, itemId = null) {
+  const next = new Set(picks);
+  if (next.has(id)) next.delete(id);
+  else {
+    next.add(id);
+    if (itemId) next.add(itemId);
+  }
+  return next;
+}
+
+/** True while the picks are the read's own proposal: then the button is "Use this scan ▸". */
+export function asProposed(picks, changeSet) {
+  const proposed = initialPicks(changeSet);
+  return picks.size === proposed.size && [...picks].every((id) => proposed.has(id));
+}
+
+/**
+ * The apply request's body: {} uses the read as proposed ("Use this scan"); otherwise `select` names what is ticked
+ * ("Apply N selected"), with `picks` for the "Which current plan?" items that are ticked.
+ */
+export function applyBody(picks, changeSet, places = {}) {
+  if (asProposed(picks, changeSet)) return {};
+  const placed = Object.fromEntries(
+    (changeSet?.items || [])
+      .filter((item) => item.op === 'pick_current' && picks.has(item.id) && places[item.id])
+      .map((item) => [item.id, places[item.id]]),
+  );
+  return { select: [...picks], picks: placed };
+}

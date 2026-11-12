@@ -12,8 +12,9 @@ ai sits left of every value owner in the chain, so it never imports them: they f
   returns {'saved': n, 'areas': [frontend areas to refetch]}. A `ref` is the owner's own and opaque to ai.
 - `readers` {target: Reader}: each value owner's reader (slice 18: quotes). `ai/reading.py` cuts the files into
   ranges, sends each with the reader's `prompt` and `schema`, and hands the answers to the reader, which merges them
-  (`merge`), finds each value in its file and builds the change set (`build_changes`); `apply`, `undo` and `discard`
-  land or drop it (slice 19 on). `corpus` and `score` feed the Eval lane (`manage.py reader_eval`).
+  (`merge`), finds each value in its file and builds the change set (`build_changes`); `apply` and `undo` land it
+  through the owner's services and take it back (slice 19). `corpus` and `score` feed the Eval lane
+  (`manage.py reader_eval`).
 - `context`, `tools`: the chat's context providers and tools (slice 24; empty until then).
 """
 
@@ -50,8 +51,12 @@ class Reader:
     - `merge(parts, files) -> merged`: the answers of every range of every file, joined (parts: [(file, range, data)]).
     - `build_changes(deal, user, merged, files, extra) -> change set` (D.6's shape); `extra` holds the failed parts,
       left-out pages and the run's cost.
-    - `must_review`: its reads always wait for a person (SBC, intake, census, questionnaire); `apply`, `undo`,
-      `discard`: slice 19 on. `corpus()` and `score(key, merged)`: the Eval lane's cases and scorer."""
+    - `must_review`: its reads always wait for a person (SBC, intake, census, questionnaire).
+    - `apply(user, deal, job, select=None, picks=None) -> landed`: lands the chosen parts of `job.result` through the
+      owner's services in one transaction, returning what it wrote ({activity_id, activity_ids, plan_ids, areas,
+      summary, skipped, …}); `undo(user, deal, job, force=False) -> {reverted, kept, skipped, at, by}` reverts that
+      landing, raising `deals.activity.Refused` when something changed since (slice 19). `discard`: slice 51's census.
+    - `corpus()` and `score(key, merged)`: the Eval lane's cases and scorer."""
 
     target: str
     kinds: tuple

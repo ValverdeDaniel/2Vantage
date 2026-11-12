@@ -53,3 +53,27 @@ export function summaryLine(changeSet, models) {
   const cost = changeSet.cost_usd ? ` · $${Number(changeSet.cost_usd).toFixed(2)}` : '';
   return `${changeSet.summary}${model ? ` · read with ${model}` : ''}${cost}`;
 }
+
+/** The toast after "Use this scan": the old app's "Scan applied — 2 current plans · 2 renewals"; a read that found
+ *  nothing new says so in the server's words. */
+export function landedToast(landed) {
+  if (!landed?.activity_ids?.length) return landed?.summary || 'Nothing changed.';
+  return `Scan applied — ${landed.summary}`;
+}
+
+/** The strip under a used read: "✓ Used Claude's read — 2 current plans · 2 renewals". */
+export function landedText(news) {
+  return `✓ Used Claude’s read — ${news.summary}`;
+}
+
+/** What ↶ Undo this run asks first (the old ScanChat's confirm). */
+export const UNDO_ASK =
+  'The plans this read added come off and the values it changed go back to what they were. A plan someone has ' +
+  'starred, recommended, sold, packaged, linked or typed into since stays.';
+
+/** The toast after an Undo: what came back, and what stayed. */
+export function undoneToast(undone) {
+  const kept = undone?.kept?.length ? ` ${undone.kept.join(', ')} stayed: someone worked on it since.` : '';
+  const skipped = undone?.skipped?.length ? ` Left as they are: ${undone.skipped.join(' ')}` : '';
+  return `Undone — the deal is back to how it was before that read.${kept}${skipped}`;
+}

@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { byLine, headChip, initialPicks, linkText, movedPct, planItems, printedRows, rowsFor } from './changeSet';
+import {
+  applyBody,
+  asProposed,
+  byLine,
+  headChip,
+  initialPicks,
+  linkText,
+  movedPct,
+  planItems,
+  printedRows,
+  rowsFor,
+  togglePick,
+} from './changeSet';
 
 const changeSet = {
   items: [
@@ -40,5 +52,23 @@ describe('the quote change set (D28, D31)', () => {
     expect(movedPct('702.40', '761.40')).toBe('+8.4%');
     expect(movedPct('100', '100')).toBe('');
     expect(movedPct('', '5')).toBe('');
+  });
+});
+
+describe('using the read (D28, D31, D72, D117)', () => {
+  it('uses the read as proposed until a tick changes, then applies what is ticked', () => {
+    const picks = initialPicks(changeSet);
+    expect(asProposed(picks, changeSet)).toBe(true);
+    expect(applyBody(picks, changeSet)).toEqual({});
+    const withCounts = togglePick(picks, 'i3');
+    expect(asProposed(withCounts, changeSet)).toBe(false);
+    expect(applyBody(withCounts, changeSet)).toEqual({ select: ['i1', 'i2', 'i3'], picks: {} });
+  });
+
+  it('ticks a plan with its value, and sends where a "Which current plan?" item goes', () => {
+    const picks = togglePick(new Set(), 'i9:rate_ee', 'i9');
+    expect([...picks]).toEqual(['i9:rate_ee', 'i9']);
+    const placed = { items: [{ id: 'i9', op: 'pick_current', tick: false }] };
+    expect(applyBody(picks, placed, { i9: 'new' })).toEqual({ select: ['i9:rate_ee', 'i9'], picks: { i9: 'new' } });
   });
 });

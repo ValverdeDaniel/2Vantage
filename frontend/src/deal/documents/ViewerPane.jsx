@@ -7,10 +7,13 @@ import { locWords } from './checkWords';
 import FileControls from './FileControls';
 import FilePanel from './FilePanel';
 import FileTabs from './FileTabs';
+import RereadPanel from './RereadPanel';
+import useReread from './useReread';
 
 /*
- * The file side of the station (plan.md §8.16; E1–E3, E10–E18, E21–E32, E59): the file row with 📚 All proposals,
- * "Show removed files", the file's controls, what "Check this file" is doing, the File panel, the file bar and the
+ * The file side of the station (plan.md §8.16; E1–E3, E10–E18, E21–E32, E59, E75): the file row with 📚 All
+ * proposals, "Show removed files", the file's controls and the Re-read panel under them (slice 19), what "Check this
+ * file" is doing, the File panel, the file bar and the
  * viewer. `station` holds the files and what is on screen; `on` the handlers DocumentsTab owns. When a value read from
  * another file moved the viewer, the file bar says so and offers "← Back to <file>" (E31, D-164). While the file is
  * open in its own window (`popped`; E69), a slim bar stands in for the viewer: "Show the window", "Bring it back here".
@@ -18,6 +21,7 @@ import FileTabs from './FileTabs';
 export default function ViewerPane({ station, meta, removedList, on }) {
   const { files, shown, allOn, proposals, editing, expanded, update, check, checking, value, find, viewedPage } = station;
   const { scopeFile, popped } = station;
+  const reread = useReread(station.dealId, files, shown, allOn);
   const elsewhere = Boolean(scopeFile && scopeFile.id !== shown?.id);
   const bucketLabel = (key) => labelOf(meta.document_buckets, key);
   const isRemoved = Boolean(shown?.archived_at);
@@ -47,11 +51,13 @@ export default function ViewerPane({ station, meta, removedList, on }) {
         editing={editing}
         expanded={expanded}
         popped={popped}
+        reread={reread}
         onEdit={on.edit}
         onRemove={on.remove}
         onExpand={on.expand}
         onPopOut={on.popOut}
       />
+      {reread.open && <RereadPanel reread={reread} />}
       <CheckStrip check={check} count={checking.length} />
       {editing && !isRemoved && (
         <FilePanel

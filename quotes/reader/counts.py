@@ -5,7 +5,8 @@ O.6 #10). Nothing is written here.
   per current plan when printed per plan (they land as that plan's typed counts through `set_enrollment(plans=…)`,
   which a second current plan needs, F88), or as the line's figure when printed for the whole line. They are never a
   plan's own enrollment until a person ticks them. With a census on the line they are not proposed: the census prices
-  the line (D67 ranks printed counts below it), and a finding says so.
+  the line (D67 ranks printed counts below it), and a finding says so. Counts the plan (or the line) already holds
+  are not proposed again (D60), so a re-read of a file whose counts were used proposes none.
 - **Lines** (D56): every printed line is read; lines the deal does not ask for become one `add_lines` item, ticked
   only when the deal asks for no line yet (it lands through Intake's intent service, slice 19).
 """
@@ -21,6 +22,11 @@ LINE_FIGURE = 'Printed for the whole line: they would become the line’s typed 
 
 def _text(counts):
     return ' · '.join(f'{counts[tier]} {tier}' for tier in TIERS if tier in counts)
+
+
+def _same(held, counts):
+    """The stored counts are these (a tier left out is none)."""
+    return {tier: held.get(tier) or 0 for tier in TIERS} == {tier: counts.get(tier) or 0 for tier in TIERS}
 
 
 def _composite(line):
@@ -53,6 +59,9 @@ def add(builder, deal, merged, lines):
             if item is None:
                 continue
             counts = {tier: found['counts'][tier] for tier in TIERS if tier in found['counts']}
+            held = next((plan.enrollment for plan in builder.plans if plan.id == item['plan']), None)
+            if held and _same(held, counts):
+                continue
             target = {'plan': item['plan']} if item['plan'] else {'item': item['id']}
             builder.items.append(
                 {
@@ -72,6 +81,8 @@ def add(builder, deal, merged, lines):
             )
         if whole and not printed:
             counts = {tier: whole['counts'][tier] for tier in TIERS if tier in whole['counts']}
+            if people.get(line) and _same(people[line].figure, counts):
+                continue
             builder.items.append(
                 {
                     'id': builder.next_id(),

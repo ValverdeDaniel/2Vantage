@@ -3878,7 +3878,7 @@ nothing. The two polled GETs use the `ai_poll` throttle alone.
 | POST | `deals/{id}/ai/messages/` | user | `{chat_id?, text, document_ids?, tab, viewer?, board?, model?, budget_override?}` → `201 {chat_id, message, job, queue_position}` |
 | POST | `deals/{id}/ai/reads/`, `…/recheck/`, `…/locate/`, `…/rank/` | user | The button doors: read files (D39), re-check values (D93), find each value in its file (E59), rank plans (D96) → `201` job |
 | GET | `ai/jobs/{id}/` | user | One job and its change set, with an ETag |
-| POST | `ai/jobs/{id}/cancel/`, `…/apply/`, `…/discard/`, `…/undo/`, `…/retry/` | user | `apply/ {select?}`, `undo/ {force?}`, `retry/ {model, mode}` |
+| POST | `ai/jobs/{id}/cancel/`, `…/apply/`, `…/discard/`, `…/undo/`, `…/retry/` | user | `apply/ {select?, picks?}` → `{job, landed}`; `undo/ {force?}` → `{job, undone}`, 409 with `can_force` when something changed since (built in slice 19); `retry/ {model, mode}` |
 
 Payloads come from `ai/selectors.py`; `useAiState` is the only poller (O.4). Client guidance is written through intake
 (§7.6), not here (O.6 #16). Attach SBC and "As quoted" are quotes' doors (§7.8). Full list: Part D, D.6.
@@ -5208,6 +5208,26 @@ finding, when allowed → landing (§10.5).
   something changed since, it says so and offers **Undo anyway**. A plan the run created stays when someone starred,
   recommended, sold, packaged, linked or typed into it. A census import is undone through its `CensusImport`.
 - **Try again** with the next model, and **Check again** (D76).
+- **Built in slice 19:** `quotes/services/read_apply.py` (D72), `read_plans.py` (the plans and values) and
+  `quotes/reader/choice.py` (what the person chose): **Use this scan ▸** sends nothing and lands the read as proposed
+  (ticked items and values; never a printed count, an unsure link or a "Which current plan?" item); once a tick
+  changes, the same button reads **Apply N selected ▸** and sends `select` (item ids, `"<item>:<key>"` for a value
+  that arrived unticked, `"<item>:replaces"`) and `picks` (`{item: plan id | "new" | "alternate"}`, D117). One
+  transaction locks the Deal, the job, then the lines' plans. **Deviation from D72's "one Activity row":** a landing
+  writes one row per owner, all in that transaction — the plans and values (area `quote_read`, action `read`, a
+  `plan.read_ref` key on each plan the read made), the ticked printed counts through `set_enrollment` (area
+  `enrollment`, D67: they become typed counts) and lines added through Intake's `set_intent` (D56) — and the job keeps
+  their ids (`result.landed.activity_ids`), so Undo reverts them together, newest first. A value lands only while it is
+  still what the person saw; a plan or current plan the deal gained since is not made again. The deal advances to
+  Quoting when anything landed (D75); a read that matches the deal writes nothing (D60), and its printed counts are not
+  proposed again once held. **Undo this run** (`quotes/revert_read.py`, D73) puts back the values with the source
+  entries they replaced (kept in `landed.sources`), takes off the plans the read made unless someone starred,
+  recommended, sold, packaged, linked, typed into or otherwise changed them since (they stay, named), and refuses with
+  `can_force` when a value or another owner's row changed since; **Undo anyway** leaves those and puts back the rest.
+  The state's `news` lists reads used in the last 15 minutes (`{type: 'landed', job_id, documents, summary, skipped,
+  activity_id, at}`) for the "✓ Used Claude's read — … ↶ Undo this run" strip. Documents gains ↻ Re-read… and the old
+  Re-read panel (E75, every kind the quote reader reads, E76), the staged banner in Scanned data (E78) and ↗ on staged
+  values (E78's pin). Applying on a lost deal is a person's internal edit and passes (O.3.7; the old app refused it).
 - **Built in slice 18:** every read waits (`land: staged`); the staged card shows on Documents under the file it read
   (`deal/claude/ReadReviews` with `ReviewCard`, the quote body `deal/advisor/claude/QuoteReview`, `PlanDiff`,
   `ChangeList`): Discard works (D74); "Use this scan ▸" and "Apply N selected ▸" show, disabled, until slice 19's

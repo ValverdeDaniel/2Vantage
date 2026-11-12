@@ -68,6 +68,21 @@ def waiting_payload(job):
     }
 
 
+def landed_payload(job):
+    """A read used in the last minutes, for its "✓ Used …  ↶ Undo this run" strip (D23, D73): never its items."""
+    landed = (job.result or {}).get('landed') or {}
+    return {
+        'type': 'landed',
+        'job_id': job.id,
+        'target': job.target,
+        'documents': job.documents,
+        'summary': landed.get('summary', ''),
+        'skipped': landed.get('skipped') or [],
+        'activity_id': job.activity_id,
+        'at': landed.get('at'),
+    }
+
+
 def job_payload(job):
     """One job, whole: its steps and its result (a change set from slice 18; a locate's counts and files)."""
     return {**job_light(job), 'steps': job.steps, 'params': job.params, 'result': job.result}
@@ -98,6 +113,11 @@ def deal_state(deal, user):
         .select_related('created_by')
         .order_by('-finished_at', '-id')[:WAITING_KEPT]
     )
+    landed = (
+        Job.objects.filter(deal=deal, kind=kinds.READ, resolution='applied', updated_at__gte=since)
+        .exclude(activity__isnull=True)
+        .order_by('-updated_at', '-id')[:WAITING_KEPT]
+    )
     places = _queue_positions(jobs)
     finished = sorted((job for job in jobs if job.status in kinds.FINISHED), key=lambda job: job.finished_at)
     row = DealAi.objects.filter(deal=deal).select_related('locked_by').first()
@@ -108,7 +128,7 @@ def deal_state(deal, user):
         'jobs': [job_light(job, places.get(job.id)) for job in jobs if job.status in kinds.ACTIVE],
         'recent': [job_light(job) for job in reversed(finished[-RECENT_KEPT:])],
         'waiting': [waiting_payload(job) for job in staged if is_waiting(job)],  # change sets to review (D28)
-        'news': [],  # what a finished job left to look at (slice 20)
+        'news': [landed_payload(job) for job in landed],  # reads used lately, with Undo (slice 19; more in 20)
         'lock': {'by': person(row.locked_by), 'at': row.locked_at} if row and row.locked_at else None,
         'spend': {'usd': f'{spent:.2f}', 'budget_usd': f'{row.budget_usd:.2f}' if row and row.budget_usd else None},
         'can': {'direct': can_direct(user), 'budget': bool(getattr(user, 'is_staff', False))},

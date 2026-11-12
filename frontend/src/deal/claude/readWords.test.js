@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { endedText, failedText, leftOutText, readerKinds, readsOn, runningText, summaryLine } from './readWords';
+import {
+  endedText,
+  failedText,
+  landedToast,
+  leftOutText,
+  readerKinds,
+  readsOn,
+  runningText,
+  summaryLine,
+  undoneToast,
+} from './readWords';
 
 const meta = { ai: { targets: [{ key: 'quotes', kinds: ['quote', 'renewal'] }] } };
 const nameOf = (id) => ({ 9: 'packet.pdf' })[id];
@@ -37,5 +47,18 @@ describe('the read door and card words', () => {
     expect(summaryLine({ summary: '2 current plans', model: 'claude-sonnet-5-5', cost_usd: '0.0412' }, models)).toBe(
       '2 current plans · read with Sonnet 5.5 · $0.04',
     );
+  });
+});
+
+describe('using and undoing a read (D72, D73)', () => {
+  it('says what landed, or that nothing did', () => {
+    expect(landedToast({ activity_ids: [4], summary: '2 current plans · 2 renewals' })).toBe(
+      'Scan applied — 2 current plans · 2 renewals',
+    );
+    expect(landedToast({ activity_ids: [], summary: 'Nothing changed.' })).toBe('Nothing changed.');
+  });
+
+  it('names the plans an Undo kept', () => {
+    expect(undoneToast({ kept: ['Florida Blue PPO'], skipped: [] })).toContain('Florida Blue PPO stayed');
   });
 });

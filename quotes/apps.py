@@ -9,14 +9,15 @@ class QuotesConfig(AppConfig):
         from deals import activity, providers, stored_counts
         from intake import providers as intake_providers
 
-        from . import facts, flags, locate_hooks, reader, revert, revert_enrollment
+        from . import facts, flags, locate_hooks, reader, revert, revert_enrollment, revert_read
         from .selectors.intake_facts import quote_lines
         from .selectors.sales import client_has_sold
-        from .services import enrollment, saved_views
+        from .services import enrollment, read_apply, saved_views
 
         activity.reverters['quotes'] = revert.revert  # O.1's seam: Revert in the Activity drawer and Undo
         activity.reverters[saved_views.AREA] = saved_views.revert  # an Update of a saved board setup (F28)
         activity.reverters[enrollment.AREA] = revert_enrollment.revert  # a typed-enrollment save (F85, F88, F91)
+        activity.reverters[read_apply.AREA] = revert_read.revert  # a used quote read: ↶ Undo this run (D73)
         providers.fill('client_has_sold', client_has_sold)  # Back to prospect's refusal (§5.1)
         intake_providers.fill('quote_lines', quote_lines)  # line states, lines off the proposal, from_plans (B24)
         intake_providers.fill('headcount', facts.headcount)  # the one headcount: tier, band, printed counts (§5.7)

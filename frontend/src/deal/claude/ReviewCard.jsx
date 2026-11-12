@@ -1,36 +1,40 @@
 import { useState } from 'react';
-import { useDiscardRead, useJob } from '../../api/ai';
+import { useApplyRead, useDiscardRead, useJob } from '../../api/ai';
 import { errorText } from '../../lib/errors';
 import Loading from '../../ui/Loading';
 import { useToast } from '../../ui/useToast';
-import { failedText, leftOutText, summaryLine } from './readWords';
+import { applyBody, asProposed, initialPicks, pickedCount, togglePick } from '../advisor/claude/changeSet';
+import { failedText, landedToast, leftOutText, summaryLine } from './readWords';
 
 /*
- * "Review this scan" (plan.md §10.5; D28, D31; the old StagedScanReview and ProposedChangesCard): one read's change
- * set, waiting for a person. The head says nothing has changed yet; notes name a stopped or partial read, its failed
- * parts and the pages it did not read; the reader's own body (`renderer`, e.g. the quote reader's plans) shows what
- * would change, each item with its tick; then what the read found worth a look. Discard drops it (D74). Using it —
- * "Use this scan ▸" and "Apply N selected ▸" — lands through the owner's services, which come with slice 19: until
- * then both buttons are shown, disabled, and nothing from a read is written.
+ * "Review this scan" (plan.md §10.5; D28, D31, D72, D74, E78; the old StagedScanReview and ProposedChangesCard): one
+ * read's change set, waiting for a person. The head says nothing has changed yet; notes name a stopped or partial
+ * read, its failed parts and the pages it did not read; the reader's own body (`renderer`, e.g. the quote reader's
+ * plans) shows what would change, each item and each unticked value with its tick, and ↗ to see a value in its file
+ * (`onOpen`); then what the read found worth a look.
+ * - "Use this scan ▸" uses the read as Claude proposes it; once the person changes a tick the same button says "Apply
+ *   N selected ▸" and uses exactly what is ticked (the printed counts, a value left alone, where a current plan goes).
+ *   Both land through the owner's services, one transaction, with ↶ Undo this run after (D73).
+ * - Discard drops it (D74).
  */
-const NOT_YET = 'Using a read is not built yet: nothing from it is written.';
+const RESOLVED = new Set(['applied', 'discarded', 'undone']); // a stopped read still waits, with what it read
 
-export default function ReviewCard({ dealId, jobId, renderer: Body, meta, nameOf }) {
+export default function ReviewCard({ dealId, jobId, renderer: Body, meta, nameOf, onOpen }) {
   const toast = useToast();
   const job = useJob(jobId);
   const discard = useDiscardRead(dealId);
+  const apply = useApplyRead(dealId);
   const [picks, setPicks] = useState(null);
+  const [places, setPlaces] = useState({});
   const changeSet = job.data?.result;
   if (job.isPending) return <Loading label="Loading the read…" />;
-  if (!changeSet?.items) return null;
-  const picked = picks ?? new Set(changeSet.items.filter((item) => item.tick && !item.stale).map((item) => item.id));
-  const toggle = (id) =>
-    setPicks(() => {
-      const next = new Set(picked);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  if (!changeSet?.items || RESOLVED.has(job.data?.resolution)) return null;
+  const picked = picks ?? initialPicks(changeSet);
+  const toggle = (id, itemId = null) => setPicks(togglePick(picked, id, itemId));
+  const place = (itemId, where) => setPlaces({ ...places, [itemId]: where });
+  const proposed = asProposed(picked, changeSet);
+  const count = pickedCount(picked, changeSet);
+  const busy = discard.isPending || apply.isPending;
   const words = meta.ai || {};
   const notes = [
     changeSet.partial && !changeSet.failed_parts?.length ? 'Stopped before the end: this is what was read.' : '',
@@ -48,6 +52,15 @@ export default function ReviewCard({ dealId, jobId, renderer: Body, meta, nameOf
     }
   }
 
+  async function use() {
+    try {
+      const { landed } = await apply.mutateAsync({ jobId, ...applyBody(picked, changeSet, places) });
+      toast.success(landedToast(landed));
+    } catch (error) {
+      toast.error(errorText(error));
+    }
+  }
+
   return (
     <div className="bnf-staged-review bb-mt" data-review-job={jobId}>
       <div className="bnf-staged-head">
@@ -59,14 +72,21 @@ export default function ReviewCard({ dealId, jobId, renderer: Body, meta, nameOf
           </div>
         </div>
         <div className="bnf-staged-actions">
-          <button type="button" className="btn btn-secondary btn-sm" disabled={discard.isPending} onClick={drop}>
+          <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={drop}>
             Discard
           </button>
-          <button type="button" className="btn btn-secondary btn-sm" disabled title={NOT_YET}>
-            Apply {picked.size} selected ▸
-          </button>
-          <button type="button" className="btn btn-primary btn-sm" disabled title={NOT_YET}>
-            Use this scan ▸
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            disabled={busy || (!proposed && !count)}
+            onClick={use}
+            title={
+              proposed
+                ? 'Use the read as Claude proposes it: the ticked plans and values. Printed counts and anything unsure stay out until you tick them.'
+                : 'Use only what is ticked here.'
+            }
+          >
+            {apply.isPending ? 'Applying…' : proposed ? 'Use this scan ▸' : `Apply ${count} selected ▸`}
           </button>
         </div>
       </div>
@@ -76,7 +96,17 @@ export default function ReviewCard({ dealId, jobId, renderer: Body, meta, nameOf
           {note}
         </div>
       ))}
-      {Body ? <Body changeSet={changeSet} meta={meta} picked={picked} onToggle={toggle} /> : null}
+      {Body ? (
+        <Body
+          changeSet={changeSet}
+          meta={meta}
+          picked={picked}
+          onToggle={toggle}
+          places={places}
+          onPlace={place}
+          onOpen={onOpen}
+        />
+      ) : null}
       {changeSet.findings?.length > 0 && (
         <div className="bnf-staged-section">
           <div className="bnf-staged-section-title">Worth a look</div>
