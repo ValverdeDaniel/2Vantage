@@ -13,6 +13,8 @@
   skipped items), `unmark_marketed` (B33, B34);
 - `intent`: the coverage intent — `set_intent`, the only writer of the lines to quote (B16–B18, B32), and
   `confirm_intent` / `reopen_intent` (B20).
+- `client`: a client's answers through a portal link — `save_client` (pending entries, OQ84) and `sign_from_link`
+  (the BOR typed on the portal, with its link, IP and browser; L86, OQ86), slice 54.
 `rows` holds the locks (the Deal, the Intake row, then coverage rows by id) and the Activity entries they share.
 Every write records Activity (area `intake`) with before and after, writes nothing when nothing changes, and returns
 only what changed.
@@ -21,6 +23,7 @@ only what changed.
 from .answers import update_answers
 from .bor import clear_bor, sign_bor
 from .checklist import set_checklist_item, set_form_choice
+from .client import save_client, sign_from_link
 from .coverage import create_coverage, delete_coverage, update_coverage
 from .intent import confirm_intent, reopen_intent, set_intent
 from .marketed import NotReady, mark_marketed, unmark_marketed
@@ -35,10 +38,12 @@ __all__ = [
     'mark_answers',
     'mark_marketed',
     'reopen_intent',
+    'save_client',
     'set_checklist_item',
     'set_form_choice',
     'set_intent',
     'sign_bor',
+    'sign_from_link',
     'unmark_marketed',
     'update_answers',
     'update_coverage',

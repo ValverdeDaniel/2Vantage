@@ -912,7 +912,8 @@ state polls (built in slice 16: the state and job GETs use this throttle alone),
 two tabs never uses up the user rate (E.6). The portal
 (slice 54) has no authentication classes and its own throttles, keyed by token: `portal_read` 300/hour, `portal_write`
 3,600/hour, `portal_poll` 600/hour and `portal_pin` 10/hour on top of the five-try PIN lock. The anonymous rate never
-applies to it (L.6). They replace the baseline's single `portal` scope (1,000/hour), which slice 54 removes.
+applies to it (L.6). They replace the baseline's single `portal` scope (1,000/hour), which slice 54 removed
+(`review/portal/throttles.py`; the count is keyed by the token's hash).
 
 **`backend/settings_test.py`** imports settings and overrides: MD5 password hasher (fast), throttles off,
 `ANTHROPIC_API_KEY = ''` and `AI_TOTAL_BUDGET_USD = ''` (slice 18: no test reaches Claude, even with the key in the
@@ -2973,6 +2974,13 @@ upload slots each expose one owner contract (O.3.4, L.6). The rules:
 `link_state`, `carries`, `ready`, `in_progress`, `soonest_first`), `policy` (`floor`, the life rules, `nudge_open`)
 and `badges`; the request and link services with the PIN (shown once, hashed, five tries); `review.summary.facts`.
 
+**Built (slice 54):** the portal for intake, census and documents (§7.14): `review/portal/` (`guard`, `asked`, the
+payload and its parts, the views, per-link throttles), `rules/portal.py` (the lock rule `editable`, `we_read`,
+`form_stamp`, the to-do `rail`), the client's writes in `review/services/answers.py`, `client_adds.py` and `stamps.py`,
+through the owners' doors `intake.services.save_client` / `sign_from_link` and `census.services.save_client` /
+`add_people`. Contacts, coverage and lines wait as pending entries (OQ84); nothing prints a pending answer (OQ85); the
+portal keeps link stamps and key-only Activity rows, and an IP only on a BOR signed there (OQ86).
+
 **Full rules:** Part L (L.3; L.6: models, the owner contract, `rules/`, portal security) and O.3.4. **Slices:** 53–59.
 
 ### 5.9 Next step and agenda — `agenda/steps/`, `agenda/rows.py`
@@ -3376,13 +3384,14 @@ Built in slices 11, 39 and 40 (the BOR, the checklist, readiness and the markete
 | `deal` | OneToOne Deal, CASCADE, primary key, `related_name='intake'` | |
 | `answers` | JSON `{key: value}` | §5.2 |
 | `sources` | JSON `{key: source}` | §3.7 |
-| `client` | JSON `{key: entry}` | Client answers waiting for review (O.3.1) |
+| `client` | JSON `{key: entry}` | Client answers waiting for review (O.3.1): a question key, or `block:contacts`, `block:coverage`, `block:lines` (OQ84; slice 54). The entry's shape and its base rule are `intake/client_entries.py`, which census shares |
 | `rules` | JSON `{key: rule}` | Per-deal Auto, Required or Waived per question (B37, OQ17) |
 | `checklist` | JSON `{item: {checked, by, at, note, requirement, client_note, form_key}}` | The marketing checklist, COBRA included (B26, B27, O.6 #2). `form_key` is the questionnaire choice (B22) |
 | `intent_confirmed` | JSON | The confirmed coverage-and-intent decisions, kept readable: `{decisions: {line: {in_force (null when unanswered), this_year, rate_guarantee_through}}, by, by_name, at}`, `{}` when never confirmed; "confirmed" means they still equal today's (B20) |
 | `bor_name` | Char(200), blank | Typed signature |
 | `bor_signed_at` | DateTime, null | |
 | `bor_signed_by` | FK User, null, SET_NULL | Who recorded it |
+| `bor_via` | JSON `{link, ip, agent}` | A BOR signed on the client portal: the link, the signer's IP and browser (L86; OQ86: the one place the portal keeps an IP); `{}` for a person's signature, a clear or a revert (slice 54) |
 | `marketed_at`, `marketed_by` | DateTime, null; FK User, null | Mark as marketed; the first date is kept (B34, N.1) |
 | `flags` | stored count | Open warnings, rewritten with each write (O.3.7) |
 | `updated_at` | DateTime | |
@@ -4370,7 +4379,8 @@ with one link per person (L.6). Full list: Part L, L.6.
 
 ### 7.14 Client portal — `portal/{token}/` (public)
 
-Not built (slices 54–59). All portal endpoints: `AllowAny`, **no authentication classes**, throttled per token:
+Built in slice 54 (V2: intake, census and documents; `review/portal/`); questions, `seen/` and the questionnaire
+doors join with slices 56–58. All portal endpoints: `AllowAny`, **no authentication classes**, throttled per token:
 `portal_read` 300/h, `portal_write` 3,600/h, `portal_poll` 600/h, and `portal_pin` 10/h on top of the five-try lock.
 The global anonymous rate never applies. Unknown token → `404 {"detail": "This link isn't valid."}`. Expired, revoked
 or closed → `410`, carrying the agency's contact; writes on a lost or archived deal also answer `410`; `428` until the
@@ -4395,6 +4405,31 @@ PIN is given (L.6).
 - A link lasts 7 days, sliding on save, under a 30-day ceiling from creation (OQ81).
 - Saves go through the owners' `save_client`; answers wait as `client` entries until staff approve them (O.3.4).
 - Request logs and error reports drop `/api/portal/` paths (§11). Old `/b/` links show "This link has moved" (L136).
+
+**Built (slice 54).** Refs name each answer as `rules.requests.carries` does (`intake:<key>`, `intake:block:<contacts|
+coverage|lines>`, `census:<member id>:<column>`); what a link may write is exactly what `review/portal/asked.py` says
+it asks now (blanks and gaps read stored values only). Every answer, refusals included, carries the three headers.
+- `GET portal/{t}/` → `{agency {name, phone, email, color}, account_name, expires_at, days_left, submitted_at,
+  first_submitted_at, can_write, staff, preview, form_stamp, message, colleagues, answered_elsewhere_at, intake,
+  people, add_people, census_file, documents, checklist}` (`review/portal/payload.KEYS`; the nested keys are pinned by
+  review's tests). `intake` = `{sections: [{key, label, fields: [{key, label, type, options, hint, help, needed, value,
+  base, locked, we_read, by_colleague, shown, shown_when}]}], blocks: {contacts {value, base, by_colleague, roles},
+  coverage {value, base, by_colleague, lines, funding}, lines {value, base, by_colleague, lines, note}, bor {signed,
+  name, signed_at, on_file}}}`; a person `{id, title, kind, employee_id, added, fields: [{column, label, type, group,
+  group_label, help, choices, required, value, base, by_colleague}]}`; `add_people` `{left, relationships}`;
+  `census_file` `{detail, accept, received: [{name, at}]}`; a document `{slot, label, detail, accept, note, received}`;
+  `checklist` `{items: [{key, kind, label, done, filled?, total?}], done, total}`. The client's GET records the open
+  (one conditional UPDATE; a re-read within 30 minutes adds nothing; the first open writes "Client opened their
+  link"). 428 `{detail, verification, kind: 'pin', locked, agency}`; 410 `{detail, agency}`; 404 `{detail}`.
+- `POST verify/` `{pin}` → `{verified}` and the `X-Link-Verification` header, or 400 `{detail, tries_left, locked}`.
+- `POST save/` `{answers: {ref: {value, base}}}` → `{saved: [ref], bases: {ref: base}, link: {expires_at, days_left},
+  activity_id}`; 400 `{answers: {ref: sentence}}` (a ref the link does not ask, a refused value); 409 `{detail,
+  conflicts: [{ref, theirs, base}]}`; all or nothing. `POST submit/` → the same plus `submitted_at`.
+- `POST files/` multipart `{slot, file}` (`census_file`, or a document slot such as `invoice@medical`) → 201 `{slot,
+  received, link}`; `POST people/` `{people: [{kind, first_name, last_name, employee_id?, relationship?, dob?}]}` → 201
+  `{people: [person], add_people}`; `POST sign/` `{name}` → `{bor, link}`; `GET stamp/` → `{form_stamp, days_left}`;
+  `GET census-template/` → the blank template; `GET portal/moved/` → `{agency}` (takes no token);
+  `GET links/{lid}/preview/` (staff) → the page with `preview: true`, no open counted.
 
 Full list: Part L, L.6.
 
@@ -4979,6 +5014,10 @@ Part L (L76–L110, L136; L.6). Slices 54, 58 and 59.
 - SSN is never asked (OQ16). Commission and coverage intent are never shown (L108).
 - Staff use View as client at `/preview/links/:linkId`; their writes there answer 403 (L78). Old `/b/` links show
   "This link has moved" (L136).
+- **Built (slice 54):** `frontend/src/portal/` (PortalPage, PortalGate, PortalShell, PortalForm, TodoRail,
+  IntakeSection, blocks/, PeopleSection, CellInput, AddPersonForm, FileSlots, SubmitBar, Unavailable, MovedPage,
+  PreviewPage, `portalApi` with its own axios instance, `useAutosave`, `usePortalWrites`, `usePortalStamp`,
+  `portalModel`), on the old classes; walked at 390×844 (`--need s54`). View as client is on the request card.
 
 ### 8.21 The grid
 

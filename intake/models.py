@@ -24,6 +24,9 @@ class Intake(models.Model):
     bor_name = models.CharField(max_length=200, blank=True)
     bor_signed_at = models.DateTimeField(null=True, blank=True)
     bor_signed_by = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    # A BOR signed on the client portal (L86; slice 54): {link, ip, agent}, the link it came through with the signer's
+    # IP and browser (OQ86: the one place the portal keeps an IP). {} for a person's signature.
+    bor_via = models.JSONField(default=dict, blank=True)
     marketed_at = models.DateTimeField(null=True, blank=True)
     marketed_by = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
     flags = models.PositiveIntegerField(default=0)  # open warnings, a stored count (O.3.7; from slice 39)

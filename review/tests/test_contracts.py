@@ -11,7 +11,10 @@ from review.models import ClientLink, ClientRequest
 
 pytestmark = pytest.mark.django_db
 
-ASK = {'asks': {'intake': {'scope': 'missing'}}, 'people': [{'name': 'Dana'}]}
+ASK = {
+    'asks': {'intake': {'scope': 'missing', 'blocks': ['bor']}, 'census': {'file': True}},
+    'people': [{'name': 'Dana'}],
+}
 
 
 @pytest.fixture
@@ -20,20 +23,49 @@ def made(user, deal):
 
 
 def samples(deal, made):
+    token = made.links[0][1].rsplit('/', 1)[1]
     return {
         'api/deals/<int:pk>/review/board/': {'pk': deal.id},
         'api/deals/<int:pk>/review/requests/': {'pk': deal.id},
         'api/deals/<int:pk>/review/requests/<int:rid>/close/': {'pk': deal.id, 'rid': made.request.id},
         'api/links/<int:lid>/': {'lid': made.links[0][0].id},
+        'api/links/<int:lid>/preview/': {'lid': made.links[0][0].id},
+        **{route: {'token': token} for route in PORTAL},
     }
 
 
 ALL = {'signed_out': 401, 'producer': 200, 'admin': 200}
+# The portal (rule 11): public; a staff session reads it and every write answers 403.
+PUBLIC_READ = {'signed_out': 200, 'producer': 200, 'admin': 200}
+PUBLIC_WRITE = {'signed_out': 200, 'producer': 403, 'admin': 403}
+PORTAL = [
+    'api/portal/<str:token>/',
+    'api/portal/<str:token>/verify/',
+    'api/portal/<str:token>/save/',
+    'api/portal/<str:token>/submit/',
+    'api/portal/<str:token>/files/',
+    'api/portal/<str:token>/people/',
+    'api/portal/<str:token>/sign/',
+    'api/portal/<str:token>/stamp/',
+    'api/portal/<str:token>/census-template/',
+]
 MATRIX = [
     ('GET', 'api/deals/<int:pk>/review/board/', ALL),
     ('POST', 'api/deals/<int:pk>/review/requests/', {**ALL, 'producer': 201, 'admin': 201}, ASK),
     ('POST', 'api/deals/<int:pk>/review/requests/<int:rid>/close/', ALL, {'reason': 'cancelled'}),
     ('PATCH', 'api/links/<int:lid>/', ALL, {'action': 'mark_sent', 'copied': True}),
+    ('GET', 'api/links/<int:lid>/preview/', ALL),
+    ('GET', 'api/portal/moved/', PUBLIC_READ),
+    ('GET', 'api/portal/<str:token>/', PUBLIC_READ),
+    ('GET', 'api/portal/<str:token>/stamp/', PUBLIC_READ),
+    ('GET', 'api/portal/<str:token>/census-template/', PUBLIC_READ),
+    # A link that asks for no PIN: verify answers as proved; a staff session never proves one (403).
+    ('POST', 'api/portal/<str:token>/verify/', PUBLIC_WRITE, {'pin': '000000'}),
+    ('POST', 'api/portal/<str:token>/save/', PUBLIC_WRITE, {'answers': {}}),
+    ('POST', 'api/portal/<str:token>/submit/', PUBLIC_WRITE, {'answers': {}}),
+    ('POST', 'api/portal/<str:token>/sign/', PUBLIC_WRITE, {'name': 'Jordan Example'}),
+    ('POST', 'api/portal/<str:token>/people/', {**PUBLIC_WRITE, 'signed_out': 400}, {'people': []}),
+    ('POST', 'api/portal/<str:token>/files/', {**PUBLIC_WRITE, 'signed_out': 400}, {'slot': 'census_file'}),
 ]
 
 

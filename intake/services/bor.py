@@ -41,12 +41,15 @@ def state(intake):
     }
 
 
-def _put(intake, values):
+def put(intake, values):
+    """Write the signature's fields. `via` is the portal's record of a client's signature (slice 54): a person's
+    signature, a clear and a revert leave it empty."""
     signed_at = values.get('signed_at')
     intake.bor_name = values.get('name') or ''
     intake.bor_signed_at = parse_datetime(signed_at) if isinstance(signed_at, str) else signed_at
     intake.bor_signed_by_id = values.get('signed_by')
-    intake.save(update_fields=['bor_name', 'bor_signed_at', 'bor_signed_by', 'updated_at'])
+    intake.bor_via = (values.get('via') or {}) if intake.bor_signed_at else {}
+    intake.save(update_fields=['bor_name', 'bor_signed_at', 'bor_signed_by', 'bor_via', 'updated_at'])
 
 
 def clean_name(raw):
@@ -76,7 +79,7 @@ def sign_bor(user, deal_id, name):
         return Signed({}, None)
     before = state(intake)
     by = user.id if getattr(user, 'is_authenticated', False) else None
-    _put(intake, {'name': name, 'signed_at': clock.now(), 'signed_by': by})
+    put(intake, {'name': name, 'signed_at': clock.now(), 'signed_by': by})
     changed = diff(before, state(intake))
     return Signed(changed, _record(deal, user, 'Signed the BOR (typed signature)', changed))
 
@@ -89,7 +92,7 @@ def clear_bor(user, deal_id):
         return Signed({}, None)
     intake = rows.lock_intake(deal_id)
     before = state(intake)
-    _put(intake, {'name': '', 'signed_at': None, 'signed_by': None})
+    put(intake, {'name': '', 'signed_at': None, 'signed_by': None})
     changed = diff(before, state(intake))
     return Signed(changed, _record(deal, user, 'Cleared the BOR signature', changed))
 
@@ -102,5 +105,5 @@ def revert(deal_id, changed):
     wanted = {**before, **{key: pair[0] for key, pair in changed.items() if key in FIELDS}}
     if wanted == before:
         return {}
-    _put(intake, wanted)
+    put(intake, wanted)
     return diff(before, state(intake))

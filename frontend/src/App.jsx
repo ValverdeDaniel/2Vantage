@@ -17,6 +17,10 @@ const DealPage = lazy(() => import('./pages/DealPage/DealPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage/NotFoundPage'));
 // A deal's file in its own window, with no top bar (E69–E71; slice 65): the Documents tab's bundle.
 const DocumentWindowPage = lazy(() => import('./deal/documents').then((m) => ({ default: m.DocumentWindowPage })));
+// The client portal and its neighbours, outside the app shell (§8.20; L76, L78, L136; slice 54).
+const PortalPage = lazy(() => import('./portal/PortalPage'));
+const PreviewPage = lazy(() => import('./portal/PreviewPage'));
+const MovedPage = lazy(() => import('./portal/MovedPage'));
 
 // Routes (plan.md §8.1). The deal's tab is in the path; /deals/:dealId (and an old ?tab= link) opens a tab there.
 export default function App() {
@@ -25,6 +29,16 @@ export default function App() {
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/portal/:token" element={<PortalPage />} />
+          <Route path="/b/:token" element={<MovedPage />} />
+          <Route
+            path="/preview/links/:linkId"
+            element={
+              <RequireAuth>
+                <PreviewPage />
+              </RequireAuth>
+            }
+          />
           <Route
             path="/deals/:dealId/documents/:docId/window"
             element={

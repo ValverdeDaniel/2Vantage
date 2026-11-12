@@ -1,7 +1,9 @@
 """The walk of the staging canary scan (slice 47; plan.md §11.4 item 5, §12.9; Q.8; deploy/phi-gate.md).
 
 A person's census work, scripted with this run's canary census (deploy/canaries.py) on a new synthetic client: upload
-the census file, map and apply it, open and search the roster, edit a person (and three edits the app refuses), view
+the census file, map and apply it, open and search the roster, edit a person (and three edits the app refuses), answer
+on the client portal as the employer (deploy/canary_portal.py: the PIN, a census answer, a refused SSN, an added
+person, a census file, Submit; slice 54), view
 and download every file that carries the people (Documents, the census export and template, the RFP's carrier files,
 packet and drafts), type a stop-loss laser and export the board with it, then archive the client. On the way it
 checks the answers that must never carry PHI: error bodies, download names, redirects, the deal's header and its feed.
@@ -21,6 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import canaries as made  # noqa: E402
+from canary_portal import portal  # noqa: E402
 from http_client import Checks, Client  # noqa: E402
 
 CARRIERS = ['aetna', 'cigna']  # asked, so the RFP has email drafts
@@ -166,6 +169,7 @@ def main():
         if made_deal:
             deal, client_id, document = made_deal
             roster(walk, deal)
+            portal(walk, deal, made)  # the client portal's leg (slice 54): deploy/canary_portal.py
             files(walk, deal, document)
             lasers(walk, deal)
             surfaces(walk, deal, client_id)

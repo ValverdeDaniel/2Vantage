@@ -167,13 +167,17 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
         'rest_framework.throttling.ScopedRateThrottle',
     ],
-    # `ai_poll`: the AI state and job polls alone (useAiState every 2 s on two tabs, §3.5, E.6).
+    # `ai_poll`: the AI state and job polls alone (useAiState every 2 s on two tabs, §3.5, E.6). The client portal's
+    # four, kept per link (slice 54; review/portal/throttles.py): the anonymous rate never applies to it.
     'DEFAULT_THROTTLE_RATES': {
         'anon': '200/hour',
         'user': '5000/hour',
         'login': '10/minute',
-        'portal': '1000/hour',
         'ai_poll': '3600/hour',
+        'portal_read': '300/hour',
+        'portal_write': '3600/hour',
+        'portal_poll': '600/hour',
+        'portal_pin': '10/hour',
     },
     'UNAUTHENTICATED_USER': 'django.contrib.auth.models.AnonymousUser',
 }

@@ -22,6 +22,7 @@ import { market40 } from './market40.mjs';
 import { pages14 } from './pages14.mjs';
 import { pair33 } from './pair33.mjs';
 import { pdf29 } from './pdf29.mjs';
+import { portal54 } from './portal54.mjs';
 import { questionnaire42 } from './questionnaire42.mjs';
 import { questionnaire43 } from './questionnaire43.mjs';
 import { rfp44 } from './rfp44.mjs';
@@ -265,5 +266,6 @@ export const WALKS = {
   s48: { ...commission48, run: (ctx) => commission48.run(ctx, { signIn, openDeal }) }, // slice 48's done-when (re-seed GD1 after)
   s49: { ...booking49, run: (ctx) => booking49.run(ctx, { signIn, openDeal }) }, // slice 49's done-when (re-seed GD1 after)
   s53: { ...review53, run: (ctx) => review53.run(ctx, { signIn, openDeal }) }, // slice 53's done-when (re-seed GD4 after)
+  s54: { ...portal54, run: (ctx) => portal54.run(ctx, { signIn, openDeal }) }, // slice 54's done-when, at 390×844 (re-seed GD6 after)
   s66: { ...voice66, run: (ctx) => voice66.run(ctx, { signIn, openDeal }) }, // slice 66's done-when (a fake recognizer; no Claude, no writes)
 };

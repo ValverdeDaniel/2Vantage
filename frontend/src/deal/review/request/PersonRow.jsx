@@ -6,8 +6,8 @@ import PinOnce from './PinOnce';
  * One person on a request (L8; old 891f1b3 `RequestCard.jsx` people rows and `LinkStatus.jsx`): their name and role,
  * the link's state in one vocabulary (said of the link, never of a person: anyone holding the URL counts), and what
  * can be done to it: Copy link (copying is the send), Mark sent / Not sent after all, Extend, Turn off / Turn back on
- * (the old link settings card's switch) and New PIN. Copy message, Nudge and View as client arrive with the message
- * drafts and the portal (slices 54–57).
+ * (the old link settings card's switch), New PIN and View as client (L78, slice 54: their page, read-only, in a new
+ * tab). Copy message and Nudge arrive with the message drafts (slices 56–57).
  */
 export default function PersonRow({ person, meta, actions, readOnly, pin }) {
   const { state } = person;
@@ -35,6 +35,12 @@ export default function PersonRow({ person, meta, actions, readOnly, pin }) {
               title="Copy their personal link to paste anywhere: copying it counts as sending it">
               Copy link
             </button>
+          )}
+          {state !== 'closed' && (
+            <a className="rr-linklike" href={`/preview/links/${person.link_id}`} target="_blank" rel="noreferrer"
+              title="Their page as they see it, read-only: nothing is saved and no open is counted (L78)">
+              View as client
+            </a>
           )}
           {state === 'draft' && (
             <button type="button" className="rr-linklike" disabled={busy} onClick={() => actions.markSent(person)}

@@ -8,7 +8,7 @@ field; never a name, an address, a token or a PIN (§3.8; contacts are key-only 
 
 from django.db import transaction
 
-from deals import activity, rules
+from deals import activity, clock, rules
 from deals.models import Deal
 
 from .. import words
@@ -47,6 +47,21 @@ def locked_link(link_id):
     request_id = ClientLink.objects.values_list('request_id', flat=True).get(pk=link_id)
     deal, request = locked_request(request_id)
     return deal, request, ClientLink.objects.select_for_update().get(pk=link_id)
+
+
+def locked_open(link_id):
+    """(Deal, request, link) locked for a portal write, which locks them last, after the owners it wrote (slice 54);
+    refused with the portal's 410 when the link was turned off, ran out or its request closed meanwhile, or the deal
+    may no longer ask its client."""
+    from ..portal import guard
+    from ..rules import policy
+
+    deal, request, link = locked_link(link_id)
+    if not policy.opens(link, clock.now(), closed=request.closed_at is not None):
+        raise guard.Gone()
+    if rules.client_asks_open(deal):
+        raise guard.Gone(guard.CLOSED)
+    return deal, request, link
 
 
 def refuse_unless_asking(deal, request):

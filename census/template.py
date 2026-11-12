@@ -117,14 +117,15 @@ def _saved(book):
     return out.getvalue()
 
 
-def template(deal):
-    """(bytes, people prefilled) — the census template to hand the employer (§9.1)."""
+def template(deal, *, blank=False):
+    """(bytes, people prefilled) — the census template to hand the employer (§9.1). `blank`: the client portal's copy,
+    which never carries the roster (L.6, B3)."""
     import openpyxl
 
     needed = facts.needed(deal)
     keys = template_keys(deal, needed)
     required = set(needed[fields.EMPLOYEE]) | set(needed[fields.DEPENDENT])
-    people = _ordered(deal.id)
+    people = [] if blank else _ordered(deal.id)
     book = openpyxl.Workbook()
     ws = book.active
     ws.title = SHEET
