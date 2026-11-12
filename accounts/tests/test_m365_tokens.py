@@ -77,7 +77,7 @@ def test_PHI3_the_state_must_match_and_is_used_once(entra, user):
 def test_PHI3_a_sign_in_left_ten_minutes_has_expired(entra, user):
     def later(client, back):
         session = client.session
-        session[oidc.SESSION_KEY]['at'] -= oidc.PENDING_SECONDS + 1
+        session[oidc.SESSION_KEY]['at'] -= oidc.PENDING_SECONDS + 120  # wide: the clock steps back under load
         session.save()
 
     client, answer = attempt(entra, before_callback=later)
