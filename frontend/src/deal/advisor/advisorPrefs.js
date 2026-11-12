@@ -5,15 +5,20 @@
  *
  * Views (F1): Quote comparison, "As quoted" (one scanned quote as printed, F42; slice 21: offered only once a read
  * has landed a printed table), the Proposal builder (slice 25; J17) and the Export viewer, last, as the old app put it
- * (slice 28; F3). The Stop-loss analysis pill (only with a stop-loss line, F2) joins with slice 36; Unleashed waits
- * (F4). The Export viewer's file is kept here too, as the old `exportFile`, and `?file=` wins (F136); the viewer
- * decides which files it can show.
+ * (slice 28; F3). The Stop-loss analysis pill, second as the old app put it, shows only when the deal has a stop-loss
+ * line, even with no plans yet (F2; slice 36); Unleashed waits (F4). The Export viewer's file is kept here too, as
+ * the old `exportFile`, and `?file=` wins (F136); the viewer decides which files it can show.
  */
 
 export const PREFS_KEY = 'vantage.bnf.advisor';
 
 export const VIEWS = [
   { key: 'quotes', label: 'Quote comparison', hint: 'Filter, sort and shortlist the quoted plans' },
+  {
+    key: 'stop-loss',
+    label: 'Stop-loss analysis',
+    hint: 'The reinsurance verdict board — maximum annual liability, lasers, and the analysis workbook',
+  },
   {
     key: 'quoted',
     label: 'As quoted',
@@ -51,10 +56,15 @@ export function writePrefs(storage, patch) {
 
 /**
  * The views this deal offers: every built view, "As quoted" only when the deal has a printed table (`quoted`, the
- * `plans/as-quoted/` files; F42), so a pill never opens nothing (a stop-loss one would need a stop-loss line, F2).
+ * `plans/as-quoted/` files; F42), and the Stop-loss analysis only when the deal has the stop-loss line (`stopLossLine`,
+ * /api/meta/'s `stop_loss.line`; F2), so a pill never opens nothing.
  */
-export function offeredViews(lines, quoted) {
-  return VIEWS.filter((view) => view.key !== 'quoted' || (quoted?.length ?? 0) > 0);
+export function offeredViews(lines, quoted, stopLossLine) {
+  return VIEWS.filter(
+    (view) =>
+      (view.key !== 'quoted' || (quoted?.length ?? 0) > 0) &&
+      (view.key !== 'stop-loss' || (Boolean(stopLossLine) && lines.some((row) => row.line === stopLossLine))),
+  );
 }
 
 /** The view to show: the URL's, else the kept one, when offered; else Quote comparison. */

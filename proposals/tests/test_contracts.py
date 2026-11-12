@@ -30,6 +30,8 @@ def samples(world):
         'api/deals/<int:pk>/proposal/files/pdf/': {'pk': deal.id},
         'api/deals/<int:pk>/proposal/files/pptx/': {'pk': deal.id},
         'api/deals/<int:pk>/proposal/files/letter/': {'pk': deal.id},
+        # slice 36: no stop-loss plan here, so the workbook refuses past the permission check (the 200: its own tests)
+        'api/deals/<int:pk>/plans/stop-loss/workbook/': {'pk': deal.id, 'expect': 409},
         'api/deals/<int:pk>/proposal/files/xlsx/': {'pk': deal.id},
         'api/deals/<int:pk>/proposal/preview/': {'pk': deal.id, 'query': {'file': 'workbook'}},
     }
@@ -44,6 +46,7 @@ MATRIX = [
     ('GET', 'api/deals/<int:pk>/proposal/files/pdf/', ALL),
     ('GET', 'api/deals/<int:pk>/proposal/files/pptx/', ALL),
     ('GET', 'api/deals/<int:pk>/proposal/files/letter/', ALL),
+    ('GET', 'api/deals/<int:pk>/plans/stop-loss/workbook/', {'signed_out': 401, 'producer': 409, 'admin': 409}),
     ('GET', 'api/deals/<int:pk>/proposal/files/xlsx/', ALL),
     ('GET', 'api/deals/<int:pk>/proposal/preview/', ALL),
 ]

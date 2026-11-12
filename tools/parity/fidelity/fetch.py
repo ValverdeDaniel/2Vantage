@@ -5,6 +5,8 @@ browser/shared/apps.mjs does. A deal is found by its client's name (the spec's `
 be reloading (other lanes edit code), so a refused connection or a 5xx is retried for a while before it counts.
 
     <out>/<GDn>/old.xlsx  old.pdf  old.pptx  old.letter  new.xlsx  new.pdf  new.pptx  new.letter (a PDF)
+    <out>/<GDn>/old.sl.xlsx  new.sl.xlsx   the stop-loss analysis workbook (slice 36; refused by both apps on a deal
+                                           with no stop-loss plan, which counts as a match)
     <out>/<GDn>/fetch.json   per file: the status, the file name the app gave, or the refusal's words
 """
 
@@ -27,7 +29,10 @@ FILES = (
     ('pdf', 'proposal-pdf', 'pdf'),
     ('pptx', 'proposal-deck', 'pptx'),
     ('letter', 'proposal-paper', 'letter'),
+    ('sl.xlsx', 'stop-loss-workbook', 'stop-loss-workbook'),  # slice 36 (J166): not a proposal file in 2Vantage
 )
+# A file 2Vantage serves outside `proposal/files/`: its path under the deal.
+NEW_PATHS = {'sl.xlsx': 'plans/stop-loss/workbook'}
 RETRY_FOR = 90  # seconds a reloading server may take
 TIMEOUT = 120
 
@@ -96,7 +101,8 @@ class NewApp:
         return (hit.get('deal') or {}).get('id') if hit else None
 
     def url(self, deal, kind):
-        return f'{NEW_API}/api/deals/{deal}/proposal/files/{dict((f[0], f[2]) for f in FILES)[kind]}/'
+        path = NEW_PATHS.get(kind) or f'proposal/files/{dict((f[0], f[2]) for f in FILES)[kind]}'
+        return f'{NEW_API}/api/deals/{deal}/{path}/'
 
 
 def _filename(headers):

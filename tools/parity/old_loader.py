@@ -18,7 +18,8 @@ The rows are written the way the old app writes them, through its own writers wh
 - the intake answers (slice 39, GD6) as the old form's hand edit stores them (CaseField.edited_value), each cleaned by
   the old app's own `intake_writes.clean_value`, so the old form shows what 2Vantage's one cleaner stores;
 - a census roster (slice 41, GD4) as the old import writes a spreadsheet's people (`old_census.py`, beside this file);
-- a whole line's typed counts (slice 13, GD3's `line_figures`) as the old line counts (`tier_counts_by_line`).
+- a whole line's typed counts (slice 13, GD3's `line_figures`) as the old line counts (`tier_counts_by_line`);
+- for a deal with a Stop-Loss line (slice 36, GD5), the old app's own stop-loss figures, printed as an answer key.
 Then every row is read back and checked against the spec; a difference stops the load.
 """
 
@@ -255,6 +256,29 @@ def check(spec, case, made):
     return wrong
 
 
+def stop_loss_figures(spec, case):
+    """GD5 (slice 36): the old app's own stop-loss verdict for each plan of the Stop-Loss line, printed after the load,
+    so the old app serves as an answer key for golden/keys/gd5.json (plan.md §12.6): the headcount every PEPM
+    multiplies (`stop_loss_enrolled`, the medical tally) and each plan's annual premium, attachment, laser liability
+    and maximum annual liability, from `stop_loss_math.stop_loss_summary`. Nothing is written."""
+    if 'stop_loss' not in spec['lines']:
+        return
+    from benefits.pipeline.plan_math import stop_loss_enrolled
+    from benefits.pipeline.stop_loss_math import stop_loss_summary
+
+    headcount = stop_loss_enrolled(case)
+    print(f'{spec["key"]} stop-loss: {headcount} enrolled employees x 12 months')
+    plans = [p for p in spec['plans'] if p['line'] == 'stop_loss']
+    names = {(p['carrier'], p['name'], p['role'] == 'current'): p['ref'] for p in plans}
+    for row in case.plans.filter(line='stop_loss'):
+        values = {pv.field_def.key: pv.effective_value for pv in row.values.select_related('field_def')}
+        found = stop_loss_summary(values, headcount)
+        ref = names.get((row.carrier, row.plan_name, row.is_current), row.pk)
+        figures = ', '.join(f'{key} {found[key]}' for key in (
+            'annual_premium', 'annual_attachment', 'laser_liability', 'max_annual_liability'))
+        print(f'  {ref}: {figures}')
+
+
 def load(spec, user):
     with transaction.atomic():
         case = make_case(spec, user)
@@ -269,6 +293,7 @@ def load(spec, user):
             raise ParityError(f'{spec["key"]} did not load as its spec says:\n  ' + '\n  '.join(wrong))
     left_out = '; '.join(item['what'] for item in spec['parity'].get('left_out', []))
     print(f'{spec["key"]} {spec["client"]}: case {case.pk}, {len(made)} plans, checked. Left out: {left_out or "-"}')
+    stop_loss_figures(spec, case)
     return case
 
 

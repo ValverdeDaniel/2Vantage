@@ -14,6 +14,7 @@ import LineTabs from './LineTabs';
 import QuoteBoard from './board/QuoteBoard';
 import PackagesPanel from './PackagesPanel';
 import useAdvisorPrefs from './useAdvisorPrefs';
+import StopLossBoard from './stoploss/StopLossBoard';
 import ViewPills from './ViewPills';
 import { AddQuotesButton } from '../claude'; // Work with Claude's door on the board (F96; slice 20)
 
@@ -29,7 +30,8 @@ import { AddQuotesButton } from '../claude'; // Work with Claude's door on the b
  * offered once a read has landed a printed table. The Export viewer, last, mounts the proposal folder's viewer (slice
  * 28; F3, F136): its file is kept with the view and line, and where it stands in each file (`exportPlace`) is held
  * here, so a switch to the builder and back finds the same tab; "Open proposal ▸" on the builder opens it (J27), and
- * "See the slides ▸" on its Plans card opens the PowerPoint on that line's first plan set (J58; slice 30).
+ * "See the slides ▸" on its Plans card opens the PowerPoint on that line's first plan set (J58; slice 30). The
+ * Stop-loss analysis, second, only with a stop-loss line (F2), mounts `stoploss/StopLossBoard` (slice 36).
  */
 
 function EmptyPanel({ title, children, actions }) {
@@ -54,7 +56,7 @@ export default function AdvisorTab({ deal }) {
   const navigate = useNavigate();
   const lines = q.useAdvisorLines(deal.id);
   const quoted = useQuotedFiles(deal.id);
-  const prefs = useAdvisorPrefs(lines.data ?? [], quoted.data);
+  const prefs = useAdvisorPrefs(lines.data ?? [], quoted.data, meta?.stop_loss?.line);
   const comparison = q.useComparison(deal.id, prefs.line);
   const [dialog, setDialog] = useState(null);
   const [exportPlace, setExportPlace] = useState({});
@@ -110,6 +112,16 @@ export default function AdvisorTab({ deal }) {
           }}
         />
       </div>
+    );
+  } else if (prefs.view === 'stop-loss' && prefs.offered.some((view) => view.key === 'stop-loss')) {
+    // The Stop-loss analysis (F98–F107; slice 36): the Stop-Loss line only, so no line tabs.
+    body = (
+      <StopLossBoard
+        dealId={deal.id}
+        meta={meta}
+        onOpenLine={prefs.openLine}
+        onGoTab={(tab) => navigate(`/deals/${deal.id}/${tab}`)}
+      />
     );
   } else if (prefs.view === 'export') {
     body = (

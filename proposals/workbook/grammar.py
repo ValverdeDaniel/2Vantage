@@ -5,8 +5,9 @@ A formula is ours only: a template built in code, held to a closed grammar, neve
   empty string `""` and `= <> < > <= >= + - * /`. That refuses a string literal, `&`, `!`, a quote, any sheet
   reference and any other function by construction.
 - With `sheets` (the file's own tab titles: the Compare, Composite Rates and All Plans tabs) it also takes INDEX,
-  MATCH, IFERROR, MIN, MAX and HYPERLINK (whose address and words are always cells), and a quoted reference to one of
-  those tabs. A tab outside `sheets` is refused.
+  MATCH, IFERROR, MIN, MAX and HYPERLINK (whose address and words are always cells), N and COUNT (the stop-loss
+  workbook's blank-as-zero and "any laser typed" guards, slice 36), and a quoted reference to one of those tabs. A tab
+  outside `sheets` is refused.
 - A conditional fill's condition: references, AND, the comparisons and `""`, nothing else.
 There is no SUMPRODUCT: a what-if count on an unrated tier falls back to the stated premium or blank (J.5 B33).
 """
@@ -21,12 +22,12 @@ _FORMULA_TOKEN = re.compile(
     r'|(?<!")""(?!")'
     r'|<>|<=|>=|[=<>+\-*/,()]'
 )
-_LOOKUP_FUNCTION = re.compile(r'(?:INDEX|MATCH|IFERROR|MIN|MAX|HYPERLINK)\(')
+_LOOKUP_FUNCTION = re.compile(r'(?:INDEX|MATCH|IFERROR|MIN|MAX|HYPERLINK|N|COUNT)\(')
 _SHEET_PREFIX = re.compile(r"'((?:[^']|'')+)'!(?=\$?[A-Z]{1,3}\$?[0-9]+)")
 _CONDITION_TOKEN = re.compile(r'\s+|AND\(|\$?[A-Z]{1,3}\$?[0-9]+(?![A-Z0-9(])|(?<!")""(?!")|<>|[=,()]')
 _VALIDATION_SOURCE = re.compile(r"'((?:[^']|'')+)'!\$([A-Z]{1,3})\$([0-9]+):\$([A-Z]{1,3})\$([0-9]+)")
 MAX_LENGTH = 8192
-FUNCTIONS = ('IF', 'OR', 'AND', 'SUM', 'ROUND', 'INDEX', 'MATCH', 'IFERROR', 'MIN', 'MAX', 'HYPERLINK')
+FUNCTIONS = ('IF', 'OR', 'AND', 'SUM', 'ROUND', 'INDEX', 'MATCH', 'IFERROR', 'MIN', 'MAX', 'HYPERLINK', 'N', 'COUNT')
 
 
 class Refused(ValueError):

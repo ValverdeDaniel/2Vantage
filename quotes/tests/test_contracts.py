@@ -69,6 +69,7 @@ def samples(world):
         'api/plans/<int:plan_id>/priced/': {'plan_id': world['alternate'].id},  # slice 35: ✎ re-price (F82)
         'api/deals/<int:pk>/plans/as-quoted/': deal,  # slice 21: the printed tables (F42, E42)
         'api/plans/<int:plan_id>/sbc/': {'plan_id': world['current'].id},  # slice 22: Attach SBC… (D38)
+        'api/deals/<int:pk>/plans/stop-loss/': {**deal, 'query': {'without': f"{world['current'].id}:1"}},  # s36
     }
 
 
@@ -136,6 +137,7 @@ def matrix(world):
         ('GET', 'api/deals/<int:pk>/plans/as-quoted/', ok()),  # slice 21: the printed tables (F42, E42)
         # slice 22: Attach SBC… reads nothing without a key (D26): refused before anything is stored
         ('POST', 'api/plans/<int:plan_id>/sbc/', ok(409)),
+        ('GET', 'api/deals/<int:pk>/plans/stop-loss/', ok()),  # slice 36: the stop-loss analysis (F98–F107)
     ]
 
 

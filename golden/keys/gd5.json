@@ -1,0 +1,76 @@
+{
+ "deal": "GD5",
+ "client": "Golden Stop-Loss (synthetic)",
+ "checked_by": null,
+ "checked_on": null,
+ "method": null,
+ "note": "Worked out by hand in slice 36 (48 enrolled employees from LF-C's typed counts × 12 months = 576 employee-months), independently of the app; not yet signed. Stephanie signs it, and a figure changes only with her agreement (plan.md §12.6). Annual stop-loss figures are exact; the board shows them rounded half up to whole dollars.",
+ "plans": {
+  "LF-C": {"monthly": 43860, "annual": 526320, "change": null},
+  "LF-R": {"monthly": 46492, "annual": 557904, "change": {"delta": 31584, "pct": 6.0}},
+  "LF-A": {"monthly": 42544, "annual": 510528, "change": {"delta": -15792, "pct": -3.0}},
+  "SL-C": {"monthly": 4670, "annual": 56040, "change": null},
+  "SL-R": {"monthly": 5472, "annual": 65664, "change": {"delta": 9624, "pct": 17.2}},
+  "SL-A": {"monthly": 3950, "annual": 47400, "change": {"delta": -8640, "pct": -15.4}},
+  "SL-B": {"monthly": 5496, "annual": 65952, "change": {"delta": 9912, "pct": 17.7}},
+  "SL-D": {"monthly": 4723, "annual": 56676, "change": {"delta": 636, "pct": 1.1}}
+ },
+ "lf_split": {
+  "LF-C": {"claim_funding": 30702, "fixed_costs": 13158, "monthly_total": 43860, "pct_to_claims": 70.0},
+  "LF-A": {"claim_funding": 30206.38, "fixed_costs": 12337.82, "monthly_total": 42544.2, "pct_to_claims": 71.0},
+  "LF-R": null
+ },
+ "stop_loss": {
+  "basis": {"lives": 48, "months": 12, "source": "medical", "words": "From medical enrollment"},
+  "plans": {
+   "SL-C": {
+    "premium_pepm": "97.30", "annual_premium": "56044.80", "annual_admin": "21888", "annual_attachment": "612000",
+    "annual_expected_claims": "489600", "laser_liability": "115000", "laser_count": 2,
+    "projected_cost": "567532.80", "max_annual_liability": "804932.80", "vs": null
+   },
+   "SL-R": {
+    "premium_pepm": "114.00", "annual_premium": "65664", "annual_admin": "21888", "annual_attachment": "651600",
+    "annual_expected_claims": "521280", "laser_liability": "165000", "laser_count": 3,
+    "projected_cost": "608832", "max_annual_liability": "904152",
+    "vs": {"max_annual_liability": "99219.20", "annual_premium": "9619.20", "laser_liability": "50000"}
+   },
+   "SL-A": {
+    "premium_pepm": "82.30", "annual_premium": "47404.80", "annual_admin": "19584", "annual_attachment": "633600",
+    "annual_expected_claims": "506880", "laser_liability": "215000", "laser_count": 2,
+    "projected_cost": "573868.80", "max_annual_liability": "915588.80",
+    "vs": {"max_annual_liability": "110656", "annual_premium": "-8640", "laser_liability": "100000"}
+   },
+   "SL-B": {
+    "premium_pepm": "114.50", "annual_premium": "65952", "annual_admin": "21024", "annual_attachment": "650000",
+    "annual_expected_claims": "495360", "laser_liability": "0", "laser_count": 0,
+    "projected_cost": "582336", "max_annual_liability": "736976",
+    "vs": {"max_annual_liability": "-67956.80", "annual_premium": "9907.20", "laser_liability": "-115000"}
+   },
+   "SL-D": {
+    "premium_pepm": "98.40", "annual_premium": "56678.40", "annual_admin": "20160", "annual_attachment": null,
+    "annual_expected_claims": null, "laser_liability": "80000", "laser_count": 1,
+    "projected_cost": null, "max_annual_liability": null,
+    "vs": {"max_annual_liability": null, "annual_premium": "633.60", "laser_liability": "-35000"}
+   }
+  },
+  "ranks": {
+   "max_annual_liability": ["SL-B", "SL-R", "SL-A", "SL-D"],
+   "annual_premium": ["SL-A", "SL-D", "SL-R", "SL-B"],
+   "projected_cost": ["SL-A", "SL-B", "SL-R", "SL-D"],
+   "laser_liability": ["SL-B", "SL-D", "SL-R", "SL-A"],
+   "spec_deductible": ["SL-A", "SL-R", "SL-B", "SL-D"]
+  },
+  "punchline": "SL-A",
+  "what_if": {
+   "without": {"SL-A": [1]},
+   "SL-A": {"laser_liability": "80000", "laser_count": 1, "max_annual_liability": "780588.80", "vs_max_annual_liability": "-24344"},
+   "max_annual_liability": ["SL-B", "SL-A", "SL-R", "SL-D"]
+  },
+  "workbook": {
+   "laser_rows": 6,
+   "shared_rows": {"SL-C": {"1": 125000, "2": 90000}, "SL-R": {"1": 150000, "2": 90000, "3": 75000}, "SL-A": {"1": 175000, "2": 120000}, "SL-B": {}, "SL-D": {"1": 140000}},
+   "fie_enrolled": {"EE": 30, "ES": 6, "EC": 5, "FAM": 7},
+   "binding_without_disclosure": "SIIA disclosure not started"
+  }
+ }
+}

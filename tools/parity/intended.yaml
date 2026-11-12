@@ -647,3 +647,124 @@ intended:
     why: "J149: both files break every five slots (2 + 10n); the old breaks read differently only because the prefill moved the starred plans one slot (J149 with J55 and F119), which the lane's column alignment follows."
     signed_by: null
     signed_on: null
+
+  # ---- GD5 (slice 36): the level-funded medical line's Funding rows, and the stop-loss analysis workbook ------------
+  - item: F144
+    deal: GD5
+    file: workbook
+    where: "Medical!print scale"
+    kind: print
+    old: "70"
+    new: "68"
+    why: "plan.md §4.3: the two Funding rows make GD5's medical tab taller, so its height fit (print_plan.height_fit_scale) is smaller."
+    signed_by: null
+    signed_on: null
+  - item: F144
+    deal: GD5
+    file: "proposal-pdf, paper"
+    where: "page * «Medical — *»"
+    kind: words
+    match: "^None → Other Plan Details Funding( Level-funded)+$"
+    old: "no Funding row"
+    new: "Other Plan Details · Funding · Level-funded …"
+    why: "plan.md §4.3: funding prints as a design row on medical; the old app keeps it on the coverage line (GD5's values_left_out)."
+    signed_by: null
+    signed_on: null
+  - item: F144
+    deal: GD5
+    file: "proposal-pdf, paper"
+    where: "page * «Medical — *»"
+    kind: "word-offset, word-position"
+    match: "dx up to [+-]0\\.0 pt, dy up to (-0\\.8|\\+18\\.4) pt$"
+    old: "the rows below the design block"
+    new: "the same rows up to 18.4 pt lower, the table's lines 0.8 pt tighter: the Funding band and row, with the table fitted to the page"
+    why: "plan.md §4.3: the Funding band and row are two more table rows; GD5's three-plan medical table is fitted to its page, so they push the rows under them down less than a full 42.8 pt."
+    signed_by: null
+    signed_on: null
+  - item: F144
+    deal: GD5
+    file: deck
+    where: "slide * «Medical*"
+    kind: text
+    match: "^None → Other Plan Details / Funding( / Level-funded)+$"
+    old: "no Funding row"
+    new: "Other Plan Details / Funding / Level-funded …"
+    why: "plan.md §4.3: funding prints as a design row on medical; the old app keeps it on the coverage line."
+    signed_by: null
+    signed_on: null
+  - item: F144
+    deal: GD5
+    file: deck
+    where: "slide * «Medical*"
+    kind: shape-position
+    match: "(TABLE \\(19\\)\\| → h\\+4\\.8 |Enrollment basis.* → y\\+4\\.8 w-)"
+    old: "the medical table and the basis note under it"
+    new: "the table 4.8 pt taller with the Funding band and row (its type stepped down to hold them, J140), the note 4.8 pt lower"
+    why: "plan.md §4.3: the Funding band and row are two more table rows; J140 fits the table by stepping its type down."
+    signed_by: null
+    signed_on: null
+  - item: OQ104
+    deal: GD5
+    file: stop-loss
+    where: "*!B*"
+    kind: value
+    match: "^(Claimant ID → Laser|[^ ]+ → Laser \\d+)$"
+    old: "the laser rows' claimant ids or initials (\"J.D.\", \"R.K.\"), headed \"Claimant ID\""
+    new: "each laser row named by its position (\"Laser 1\", \"Laser 2\"), headed \"Laser\""
+    why: "OQ104's default (plan.md §3.8, §4.3, §9.13): the stop-loss workbook is a client document (OQ43) and lists lasers by position; the claimant ids in sl_lasers never print on a client file."
+    signed_by: null
+    signed_on: null
+  - item: OQ104
+    deal: GD5
+    file: stop-loss
+    where: "Option Comparison!B35"
+    kind: value
+    match: "^Claimant IDs only — no PHI\\..* → Lasers by position only — no claimant ids, no PHI\\."
+    old: "Claimant IDs only — no PHI. Carriers laser different people …"
+    new: "Lasers by position only — no claimant ids, no PHI. Carriers laser different people …"
+    why: "OQ104: the note says what the rows now hold."
+    signed_by: null
+    signed_on: null
+  - item: J153
+    deal: GD5
+    file: stop-loss
+    where: "In-Force Snapshot!F*"
+    kind: formula
+    match: "COUNTIF\\(E[0-9]+:E[0-9]+,\">0\"\\)\\) → .*IF\\(N\\(E[0-9]+\\)>0,1,0\\)"
+    old: "=IF(guard,\"\",COUNTIF(E33:E38,\">0\"))"
+    new: "=IF(guard,\"\",IF(N(E33)>0,1,0)+…+IF(N(E38)>0,1,0))"
+    why: "J153 (plan.md §9.4): a formula of ours holds no string literal, so \">0\" goes; the sum counts the same lasers above spec, the way the old Option Comparison already counted them."
+    signed_by: null
+    signed_on: null
+  - item: J166
+    deal: GD5
+    file: stop-loss
+    where: "Option Comparison!C*"
+    kind: formula
+    match: "^='In-Force Snapshot'!(C[0-9]+) → =IF\\('In-Force Snapshot'!\\1=\"\",\"\",'In-Force Snapshot'!\\1\\)$"
+    old: "='In-Force Snapshot'!C24 (a bare link: an empty snapshot cell reads 0 here)"
+    new: "=IF('In-Force Snapshot'!C24=\"\",\"\",'In-Force Snapshot'!C24)"
+    why: "J166 with plan.md §9.4's stored results: a blank in-force figure stays blank on the CURRENT column instead of reading $0 (which would mint a $0 premium), the fix slice 27 made on the Composite cards."
+    signed_by: null
+    signed_on: null
+  - item: J166
+    deal: GD5
+    file: stop-loss
+    where: all
+    kind: font
+    match: "^name None→'Calibri' → $"
+    old: "a bold or coloured font with no name (openpyxl's Font(bold=True)), which Excel draws in its default, Calibri"
+    new: "the same font with its name, Calibri, written"
+    why: "plan.md §3.1: generated workbooks are written with XlsxWriter through documents/xlsx_safe.py, which names the default font in every format it writes; the look is the same."
+    signed_by: null
+    signed_on: null
+  - item: J166
+    deal: GD5
+    file: stop-loss
+    where: "*!print margins"
+    kind: print
+    old: "[0.75, 0.75, 1.0, 1.0] (openpyxl's default page margins)"
+    new: "[0.7, 0.7, 0.75, 0.75] (XlsxWriter's default page margins)"
+    why: "plan.md §3.1: the workbook is written with XlsxWriter; neither app sets this file's page setup, so each writer's default margins stand."
+    signed_by: null
+    signed_on: null

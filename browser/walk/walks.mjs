@@ -28,6 +28,7 @@ import { sbc22 } from './sbc22.mjs';
 import { quoteDoor20 } from './quoteDoor20.mjs';
 import { quoteFirst13 } from './quoteFirst13.mjs';
 import { scanQuotes19 } from './scanQuotes19.mjs';
+import { stopLoss36 } from './stopLoss36.mjs';
 
 const signIn = async ({ page, step, base, user }) => {
   await step('the sign-in page asks for a username and password', async () => {
@@ -247,6 +248,7 @@ export const WALKS = {
   s38: { ...archive38, run: (ctx) => archive38.run(ctx, { signIn, openDeal }) }, // slice 38's done-when
   s40: { ...market40, run: (ctx) => market40.run(ctx, { signIn, openDeal }) }, // slice 40's done-when
   s42: { ...questionnaire42, run: (ctx) => questionnaire42.run(ctx, { signIn, openDeal }) }, // slice 42's done-when
+  s36: { ...stopLoss36, run: (ctx) => stopLoss36.run(ctx, { signIn, openDeal }) }, // slice 36's done-when (GD5; writes nothing)
   s43: { ...questionnaire43, run: (ctx) => questionnaire43.run(ctx, { signIn, openDeal }) }, // slice 43's done-when
   s44: { ...rfp44, run: (ctx) => rfp44.run(ctx, { signIn, openDeal }) }, // slice 44's done-when (re-seed GD2 after)
   s45: { ...rfp45, run: (ctx) => rfp45.run(ctx, { signIn, openDeal }) }, // slice 45's done-when (GD4; files to $WALK_FILES)

@@ -109,6 +109,12 @@ def gd3(golden):
 
 
 @pytest.fixture(scope='module')
+def gd5(golden):
+    """GD5 as seeded: a level-funded medical line and the Stop-Loss line's contract, renewal and options (slice 36)."""
+    return golden['GD5']
+
+
+@pytest.fixture(scope='module')
 def gd6(golden):
     return golden['GD6']
 

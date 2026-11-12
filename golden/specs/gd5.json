@@ -1,0 +1,205 @@
+{
+  "key": "GD5",
+  "about": "Stop-loss: a level-funded medical line beside a Stop-Loss line with its in-force contract, the renewal and three market options, with TPA terms and lasers; the analysis, its verdict and its five-tab workbook (slice 36). The SIIA disclosure joins with slice 43.",
+  "client": "Golden Stop-Loss (synthetic)",
+  "status": "prospect",
+  "effective_date": "2027-01-01",
+  "lines": ["medical", "stop_loss"],
+  "plans": [
+    {
+      "ref": "LF-C", "line": "medical", "role": "current", "carrier": "Aetna", "name": "Funding Advantage PPO 2500", "links": [],
+      "values": {
+        "funding": "level_funded",
+        "plan_type": "PPO",
+        "deductible_single": "2500",
+        "oop_max_single": "6000",
+        "pcp_copay": "$25",
+        "rate_ee": "600.00",
+        "rate_es": "1260.00",
+        "rate_ec": "1140.00",
+        "rate_fam": "1800.00",
+        "lf_claim_funding": "30702.00",
+        "lf_stop_loss_premium": "8772.00",
+        "lf_admin_fee": "4386.00"
+      },
+      "enrollment": {"EE": 30, "ES": 6, "EC": 5, "FAM": 7}
+    },
+    {
+      "ref": "LF-R", "line": "medical", "role": "renewal", "carrier": "Aetna", "name": "Funding Advantage PPO 2500", "links": ["LF-C"],
+      "values": {
+        "funding": "level_funded",
+        "plan_type": "PPO",
+        "deductible_single": "2500",
+        "oop_max_single": "6000",
+        "pcp_copay": "$25",
+        "rate_ee": "636.00",
+        "rate_es": "1335.60",
+        "rate_ec": "1208.40",
+        "rate_fam": "1908.00"
+      }
+    },
+    {
+      "ref": "LF-A", "line": "medical", "role": "alternate", "carrier": "Cigna", "name": "LocalPlus Level Funded 2500", "links": [],
+      "values": {
+        "funding": "level_funded",
+        "plan_type": "PPO",
+        "deductible_single": "2500",
+        "oop_max_single": "6500",
+        "pcp_copay": "$30",
+        "rate_ee": "582.00",
+        "rate_es": "1222.20",
+        "rate_ec": "1105.80",
+        "rate_fam": "1746.00",
+        "lf_claim_funding": "30206.38",
+        "lf_stop_loss_premium": "8082.40",
+        "lf_admin_fee": "4255.42"
+      }
+    },
+    {
+      "ref": "SL-C", "line": "stop_loss", "role": "current", "carrier": "Symetra", "name": "Stop-Loss 2026", "links": [],
+      "values": {
+        "sl_spec_deductible": "50000",
+        "sl_spec_rate": "85.20",
+        "sl_agg_rate": "12.10",
+        "sl_agg_factor": "850.00",
+        "sl_agg_corridor": "1.25",
+        "sl_contract_basis": "12/15",
+        "sl_run_out_months": "3",
+        "sl_tlo": "Not included",
+        "sl_lasers": "J.D. 125000, R.K. 90000",
+        "sl_collateral": "1500",
+        "tpa_name": "Allied Benefit Systems",
+        "tpa_admin_fee": "38.00",
+        "tpa_rate_guarantee": "2 years"
+      }
+    },
+    {
+      "ref": "SL-R", "line": "stop_loss", "role": "renewal", "carrier": "Symetra", "name": "Stop-Loss 2026", "links": ["SL-C"],
+      "values": {
+        "sl_spec_deductible": "50000",
+        "sl_spec_rate": "98.40",
+        "sl_agg_rate": "13.60",
+        "sl_other_load": "2.00",
+        "sl_agg_factor": "905.00",
+        "sl_agg_corridor": "1.25",
+        "sl_contract_basis": "12/15",
+        "sl_run_out_months": "3",
+        "sl_tlo": "Not included",
+        "sl_lasers": "J.D. 150000, R.K. 90000, M.P. 75000",
+        "sl_collateral": "1500",
+        "tpa_name": "Allied Benefit Systems",
+        "tpa_admin_fee": "38.00",
+        "tpa_rate_guarantee": "1 year"
+      }
+    },
+    {
+      "ref": "SL-A", "line": "stop_loss", "role": "alternate", "carrier": "Sun Life", "name": "Stop-Loss Advantage 40K", "links": [],
+      "values": {
+        "sl_spec_deductible": "40000",
+        "sl_spec_rate": "72.50",
+        "sl_agg_rate": "9.80",
+        "sl_agg_factor": "880.00",
+        "sl_agg_corridor": "1.25",
+        "sl_agg_floor": "600000",
+        "sl_contract_basis": "12/12",
+        "sl_run_in_months": "3",
+        "sl_run_in_limit": "100000",
+        "sl_run_out_months": "0",
+        "sl_tlo": "Included",
+        "sl_lasers": "J.D. 175000, R.K. 120000",
+        "tpa_name": "Allied Benefit Systems",
+        "tpa_admin_fee": "34.00",
+        "tpa_rate_guarantee": "2 years"
+      }
+    },
+    {
+      "ref": "SL-B", "line": "stop_loss", "role": "alternate", "carrier": "HM Insurance Group", "name": "Stop-Loss Select 50K", "links": [],
+      "values": {
+        "sl_spec_deductible": "50000",
+        "sl_spec_rate": "101.75",
+        "sl_agg_rate": "11.25",
+        "sl_other_load": "1.50",
+        "sl_agg_factor": "860.00",
+        "sl_agg_corridor": "1.2",
+        "sl_agg_floor": "650000",
+        "sl_contract_basis": "12/18",
+        "sl_run_out_months": "6",
+        "sl_tlo": "Included",
+        "sl_collateral": "2400",
+        "tpa_name": "HealthSCOPE Benefits",
+        "tpa_admin_fee": "36.50",
+        "tpa_rate_guarantee": "3 years"
+      }
+    },
+    {
+      "ref": "SL-D", "line": "stop_loss", "role": "alternate", "carrier": "Voya", "name": "Stop-Loss Core 60K", "links": [],
+      "values": {
+        "sl_spec_deductible": "60000",
+        "sl_spec_rate": "88.00",
+        "sl_agg_rate": "10.40",
+        "sl_agg_corridor": "1.25",
+        "sl_contract_basis": "12/12",
+        "sl_lasers": "J.D. 140000",
+        "tpa_name": "Allied Benefit Systems",
+        "tpa_admin_fee": "35.00"
+      }
+    }
+  ],
+  "starred": ["LF-A", "SL-B"],
+  "recommended": ["LF-A", "SL-B"],
+  "packages": [
+  ],
+  "reasons": {
+    "medical": "Cigna keeps the level-funded design for 3% less, with 71% of the premium funding claims.",
+    "stop_loss": "HM carries no lasers, so its maximum annual liability is the lowest on the page."
+  },
+  "parity": {
+    "old_app": "891f1b3",
+    "case": {
+      "stage": "intake"
+    },
+    "client_book": null,
+    "values_layer": "edited",
+    "values_left_out": {
+      "funding": "The old app keeps funding on the deal's coverage line, not on a plan."
+    },
+    "links": {},
+    "copies": {},
+    "recommended_by_current": {},
+    "recommended_by_line": {
+      "medical": "LF-A",
+      "stop_loss": "SL-B"
+    },
+    "line_counts": {
+      "medical": "LF-C"
+    },
+    "figures_left_out": {},
+    "intended": [
+      {
+        "item": "OQ13",
+        "what": "Stop-loss plans take the ▲▼ and ◀▶ arrows, slot picks and reset like every line",
+        "why": "OQ13 answered yes; the old app kept stop-loss in the order its quotes were added and refused arrows and picks (F49, J7)"
+      },
+      {
+        "item": "OQ104",
+        "what": "The stop-loss workbook names each laser row by position (Laser 1, Laser 2, …), never by the claimant ids or initials the old sheet printed",
+        "why": "OQ104's default: laser liability prints as amounts; sl_lasers never prints on a client file (§3.8, §4.3, §9.13)"
+      },
+      {
+        "item": "F104",
+        "what": "The stop-loss board's laser detail names each laser by position, and the what-if leaves lasers out by position",
+        "why": "F104: by laser position, never claimant id; rule 10"
+      }
+    ],
+    "left_out": [
+      {
+        "what": "Funding on every plan",
+        "why": "The old app keeps funding on the deal's coverage line (CoverageLine.funding)."
+      },
+      {
+        "what": "The SIIA stop-loss disclosure",
+        "why": "Slice 43 adds it to GD5; until then both apps' Binding Notes read 'SIIA disclosure not started'."
+      }
+    ]
+  }
+}

@@ -1,7 +1,9 @@
 """The closed list of functions the test-only evaluator knows (sheet_eval.py; plan.md §9.4): IF, OR, AND, SUM, ROUND,
-INDEX, MATCH, IFERROR, MIN, MAX and HYPERLINK, as Excel reads them. INDEX returns the cell (a blank one still equals
-""); MATCH(x, range, 0) is exact and case-insensitive (#N/A when absent); SUM, MIN and MAX skip text and blanks in a
-reference; IF and IFERROR evaluate only the branch they need. Each takes the evaluator and its arguments' token spans.
+INDEX, MATCH, IFERROR, MIN, MAX, HYPERLINK, N and COUNT (the stop-loss workbook's, slice 36), as Excel reads them. N is
+a number as itself and anything else as 0; COUNT counts the numbers in its references. INDEX returns the cell (a
+blank one still equals ""); MATCH(x, range, 0) is exact and case-insensitive (#N/A when absent); SUM, MIN and MAX
+skip text and blanks in a reference; IF and IFERROR evaluate only the branch they need. Each takes the evaluator
+and its arguments' token spans.
 """
 
 from .sheet_values import BLANK, Err, Raise, Ref, number, rank, round_excel, truth
@@ -95,6 +97,15 @@ def _hyperlink(ev, spans):
     return shown
 
 
+def _n(ev, spans):
+    found = ev.value(ev.run(spans[0]))
+    if isinstance(found, Err):
+        raise Raise(found)
+    if isinstance(found, bool):
+        return 1.0 if found else 0.0
+    return float(found) if isinstance(found, float | int) else 0.0
+
+
 FUNCTIONS = {
     'IF': if_,
     'OR': lambda ev, spans: _logical(ev, spans, any),
@@ -107,4 +118,6 @@ FUNCTIONS = {
     'MIN': _extreme(min),
     'MAX': _extreme(max),
     'HYPERLINK': _hyperlink,
+    'N': _n,
+    'COUNT': lambda ev, spans: float(sum(1 for span in spans for _ in ev.items(span))),
 }

@@ -16,6 +16,7 @@ COMPARERS = {
     'pdf': lambda old, new, work: pdf.compare(old, new, work),
     'pptx': lambda old, new, work: pptx.compare(old, new),
     'letter': lambda old, new, work: pdf.compare(old, new, work, sheets=True),  # Paper: the PDF's pages on Letter
+    'sl.xlsx': lambda old, new, work: xlsx.compare(old, new),  # the stop-loss analysis workbook (slice 36, J166)
 }
 
 

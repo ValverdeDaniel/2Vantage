@@ -14,7 +14,7 @@ from intake import coverage as intake_coverage
 from intake import form as intake_form
 from proposals import catalog as proposal_catalog
 from questionnaire import forms as questionnaire_forms
-from quotes import board_presets, fields
+from quotes import board_presets, fields, stop_loss_board
 from quotes.math import enrollment as quote_enrollment
 from review import meta as review_meta
 from rfp import meta as rfp_meta
@@ -39,6 +39,7 @@ class MetaView(APIView):
                 'carriers': carriers.meta(),
                 'board': board_presets.meta(),  # the Advisor's columns, sorts, sliders and budget rungs (F31)
                 'enrollment': quote_enrollment.meta(),  # enrollment sources in words, keys by basis (F86, F92)
+                'stop_loss': stop_loss_board.meta(),  # the stop-loss board's rank keys, terms, settings (F102)
                 'commission_types': comp.meta(),  # pct, flat, pepm (§4.6)
                 'commission': commission_vocab.meta(),  # roles, kinds, bases, sources, scopes (H10–H24; slice 48)
                 'contact_roles': contacts.meta(),  # the seven roles, client side or not (§4.6, OQ106; slice 38)

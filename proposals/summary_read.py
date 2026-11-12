@@ -3,8 +3,10 @@
 intent), plus two light reads: the census's 65+ count and who the RFP asked.
 
 Only client-safe facts enter: each plan's words ("Carrier · Name", its client name first; J14), its figures from
-quotes' results and the few design values the summary compares (never `sl_lasers`, notes or sources). The census's
-birth dates are read to count ages and never leave this module (§5.3.7; J66).
+quotes' results and the few design values the summary compares (never `sl_lasers`, notes or sources), and from
+slice 36 a medical plan's level-funded split (`lf_split`, F107) and a stop-loss plan's verdict (`stop_loss`: its
+maximum annual liability and change against the in-force contract), both quotes' math. The census's birth dates are
+read to count ages and never leave this module (§5.3.7; J66).
 """
 
 from census import fields as census_fields
@@ -13,6 +15,8 @@ from census.models import Member
 from deals import lines
 from quotes import math as m
 from quotes.math import enrollment as counts
+from quotes.math import stop_loss as sl
+from quotes.selectors import stop_loss
 
 # The plan values the summary's design blocks compare (summary_blocks.design).
 VALUE_KEYS = (
@@ -50,8 +54,23 @@ def _plan(plan, state, rows):
     }
 
 
+def _verdicts(line, state):
+    """Each plan's level-funded split (medical) and stop-loss verdict (stop-loss), for the summary's two quotes-math
+    blocks (J64; slice 36)."""
+    found = stop_loss.verdicts(state) if line == stop_loss.LINE else {}
+
+    def add(entry):
+        plan = state.data.by_id[entry['id']]
+        entry['lf_split'] = sl.lf_split(plan.values) if line == MEDICAL else None
+        entry['stop_loss'] = found.get(entry['id'])
+        return entry
+
+    return add
+
+
 def line_facts(line, state, laid, intent_state, intent_row):
     """One line as the summary reads it (`summary_blocks.reading`)."""
+    add = _verdicts(line, state)
     data, rows = state.data, laid.rows
     shown = laid.shown
     sold = [p for p in data.plans if p.sold]
@@ -67,10 +86,10 @@ def line_facts(line, state, laid, intent_state, intent_row):
         'composite': data.rate_basis == 'composite',
         'no_people': any(state.results[p.id]['reason'] == 'no_enrollment' for p in shown),
         'people': {'figures': counts.as_plain(found[0]), 'source': found[1]} if found else None,
-        'currents': [_plan(p, state, rows) for p in data.current],
-        'options': [_plan(p, state, rows) for p in shown if p.role != 'current'],
-        'quotes': [_plan(p, state, rows) for p in data.plans if p.role != 'current'],
-        'picks': [_plan(p, state, rows) for p in picks],
+        'currents': [add(_plan(p, state, rows)) for p in data.current],
+        'options': [add(_plan(p, state, rows)) for p in shown if p.role != 'current'],
+        'quotes': [add(_plan(p, state, rows)) for p in data.plans if p.role != 'current'],
+        'picks': [add(_plan(p, state, rows)) for p in picks],
         'current_package': current_package
         and {
             'monthly': current_package['monthly'],

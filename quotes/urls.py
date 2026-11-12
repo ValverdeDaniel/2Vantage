@@ -10,6 +10,7 @@ from . import (
     review_views,
     sbc_views,
     source_views,
+    stop_loss_views,
     template_views,
     views,
 )
@@ -36,6 +37,7 @@ urlpatterns = [
     path('deals/<int:pk>/plans/marks/', review_views.MarksView.as_view()),  # approve, ignore, check, clear (E85)
     path('deals/<int:pk>/plans/priced/', priced_views.PricedView.as_view()),  # priced versions, dry run (F76; s35)
     path('deals/<int:pk>/plans/as-quoted/', layout_views.AsQuotedView.as_view()),  # printed tables (F42, E42; s21)
+    path('deals/<int:pk>/plans/stop-loss/', stop_loss_views.StopLossView.as_view()),  # the analysis (F98–F107; s36)
     path('plans/<int:plan_id>/', views.PlanView.as_view()),
     path('plans/<int:plan_id>/source/', source_views.PlanSourceView.as_view()),  # ↗ open in file (slice 15, E18)
     path('plans/<int:plan_id>/renewal/', views.RenewalView.as_view()),

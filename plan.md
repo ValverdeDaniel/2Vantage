@@ -4106,7 +4106,7 @@ the design; a path with no plan id sits under `deals/{id}/`.
 | `plans/{id}/sbc/` | Attach SBC: a staged read of design values. POST multipart `{file}` (filed on the deal as kind `sbc`, the plan's carrier and role, medical) or `{document_id}` (an SBC already there), `model?` → 201 the `read` job (target `sbc`, `params.plan`), 200 the same read going. 409 without a key, on a plan of another line, on a priced version or copy ("takes its design from the plan it was made from"); 400 no file, a file not the deal's or not an SBC, a bad id; 404 no plan | D38, D47 | built; 22 |
 | `plans/pair/` | Pair two halves into one printed column, or split them | J15, O.6 #4 | 33 |
 | `plans/priced/`, `plans/{id}/priced/` | Priced versions: a dry-run preview, then the commit. POST `deals/{id}/plans/priced/` `{plan_ids, kind: concession\|bundle\|holiday, all?: {op, value}, each?: {rate key: {op, value} \| "keep"}, parts?: [{line, op, value, plan_id? \| carrier?}], conditional?, credit?: {annual} \| {months}, note?, name?, dry_run?}` → 201 (200 for a dry run) `{dry_run, drafts: [{original_id, name, label, derived, starred, changes: {key: value}, premium, change, part_of, credit, enrollment_used, enrollment_source}], plans: [the versions written], warning, activity_id}`; one version per plan named, all on one line, one `created` row. POST `plans/{id}/priced/` (✎) takes the same body on a version and re-prices it from its original (one revertible `updated` row; the same body again writes nothing). `op`: `pct_off`, `pct_up`, `flat_off`, `flat_up`, `set` (a bundle has no `set`). Malformed → 400 with the sentence; refusals → 409 (a sold plan, a concession or bundle on the in-force plan, a bundle on an `included` quote, a rate below zero, a dollar credit across several plans, two lines, a version's kind, an original gone). Remove a version with `plans/delete/` (Undo restores it). The board's words are `/api/meta/` `board.priced` | F76–F84 | built; 35 |
-| `plans/stop-loss/`, `plans/stop-loss/workbook/` | Stop-loss analysis and its five-tab workbook | F98–F107, J166 | 36 |
+| `plans/stop-loss/`, `plans/stop-loss/workbook/` | Stop-loss analysis and its five-tab workbook. GET `plans/stop-loss/?without=<plan>:<laser position>,…` → `{line, basis {lives, months, source, words}, currents, current_id, columns [{id, carrier, name, role, current, starred, figures (rounded once in quotes' math; lasers by position: {n, amount, extra, included}), vs, scored, what_if, terms}], ranks {rank key: [option ids], lowest first, unscored last}, punchline, what_if, refusal}`; `without` is the laser what-if, never stored; a malformed pair is a 400. The workbook is served by proposals (the sheet writer lives there): 409 with the sentence on no stop-loss plan or two in-force contracts; writes nothing | F98–F107, J166 | built; 36 |
 
 There is no merge endpoint: the reader's `combine` and Claude's `merge_plans` call the one merge service (O.6 #32).
 Rank starts at `deals/{id}/ai/rank/` (§7.5); the page split is proposals' `deals/{id}/proposal/pages/` (§7.12).
@@ -4701,7 +4701,12 @@ The view and the line are kept per browser, and `?view=` and `?line=` win (F1, F
 - ⤓ Export, Import from template, ＋ Add SBCs and ＋ Add quotes (F93–F96).
 
 **Stop-loss analysis** (F98–F107, F29; slice 36): the basis with its source, the in-force cards, verdict cards ranked
-lowest first, the option table, the laser what-if (never saved) and the five-tab workbook (§9.13).
+lowest first, the option table, the laser what-if (never saved) and the five-tab workbook (§9.13). Built in slice 36
+(`deal/advisor/stoploss/`, the old StopLossAnalysis.jsx's markup and words): the pill second, only with a stop-loss
+line (F2); one basis for every column, the line's enrolled people (the in-force contract's lives, else the line's
+typed figure, else the medical enrolled employees, else the census) named in words; ranks, deltas and the punchline
+(lowest premium against lowest maximum annual liability, whatever the rank key) from the server; the four controls
+saved as `SavedView(view='stop-loss')` on the old saved bar (F29); lasers by position on screen too (F104).
 
 **Proposal builder** (J17–J68; slices 25, 26 and 34):
 - Collapsible cards with completed marks (J18–J20); the toolbar with the checks list, the three file buttons and
@@ -5284,7 +5289,7 @@ they join the RFP packet in slice 46, which reads `selectors.rfp.rfp_files`, `se
 - A start-up check compares each bundled blank's SHA-256 with its layout, so a reissued form fails loudly (G125); the
   Florida Blue field data is a generated module (G124).
 
-### 9.13 Stop-loss analysis workbook (`quotes/stop_loss_workbook.py`)
+### 9.13 Stop-loss analysis workbook (`proposals/workbook/stop_loss_build.py`)
 
 The old five-tab workbook, Stephanie's analysis generated (J166, F106; slice 36): In-Force Snapshot, Option Comparison,
 Binding Notes, Glossary and FIE Rates, with live formulas whose results come from `quotes/math/stop_loss.py`.
@@ -5294,6 +5299,12 @@ Binding Notes, Glossary and FIE Rates, with live formulas whose results come fro
 - **Lasers (OQ104's default):** laser liability prints as amounts; the laser rows (`sl_lasers`, with
   claimant ids or initials) never print, unlike the old sheet.
 - Written through `xlsx_safe`; checked by the Recalc and Fidelity lanes on GD5 (Q.4).
+- Built in slice 36 in the proposals app, where the sheet model and writer live (quotes cannot import to its right),
+  from quotes' client-safe read (`quotes/selectors/stop_loss_file.py`); served at quotes' path
+  `plans/stop-loss/workbook/`. The old geometry, formulas, words and look; laser rows named "Laser 1", "Laser 2",
+  one claimant per row across options; a number linked from the snapshot reads `=IF(ref="","",ref)`; the grammar
+  gained N and COUNT, and COUNTIF's ">0" became a sum of IF(N(…)>0,1,0). The file keeps the old name
+  (`<client-slug>-stop-loss-analysis.xlsx`) and writes no `downloaded` row (no claimant prints, as J97).
 
 ### 9.14 Advisor board export (`quotes/board_export.py`)
 
@@ -6105,7 +6116,9 @@ and payroll_100 bases before slice 27 (OQ103). Q.4 lists what each key pins.
 - **GD4 Census by plan name** (slice 12): about 150 people with dependents and waivers; elections naming three current
   plans, one alias and an unmatched variant; a copy on Warner's template.
 - **GD5 Stop-loss** (slice 36): level-funded medical with stop-loss and TPA quotes and lasers; the SIIA disclosure from
-  slice 43.
+  slice 43. Built: medical LF-C (typed 30/6/5/7, 48 employees), its renewal and a Cigna level-funded quote; the
+  Stop-Loss line's in-force Symetra contract, its renewal and three options (one unscored), every analysis figure in
+  `golden/keys/gd5.json` (unsigned); the old app's own figures equal it (`old_loader` prints them).
 - **GD6 Get to Market** (slices 38–59): full intake, contacts, coverage with in-force commission, BOR, a 60-person
   census, Florida Blue 51+ signed, the Warner route, and a client link answered and approved. At Milestone 2 its plan is
   sold and booked, and its client becomes a New client with its own client page.
@@ -6635,11 +6648,11 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | OQ39 | Does a carrier hidden on Markets checked also leave Compare and All Plans, labelled on screen? | Open. Default: yes. Built in slice 27: its unpresented quotes leave All Plans and the drop-downs, counted in an All Plans note; the Markets card says so | Open | 27 |
 | OQ40 | Stephanie's Excel review: her marked-up rows and colours, the disclaimer wording, and whether plan notes, telehealth and Rx mail order print (v1.1 §16 #3–#5) | Open. Default: the old formats. Built in slice 27 as the old app printed them: the old rows (telehealth, mail order and the worksite Notes rows print), colours and the old disclaimer paragraphs | Open (Stephanie) | 27 |
 | OQ41 | Firm pages: logo, colour and contact in Django admin; About, figures, calendar and team in an in-app drawer; "Prepared by" from the agent-name rule? | Open. Default: yes. Slice 27's Cover prints the agency's logo, name, phone and email from Django admin, with `deals.rules.agent_name` on the contact line | Open | 27; 29, 34 |
-| OQ104 | Lasers on client files: print laser liability as amounts and list lasers by position, never the claimant ids or initials in `sl_lasers`, which the old stop-loss sheet printed? | Open. Default: yes (§3.8, §4.3, §9.13) | Open | 27; 36 |
+| OQ104 | Lasers on client files: print laser liability as amounts and list lasers by position, never the claimant ids or initials in `sl_lasers`, which the old stop-loss sheet printed? | Open. Default: yes (§3.8, §4.3, §9.13). Built in slice 36 with the default: the workbook and the board name lasers by position; Activity keeps a laser's key only (`deals.activity.key_only_values`) | Open | 27; 36 |
 | **Slice 33: PRO-9** | | | | |
 | OQ42 | Florida Blue 5182 and 5183 under D-219: should the in-network single deductible print "EE $2,500 / PP $5,000" or "$2,500"? | Open. Default: both figures | Open | 33 |
 | **Slice 36: ADV-8** | | | | |
-| OQ43 | Is the stop-loss workbook still the client document for self-funded deals? | Open. Default: kept | Open | 36 |
+| OQ43 | Is the stop-loss workbook still the client document for self-funded deals? | Open. Default: kept. Built in slice 36 with the default (client fields only, §9.13) | Open | 36 |
 | **Slice 37: AI-7** | | | | |
 | OQ44 | Should Rank clear hand-picked stars outside the filter? | Open. Default: no (F.5 #11) | Open | 37 |
 | **Slice 38: FND-3** | | | | |

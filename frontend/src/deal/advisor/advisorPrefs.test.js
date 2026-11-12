@@ -39,7 +39,8 @@ describe('F1 F5 the kept choices', () => {
   });
 
   it('an unavailable view falls back to Quote comparison', () => {
-    expect(chooseView('stop-loss', null)).toBe('quotes');
+    expect(chooseView('stop-loss', null, offeredViews(lines, []))).toBe('quotes'); // no stop-loss line here (F2)
+    expect(chooseView('unleashed', null)).toBe('quotes'); // Unleashed waits (F4)
     expect(chooseView(null, 'quotes')).toBe('quotes');
     expect(chooseView('build', 'quotes')).toBe('build'); // the Proposal builder (slice 25)
     expect(chooseOrientation('cols')).toBe('cols');
@@ -73,5 +74,15 @@ describe('F3 F136 the Export viewer is the last view and keeps its file', () => 
     expect(chooseFileWanted('excel', 'powerpoint')).toBe('excel');
     expect(chooseFileWanted(null, 'powerpoint')).toBe('powerpoint');
     expect(chooseFileWanted(null, undefined)).toBe('');
+  });
+});
+
+describe('F2 the Stop-loss analysis pill shows only with a stop-loss line', () => {
+  it('is offered second, as the old app put it, once the deal has the line, even with no plans yet', () => {
+    const withLine = [...lines, { line: 'stop_loss', current: 0, renewal: 0, alternate: 0 }];
+    expect(offeredViews(lines, [], 'stop_loss').map((view) => view.key)).not.toContain('stop-loss');
+    expect(offeredViews(withLine, [], 'stop_loss').map((view) => view.key).slice(0, 2)).toEqual(['quotes', 'stop-loss']);
+    expect(offeredViews(withLine, [], undefined).map((view) => view.key)).not.toContain('stop-loss'); // meta not yet
+    expect(chooseView('stop-loss', 'quotes', offeredViews(withLine, [], 'stop_loss'))).toBe('stop-loss');
   });
 });

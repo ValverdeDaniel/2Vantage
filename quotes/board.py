@@ -9,8 +9,11 @@ The quotes config (one object; the browser keeps it in the URL and applies a sav
 - `sliders`: {field: number} for the keys of `SLIDERS` (F20); `ee_rate_max`, `copay_max`: numbers or None (F21);
 - `hide`: keys of `HIDES`; `starred_only`, `needs_check`, `to_review`: switches (F22); `carriers`: names (F23);
 - `preset`, `sort` {key, dir}, `layout` ('rows' or 'cols'): the columns, the order and ⇄ Transpose (F31–F34).
-Claude's pick names plans, so it is never part of a config (F25). The stop-loss board's config arrives with its slice
-(F29; slice 36), as a second entry in CLEANERS.
+Claude's pick names plans, so it is never part of a config (F25).
+
+The stop-loss board's config (F29; slice 36; the old cleaner's stop-loss branch), the second entry in CLEANERS:
+`rank_by` (a key of `stop_loss_board.RANK_KEYS`), `annual_mode`, `show_terms` and `hide_unscored` (switches). The
+laser what-if is never part of it (F104).
 """
 
 import copy
@@ -20,7 +23,7 @@ import re
 from deals import lines
 
 from . import board_presets as presets
-from . import fields
+from . import fields, stop_loss_board
 
 MAX_FIND = 120
 MAX_CARRIERS = 30
@@ -226,7 +229,13 @@ QUOTES = {
     'sort': (_sort, {'key': presets.DEFAULT_SORT, 'dir': 1}),
     'layout': (_choice(LAYOUTS, 'The layout'), 'rows'),
 }
-CLEANERS = {'quotes': QUOTES}
+STOP_LOSS = {
+    'rank_by': (_choice(stop_loss_board.RANK_KEY_SET, 'Rank by'), stop_loss_board.SETTINGS['rank_by']),
+    'annual_mode': (lambda value: _switch(value, 'Annual only'), stop_loss_board.SETTINGS['annual_mode']),
+    'show_terms': (lambda value: _switch(value, 'Contract terms'), stop_loss_board.SETTINGS['show_terms']),
+    'hide_unscored': (lambda value: _switch(value, 'Hide unscored'), stop_loss_board.SETTINGS['hide_unscored']),
+}
+CLEANERS = {'quotes': QUOTES, stop_loss_board.VIEW: STOP_LOSS}
 
 
 def defaults(view='quotes'):

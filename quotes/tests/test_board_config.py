@@ -109,7 +109,20 @@ def test_F24_a_patch_cleans_only_the_keys_it_names():
     assert board.clean_config({'find': 'Aetna', 'preset': 'rx'}, partial=True) == {'find': 'Aetna', 'preset': 'rx'}
 
 
-def test_F29_stop_loss_setups_wait_for_their_board():
+def test_F29_stop_loss_settings_take_their_four_controls_and_nothing_else():
+    assert board.clean_config({}, view='stop-loss') == {
+        'rank_by': 'max_annual_liability',
+        'annual_mode': False,
+        'show_terms': True,
+        'hide_unscored': False,
+    }
+    assert board.clean_config({'annual_mode': True}, view='stop-loss', partial=True) == {'annual_mode': True}
     with pytest.raises(board.ConfigError) as refused:
-        board.clean_config({}, view='stop-loss')
+        board.clean_config({'rank_by': 'total', 'show_terms': 'yes', 'without': [1]}, view='stop-loss')
+    assert set(refused.value.errors) == {'rank_by', 'show_terms', 'without'}  # the what-if is never saved (F104)
+
+
+def test_F29_a_view_without_a_board_is_refused():
+    with pytest.raises(board.ConfigError) as refused:
+        board.clean_config({}, view='census-review')
     assert set(refused.value.errors) == {'view'}
