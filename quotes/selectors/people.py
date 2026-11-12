@@ -1,14 +1,16 @@
 """What each line knows of its people beyond its plans (plan.md §5.5, §5.3.6; F88–F91, N.1), read once per request.
 
 `load(deal_id, line_keys)` → {line: `shapes.People`}: the lines' `LineEnrollment` rows (the whole-line figure, the
-switch and `typed_at`) and the census's stored rollup for each line with its last import time, in two queries (the
-census's figures come from `CensusFacts`, never a census query per plan, C23). Medical's people, which worksite
+switch, `typed_at` and `census_seen`) and the census's stored rollup for each line with its last import time, plus how
+many imports the deal has applied (`applied_imports`, what F91 compares `census_seen` with), in at most three queries
+(the census's figures come from `CensusFacts`, never a census query per plan, C23). Medical's people, which worksite
 tier-rated lines borrow (OQ19) and stop-loss counts as lives (F98), are set by `state.deal_state`, which prices medical
 first.
 """
 
 from census import facts as census_facts
 from census import rollup
+from census.models import CensusImport
 from deals import lines
 
 from ..models import LineEnrollment
@@ -23,9 +25,19 @@ def borrows(line_key):
     return bool(entry.get('proxy')) or entry.get('rate_basis') == 'stop_loss'
 
 
+def applied_imports(deal_id, stored=None):
+    """How many census imports the deal has applied: a count that only grows (an applied import is never discarded),
+    so "an import came after the typed counts" never rests on the clock (F91). No query while nothing was imported."""
+    stored = stored or census_facts.stored(deal_id)
+    if stored['last_import_at'] is None:
+        return 0
+    return CensusImport.objects.filter(deal_id=deal_id, status=CensusImport.APPLIED).count()
+
+
 def load(deal_id, line_keys):
     rows = {row.line: row for row in LineEnrollment.objects.filter(deal_id=deal_id, line__in=list(line_keys))}
     stored = census_facts.stored(deal_id)
+    imports = applied_imports(deal_id, stored)
     out = {}
     for key in line_keys:
         row = rows.get(key)
@@ -35,5 +47,7 @@ def load(deal_id, line_keys):
             typed_at=row.typed_at if row else None,
             census=rollup.for_line(stored['rollup'], key),
             imported_at=stored['last_import_at'],
+            imports=imports,
+            census_seen=row.census_seen if row else None,
         )
     return out

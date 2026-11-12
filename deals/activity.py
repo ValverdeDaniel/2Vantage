@@ -109,7 +109,9 @@ def _scope(deal_id, subject):
 
 
 def _merge_into_latest(scope, user, kind, coalesce_key, summary, count, noun, changes, now):
-    latest = Activity.objects.filter(**scope).exclude(action__in=ACCESS).order_by('-updated_at', '-id').first()
+    # The latest row is the last one written (its id), never the latest clock stamp: a clock that steps back (a VM
+    # resyncing its time under load) would otherwise make an older row look newer and split one burst in two.
+    latest = Activity.objects.filter(**scope).exclude(action__in=ACCESS).order_by('-id').first()
     if not (
         latest
         and latest.coalesce_key == coalesce_key

@@ -131,8 +131,10 @@ class Package(models.Model):
 
 class LineEnrollment(models.Model):
     """A line's typed counts beyond its plans' own (plan.md §5.5, §6.7; F88, F91, O.6 #10): the figure typed for the
-    whole line, the one switch for every typed count on the line (`on`), and when the line's typed set was last saved
-    (`typed_at`), which a later census import overrides until someone keeps the typed counts. Written only through
+    whole line, the one switch for every typed count on the line (`on`), when the line's typed set was last saved
+    (`typed_at`, shown on screen) and how many census imports the deal had applied then (`census_seen`): a later import
+    (more applied imports than seen) overrides the typed counts until someone keeps them (F91). The count, not the two
+    clock stamps, decides, so a clock that steps back never reorders a save and an import. Written only through
     `services.enrollment`; the Advisor's counts card and the builder's EnrollmentStrip are its two doors (J48)."""
 
     deal = models.ForeignKey(Deal, on_delete=models.CASCADE, related_name='line_enrollments')
@@ -140,6 +142,7 @@ class LineEnrollment(models.Model):
     enrollment = models.JSONField(default=dict, blank=True)  # {} or the basis's figures: {EE…FAM}, {volume}, {lives}
     on = models.BooleanField(default=True)
     typed_at = models.DateTimeField(null=True, blank=True)
+    census_seen = models.PositiveIntegerField(null=True, blank=True)  # applied census imports when typed; None = never
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

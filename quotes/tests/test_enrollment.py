@@ -86,17 +86,22 @@ def test_F87_a_priced_version_prices_its_originals_people():
     assert got(version, data) == (tiers(12, 3, 2, 1), 'from original plan')
 
 
-def split_line(typed_at, imported_at, **extra):
+# Typed before / after the deal's one census import: the count of applied imports decides (F91), the stamps only show.
+BEFORE = {'typed_at': NOV[2], 'imported_at': NOV[5], 'census_seen': 0, 'imports': 1}
+AFTER = {'typed_at': NOV[6], 'imported_at': NOV[5], 'census_seen': 1, 'imports': 1}
+
+
+def split_line(when, **extra):
     d = plan(1, 'current', {'EE': 12, 'ES': 3, 'EC': 2, 'FAM': 1}, name='HMO 1500')
     f = plan(2, 'current', {'EE': 8, 'ES': 2, 'EC': 1, 'FAM': 1}, name='PPO 2500')
     e = plan(3, replaces=(1,))
     counts = census({'HMO 1500': (10, 3, 2, 2), 'PPO 2500': (9, 2, 2, 1), '': (0, 0, 0, 0)}, (19, 5, 4, 3))
-    data = line([d, f, e], typed_at=typed_at, imported_at=imported_at, census=counts, **extra)
+    data = line([d, f, e], census=counts, **when, **extra)
     return d, f, e, data
 
 
 def test_F91_counts_typed_before_the_latest_import_give_way_to_the_census():
-    d, f, e, data = split_line(NOV[2], NOV[5])
+    d, f, e, data = split_line(BEFORE)
     assert got(d, data) == (tiers(10, 3, 2, 2), 'census')
     assert got(f, data) == (tiers(9, 2, 2, 1), 'census')
     assert got(e, data) == (tiers(10, 3, 2, 2), 'census')  # the census counts of the plan it replaces
@@ -104,31 +109,51 @@ def test_F91_counts_typed_before_the_latest_import_give_way_to_the_census():
 
 
 def test_F91_counts_typed_after_the_import_win():
-    d, f, e, data = split_line(NOV[6], NOV[5])
+    d, f, e, data = split_line(AFTER)
     assert got(d, data) == (tiers(12, 3, 2, 1), 'typed')
     assert got(e, data) == (tiers(12, 3, 2, 1), 'from replaced plan')
     assert not any(m.gave_way(p, data) for p in (d, f, e))
 
 
 def test_F91_typed_counts_stay_where_the_census_cannot_price_the_plan():
-    d, f, e, _ = split_line(NOV[2], NOV[5])
+    d, f, e, _ = split_line(BEFORE)
     counts = census({'HMO 1500': (10, 3, 2, 2), 'Someone else': (9, 2, 2, 1)}, (19, 5, 4, 3))  # a text no plan has
-    data = line([d, f, e], typed_at=NOV[2], imported_at=NOV[5], census=counts)
+    data = line([d, f, e], census=counts, **BEFORE)
     assert got(d, data) == (tiers(12, 3, 2, 1), 'typed')
     assert not m.gave_way(d, data)
 
 
 def test_F91_a_line_figure_typed_before_the_import_gives_way_to_the_line_census():
     quotes = [plan(1), plan(2)]
-    data = line(quotes, figure=FIGURE, typed_at=NOV[2], imported_at=NOV[5], census=census(tiers_=(18, 4, 4, 2)))
+    data = line(quotes, figure=FIGURE, census=census(tiers_=(18, 4, 4, 2)), **BEFORE)
     assert got(quotes[0], data) == (tiers(18, 4, 4, 2), 'census')
     assert m.gave_way(quotes[0], data)
-    later = line(quotes, figure=FIGURE, typed_at=NOV[6], imported_at=NOV[5], census=census(tiers_=(18, 4, 4, 2)))
+    later = line(quotes, figure=FIGURE, census=census(tiers_=(18, 4, 4, 2)), **AFTER)
     assert got(quotes[0], later) == (tiers(20, 5, 3, 2), 'line')
 
 
+@pytest.mark.parametrize(
+    'typed_at, imported_at',
+    [(NOV[5], NOV[5]), (NOV[6], NOV[5]), (NOV[2], NOV[5])],
+    ids=['same instant', 'clock stepped back before the import', 'clock in order'],
+)
+def test_F91_the_count_of_imports_orders_a_save_and_an_import_whatever_the_clock_says(typed_at, imported_at):
+    stamps = {'typed_at': typed_at, 'imported_at': imported_at}
+    d, _f, _e, before = split_line({**stamps, 'census_seen': 1, 'imports': 2})  # an import came after the save
+    assert got(d, before) == (tiers(10, 3, 2, 2), 'census') and m.gave_way(d, before)
+    d, _f, _e, after = split_line({**stamps, 'census_seen': 2, 'imports': 2})  # saved after the latest import
+    assert got(d, after) == (tiers(12, 3, 2, 1), 'typed') and not m.gave_way(d, after)
+
+
+def test_F91_counts_never_saved_since_an_import_are_older_than_it_and_no_import_means_no_census_takeover():
+    d, _f, _e, never = split_line({'imports': 1, 'census_seen': None})
+    assert got(d, never)[1] == 'census'
+    d, _f, _e, none = split_line({'imports': 0, 'census_seen': None})
+    assert got(d, none)[1] == 'typed'
+
+
 def test_F88_the_switch_off_prices_every_plan_from_the_census_and_keeps_the_counts():
-    d, f, e, data = split_line(NOV[6], NOV[5], on=False)
+    d, f, e, data = split_line(AFTER, on=False)
     assert got(d, data) == (tiers(10, 3, 2, 2), 'census')
     assert d.enrollment == {'EE': 12, 'ES': 3, 'EC': 2, 'FAM': 1}
     nothing = line([plan(1)], figure=FIGURE, on=False)

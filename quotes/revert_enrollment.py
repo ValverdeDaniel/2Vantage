@@ -3,7 +3,8 @@
 Runs inside `deals.activity.revert`'s transaction, after the Deal lock. It locks the row's plans by id, then the
 line's LineEnrollment; refuses with a sentence when a plan has been removed or sold since, or when a later write
 changed one of its keys (a move to another line clears a plan's counts); then puts each key's "before" back: a plan's
-counts and census plan names, the line figure, its switch and `typed_at`.
+counts and census plan names, the line figure, its switch, `typed_at` and `census_seen` (so undoing Keep lets the
+census take over again).
 """
 
 from datetime import datetime
@@ -14,7 +15,12 @@ from .models import LineEnrollment, Plan
 from .services.enrollment import AREA
 
 REMOVED = 'A plan this change was made on has been removed, so the change cannot be reverted.'
-WORDS = {'census_names': 'Census plan names', 'on': 'Typed counts switch', 'typed_at': 'When the counts were typed'}
+WORDS = {
+    'census_names': 'Census plan names',
+    'on': 'Typed counts switch',
+    'typed_at': 'When the counts were typed',
+    'census_seen': 'The census imports the counts were typed after',
+}
 
 
 def _label(key):
@@ -49,6 +55,9 @@ def _put_back_line(row, keys):
         elif key == 'typed_at':
             diff[key] = [row.typed_at.isoformat() if row.typed_at else None, before]
             row.typed_at = datetime.fromisoformat(before) if before else None
+        elif key == 'census_seen':
+            diff[key] = [row.census_seen, before]
+            row.census_seen = before
         else:
             tier = key.partition('.')[2]
             diff[key] = [figures.get(tier), before]

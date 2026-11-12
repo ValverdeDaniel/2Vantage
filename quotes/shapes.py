@@ -45,7 +45,8 @@ class People:
     """What a line knows of its people beyond its plans' own typed counts (§5.5; F88, F91): the figure typed for the
     whole line and the line's one switch, when its typed counts were saved, the census's figures for the line
     (`census.rollup.for_line`) and when the census was last imported, and — for the lines that borrow them —
-    medical's people as `(figures, source)` (worksite tier-rated lines, OQ19; stop-loss lives, F98)."""
+    medical's people as `(figures, source)` (worksite tier-rated lines, OQ19; stop-loss lives, F98). `imports` is how
+    many census imports the deal has applied, `census_seen` how many it had when the typed counts were saved."""
 
     on: bool = True
     figure: dict = field(default_factory=dict)
@@ -53,13 +54,19 @@ class People:
     census: dict | None = None
     imported_at: datetime | None = None
     medical: tuple | None = None
+    imports: int = 0
+    census_seen: int | None = None
 
     @property
     def stale(self):
-        """Counts typed before the latest census import give way to the census (F91)."""
-        if self.imported_at is None:
+        """Counts typed before the latest census import give way to the census (F91): an import was applied after
+        they were saved. Decided by counting applied imports, never by comparing `typed_at` with `imported_at`: the
+        two come from the clock, which can step back (a virtual machine resyncing its time), and a save and an import
+        a moment apart could then read in the wrong order. Counts never saved since an import (`census_seen` None)
+        are older than it."""
+        if not self.imports:
             return False
-        return self.typed_at is None or self.typed_at < self.imported_at
+        return self.census_seen is None or self.census_seen < self.imports
 
 
 @dataclass

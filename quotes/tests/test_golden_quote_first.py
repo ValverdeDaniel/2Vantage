@@ -2,9 +2,12 @@
 Q.3 #5, Q.4, Q.9 row 13). `gd3` is checkpoint A as seeded, read only; `quote_first` builds a fresh GD3 for a test that
 moves it through the packet's arrival, the split and the census (the root conftest; app tests never import golden)."""
 
+from datetime import timedelta
+from unittest import mock
+
 import pytest
 
-from deals import activity
+from deals import activity, clock
 from quotes import facts, services
 from quotes.selectors import comparison, line_state
 
@@ -106,6 +109,24 @@ def test_F91_GD3_keep_my_typed_counts_wins_again_and_undo_gives_way_again(quote_
     assert services.set_enrollment(quote_first.user, built.deal, 'medical', keep=True).activity is None  # kept already
     activity.revert(saved.activity.id, quote_first.user)
     check(built, golden_keys['GD3']['checkpoints']['B']['plans'])
+
+
+@pytest.mark.parametrize(
+    'step_back', [timedelta(0), timedelta(seconds=1)], ids=['same clock tick', 'clock steps back 1 s']
+)
+def test_F91_GD3_the_import_takes_over_however_the_clock_orders_the_save_and_the_import(
+    quote_first, golden_keys, step_back
+):
+    """The split and the census import stamped at one instant, or the import a second earlier than the save (the
+    test machines' clock steps back under load): the census still comes after the counts, and Keep still wins."""
+    at = clock.now()
+    with mock.patch.object(clock, 'now', return_value=at):
+        built = quote_first.arrive('D').arrive('F').split().built
+    with mock.patch.object(clock, 'now', return_value=at - step_back):
+        built = quote_first.census().built
+        check(built, golden_keys['GD3']['checkpoints']['B']['plans'])
+        services.set_enrollment(quote_first.user, built.deal, 'medical', keep=True)
+        check(built, golden_keys['GD3']['checkpoints']['B_kept']['plans'])
 
 
 def test_F91_GD3_counts_typed_after_the_import_win(quote_first, golden_keys):

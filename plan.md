@@ -2645,12 +2645,15 @@ or a reason), for every basis. The first step that gives figures wins (O.6 #24):
 Every source is named in words on the screens that show a premium (F86, J83).
 
 **Typed counts against a later census** (F91; OQ18, answered "yes keep the strip"). Counts typed before the latest
-census import give way to the census wherever the census can price the plan (steps 4 and 7): a typed figure whose
-`typed_at` is earlier than the census's last import yields to the census figure for the same plan. The counts card
+census import give way to the census wherever the census can price the plan (steps 4 and 7): a typed figure saved
+when the deal had fewer applied census imports than it has now (`LineEnrollment.census_seen` below the count) yields to
+the census figure for the same plan. The counts card
 says "Priced from the census now · Keep my typed counts"; Keep stamps the typed counts as typed now, so they win
 again. Counts typed after the import win. `typed_at` is the line's (`LineEnrollment`), so one save stamps the line's
-whole typed set, per-plan counts and line figure alike. Pricing compares it with `CensusFacts.last_import_at` on every
-read, so an import re-prices the Advisor with no signal between census and quotes (slice 13). Nothing changes silently: a booked deal shows "Out of date · Update" (H120),
+whole typed set, per-plan counts and line figure alike, and records `census_seen`. Pricing compares that with the
+deal's applied imports on every read, so an import re-prices the Advisor with no signal between census and quotes
+(slice 13). The count decides, never the clock: comparing `typed_at` with `last_import_at` let a clock that stepped
+back put a save and an import in the wrong order (the slice-13 F91 flake); `typed_at` is only shown. Nothing changes silently: a booked deal shows "Out of date · Update" (H120),
 a started questionnaire shows its band notice (G133), and mapping becomes Agenda's lead step (N.2). v1.1's "typed
 enrollment always wins" goes.
 
@@ -3478,7 +3481,8 @@ Totals and the same-people check are computed on read by `package()`, never stor
 
 **LineEnrollment** — one per deal and line (F88; built in slice 13, quotes 0007; `Plan.enrollment_on` went in 0008):
 `enrollment` (`{}` or the basis's figures:
-`{EE, ES, EC, FAM}`, `{volume}` or `{lives}`), `on` (one switch per line) and `typed_at`. Counts typed before the
+`{EE, ES, EC, FAM}`, `{volume}` or `{lives}`), `on` (one switch per line), `typed_at` (shown) and `census_seen` (the
+deal's applied census imports when the counts were saved; quotes 0010). Counts typed before the
 latest census import give way to the census, with "Keep my typed counts" (F91, OQ18). The Advisor's counts card and
 the builder's EnrollmentStrip write it through one service (J48, O.6 #10).
 

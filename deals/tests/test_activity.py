@@ -31,7 +31,7 @@ def notes_reverter(monkeypatch):
 
 def edit_notes(user, deal, text):
     services.update_client(user, deal.client_id, notes=text)
-    return Activity.objects.filter(deal=deal).latest('updated_at', 'id')
+    return Activity.objects.filter(deal=deal).latest('id')  # the last row written, whatever the clock says
 
 
 def notes(deal):
@@ -109,6 +109,22 @@ def test_A34_revert_after_a_later_write_is_refused_naming_the_keys(api, user, de
         'keys': ['notes'],
     }
     assert notes(deal) == 'Second' and Activity.objects.get(pk=row.id).reverted_at is None
+
+
+def test_A34_a_burst_merges_into_the_last_row_written_even_when_the_clock_stepped_back(user, deal):
+    def write(before, after, key='quotes:values', action='updated'):
+        changes = [activity.change('plan:1', {'rate_ee': [before, after]})]
+        return activity.record(deal, user, 'quotes', action, 'Edited', 1, key, 'plan value', changes=changes)
+
+    start = clock.now()
+    with mock.patch.object(clock, 'now', return_value=start):
+        other = write('0', '1', key='', action='created')  # an unkeyed row, stamped at `start`
+    with mock.patch.object(clock, 'now', return_value=start - timedelta(seconds=1)):  # the clock steps back
+        first = write('1', '2')
+    with mock.patch.object(clock, 'now', return_value=start - timedelta(milliseconds=500)):
+        second = write('2', '3')
+    assert second.pk == first.pk != other.pk
+    assert second.changes == [{'t': 'plan:1', 'k': {'rate_ee': ['1', '3']}}]
 
 
 def test_A34_a_burst_never_merges_into_a_reverted_row(user, deal):

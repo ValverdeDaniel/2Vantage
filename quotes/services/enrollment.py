@@ -7,7 +7,9 @@ slice 25) both call `set_enrollment`.
 - `whole_line` is the line figure (`{}` or None clears it); `on` the switch; `census_names` `{plan id: [texts]}` for
   current plans (a text given to one plan leaves the others); `keep` stamps typed counts saved before the latest census
   import as typed now, so they price again (F91).
-- Any change to typed figures stamps `typed_at` now: counts typed after the import win.
+- Any change to typed figures stamps `typed_at` now and `census_seen` with the deal's applied census imports: counts
+  typed after the import win. The count decides, not the clock (`shapes.People.stale`); both writers lock the Deal
+  first, so a save and an import are ordered by the lock.
 Each argument left out leaves its part as it is. Locks the Deal, then the line's plans by id, then its LineEnrollment.
 An unchanged save writes nothing (§3.7): not the counts, not `typed_at`, not Activity. One Activity row, area
 `enrollment`, with before and after per key; `revert.revert_enrollment` puts them back.
@@ -18,13 +20,14 @@ from collections import namedtuple
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
-from census import facts as census_facts
 from deals import activity, clock, lines
 
 from .. import math as m
 from .. import signals
 from ..math import by_plan
 from ..models import LineEnrollment
+from ..selectors import people as known
+from ..shapes import People
 from . import locks
 
 AREA = 'enrollment'
@@ -169,12 +172,15 @@ def set_enrollment(user, deal, line, *, plans=UNSET, whole_line=UNSET, on=UNSET,
     if switched is not None:
         line_diff['on'] = [row.on, on]
     typed = any(p.enrollment for p in rows.values()) or bool(figure if figure is not None else row.enrollment)
-    imported = census_facts.stored(deal.id)['last_import_at']
-    kept = keep and typed and imported is not None and (row.typed_at is None or row.typed_at < imported)
+    imports = known.applied_imports(deal.id)
+    kept = keep and typed and People(imports=imports, census_seen=row.census_seen).stale
     if counts or kept:
         now = clock.now()
         line_diff['typed_at'] = [row.typed_at.isoformat() if row.typed_at else None, now.isoformat()]
         row.typed_at = now
+        if row.census_seen != imports:
+            line_diff['census_seen'] = [row.census_seen, imports]
+            row.census_seen = imports
     if line_diff:
         row.enrollment = figure if figure is not None else row.enrollment
         row.on = on if switched is not None else row.on
