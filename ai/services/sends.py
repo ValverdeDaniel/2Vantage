@@ -26,17 +26,22 @@ NOT_A_READ = 'Only a read can be tried again.'
 STILL_GOING = 'This read is still going: stop it first, or wait for it to finish.'
 
 
-def target_of(kind):
-    """The reader that reads files of `kind` in a send, or None."""
+def target_of(kind, tab=''):
+    """The reader that reads files of `kind` in a send from `tab`, or None. A reader of its own tab only (intake: its
+    kinds are the deal's everyday paperwork) reads only what is sent from that tab (the old pages.target_for_doc_type:
+    "never Intake, which is reached from its tab"; slice 51)."""
     for target in kinds.SEND_ORDER:
         reader = registry.readers.get(target)
+        if target in kinds.OWN_TAB_ONLY and tab != target:
+            continue
         if reader is not None and kind in reader.kinds:
             return target
     return None
 
 
-def start_send(user, deal, document_ids, *, model='', budget_override=False):
-    """([(job, created)] in the order they run, [ids of the files no reader reads])."""
+def start_send(user, deal, document_ids, *, model='', budget_override=False, tab=''):
+    """([(job, created)] in the order they run, [ids of the files no reader reads]). `tab`: the deal tab the drawer
+    was open on."""
     if not client.available():
         raise Refused(client.NoKey.sentence)
     if not document_ids:
@@ -47,7 +52,7 @@ def start_send(user, deal, document_ids, *, model='', budget_override=False):
         raise ValidationError({'document_ids': [NOT_THIS_DEAL]})
     groups, not_read = {}, []
     for doc in sorted(found.values(), key=lambda doc: (doc.uploaded_at, doc.id)):
-        target = target_of(doc.kind)
+        target = target_of(doc.kind, tab)
         if target is None:
             not_read.append(doc.id)
         else:

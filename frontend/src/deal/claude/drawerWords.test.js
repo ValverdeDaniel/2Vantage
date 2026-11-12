@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   fileFacts,
   lastRunLine,
+  readsInto,
   nextModel,
   runningTitle,
   secondsSince,
@@ -61,6 +62,9 @@ describe('the drawer words', () => {
       'Waiting for the job ahead (next)',
     );
     expect(runningTitle({ status: 'running', kind: 'read', documents: [1, 2] })).toBe('Reading 2 files');
+    expect(runningTitle({ status: 'running', kind: 'rank', documents: [] })).toBe(
+      'Ranking plans against the client guidance',
+    ); // slice 37
   });
 
   it('D21 counts whole seconds since the job started', () => {
@@ -76,5 +80,29 @@ describe('the drawer words', () => {
       'Attached 2 files — Claude reads them after the job ahead. 1 of them is only filed.',
     );
     expect(sentToast(1, { jobs: [], not_read: [9] })).toMatch(/^Filed 1 file\./);
+  });
+});
+
+describe('where a reader puts what it reads (slice 51)', () => {
+  const meta = {
+    ai: {
+      targets: [
+        { key: 'quotes', kinds: ['quote'], waits: false },
+        { key: 'census', kinds: ['census'], waits: true },
+        { key: 'intake', kinds: ['other'], waits: true },
+      ],
+    },
+  };
+
+  it('D29 the census and intake readers read into their own tabs and always wait', () => {
+    expect(readsInto(meta, 'census')).toEqual({ target: 'census', into: 'the census', waits: true, members: true });
+    expect(readsInto(meta, 'other')).toEqual({ target: 'intake', into: 'Intake', waits: true, members: false });
+    expect(readsInto(meta, 'quote').into).toBe('the plans');
+  });
+
+  it('D13 a census file says no member pages are left out: its reader reads them', () => {
+    const roster = { page_count: 2, screen: { left_out_pages: [1, 2] } };
+    expect(fileFacts(roster, true)).toBe('2 pages');
+    expect(fileFacts(roster)).toBe('2 pages · 2 left out (member data)');
   });
 });

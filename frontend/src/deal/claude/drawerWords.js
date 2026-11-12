@@ -15,16 +15,28 @@ export function readKinds(meta) {
   return [...new Set((meta?.ai?.targets || []).flatMap((entry) => entry.kinds))];
 }
 
+// Where each reader puts what it reads, in the drawer's words (slice 51: the census and intake readers).
+const INTO = { census: 'the census', intake: 'Intake' };
+
+/** {target, into, waits, members} for files of `kind`: the reader that reads them, where it puts them, whether its
+ *  reads always wait for review (meta's `waits`, the reader's `must_review`) and whether it reads member pages. */
+export function readsInto(meta, kind) {
+  const entry = (meta?.ai?.targets || []).find((target) => target.kinds.includes(kind));
+  const target = entry?.key || '';
+  return { target, into: INTO[target] || 'the plans', waits: Boolean(entry?.waits), members: target === 'census' };
+}
+
 export function kindLabel(meta, key) {
   return meta?.document_kinds?.find((kind) => kind.key === key)?.label || key;
 }
 
-/** "37 pages · 4 left out (member data) · 12 image pages" (D13), from the file's upload screen. */
-export function fileFacts(doc) {
+/** "37 pages · 4 left out (member data) · 12 image pages" (D13), from the file's upload screen. A reader that reads
+ *  member pages by design (the census's, slice 51) leaves none out. */
+export function fileFacts(doc, readsMemberPages = false) {
   const screen = doc.screen || {};
   const bits = [];
   if (doc.page_count) bits.push(`${doc.page_count} page${doc.page_count === 1 ? '' : 's'}`);
-  const left = screen.left_out_pages?.length || 0;
+  const left = readsMemberPages ? 0 : screen.left_out_pages?.length || 0;
   const images = screen.image_pages?.length || 0;
   if (left) bits.push(`${left} left out (member data)`);
   if (images) bits.push(`${images} image page${images === 1 ? '' : 's'}`);
@@ -84,6 +96,7 @@ export function runningTitle(job) {
   if (job.kind === 'locate') return 'Checking the values against the files';
   if (job.kind === 'issue') return 'Building the proposal files'; // Issue to client (slice 32): not Claude's
   if (job.kind === 'turn') return 'Answering your message';
+  if (job.kind === 'rank') return 'Ranking plans against the client guidance'; // ⚖ Rank (slice 37)
   const files = job.documents.length === 1 ? 'the file' : `${job.documents.length} files`;
   return `Reading ${files}`;
 }
@@ -93,6 +106,7 @@ export function stripDoing(job) {
   if (job.kind === 'locate') return `Claude is checking the values against the files · ${job.progress || 0}%`;
   if (job.kind === 'issue') return `Building the proposal files · ${job.progress || 0}%`;
   if (job.kind === 'turn') return job.status === 'queued' ? 'Claude will answer after the job ahead' : 'Claude is answering a message';
+  if (job.kind === 'rank') return `Claude is ranking plans against the client guidance · ${job.progress || 0}%`;
   const where = job.status === 'queued' ? 'waiting to start' : `${job.progress || 0}%`;
   return `Claude is reading ${job.documents.length === 1 ? 'the file' : 'the files'} · ${where}`;
 }

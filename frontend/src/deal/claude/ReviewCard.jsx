@@ -54,6 +54,7 @@ export default function ReviewCard({
   const count = pickedCount(picked, changeSet);
   const busy = discard.isPending || apply.isPending;
   const words = meta.ai || {};
+  const plans = changeSet.target !== "intake"; // an intake read lands answers, never plans (slice 51)
   const notes = [
     changeSet.partial && !changeSet.failed_parts?.length
       ? "Stopped before the end: this is what was read."
@@ -94,8 +95,8 @@ export default function ReviewCard({
             <div className="bb-panel-title">Review this scan</div>
             <div className="bb-panel-sub">
               Nothing has changed yet. Compare the new read against what&apos;s
-              on the deal, then keep whichever you want. Using this scan never
-              deletes a plan.
+              on the deal, then keep whichever you want.
+              {plans ? " Using this scan never deletes a plan." : ""}
             </div>
           </div>
           <div className="bnf-staged-actions">
@@ -113,9 +114,11 @@ export default function ReviewCard({
               disabled={busy || (!proposed && !count)}
               onClick={use}
               title={
-                proposed
-                  ? "Use the read as Claude proposes it: the ticked plans and values. Printed counts and anything unsure stay out until you tick them."
-                  : "Use only what is ticked here."
+                !proposed
+                  ? "Use only what is ticked here."
+                  : plans
+                    ? "Use the read as Claude proposes it: the ticked plans and values. Printed counts and anything unsure stay out until you tick them."
+                    : "Use the read as Claude proposes it: the ticked rows. What a person typed and anything unsure stay out until you tick them."
               }
             >
               {apply.isPending

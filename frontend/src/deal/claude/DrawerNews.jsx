@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router';
 import { useRetryRead } from '../../api/ai';
 import { errorText } from '../../lib/errors';
 import { useToast } from '../../ui/useToast';
+import CensusReadCard from './CensusReadCard';
 import { claudeDoor } from './door';
 import LandedStrip from './LandedStrip';
 import OverBudget from './OverBudget';
@@ -89,6 +90,8 @@ export default function DrawerNews({ dealId, state, meta, onDocuments, dismissed
         waiting.map((row) =>
           row.kind === 'recheck' ? (
             <RecheckCard key={row.job_id} dealId={dealId} jobId={row.job_id} nameOf={nameOf} onOpen={open} />
+          ) : row.target === 'census' ? (
+            <CensusReadCard key={row.job_id} dealId={dealId} jobId={row.job_id} nameOf={nameOf} />
           ) : (
             <ReviewCard
               key={row.job_id}

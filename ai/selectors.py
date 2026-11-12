@@ -20,7 +20,7 @@ from deals.selectors import person
 
 from . import budget, client, kinds, pricing, ranges, read_files, registry
 from .models import DealAi, Job
-from .services.jobs import WAITING
+from .services.jobs import PHI_OFF, WAITING
 from .services.landing import waiting as is_waiting
 
 RECENT = timedelta(minutes=15)
@@ -28,6 +28,7 @@ RECENT_KEPT = 10
 WAITING_KEPT = 10
 STEPS_SHOWN = 8  # the running card's last steps (D22)
 RECHECK_SUGGEST = 20  # past this many open warnings, Claude's re-check is offered on the strip (E80; the old app's)
+NEWS_KINDS = (kinds.READ, kinds.RECHECK, kinds.RANK)  # landed lately, with ↶ Undo this run (Rank: slice 37, D36)
 
 
 def _last_step(job):
@@ -99,6 +100,7 @@ def landed_payload(job):
         'auto': bool(landed.get('auto')),  # it landed by itself (D71)
         'model': job.model,
         'plan_ids': landed.get('plan_ids') or [],
+        'undo': landed.get('undo', True),  # False: a census import, undone by importing again (slice 51)
     }
 
 
@@ -133,7 +135,7 @@ def deal_state(deal, user):
         .order_by('-finished_at', '-id')[:WAITING_KEPT]
     )
     landed = (
-        Job.objects.filter(deal=deal, kind__in=(kinds.READ, kinds.RECHECK), resolution='applied', updated_at__gte=since)
+        Job.objects.filter(deal=deal, kind__in=NEWS_KINDS, resolution='applied', updated_at__gte=since)
         .exclude(activity__isnull=True)
         .order_by('-updated_at', '-id')[:WAITING_KEPT]
     )
@@ -169,13 +171,20 @@ def meta():
     """`/api/meta/`'s `ai` section, served only when Claude is set up (D.6): the readers and the file kinds each reads,
     the reading models (Opus 5.5 for admins and direct people, D91) in "Try again" order, and the caps."""
     return {
-        'targets': [{'key': key, 'kinds': list(reader.kinds)} for key, reader in registry.readers.items()],
+        # `waits`: its reads always wait for review (the reader's must_review: SBC, census, intake; slice 51)
+        'targets': [
+            {'key': key, 'kinds': list(reader.kinds), 'waits': bool(reader.must_review)}
+            for key, reader in registry.readers.items()
+        ],
         # each deal tab's readers, registered ones only (D5), and the order one send's reads run in (D17)
         'tabs': {
             tab: [target for target in targets if target in registry.readers]
             for tab, targets in kinds.TAB_TARGETS.items()
         },
         'send_order': [target for target in kinds.SEND_ORDER if target in registry.readers],
+        # the member-data readers wait for the PHI-gate switch; the tabs' doors say so while it is off (slice 51)
+        'phi_readers': bool(settings.AI_PHI_READERS),
+        'phi_off': '' if settings.AI_PHI_READERS else PHI_OFF,
         'default_model': settings.AI_MODEL if settings.AI_MODEL in pricing.READ_MODELS else pricing.SONNET,
         'models': [
             {'key': key, 'label': pricing.LABELS[key], 'admins_only': key == pricing.OPUS}

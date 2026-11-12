@@ -76,7 +76,13 @@ class CensusImport(models.Model):
     created_by = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
     created_at = models.DateTimeField(auto_now_add=True)
     applied_at = models.DateTimeField(null=True, blank=True)
-    # `job` (the read that proposed it, an ai.Job) arrives with Claude's census reader, slice 51.
+    # The Claude read that proposed it (slice 51; D110, C11): a PDF roster Claude read, or a spreadsheet whose columns
+    # the mapping assist proposed. Its job's change set only points here (D29).
+    job = models.ForeignKey('ai.Job', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    # The people a PDF roster read found, waiting for review: {keys, people [{kind, parent, doc, values, pages, low}],
+    # duplicates, guessed} (census.reader.staged). Member data, like a Member row's; emptied once the import is applied
+    # or discarded (D74, B13). {} for a spreadsheet, whose people are read from the file each time.
+    read = models.JSONField(default=dict, blank=True)
 
     class Meta:
         ordering = ['-created_at', '-id']

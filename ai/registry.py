@@ -101,7 +101,14 @@ class Reader:
     - `apply(user, deal, job, select=None, picks=None) -> landed`: lands the chosen parts of `job.result` through the
       owner's services in one transaction, returning what it wrote ({activity_id, activity_ids, plan_ids, areas,
       summary, skipped, …}); `undo(user, deal, job, force=False) -> {reverted, kept, skipped, at, by}` reverts that
-      landing, raising `deals.activity.Refused` when something changed since (slice 19). `discard`: slice 51's census.
+      landing, raising `deals.activity.Refused` when something changed since (slice 19).
+    - `discard(user, deal, job)`: what Discard also sets aside on the owner's side, in Discard's transaction (the
+      census import a census read staged; slice 51).
+    - `local(job, progress, files) -> (files left for Claude, what it did)`: files the owner reads in code before Claude
+      reads the rest; what it did reaches `build_changes` as `extra['local']` (a census spreadsheet goes through the
+      importer and the mapping assist, which sends column shapes only, D109; slice 51).
+    - `empties`: once used, the change set keeps its summary and what landed, never its items (D74, B13: the census
+      and intake readers, whose items name people or the client's own answers).
     - `corpus()` and `score(key, merged)`: the Eval lane's cases and scorer."""
 
     target: str
@@ -121,6 +128,8 @@ class Reader:
     corpus: object = None
     score: object = None
     labels: dict = field(default_factory=dict)  # {document kind: label} for refusals in words
+    local: object = None
+    empties: bool = False
 
 
 def register_reader(reader):

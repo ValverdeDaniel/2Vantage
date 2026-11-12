@@ -2,7 +2,8 @@
 
 `write` lands `census.matching.match`'s answer on the locked people: matched people take the file's values through
 `deals.values.apply` (origin `import`, the document and the sheet cell; `low` when the column was mapped with low
-confidence) and their place in the file; a removed person who comes back is restored; new people are created,
+confidence; a roster Claude read: origin `ai`, the file and page, `low` where Claude was unsure) and their place in
+the file; a removed person who comes back is restored; new people are created,
 employees before their dependents; people the file no longer lists are removed softly unless someone worked on them,
 who are kept after the file's people. A person nothing changed for is not written at all. Returns the Activity
 entries (keys only) and the counts.
@@ -19,6 +20,7 @@ from ..models import Member
 from .rows import target
 
 LOW = 'mapping'  # `low` on a value whose column was mapped with low confidence (§5.3.2 step 4)
+UNSURE = 'Claude was not sure of this value.'  # `low` on a value a census read doubted (slice 51)
 SAVED = ['values', 'sources', 'position', 'kind', 'employee', 'removed_at', 'updated_at']
 
 Written = namedtuple('Written', 'changes stats')
@@ -57,6 +59,14 @@ def write(user, deal_id, document_id, people, found, members):
     placed, keys, before = {}, {}, {}
 
     def sources_for(person):
+        if 'pages' in person:  # a roster Claude read (census.reader.staged, slice 51): its file and page, its doubt
+            return lambda key: source(
+                'ai',
+                user,
+                doc=person.get('doc') or document_id,
+                page=person['pages'].get(key),
+                low=UNSURE if key in person['low'] else None,
+            )
         return lambda key: source(
             'import',
             user,

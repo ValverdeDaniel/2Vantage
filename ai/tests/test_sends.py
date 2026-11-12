@@ -68,13 +68,19 @@ def files(user, deal, fake_claude):
 def test_D17_one_send_reads_each_reader_once_census_then_intake_then_the_plans(user, deal, readers, files, settings):
     settings.AI_JOBS_INLINE = False
     ids = [files[kind].id for kind in ('quote', 'invoice', 'plan_doc', 'census')]
-    started, not_read = services.start_send(user, deal, ids)
+    started, not_read = services.start_send(user, deal, ids, tab='intake')  # intake reads only from its tab (s51)
     assert [job.target for job, _created in started] == ['census', 'intake', 'quotes']
     assert not_read == [files['invoice'].id]
     assert [job.documents for job, _ in started] == [[files['census'].id], [files['plan_doc'].id], [files['quote'].id]]
     ran = run_jobs()  # the worker takes them oldest first, one at a time on the deal
     assert [job.target for job in ran] == ['census', 'intake', 'quotes']
     assert all(job.status == kinds.DONE for job in Job.objects.filter(deal=deal))
+
+
+def test_D17_a_send_from_another_tab_only_files_what_intake_reads(user, deal, readers, files, settings):
+    settings.AI_JOBS_INLINE = False
+    started, not_read = services.start_send(user, deal, [files['plan_doc'].id, files['census'].id], tab='documents')
+    assert [job.target for job, _created in started] == ['census'] and not_read == [files['plan_doc'].id]
 
 
 def test_D16_a_send_while_a_read_runs_queues_behind_it(user, deal, readers, files, settings):

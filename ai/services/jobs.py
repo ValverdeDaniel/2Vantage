@@ -27,6 +27,11 @@ NO_FILES = 'Choose the files to check.'
 NO_FILES_TO_READ = 'Choose the files to read.'
 NOT_THIS_DEAL = 'Those files are not on this deal.'
 NO_READER = 'Nothing reads files for that yet.'
+# A reader that sees member data waits for the PHI-gate switch (§10.8, §11.4 item 7; slices 47, 51): the door says so.
+PHI_OFF = (
+    'Claude reads census, intake and questionnaire files only once the PHI gate is passed and an admin turns its '
+    'member-data readers on.'
+)
 NOT_READ_HERE = 'Claude reads {kinds} here; {count} of these files {verb} filed as something else.'
 NO_OVERRIDE = 'Only an admin or a direct person can run a read past its cost cap.'
 NO_OPUS = 'Opus 5.5 is kept to admins and direct people.'
@@ -93,6 +98,11 @@ def cancel(user, job_id):
     return job, True
 
 
+def phi_off_or(target, sentence):
+    """Why `target` has no reader: the PHI gate's sentence for a member-data reader left out by the switch."""
+    return PHI_OFF if target in kinds.PHI_TARGETS and not settings.AI_PHI_READERS else sentence
+
+
 def start_read(
     user,
     deal,
@@ -117,7 +127,7 @@ def start_read(
         raise Refused(client.NoKey.sentence)
     reader = registry.readers.get(target)
     if reader is None:
-        raise ValidationError({'target': [NO_READER]})
+        raise ValidationError({'target': [phi_off_or(target, NO_READER)]})
     if not document_ids:
         raise ValidationError({'document_ids': [NO_FILES_TO_READ]})
     ids = list(dict.fromkeys(document_ids))

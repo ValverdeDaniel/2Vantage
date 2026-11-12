@@ -5,7 +5,8 @@
 `origin: ai`), each plan's in an Activity row of its own marked as Claude's (`by_claude`), so ↶ Undo this run puts
 back only what the turn changed; removals through `delete_plans` (F60) and a line's clear through `clear_line`
 (F61), each its own `removed` row whose Revert restores the plans; a merge through the one merge service (F142; slice
-22), its `merged` row. A value lands only while the table still holds what Claude saw (else it is skipped and named); a
+22), its `merged` row; a pair or a split through the pair service (D-219, J161; slice 37), its `plan.pair_of`
+row. A value lands only while the table still holds what Claude saw (else it is skipped and named); a
 plan sold or recommended since is never removed (D86).
 """
 
@@ -15,6 +16,7 @@ from deals.activity import Refused
 
 from ..models import Plan
 from ..services.merge import merge_plans
+from ..services.pairs import pair, split
 from ..services.plans import update_plan
 from ..services.read_apply import AREAS
 from ..services.removal import clear_line, delete_plans
@@ -76,6 +78,17 @@ def _merge(user, deal, item, wrote):
         wrote['said'].append(item['label'][:1].lower() + item['label'][1:])
 
 
+def _pair(user, deal, item, wrote):
+    if item['op'] == 'pair_plans':
+        _changed, row = pair(user, deal, item['plan'], item['with'])
+    else:
+        _changed, row = split(user, deal, item['plan'])
+    if row is not None:
+        wrote['activity_ids'].append(row.id)
+        wrote['plan_ids'] += [item['plan'], item['with']]
+        wrote['said'].append(item['label'][:1].lower() + item['label'][1:])
+
+
 def apply(user, deal, job, items):
     wrote = {'activity_ids': [], 'plan_ids': [], 'said': [], 'skipped': []}
     for item in items:
@@ -88,6 +101,8 @@ def apply(user, deal, job, items):
                 _clear(user, deal, item, wrote)
             elif item['op'] == 'merge_plans':
                 _merge(user, deal, item, wrote)
+            elif item['op'] in ('pair_plans', 'split_pair'):
+                _pair(user, deal, item, wrote)
         except (Refused, ValidationError) as exc:
             detail = getattr(exc, 'sentence', '') or 'One change could not be made.'
             wrote['skipped'].append(str(detail)[:200])

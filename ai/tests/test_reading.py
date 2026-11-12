@@ -259,5 +259,7 @@ def test_D26_meta_serves_the_ai_section_only_when_claude_is_set_up(api, settings
 
 def test_D26_D91_meta_names_the_readers_and_the_models(api, fake_claude):
     section = api.get('/api/meta/').json()['ai']
-    assert {'key': 'quotes', 'kinds': ['quote', 'renewal', 'stop_loss_quote', 'tpa_proposal']} in section['targets']
+    quotes = {'key': 'quotes', 'kinds': ['quote', 'renewal', 'stop_loss_quote', 'tpa_proposal'], 'waits': False}
+    assert quotes in section['targets']  # `waits`: the reader's reads always wait for review (slice 51)
+    assert {'key': 'census', 'kinds': ['census'], 'waits': True} in section['targets'] and section['phi_readers']
     assert [model['key'] for model in section['models']] == [pricing.SONNET, pricing.OPUS]

@@ -2306,6 +2306,12 @@ approval (§5.8).
    import `applied`, rewrites `CensusFacts` (§5.3.5), and logs `Imported census: <n> people (<d> dependents)`. A
    census file a client uploads becomes a staged import that staff apply (L.6, slice 59); a PDF roster Claude reads
    arrives the same way (`CensusImport.job`, slice 51).
+   **Built in slice 51:** the read's people wait on the import (`CensusImport.read`: the columns read and each person
+   with kind, employee, file, page per value and the values Claude was unsure of), never on the job; the mapping dialog
+   shows them as columns mapped to themselves (no sheet or rows to choose: 400), its dry run and Apply build people
+   from them (`census.reader.staged`), each value `origin: ai` with its file and page and `low` where Claude was unsure,
+   and Apply uses the read too. Applying or discarding empties `read` (D74, B13); a new import sets a waiting read
+   aside with its job.
 
 #### 5.3.3 Is a cell required? — `census/fields.py: is_required(key, member, deal, rules, carrier_required)`
 One function; nothing else decides this. The first step that applies decides:
@@ -3425,7 +3431,9 @@ coverage subcards and the intent card edit these rows through one service (B14, 
 
 ### 6.6 census
 
-C.5, L.6 and O.2. Built in slice 12 (all four models; `CensusImport.job` waits for slice 51). The default manager
+C.5, L.6 and O.2. Built in slice 12 (all four models); slice 51 adds `CensusImport.job` (FK `ai.Job`, null, SET_NULL:
+the Claude read that staged it) and `CensusImport.read` (JSON: a PDF roster read's people while it waits, emptied once
+applied or discarded; `census.0002_import_job`). The default manager
 hides removed people and people a client added who are still pending (`client['*'].status == 'pending'`, L.6);
 `all_objects` serves matching and history. `CensusFacts` holds `employees`, `dependents`, `errors`, `warnings`,
 `required_total`, `required_filled`, `missing` (blanks by column), `pending_answers`, `pending_people`, `rollup` and
@@ -4025,9 +4033,9 @@ lists used re-checks too, and the state adds `flags: {open, suggest}` (the deal'
 | PATCH | `ai/chats/{id}/` | user | Rename |
 | GET | `ai/chats/{id}/messages/` | user | `?before=` pages back |
 | POST | `deals/{id}/ai/messages/` | user | `{chat_id?, text, document_ids?, tab, viewer?, board?, model?, budget_override?}` → `201 {chat_id, message, job, queue_position}` |
-| POST | `deals/{id}/ai/reads/`, `…/recheck/`, `…/locate/`, `…/rank/` | user | The button doors: read files (D39), re-check values (D93), find each value in its file (E59), rank plans (D96) → `201` job |
+| POST | `deals/{id}/ai/reads/`, `…/recheck/`, `…/locate/`, `…/rank/` | user | The button doors: read files (D39), re-check values (D93), find each value in its file (E59), rank plans (D96) → `201` job. `rank/` (slice 37, served by quotes: it reads intake's guidance and the line's plans) takes `{line, plan_ids?, model?}` → `201` the `rank` job (`200` the same rank going); 409 with the sentence without Claude, without guidance ("Add client guidance first…"), on a locked table, for Opus by a producer or with no quoted plan; 400 a bad line or ids |
 | GET | `ai/jobs/{id}/` | user | One job and its change set, with an ETag |
-| POST | `deals/{id}/ai/sends/` | user | `{document_ids, model?, budget_override?}` → `201 {jobs, not_read}`: the files just attached, one read per reader in the send order (D16, D17; built in slice 20) |
+| POST | `deals/{id}/ai/sends/` | user | `{document_ids, model?, budget_override?, tab?}` → `201 {jobs, not_read}`: the files just attached, one read per reader in the send order (D16, D17; built in slice 20); the intake reader reads only what is sent from the Intake tab (`tab: 'intake'`; slice 51) |
 | POST | `ai/jobs/{id}/cancel/`, `…/apply/`, `…/discard/`, `…/undo/`, `…/retry/` | user | `apply/ {select?, picks?}` → `{job, landed}`; `undo/ {force?}` → `{job, undone}`, 409 with `can_force` when something changed since (built in slice 19); `retry/ {model?, force?, budget_override?}` → `201` the new read (built in slice 20) |
 
 Payloads come from `ai/selectors.py`; `useAiState` is the only poller (O.4). Client guidance is written through intake
@@ -4094,7 +4102,7 @@ for the Documents station's census view.
 | GET | `census/members/{id}/source/` | user | `?key=` (a census column) | `{member_id, key, label, value, hint, what, source: {origin, doc, page, cell, line, loc, low, mark, confirmed} \| null}`: one cell's source, for ↗ and the roster beside its file (`census:<member>:<key>`; E18, E43); the value as the roster shows it (SSNs masked), `what` the column's label, never the person (rule 10); `400` for an unknown column, `404` for a removed person. Built in slice 65 |
 | POST | `deals/{id}/census/clear/` | user | `{confirm: true}` | `204` — soft-removes every member |
 | POST | `deals/{id}/census/imports/` | user | `{document_id}` — a file just uploaded, or a client upload already on the deal | `201 import` (proposed mapping, and the pivot recipe when the file has one row per benefit, C13; a file applied before starts from its last choices) · `400 {"detail": "Could not find a header row in this file."}` |
-| GET / PATCH | `census/imports/{id}/` | user | `{"sheet_name": "Census", "header_row": 3, "first_data_row": 7, "mapping": [{"column": 0, "field": "first_name"}]}` | import, with up to 3 sample values per column read from the file for this response only (§5.3.2). Changing the sheet or header row re-proposes the mapping |
+| GET / PATCH | `census/imports/{id}/` | user | `{"sheet_name": "Census", "header_row": 3, "first_data_row": 7, "mapping": [{"column": 0, "field": "first_name"}]}` | import, with up to 3 sample values per column read from the file for this response only (§5.3.2). Changing the sheet or header row re-proposes the mapping. Slice 51: every import row adds `job_id`, `read` (a roster Claude read: no sheet, samples from its people, no column letters; a sheet, header row or first row sent answers 400), `people` and `assisted` (columns the mapping assist proposed; each such mapping entry has `assist: true`) |
 | POST | `census/imports/{id}/apply/` | user | `?dry_run=1` | dry run `{added, changed, removed, kept, cells_changed}` (C17) · real `{stats, summary}` |
 | POST | `census/imports/{id}/discard/` | user | — | `204` |
 | GET | `deals/{id}/census/template/` | user | — | the census template, prefilled from the roster (§9.1, C38) |
@@ -4731,7 +4739,11 @@ Part B (B1–B44; B.6). Slices 11, 39 and 40. Pills Form · Board · Request · 
 Part C (C1–C47; C.5). Slices 12 and 41. Pills Roster · Board · Request · Review.
 - The roster grid on `src/grid/`: paged by employee, line chips, a frozen Person column, cell colours by status or
   mark, Excel keys with a 50-step undo, ＋ Add employee and dependents, marks and asks (C1–C8; slice 41).
-- Banners and the empty roster's doors (C9, C10). Its Work with Claude door waits for the PHI gate (D41).
+- Banners and the empty roster's doors (C9, C10). **Built in slice 51:** "Scan the census with Claude ▸" leads the
+  doors and the drawer opens by itself once on an empty roster (D41, C10; greyed with the PHI-gate sentence while the
+  switch is off, absent without Claude); "A census file is waiting for review." over the roster for a read import
+  (C9); "Not our template? Read it with Claude ▸" in the mapping dialog hands a spreadsheet to the mapping assist
+  (D42, D109); `?import=<id>` opens that import's dialog (the drawer's hand-off, D29).
 - Getting a file in: the import door and the old mapping dialog with its reformat banner, then a dry run listing who
   is added, changed, removed and kept (C12–C17; slice 12).
 - Validation with one severity word, readiness and "Census OK" (C21–C24). The COBRA tick lives in intake (C25;
@@ -4944,7 +4956,13 @@ Part D (D1–D45, D134; D.6). Slices 18–20, 24 and 66. Shown only when a key i
   (D35).
 - **Doors on other tabs:** ＋ Add quotes, ＋ Add SBCs, Attach SBC…, Re-read, Ask Claude to re-check, "Not our template?
   Read it with Claude ▸" and Intake's ✦ (D37–D40, D42, D134); the quote-first door (D43); `?claude=read&docs=…` opens
-  the quote reader on named files (I53). **Built in slice 22:** "＋ Add SBCs" beside "＋ Add quotes" (opens the drawer
+  the quote reader on named files (I53). **Built in slice 51:** Intake's "✦ Work with Claude" in its head (D134, the
+  old words and title); "Not our template? Read it with Claude ▸" in the census mapping dialog (D42: this build reads
+  it as the census's own hand-off, a spreadsheet the usual mapping could not place, to the mapping assist; the plan
+  template's import keeps its dry run); a census read's card ("A census file is waiting for review … Review it on the
+  Census tab ▸", Discard; `deal/claude/CensusReadCard`) and an intake read's body (`IntakeReview`, the old IntakeDiff's
+  Field · New scan · Current table with ticks, then coverage and contacts); the drawer's words follow the reader
+  (into the census or Intake; those reads always wait, meta `ai.targets[].waits`). **Built in slice 22:** "＋ Add SBCs" beside "＋ Add quotes" (opens the drawer
   on SBCs, F95); "Attach SBC…" in a medical plan's ⋯ menu on the Advisor's board (not on a priced version or a copy;
   the file uploads and its read waits, the drawer opening on it, D38); the Re-read panel offers SBCs too, each file
   read by its reader (E76); "✦ Ask Claude to re-check" on the review strips (the Advisor's, the station's strip and
@@ -5596,6 +5614,50 @@ finding, when allowed → landing (§10.5).
   targets for the mapping dialog to show.
 - The census, intake and questionnaire readers register only behind the PHI gate (§10.8). Reading commission
   statements waits with the ledger (H82–H91; OQ6).
+- **Built in slice 51** (C11, C19, D29, D41, D42, D109, D110, D112, D134, B39, B40):
+  - **The PHI-gate switch** (`AI_PHI_READERS`, slice 47): the census and intake readers and intake's chat tool register
+    only while it is on; the read door then answers 400 with `ai.services.jobs.PHI_OFF` ("Claude reads census, intake
+    and questionnaire files only once the PHI gate is passed …"), a send leaves their files filed, and `/api/meta/`'s
+    `ai` says `phi_readers` / `phi_off` so the Census tab's door shows greyed with the reason.
+  - **The census reader** (`census/reader/`, target `census`, kind `census`, always waits): a spreadsheet never goes to
+    Claude (the Reader's new `local` hook): the importer reads it, the offline mapper proposes its columns (starting
+    from a person's own choices when the same file already waits) and the mapping assist (`census/reader/assist.py`)
+    proposes the columns left unmapped or under 0.85 from the headers and each column's counted shapes ("9 digits with
+    dashes or spaces (98 of 100)", "a date", "2 letters", "a word", "text, 2 words", "an amount"); one call, 16k
+    `max_tokens`, recorded in the ledger against the job; it may use only census columns no other column holds, never
+    replaces a confident one, and every proposal is at most 0.80 (Check in the dialog, `assist: true`). PDF pages and
+    pictures are read whole by Claude (the member-data screen never leaves a roster's pages out): every person in
+    printed order, `dependent`, the `employee` a dependent is printed under, and `values [{key, value, page,
+    unsure}]`; `merge.py` keeps a person read twice once (SSN, else name and birth date, same role, same file) and
+    puts each dependent under its printed employee, else the employee above (C19; old `census_people`, except that a
+    dependent with no employee stays a dependent, `dep_orphan`). `changes.py` stages the import (`services.reads`) and
+    the job's change set is only a pointer: one item `{op: census_import, import, read, people, employees,
+    dependents, columns, assisted}` with counts-only findings (D29, D.6). The Census tab reviews it (§8.10); its Apply
+    also uses the read (`ai.services.landing.owner_applied`) and its Discard discards it (`owner_discarded`), and the
+    read's own "Use this scan" / Discard go through the import (`reader_apply`, `reader_discard`). ↶ Undo this run is
+    refused for a census import (key-only rows: import the file wanted again), and its landed strip shows no Undo
+    (`landed.undo: false`). Activity (area census, actor Claude): "Claude read a census file: 6 people (3 dependents)"
+    or "Mapped a census file: 9 of 10 columns, 3 proposed by Claude from the column shapes".
+  - **The intake reader** (`intake/reader/`, target `intake`, kinds `other`, `invoice`, `plan_doc`, `form_5500`;
+    always waits; a send reaches it only from the Intake tab, `ai.kinds.OWN_TAB_ONLY`, the old app's rule): answers,
+    coverage in force and contacts (the old `record_intake`); the first reading of an answer wins and a different
+    later one flags it. Its change set lists `answer` items (cleaned by the form's one cleaner; equal answers not
+    listed, D60; an answer typed, relayed, the client's or approved arrives unticked and says why, D61/B39; one Claude
+    was unsure of arrives unticked), `coverage` items (a line the deal lacks, or an existing line's blanks; carrier
+    and funding left out where current plans own them) and `contact` items (new by email, else name). "Use this
+    scan" (`intake/services/read_apply.py`): contacts through deals' contact service, then the answers (origin `ai`
+    with file, page or cell, `read_value` and `low`; the effective date through its door) and coverage lines in one
+    intake row (action `read`); ↶ Undo this run reverts that row through intake's reverter and removes the contacts it
+    added unless edited since. The change set is emptied once used (the Reader's `empties`, D74).
+  - **Intake in a chat (B39):** `propose_intake_changes` (answers with `dictated`, coverage lines) and the `<intake>`
+    context on the Intake tab (answers, needed blanks, coverage in force, the form's own checks); a dictated value lands
+    as the producer's typed edit, any other as Claude's (`ai`, flagged to check), an answer a person stands behind is
+    never written over unless the producer said it; they land through intake's turn owner as Claude's own row, with
+    ↶ Undo this run. Contacts stay with the reader (a contact's rows keep keys only, so a chat's Undo could not take
+    one back). The tool is sent without `strict` (past the API's grammar limit, slice 37: adding it as a strict tool
+    made the API refuse every turn), so its whole input is checked in code before anything is staged: an unknown
+    field, a part that is not a list of objects, an object's own extra fields, a missing key, an unknown line or
+    funding are refused in a sentence Claude can act on.
 - **Built in slice 18:** `ai/reading.py` (the job), `ai/read_files.py` (files in upload order, `FileIn`, the plan per
   file), `ai/ranges.py` (header-only pages always out, screened pages out only with the switch, a range under a quarter
   of `max_tokens`, halving), `ai/content.py`, `ai/codes.py` (F143's parser, left of quotes), and the quote reader in
@@ -5728,6 +5790,23 @@ finding, when allowed → landing (§10.5).
   removals included — the person asked for them, and sold or recommended plans are refused when proposed (D86) —
   unless the table is locked or the deal lost; everyone else's wait in the chat for "Apply N selected ▸"
   (`land.decide_turn`). §10.1's "a read that removes a plan waits" stays a rule for reads.
+- **Built in slice 37:** ⚖ Rank plans (D6, D36, D96, D97, F111, OQ44) and the tools `pair_plans`, `rank_plans`,
+  `set_table_note` and `set_rows` (J160, J161, D120). quotes registers the `rank` job kind (`quotes/rank/`): the door
+  `deals/{id}/ai/rank/` and Claude's `rank_plans` start one job per line (Rank needs a line, F111) that asks Claude
+  once — intake's guidance block, the quoted plans of the line (only those a filtered board shows) as compact JSON
+  with the Advisor's own monthly totals, and how many fit — for 5–8 picks with a reason each (structured output); its
+  landing, in the job's ending transaction, writes them through the star rule (`quotes.services.rank.rank`: the ★'s
+  auto-link, within `room()`, a pick already starred for the same reason left as it is) as one Claude row with ↶ Undo
+  this run on the strip (D36: the rank's news). A locked table refuses the door and fails a landing. A quote read that
+  lands (by itself or used) queues a rank, on commit, for each line it added quotes to, when the deal has guidance and
+  nobody has starred, sold or recommended on that line (D96's curated lines). `pair_plans` (quotes) stages a pair or a
+  split through the pair service (§5.4); proposals registers `set_table_note` and `set_rows` (`proposals/turn.py`,
+  through `set_config(by_claude=True)`, Claude's own Activity row) and the `<proposal>` context (each line's note and
+  rows; on the Proposal tab the rows a line can print). Each lands like every turn item, with ↶ Undo this run.
+  **The API's grammar limit:** the API compiles every strict tool of a request into one grammar and refuses one too
+  large ("reduce the number of strict tools"); slice 24's seven tools are at that edge (`set_board`'s thirteen optional
+  fields the most of it), so `ai/tools.py` sends only those seven (`STRICT`) with `strict: true` and every later tool
+  without it — each is validated again in code, as D81 asks of every tool.
 
 ### 10.7 The Documents review station
 
@@ -6807,7 +6886,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | **Slice 36: ADV-8** | | | | |
 | OQ43 | Is the stop-loss workbook still the client document for self-funded deals? | Open. Default: kept. Built in slice 36 with the default (client fields only, §9.13) | Open | 36 |
 | **Slice 37: AI-7** | | | | |
-| OQ44 | Should Rank clear hand-picked stars outside the filter? | Open. Default: no (F.5 #11) | Open | 37 |
+| OQ44 | Should Rank clear hand-picked stars outside the filter? | Open. Default: no (F.5 #11). Built in slice 37 with the default: Rank on a filtered board replaces only the stars among the plans the board shows; every star outside the filter stays. Rank on a whole line replaces the line's stars, hand-picked ones too, as the old Rank did (`quotes/rank/rules.py`) | Open | 37 |
 | **Slice 38: FND-3** | | | | |
 | OQ45 | Does anyone act as agent of record without a login? Is the owner always the primary producer? | Open. Default: an "Agent of record" field that falls back to the owner, then the agency producer; saving a split's primary sets the owner | Open | 38; 48 |
 | OQ46 | Does Archive hide the client and its one deal, even a sold one, with links that stay readable but refuse writes? | Open. Default: yes | Open | 38 |

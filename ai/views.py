@@ -204,18 +204,21 @@ class UndoView(APIView):
 
 
 class SendsView(APIView):
-    """POST {document_ids, model?, budget_override?}: files just attached in Work with Claude, read by the reader of
-    their kind (D16, D17) → 201 {jobs: [job, in the order they run], not_read: [ids no reader reads]}, or 200 when
-    every read was already going (or none was started). 409 without a key."""
+    """POST {document_ids, model?, budget_override?, tab?}: files just attached in Work with Claude, read by the reader
+    of their kind (D16, D17) → 201 {jobs: [job, in the order they run], not_read: [ids no reader reads]}, or 200 when
+    every read was already going (or none was started). 409 without a key. `tab`: the deal tab the drawer is open on
+    (intake reads only from Intake's, slice 51)."""
 
     def post(self, request, pk):
         deal = _deal(pk)
+        tab = request.data.get('tab')
         started, not_read = services.start_send(
             request.user,
             deal,
             _ids(request.data.get('document_ids')),
             model=_model(request.data),
             budget_override=request.data.get('budget_override') is True,
+            tab=tab if isinstance(tab, str) else '',
         )
         created = any(made for _job, made in started)
         body = {'jobs': [selectors.job_payload(_job(job.id)) for job, _made in started], 'not_read': not_read}

@@ -12,6 +12,7 @@ import { builder26 } from './builder26.mjs';
 import { commission48 } from './commission48.mjs';
 import { cover34 } from './cover34.mjs';
 import { census41 } from './census41.mjs';
+import { claudeReads51 } from './claudeReads51.mjs';
 import { deck30 } from './deck30.mjs';
 import { documents23 } from './documents23.mjs';
 import { documents65 } from './documents65.mjs';
@@ -245,6 +246,7 @@ export const WALKS = {
   s39: { ...intake39, run: (ctx) => intake39.run(ctx, { signIn, openDeal }) }, // slice 39's done-when
   s23: { ...documents23, run: (ctx) => documents23.run(ctx, { signIn, openDeal }) }, // slice 23's done-when
   s41: { ...census41, run: (ctx) => census41.run(ctx, { signIn, openDeal }) }, // slice 41's done-when
+  s51: { ...claudeReads51, run: (ctx) => claudeReads51.run(ctx, { signIn }) }, // slice 51's done-when (2 real reads)
   s65: { ...documents65, run: (ctx) => documents65.run(ctx, { signIn, openDeal }) }, // slice 65's done-when
   s25: { ...builder25, run: (ctx) => builder25.run(ctx, { signIn, openDeal }) }, // slice 25's done-when
   s26: { ...builder26, run: (ctx) => builder26.run(ctx, { signIn, openDeal }) }, // slice 26's done-when

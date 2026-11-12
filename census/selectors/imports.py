@@ -16,6 +16,7 @@ from ..services import rows
 
 def import_row(imp):
     document = imp.document
+    read = rows.is_read(imp)
     return {
         'id': imp.id,
         'status': imp.status,
@@ -26,6 +27,12 @@ def import_row(imp):
         'stats': imp.stats,
         'needs_attention': pivot.needs_attention(imp.pivot),
         'reformatted': bool((imp.pivot or {}).get('applied')),
+        # Claude's (slice 51): the read that staged it, whether it is a roster Claude read from its pages (no sheet),
+        # how many people it holds, and how many columns the mapping assist proposed from their shapes
+        'job_id': imp.job_id,
+        'read': read,
+        'people': len((imp.read or {}).get('people') or []) if read else None,
+        'assisted': sum(1 for item in imp.mapping if item.get('assist')),
     }
 
 
@@ -33,11 +40,12 @@ def import_payload(imp):
     """The import with its samples (read from the file now), sheets and reformat (§7.7 GET / PATCH)."""
     found = rows.opened(imp)
     table = found.table
+    lettered = not found.recipe.get('applied') and not rows.is_read(imp)  # a read roster has no sheet letters
     mapped = [item['column'] for item in imp.mapping if item['field'] and item['column'] < len(table.headers)]
     mapping = [
         {
             **item,
-            'letter': column_letter(item['column']) if not found.recipe.get('applied') else '',
+            'letter': column_letter(item['column']) if lettered else '',
             'label': fields.label(item['field']) if item['field'] else '',
             'samples': read.samples(table, item['column']) if item['column'] < len(table.headers) else [],
         }

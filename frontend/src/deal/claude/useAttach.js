@@ -24,7 +24,7 @@ function extension(name) {
   return dot >= 0 ? name.slice(dot).toLowerCase() : '';
 }
 
-export default function useAttach({ dealId, ensureDeal, kind, meta, model, onSent }) {
+export default function useAttach({ dealId, ensureDeal, kind, meta, model, onSent, tab = '' }) {
   const toast = useToast();
   const queryClient = useQueryClient();
   const send = useSendFiles();
@@ -38,7 +38,7 @@ export default function useAttach({ dealId, ensureDeal, kind, meta, model, onSen
   async function sendDocs(id, docs) {
     queryClient.invalidateQueries({ queryKey: documentsKey(id) });
     try {
-      const sent = await send.mutateAsync({ dealId: id, documentIds: docs.map((doc) => doc.id), model });
+      const sent = await send.mutateAsync({ dealId: id, documentIds: docs.map((doc) => doc.id), model, tab });
       toast.success(sentToast(docs.length, sent));
       onSent?.(id, sent);
     } catch (error) {

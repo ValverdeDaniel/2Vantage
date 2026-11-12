@@ -1,10 +1,10 @@
 """What a chat turn is told about the plan table and the board (plan.md §10.6; D78, D82, F109, F114; slice 24).
 
 - `<plans>`: every live plan, line by line in the board's order, with its id, role, carrier, name, plan number,
-  marks (starred, recommended, sold) and its monthly total from the Advisor's own priced figures (F114: the old
-  context priced every plan with the medical count), then each value it holds as `key=value`. Capped at 120,000
-  characters (D82); the plans past the cap are counted, and a pick can name only plans listed (F109, at most 150 a
-  line).
+  marks (starred, recommended, sold; slice 37: the plan a second half prints in one column with) and its monthly
+  total from the Advisor's own priced figures (F114: the old context priced every plan with the medical count),
+  then each value it holds as `key=value`. Capped at 120,000 characters (D82); the plans past the cap are counted,
+  and a pick can name only plans listed (F109, at most 150 a line).
 - `<board>`: what the producer's Advisor board shows now (its line, filters, how many plans and which), from what the
   browser sent with the message; a board the server cannot read is left out.
 Data, never instructions: the system prompt says so. Lasers are never sent (§3.8).
@@ -41,6 +41,8 @@ def _head(plan, monthly):
     if plan.role == 'renewal' and plan.renews_id:
         parts.append(f'renews id {plan.renews_id}')
     parts.append(_money(monthly))
+    if plan.pair_of_id:  # D-219: the client files print it in one column with its first half (pair_plans; slice 37)
+        marks.append(f'one column with id {plan.pair_of_id} in client files')
     return '- ' + ' · '.join(parts + marks)
 
 

@@ -18,6 +18,7 @@ from ..models import CensusImport
 from . import rows
 
 NOT_CENSUS = 'Choose a census file on this deal.'
+READ_HAS_NO_SHEET = 'Claude read this census from its pages, so it has no sheet or rows to choose.'
 CHOICES = ('sheet_name', 'header_row', 'first_data_row', 'reformat', 'mapping')
 
 
@@ -100,9 +101,7 @@ def create_import(user, deal_id, document_id):
         imp.header_row, imp.first_data_row = found.header_row, found.first_data_row
         imp.headers, imp.pivot = found.table.headers, found.recipe
         imp.mapping = mapper.propose(found.table.headers)
-    for waiting in CensusImport.objects.select_for_update().filter(deal_id=deal_id, status=CensusImport.PROPOSED):
-        waiting.status = CensusImport.DISCARDED
-        waiting.save(update_fields=['status'])
+    rows.set_aside_waiting(deal_id)
     imp.save()
     mapped = sum(1 for item in imp.mapping if item['field'])
     _record(deal, user, imp, 'proposed', f'Mapped a census file: {mapped} of {len(imp.mapping)} columns')
@@ -149,6 +148,8 @@ def update_import(user, import_id, data):
     rows.proposed(imp)
     before = {key: getattr(imp, key) for key in ('sheet_name', 'header_row', 'first_data_row', 'pivot', 'mapping')}
     errors = {}
+    if any(key in data for key in CHOICES[:4]) and rows.is_read(imp):
+        raise ValidationError({'sheet_name': [READ_HAS_NO_SHEET]})
     if any(key in data for key in CHOICES[:4]):
         _reshaped(imp, data, errors)
     if errors:
@@ -166,13 +167,18 @@ def update_import(user, import_id, data):
 
 
 @transaction.atomic
-def discard_import(user, import_id):
-    """Set a proposed import aside; the roster is untouched."""
+def discard_import(user, import_id, *, resolve_job=True):
+    """Set a proposed import aside; the roster is untouched. An import a Claude read staged takes its read with it
+    (`resolve_job` False when the read's own Discard is the caller, slice 51), and its people go (D74)."""
     imp = CensusImport.objects.get(pk=import_id)
     deal = rows.lock_deal(imp.deal_id)
+    if imp.job_id and resolve_job:
+        from ai.services.landing import owner_discarded
+
+        owner_discarded(imp.job_id)  # the Job before the import (the lock order)
     imp = rows.lock_import(import_id)
     rows.proposed(imp)
-    imp.status = CensusImport.DISCARDED
-    imp.save(update_fields=['status'])
+    imp.status, imp.read = CensusImport.DISCARDED, rows.emptied(imp.read)
+    imp.save(update_fields=['status', 'read'])
     _record(deal, user, imp, 'discarded', 'Discarded a census file before applying it')
     return imp

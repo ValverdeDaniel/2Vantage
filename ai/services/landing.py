@@ -16,6 +16,9 @@
   taken back and the read waits for review with the refusal's sentence.
 - `on_recheck(job, change_set)` is the `recheck` kind's (slice 22): a re-check always waits for a person (D-119);
   `apply` and `undo` then go through the owner's checker (`registry.checkers`) as a read's go through its reader.
+- `owner_applied` / `owner_discarded` (slice 51): a read whose change set only points at a proposal the owner shows on
+  its own screen (a census read's staged `CensusImport`, D29) is used or set aside there; the owner tells the job.
+  Discard here sets the owner's proposal aside through the reader's `discard`.
 Each locks the Deal first, then the job (O.3.7), then the reader locks its owner's rows.
 """
 
@@ -85,11 +88,52 @@ def discard(user, job_id):
             raise Refused(ALREADY_APPLIED)
         if not waiting(job):
             raise Refused(NOT_WAITING)
-        result = job.result or {}
-        job.result = {**{key: result[key] for key in KEPT if key in result}, 'discarded': True}
-        job.resolution = DISCARDED
-        job.save(update_fields=['result', 'resolution', 'updated_at'])
+        owner = _owner(job) if job.kind != kinds.TURN else None
+        if getattr(owner, 'discard', None) is not None:  # the census import a census read staged (slice 51)
+            owner.discard(user, job.deal, job)
+        _set_aside(job)
     return job, True
+
+
+def _set_aside(job):
+    result = job.result or {}
+    job.result = {**{key: result[key] for key in KEPT if key in result}, 'discarded': True}
+    job.resolution = DISCARDED
+    job.save(update_fields=['result', 'resolution', 'updated_at'])
+
+
+def _kept(job, landed):
+    """The change set as a used job keeps it: whole, or, for a reader that empties it (D74), its summary only."""
+    result = job.result or {}
+    reader = registry.readers.get(job.target) if job.kind == kinds.READ else None
+    if reader is not None and reader.empties:
+        result = {key: result[key] for key in KEPT if key in result}
+    return {**result, 'landed': landed}
+
+
+def owner_applied(user, job_id, landed):
+    """The owner used the read's proposal on its own screen (the Census tab's Apply of an import a census read staged;
+    slice 51): the job is used too, as "Use this scan ▸" would leave it. Runs in the owner's transaction, after it
+    locked the Deal; a job already used, undone or discarded stays as it is."""
+    job = Job.objects.select_for_update().get(pk=job_id)
+    if job.resolution.startswith((APPLIED, UNDONE, DISCARDED)):
+        return job
+    landed = {**landed, 'by': getattr(user, 'id', None), 'at': clock.now().isoformat()}
+    job.result = _kept(job, landed)
+    job.resolution = APPLIED
+    job.activity_id = landed.get('activity_id')
+    job.save(update_fields=['result', 'resolution', 'activity', 'updated_at'])
+    return job
+
+
+def owner_discarded(job_id):
+    """The owner set the read's proposal aside on its own screen (the Census tab's "Discard this file"): the job is
+    discarded too. Same transaction and lock order as `owner_applied`."""
+    job = Job.objects.select_for_update().get(pk=job_id)
+    if job.resolution.startswith((APPLIED, UNDONE, DISCARDED)):
+        return job
+    _set_aside(job)
+    return job
 
 
 def apply(user, job_id, select=None, picks=None):
@@ -110,7 +154,7 @@ def apply(user, job_id, select=None, picks=None):
                 raise Refused(NO_LANDING)
             landed = owner.apply(user, job.deal, job, select=select, picks=picks)
         landed = {**landed, 'by': getattr(user, 'id', None), 'at': clock.now().isoformat()}
-        job.result = {**(job.result or {}), 'landed': landed}
+        job.result = _kept(job, landed)
         job.resolution = APPLIED
         job.activity_id = landed.get('activity_id')
         job.save(update_fields=['result', 'resolution', 'activity', 'updated_at'])
@@ -128,7 +172,7 @@ def undo(user, job_id, force=False):
         landed = (job.result or {}).get('landed') or {}
         if not landed.get('activity_ids'):
             raise Refused(NOTHING_WRITTEN)
-        if job.kind == kinds.TURN:
+        if job.kind in (kinds.TURN, kinds.RANK):  # a turn's or a rank's rows, each through its owner (slices 24, 37)
             from .turns import undo_turn
 
             job.result = {**(job.result or {}), 'landed': {**landed, 'undone': undo_turn(user, job, landed)}}

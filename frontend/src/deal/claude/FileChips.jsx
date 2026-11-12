@@ -1,7 +1,7 @@
 import { useUpdateDocument } from '../../api/documents';
 import { errorText } from '../../lib/errors';
 import { useToast } from '../../ui/useToast';
-import { fileFacts, factsTitle, kindLabel, readButton } from './drawerWords';
+import { fileFacts, factsTitle, kindLabel, readButton, readsInto } from './drawerWords';
 
 /*
  * The file chips (plan.md §8.17; D13, D14; the old ScanChat's `bnf-scanchat-doc` pills): on a tab whose files Claude
@@ -32,11 +32,11 @@ export default function FileChips({ dealId, files, kinds, meta, readIds, reading
         {shown.map((file) => {
           const read = readIds.includes(file.id);
           const asksRole = meta.document_kinds.find((kind) => kind.key === file.kind)?.asks_role;
-          const facts = fileFacts(file);
+          const facts = fileFacts(file, readsInto(meta, file.kind).members);
           return (
             <span key={file.id} className={`bnf-scanchat-doc ${read ? 'scanned' : ''}`} data-file-chip={file.id}>
               📄 {file.display_name}
-              <span className="bnf-scanchat-doc-facts" title={factsTitle(file)}>
+              <span className="bnf-scanchat-doc-facts" title={factsTitle(file, readsInto(meta, file.kind).members)}>
                 {' · '}
                 <select
                   className="bnf-scanchat-doc-kind"
@@ -81,7 +81,9 @@ export default function FileChips({ dealId, files, kinds, meta, readIds, reading
           <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => onRead(unread)}>
             {readButton(unread.length)}
           </button>
-          <span className="bnf-scanchat-runhint">Claude reads them into the plans — give it a minute per file.</span>
+          <span className="bnf-scanchat-runhint">
+            Claude reads them into {readsInto(meta, shown[0].kind).into} — give it a minute per file.
+          </span>
         </div>
       )}
     </>

@@ -134,6 +134,25 @@ export function useStartRecheck(dealId) {
   );
 }
 
+/**
+ * ⚖ Rank plans (D6, D96, F111; slice 37): ({line, planIds, model}) → the rank job. `planIds`: only the plans a filtered
+ * board shows (OQ44: stars outside the filter stay). Refused with a sentence without guidance ("Add client guidance
+ * first"), with the table locked, or with no quoted plan; its stars land when it finishes, with ↶ Undo this run.
+ */
+export function useStartRank(dealId) {
+  return useJobWrite(
+    dealId,
+    async ({ line, planIds, model }) =>
+      (
+        await api.post(`deals/${dealId}/ai/rank/`, {
+          line,
+          ...(planIds ? { plan_ids: planIds } : {}),
+          ...(model ? { model } : {}),
+        })
+      ).data,
+  );
+}
+
 export const jobKey = (jobId) => ['ai-job', Number(jobId)];
 
 /** One job with its change set (D28): fetched when a card shows it; it changes only by Discard, apply or Undo. */
@@ -197,19 +216,21 @@ export function useUndoRead(dealId) {
 }
 
 /**
- * Attaching is the request (D16, D17): ({dealId, documentIds, model, budgetOverride}) → {jobs, not_read}. The files
- * just attached are read by the reader of their kind, one read per reader, in the send order; a drop is never refused
- * (the reads queue). Takes the deal id when called: the quote-first door attaches to a deal it made a moment ago.
+ * Attaching is the request (D16, D17): ({dealId, documentIds, model, budgetOverride, tab}) → {jobs, not_read}. The
+ * files just attached are read by the reader of their kind, one read per reader, in the send order; a drop is never
+ * refused (the reads queue). Takes the deal id when called: the quote-first door attaches to a deal it made a moment
+ * ago. `tab`: the deal tab the drawer is on (intake reads only from Intake's, slice 51).
  */
 export function useSendFiles() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ dealId, documentIds, model, budgetOverride }) =>
+    mutationFn: async ({ dealId, documentIds, model, budgetOverride, tab }) =>
       (
         await api.post(`deals/${dealId}/ai/sends/`, {
           document_ids: documentIds,
           ...(model ? { model } : {}),
           ...(budgetOverride ? { budget_override: true } : {}),
+          ...(tab ? { tab } : {}),
         })
       ).data,
     onSuccess: (sent, { dealId }) => {

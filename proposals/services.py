@@ -56,8 +56,10 @@ def _take_off(row, mark_paths):
 
 
 @transaction.atomic
-def set_config(user, deal, changes):
-    """Returns Written({path: new value}, [mark paths cleared], Activity row or None)."""
+def set_config(user, deal, changes, by_claude=False):
+    """Returns Written({path: new value}, [mark paths cleared], Activity row or None). `by_claude`: a chat turn's change
+    (slice 37: `set_table_note`, `set_rows`), recorded as Claude's in a row of its own that never merges with a
+    person's edits, so the turn's ↶ Undo this run puts back only what Claude changed."""
     deal, row = _locked(deal.pk)
     try:
         merged, diff = config.merge(row.config if row else {}, changes)
@@ -72,9 +74,12 @@ def set_config(user, deal, changes):
     row.updated_by = user if getattr(user, 'is_authenticated', False) else None
     row.save(update_fields=['config', 'marks', 'updated_by', 'updated_at'])
     change = activity.change(target(deal.id), {**diff, **cleared})
-    written = activity.record(
-        deal, user, AREA, 'updated', 'Edited', len(diff), f'proposal:{deal.id}', 'proposal setting', changes=[change]
-    )
+    if by_claude:
+        summary = f'Claude edited {len(diff)} proposal setting{"s" if len(diff) != 1 else ""}'
+        written = activity.record(deal, user, AREA, 'updated', summary, changes=[change], actor_kind='claude')
+    else:
+        coalesced = ('Edited', len(diff), f'proposal:{deal.id}', 'proposal setting')
+        written = activity.record(deal, user, AREA, 'updated', *coalesced, changes=[change])
     return Written({path: after for path, (_before, after) in diff.items()}, sorted(cleared), written)
 
 

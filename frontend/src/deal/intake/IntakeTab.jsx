@@ -5,6 +5,7 @@ import { useMeta } from '../../api/meta';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import ReviewBulkBar from '../../valuereview/ReviewBulkBar';
+import { claudeDoor } from '../claude';
 import { isBlank } from '../shared/fieldValue';
 import AuthorizationsCard from './AuthorizationsCard';
 import ChecklistCard from './ChecklistCard';
@@ -29,8 +30,8 @@ import { viewOf } from './views';
  * or Market anyway ▸ (B10, B33, B34), the select bar or the review bar (B10, B11), the banners (B9), the Coverage &
  * marketing intent card (B16–B24, slice 11), the Marketing readiness checklist (B25–B27), then the cards grid: the
  * four question cards (B1–B8; slice 39), Contacts (B13), Current coverage (B14), Lines to quote (B32) and Compliance &
- * authorizations (B29, B31). ✦ Work with Claude's intake door waits for the intake reader (slice 51); ＋ Ask for the
- * request tray (slice 56).
+ * authorizations (B29, B31). ✦ Work with Claude opens the drawer on this tab, where the intake reader reads (D134,
+ * B40; slice 51); ＋ Ask for the request tray (slice 56).
  */
 export default function IntakeTab({ deal }) {
   const meta = useMeta().data;
@@ -85,6 +86,17 @@ export default function IntakeTab({ deal }) {
         <div className="bnf-intake-head-actions">
           <ReadyBadge ready={intake.data.ready} />
           {!picked && <FromClientToggle checked={relay} onChange={setRelay} />}
+          {/* Intake's ✦ (D134; slice 51): Work with Claude on this tab, where the intake reader reads (B40). */}
+          {!picked && meta.ai && (
+            <button
+              type="button"
+              className="btn btn-sm btn-secondary"
+              onClick={() => claudeDoor.open()}
+              title="Read a benefit summary, invoice or renewal into the form, or ask Claude about what is on this page"
+            >
+              ✦ Work with Claude
+            </button>
+          )}
           {!picked && (
             <button
               type="button"

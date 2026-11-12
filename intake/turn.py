@@ -5,7 +5,8 @@
   `client_guidance` answer, at most 4,000 characters, the one cleaner checks it) when the turn ends or the producer
   applies it, recorded as Claude's so ↶ Undo this run puts the guidance back.
 - The context provider tells a turn the client's goals (the Goals card's answers) and the guidance, in <guidance>.
-The drawer's GuidanceBox writes the same answer through `PATCH deals/{id}/intake/` (D6, D98).
+The drawer's GuidanceBox writes the same answer through `PATCH deals/{id}/intake/` (D6, D98). The intake turn's
+answers and coverage lines (`turn_intake`, B39; slice 51) land through this owner too.
 """
 
 from ai import tools
@@ -56,16 +57,26 @@ def update_client_guidance(turn, data):
 
 
 def apply(user, deal, job, items):
-    """Intake's turn owner: the guidance through the form's one writer, as Claude's change."""
-    item = items[-1]
-    answered = update_answers(user, deal.id, {form.GUIDANCE: item['new']}, by_claude=True)
-    if answered.activity is None:
-        return {'activity_ids': [], 'summary': '', 'areas': []}
-    return {
-        'activity_ids': [answered.activity.id],
-        'summary': 'updated the client guidance',
-        'areas': ['intake', 'activity'],
-    }
+    """Intake's turn owner: the guidance through the form's one writer, as Claude's change; answers and coverage lines
+    (`turn_intake`, B39; slice 51) through the intake reader's landing, in Claude's own row."""
+    ids, said, skipped = [], [], []
+    guidance = [item for item in items if item['op'] == 'guidance']
+    if guidance:
+        answered = update_answers(user, deal.id, {form.GUIDANCE: guidance[-1]['new']}, by_claude=True)
+        if answered.activity is not None:
+            ids.append(answered.activity.id)
+            said.append('updated the client guidance')
+    others = [item for item in items if item['op'] in ('answer', 'coverage')]
+    if others:
+        from .services.read_apply import land
+
+        row, parts, skipped = land(user, deal, others, by_claude=True)
+        if row is not None:
+            ids.append(row.id)
+            said.append('set ' + ', '.join(parts))
+    if not ids:
+        return {'activity_ids': [], 'summary': '', 'areas': [], 'skipped': skipped}
+    return {'activity_ids': ids, 'summary': '; '.join(said), 'areas': ['intake', 'activity'], 'skipped': skipped}
 
 
 TOOL = Tool(
@@ -83,8 +94,15 @@ TOOL = Tool(
 
 
 def register():
+    from django.conf import settings
+
     from ai import registry
+
+    from . import turn_intake
 
     registry.register_tool(TOOL)
     registry.register_context('guidance', provide, order=10)
     registry.register_turn_owner('intake', apply, order=10)
+    if settings.AI_PHI_READERS:  # B39 (slice 51): with the intake reader, behind the PHI-gate switch (§10.8)
+        registry.register_tool(turn_intake.TOOL)
+        registry.register_context('intake', turn_intake.provide, order=12)

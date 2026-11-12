@@ -91,7 +91,10 @@ def test_D77_D90_a_turn_answers_in_the_chat_lane_and_its_reply_is_the_next_messa
     assert job.result['items'][0]['label'] == 'Note hello' and job.result['reply_id'] == reply.id
     assert job.cost_usd > 0 and job.usage['calls'] == 2  # every round priced (D90)
     sent = fake_claude.log[-1]['params']
-    assert sent['tool_choice'] == {'type': 'auto'} and all(tool['strict'] for tool in sent['tools'])
+    assert sent['tool_choice'] == {'type': 'auto'}
+    # slice 24's tools are strict; later ones past the API's grammar limit are validated in code (slice 37)
+    assert all(tool['strict'] == (tool['name'] in tools.STRICT) for tool in sent['tools'])
+    assert {tool['name'] for tool in sent['tools'] if tool['strict']} >= {'set_board', 'propose_changes'}
     assert sent['thinking'] == {'type': 'adaptive'} and sent['output_config'] == {'effort': 'low'}
     assert 'temperature' not in sent
 

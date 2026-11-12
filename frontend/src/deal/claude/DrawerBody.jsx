@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import FileChips from './FileChips';
 import FileRoom from './FileRoom';
-import { kindLabel } from './drawerWords';
+import { kindLabel, readsInto } from './drawerWords';
 import ModelBar from './ModelBar';
 
 /*
@@ -20,6 +20,7 @@ export default function DrawerBody({ dealId, meta, state, kind, kinds, files, at
   const [dropping, setDropping] = useState(false);
   const accept = kind ? meta.document_kinds.find((entry) => entry.key === kind)?.accept || [] : [];
   const label = kind ? kindLabel(meta, kind) : '';
+  const into = readsInto(meta, kind); // where the reader puts what it reads, and whether its reads always wait (s51)
   const lands = Boolean(state?.can?.opus);
   const reading = (state?.jobs || []).filter((job) => job.kind === 'read').flatMap((job) => job.documents);
   const drop = {
@@ -62,10 +63,10 @@ export default function DrawerBody({ dealId, meta, state, kind, kinds, files, at
       <div className="bb-panel-title">Work with Claude</div>
       <div className="bb-panel-sub">
         {kind
-          ? `Attach the files, or drop them onto this panel: each is filed as ${label} and Claude reads it into the plans. `
+          ? `Attach the files, or drop them onto this panel: each is filed as ${label} and Claude reads it into ${into.into}. `
           : 'Attach files, or drop them onto this panel, and say what each one is: Claude reads the kinds it reads and files the rest. '}
         {dealId &&
-          (lands
+          (lands && !into.waits
             ? 'Your reads land at once, with ↶ Undo this run.'
             : 'Your reads wait here for your review before anything on the deal changes.')}
       </div>

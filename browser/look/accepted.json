@@ -1075,7 +1075,7 @@
       "check": "pixels",
       "selector": null,
       "item": "B10",
-      "why": "The head's ready badge (\"Blocked — required items open\") and Market anyway ▸ are built (B33, B34; slice 40) and match; Intake's ✦ Work with Claude button (D134) waits for the intake reader (slice 51) and ＋ Ask all N for the request tray (slice 56), so Market anyway ▸ sits on the head's first row, not wrapped to a second.",
+      "why": "The head's ready badge (\"Blocked — required items open\"), Market anyway ▸ (B33, B34; slice 40) and Intake's ✦ Work with Claude (D134; slice 51, the old words and title) are built and match, the head's first row as the old one; ＋ Ask all N, beside Market anyway ▸ on its second row, waits for the request tray (slice 56).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1383,7 +1383,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A25",
-      "why": "The old empty roster opened the ✦ Work with Claude drawer by itself (C10); in 2V the drawer is built (slice 20) but the roster's door and its scan door (D41, hidden on the old side) wait for the PHI gate and the census reader (slice 51).",
+      "why": "Both empty rosters open the ✦ Work with Claude drawer by themselves (C10) and lead the row of doors with \"Scan the census with Claude ▸\" (D41; slice 51, built behind the PHI-gate switch). 2V adds the import door (C12) beside it and keeps the census reader's own words in the drawer's head (the census reads always wait); the old drawer's census chat copy and \"＋ Ask for their census file\" wait for the request tray (slice 56).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

@@ -41,6 +41,19 @@ def _star_off(plan):
     plan.starred, plan.star_reason, plan.starred_by_id, plan.starred_at = False, '', None, None
 
 
+def star_on(plan, user, reason, now, data, field_set):
+    """One fresh star in memory (F50), with its auto-link to the nearest current plan (F51): the star rule that a ★
+    click and Rank (slice 37) both follow."""
+    _star_on(plan, user, reason, now)
+    if plan.role == 'alternate' and not plan.replaces_ids:
+        nearest = closeness.nearest(data.by_id[plan.id], data.current, field_set)
+        if nearest is not None:
+            plan.replaces_ids = [nearest]
+
+
+star_off = _star_off
+
+
 def _star_line(user, deal, line_key, ids, starred, reason, now):
     """The plans of one line whose star changes, written; Refused past the line's room."""
     rows, data = locks.line(deal, line_key)
@@ -64,11 +77,7 @@ def _star_line(user, deal, line_key, ids, starred, reason, now):
     batch = Batch(fresh, STAR_KEYS)
     field_set = lines.BY_KEY[line_key]['field_set']
     for plan in fresh:
-        _star_on(plan, user, reason, now)
-        if plan.role == 'alternate' and not plan.replaces_ids:
-            nearest = closeness.nearest(data.by_id[plan.id], data.current, field_set)
-            if nearest is not None:
-                plan.replaces_ids = [nearest]
+        star_on(plan, user, reason, now, data, field_set)
     return batch.write()
 
 

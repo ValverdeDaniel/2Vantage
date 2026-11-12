@@ -74,6 +74,22 @@ export function landedText(news) {
   return news.auto ? `✓ Claude’s read landed — ${news.summary}` : `✓ Used Claude’s read — ${news.summary}`;
 }
 
+const count = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+/** A census read's card (D29, slice 51): what was read, never who — "“roster.pdf” was read, not applied: 12 people
+ *  (8 employees, 4 dependents). Nothing on the roster has changed …". */
+export function censusReadHead(item, fileName) {
+  const file = fileName ? `“${fileName}”` : 'The file';
+  const what = item.read
+    ? `${count(item.people, 'person', 'people')} (${count(item.employees, 'employee', 'employees')}, ${count(
+        item.dependents,
+        'dependent',
+        'dependents',
+      )})`
+    : `${count(item.columns, 'column', 'columns')} mapped${item.assisted ? `, ${item.assisted} proposed by Claude from their shapes` : ''}`;
+  return `${file} was read, not applied: ${what}. Nothing on the roster has changed — see who would be added, changed, removed and kept on the Census tab, then apply it there.`;
+}
+
 /** What ↶ Undo this run asks first (the old ScanChat's confirm). */
 export const UNDO_ASK =
   'The plans this read added come off and the values it changed go back to what they were. A plan someone has ' +

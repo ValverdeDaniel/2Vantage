@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  censusReadHead,
   endedText,
   failedText,
   landedText,
@@ -73,5 +74,18 @@ describe('a read that landed by itself, and trying again (D71, D76)', () => {
 
   it('D76 asks before undoing a run to read it again', () => {
     expect(retryAsk('Opus 5.5')).toMatch(/^Undo this run and read the same files again with Opus 5\.5\? The plans/);
+  });
+});
+
+describe('a census read waiting on the Census tab (D29, slice 51)', () => {
+  it('D29 says what was read in counts, never who', () => {
+    const read = { read: true, people: 4, employees: 2, dependents: 2 };
+    expect(censusReadHead(read, 'roster.pdf')).toBe(
+      '“roster.pdf” was read, not applied: 4 people (2 employees, 2 dependents). Nothing on the roster has changed — ' +
+        'see who would be added, changed, removed and kept on the Census tab, then apply it there.',
+    );
+    expect(censusReadHead({ read: false, columns: 10, assisted: 3 }, '')).toMatch(
+      /^The file was read, not applied: 10 columns mapped, 3 proposed by Claude from their shapes\./,
+    );
   });
 });

@@ -3,15 +3,16 @@ import { useQueryClient } from '@tanstack/react-query';
 import { intakeKey, patchAnswers, useIntake } from '../../api/intake';
 import { errorText } from '../../lib/errors';
 import { useToast } from '../../ui/useToast';
+import RankButton from './RankButton';
 
 /*
  * Client guidance in the drawer (plan.md §8.17, §4.5 †; D6, D98, F111; the old WorkWithClaude `bnf-wwc-guidance`): what
  * the client wants — budget, networks, lines, deductible or benefit levels — which Claude reads in every turn and Rank
- * reads (slice 37's ⚖ Rank plans sits here). It is intake's `client_guidance` answer: ✎ Edit saves it through
- * `PATCH deals/{id}/intake/` with the text the person saw (a 409 says it changed meanwhile), and Claude's
+ * reads: ⚖ Rank plans sits here (slice 37, `RankButton`). It is intake's `client_guidance` answer: ✎ Edit saves it
+ * through `PATCH deals/{id}/intake/` with the text the person saw (a 409 says it changed meanwhile), and Claude's
  * `update_client_guidance` changes it through the same writer. Never on a client file. Open or closed per click.
  */
-export default function GuidanceBox({ dealId }) {
+export default function GuidanceBox({ dealId, state, model }) {
   const toast = useToast();
   const queryClient = useQueryClient();
   const intake = useIntake(dealId);
@@ -46,6 +47,7 @@ export default function GuidanceBox({ dealId }) {
               'None yet — tell Claude below what the client wants: budget, networks, which lines, deductible or benefit levels.'}
           </div>
           <div className="bnf-wwc-guidance-actions">
+            <RankButton dealId={dealId} guidance={guidance} state={state} model={model} />
             <button type="button" className="btn btn-secondary btn-sm" onClick={() => setDraft(guidance)}>
               ✎ Edit
             </button>

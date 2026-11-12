@@ -30,6 +30,10 @@ TAB_TARGETS = {
 # One send's reads run in this order, one job per reader (D17): the census, the questionnaire and intake first, so the
 # plans are read last, over what the others filled.
 SEND_ORDER = ('census', 'questionnaire', 'intake', 'quotes', 'sbc')
+# Readers a send reaches only from their own tab: intake reads the deal's everyday paperwork (invoices, plan documents,
+# "Other"), so a file filed on Documents is only filed, never read into Intake by surprise (the old app's rule; slice
+# 51).
+OWN_TAB_ONLY = ('intake',)
 
 QUEUED, RUNNING, DONE, FAILED, CANCELLED = 'queued', 'running', 'done', 'failed', 'cancelled'
 STATUSES = (QUEUED, RUNNING, DONE, FAILED, CANCELLED)

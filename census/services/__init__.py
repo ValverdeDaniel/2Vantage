@@ -8,6 +8,8 @@
 - `members`: the roster grid's writes — `edit_values` (a person's cells, with `expect`), `add_member`, `remove_member`
   and `clear_roster` (C4–C7, slice 41);
 - `marks`: review marks on census cells — `mark_values` (approve, ignore, needs checking, clear; C8, slice 41);
+- `reads`: a Claude read staged as an import — `stage_read` (a PDF roster's people), `stage_sheet` (a spreadsheet's
+  columns with the mapping assist's proposals), and the read's own Use and Discard through the import (slice 51).
 - `client`: a client's answers and added people through a portal link — `save_client`, `add_people` (pending entries
   and people who wait whole; C35, L88–L90; slice 54).
 Every write locks what it changes, records Activity in area `census` with keys only (never a value), writes nothing

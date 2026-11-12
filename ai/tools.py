@@ -1,8 +1,9 @@
 """Claude's chat tools: the list a turn sends, and running one call (plan.md §10.6; D81, O.3.3; slice 24).
 
 Tools are strict (`strict: true`: the API holds Claude to each input schema) and validated again in code, because a
-schema cannot say "a plan of this deal" or "a field of that line". Owners register them (`registry.register_tool`);
-`specs()` lists them in their fixed order, the same bytes on every deal, so they stay in the cached prefix. A tool's
+schema cannot say "a plan of this deal" or "a field of that line"; past `STRICT` (the API's grammar limit, slice 37) a
+tool is validated in code only. Owners register them (`registry.register_tool`); `specs()` lists them in their fixed
+order, the same bytes on every deal, so they stay in the cached prefix. A tool's
 `run(turn, data)` answers in words for Claude; a refusal (`ToolRefused`) goes back as an error result Claude can act
 on. Any other failure is logged by its class only (rule 10) and answers a fixed sentence.
 
@@ -30,11 +31,28 @@ class ToolRefused(Exception):  # noqa: N818 - a refusal, said to Claude
         self.sentence = sentence
 
 
+# The API compiles every strict tool of a request into one grammar and refuses the request when that grammar is too
+# large ("The compiled grammar is too large … reduce the number of strict tools": slice 37 found slice 24's seven at
+# the edge, set_board's thirteen optional fields the most of it). These stay strict; every later tool is sent without
+# `strict`, and like every tool it is validated again in code (D81), so a malformed input is refused in words.
+STRICT = frozenset(
+    {
+        'read_document',
+        'set_board',
+        'propose_changes',
+        'clear_line',
+        'merge_plans',
+        'check_values',
+        'update_client_guidance',
+    }
+)
+
+
 def specs():
     """The tools as the API takes them, in their fixed order."""
     ordered = sorted(registry.tools.values(), key=lambda tool: (tool.order, tool.name))
     return [
-        {'name': tool.name, 'description': tool.description, 'input_schema': tool.schema, 'strict': True}
+        {'name': tool.name, 'description': tool.description, 'input_schema': tool.schema, 'strict': tool.name in STRICT}
         for tool in ordered
     ]
 

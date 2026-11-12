@@ -11,6 +11,7 @@ import { claudeDoor, PILL_TABS, STRIP_TABS, useClaudeDoor } from './door';
 import { modelLabel, nextModel, tabKinds } from './drawerWords';
 import { afterTurn } from './afterTurn';
 import { flashWhenSettled } from './flashPlans';
+import { rankToast } from './rankWords';
 
 /*
  * Work with Claude around every deal tab (plan.md §8.4, §8.17; A25, D1, D3, D34, D35, D71; the old CaseWorkspace's
@@ -19,7 +20,8 @@ import { flashWhenSettled } from './flashPlans';
  * - the navy ✦ Work with Claude pill, bottom-right on the tabs it works over, hidden while the drawer is open (D1);
  * - the drawer: the pill or a tab's door ("＋ Add quotes", a drop on Documents) opens it and it stays open across tabs;
  *   `?claude=1` opens it too, and one the URL opened closes when the parameter goes (D3);
- * - a finished read's plans flash on the table once it has refetched, automatic landings included (D35, F112).
+ * - a finished read's plans flash on the table once it has refetched, automatic landings included (D35, F112); so do
+ *   the plans a rank starred (slice 37).
  * Nothing shows without Claude set up (D26). Its own error boundary keeps a failure here from taking the tab down.
  */
 export default function WorkWithClaude({ deal, tab }) {
@@ -42,6 +44,13 @@ function AroundTheTab({ deal, tab }) {
     (job) => {
       if (job.kind === 'turn') {
         afterTurn(queryClient, deal.id, job, () => navigate(`/deals/${deal.id}/advisor${asked ? "?claude=1" : ""}`));
+        return;
+      }
+      if (job.kind === 'rank') {
+        // ⚖ Rank (slice 37, D36): the stars flash once the board refetched; the old "Shortlist updated" toast
+        if (job.landed?.plan_ids?.length) flashWhenSettled(queryClient, deal.id, job.landed.plan_ids);
+        const said = rankToast(job);
+        if (said) toast[said.tone](said.text);
         return;
       }
       if (job.kind !== 'read') return;

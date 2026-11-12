@@ -5,11 +5,15 @@ is D.6's shape with each item's `owner` (the app that lands it: quotes, intake) 
   quotes: set_values {plan, line, values: [{key, label, old, new, dictated}]} · remove_plan {plan, line} ·
           clear_line {line, plans} · merge_plans {plan, merge, overwrite, line} (slice 22)
   intake: guidance {old, new}
+  quotes (slice 37): pair_plans / split_pair {plan, with, line}
+  proposals (slice 37): table_note / rows {line, new, values: [{key, label, old, new}] for the card}
 Items are ticked; a person may untick some before applying a change set that waits. When the turn ends the change set
 lands by itself or waits (`services/turns.py`); the board patch goes to the browser, which applies it (F108).
 """
 
 from collections import Counter
+
+LABELLED = ('pair_plans', 'split_pair', 'table_note', 'rows')  # said in `summary` by their own label (slice 37)
 
 
 class TurnState:
@@ -55,6 +59,7 @@ class TurnState:
             parts.append(f'Merge {counts["merge_plans"]} plan{"s" if counts["merge_plans"] != 1 else ""}')
         if counts['guidance']:
             parts.append('Update the client guidance')
+        parts += [item['label'] for item in self.items if item['op'] in LABELLED]
         return ' · '.join(parts)
 
     def result(self, **extra):

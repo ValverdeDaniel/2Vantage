@@ -12,11 +12,21 @@ from documents import kinds as document_kinds
 READS = ('quote', 'renewal', 'stop_loss_quote', 'tpa_proposal')  # every proposal-bucket kind but SBCs and templates
 
 
+def apply(user, deal, job, select=None, picks=None):
+    """Use a read (`services.read_apply.apply`), then rank the lines it added quotes to, once it commits, when the
+    deal has client guidance and nobody has chosen on them yet (D96, F111; slice 37: `rank.start.after_read`)."""
+    from ..rank.start import after_read
+    from ..services import read_apply
+
+    landed = read_apply.apply(user, deal, job, select=select, picks=picks)
+    after_read(user, deal, job, landed)
+    return landed
+
+
 def reader():
     from ai.registry import Reader
 
     from .. import revert_read
-    from ..services import read_apply
     from . import changes, corpus, merge, prompt, schema, score
 
     return Reader(
@@ -28,7 +38,7 @@ def reader():
         note=prompt.note,
         merge=merge.merge,
         build_changes=changes.build_changes,
-        apply=read_apply.apply,
+        apply=apply,
         undo=revert_read.undo,
         corpus=corpus.cases,
         score=score.score,

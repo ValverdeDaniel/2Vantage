@@ -14,7 +14,7 @@ import RecheckOffer from './RecheckOffer';
  * - a read used in the last minutes, by a person or by itself: what it wrote, ↶ Undo this run and ↻ Try again;
  * - a read that failed, or waits past its cost cap (Review ▸ opens the drawer's over-budget card).
  * - past the server's count of flags, "✦ Re-check N flags ▸" (E80; slice 22, `RecheckOffer`).
- * The rank's news joins with its slice (37).
+ * - ⚖ Rank's stars (slice 37, D36) as their own news with ↶ Undo this run, and a rank that failed, in its words.
  */
 export default function ClaudeStrip({ dealId, state, dismissed, retryFor }) {
   const toast = useToast();
@@ -68,19 +68,26 @@ export default function ClaudeStrip({ dealId, state, dismissed, retryFor }) {
       <LandedStrip
         dealId={dealId}
         news={landed}
-        retry={retryFor(landed)}
+        retry={landed.kind === 'rank' ? null : retryFor(landed)}
         onDismiss={() => claudeDoor.dismiss(landed.job_id)}
       />
     );
   }
   const ended = (state.recent || []).find(
-    (job) => job.kind === 'read' && (job.status === 'failed' || job.land === 'budget') && !dismissed.includes(job.id),
+    (job) =>
+      ((job.kind === 'read' && (job.status === 'failed' || job.land === 'budget')) ||
+        (job.kind === 'rank' && job.status === 'failed')) && // a rank that could not star (slice 37)
+      !dismissed.includes(job.id),
   );
   if (!ended) return <RecheckOffer dealId={dealId} flags={state.flags} dismissed={dismissed} />;
   return (
     <div className="bnf-claude-strip bnf-claude-strip-news bnf-claude-strip-failed" data-claude-strip="ended">
       <span className="bnf-claude-strip-text">
-        {ended.status === 'failed' ? `Claude stopped: ${ended.error || 'the read failed'}` : ended.wait_reason}
+        {ended.status !== 'failed'
+          ? ended.wait_reason
+          : ended.kind === 'rank'
+            ? `⚖ Rank: ${ended.error || 'the ranking failed'}`
+            : `Claude stopped: ${ended.error || 'the read failed'}`}
       </span>
       {ended.land === 'budget' && (
         <button type="button" className="btn btn-secondary btn-sm" onClick={() => claudeDoor.open()}>

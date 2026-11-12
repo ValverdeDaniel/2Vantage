@@ -24,7 +24,7 @@ const GUIDANCE_TABS = new Set(['advisor', 'proposal']); // the tabs that work th
  */
 export default function DealDrawer({ deal, tab, meta, state, door, kind, kinds, retryFor, onClose }) {
   const documents = useDocuments(deal.id);
-  const attach = useAttach({ dealId: deal.id, kind, meta, model: door.model });
+  const attach = useAttach({ dealId: deal.id, kind, meta, model: door.model, tab });
   const chat = useChat({ dealId: deal.id, tab, model: door.model, state });
   const attachRef = useRef(attach);
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function DealDrawer({ deal, tab, meta, state, door, kind, kinds, 
       onClose={onClose}
     >
       {LOCK_TABS.has(tab) && <LockSwitch dealId={deal.id} lock={state.lock} />}
-      {GUIDANCE_TABS.has(tab) && <GuidanceBox dealId={deal.id} />}
+      {GUIDANCE_TABS.has(tab) && <GuidanceBox dealId={deal.id} state={state} model={door.model} />}
       <DrawerBody
         dealId={deal.id}
         meta={meta}

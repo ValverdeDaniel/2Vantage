@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router';
+import { useAiState } from '../../api/ai';
 import { addMember, useCensus, useCensusImport } from '../../api/census';
 import { useMeta } from '../../api/meta';
 import { errorText } from '../../lib/errors';
@@ -7,6 +9,8 @@ import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import { CensusLens } from '../rfp';
 import { useToast } from '../../ui/useToast';
+import ClaudeCensusDoor from './ClaudeCensusDoor';
+import { censusReader, readBanner } from './claudeCensus';
 import CobraCheck from './CobraCheck';
 import ImportDoor from './ImportDoor';
 import MappingDialog from './MappingDialog';
@@ -55,13 +59,22 @@ function RosterPage({ deal, meta, census, waiting, onReview, onPage, refetch }) 
           </div>
         </div>
       )}
-      {waiting && (
+      {waiting && !waiting.read && (
         <div className="bnf-staged-banner">
           <strong>A census file is mapped and waiting.</strong>{' '}
           {waiting.document_name ? `“${waiting.document_name}”` : 'A file'} came in on this deal and its columns are
           mapped — nothing on the roster has changed.{' '}
           <button type="button" className="bnf-override-link" onClick={() => onReview(waiting.id)}>
             Review the mapping ▸
+          </button>
+        </div>
+      )}
+      {/* A roster Claude read waits, said out loud (C9; the old "census-staged-read" banner; slice 51). */}
+      {waiting?.read && (
+        <div className="bnf-staged-banner">
+          <strong>A census file is waiting for review.</strong> {readBanner(waiting)}{' '}
+          <button type="button" className="bnf-override-link" onClick={() => onReview(waiting.id)}>
+            Review it ▸
           </button>
         </div>
       )}
@@ -112,16 +125,24 @@ export default function CensusTab({ deal }) {
   const census = useCensus(deal.id, { page });
   const [reviewing, setReviewing] = useState(null);
   const [setAside, setSetAside] = useState(null);
+  const [params, setParams] = useSearchParams();
+  // A census read that ends stages an import here (slice 51): the tab reads again to show it.
+  useAiState(deal.id, { onFinished: (job) => job.target === 'census' && census.refetch() });
   if (census.isPending) return <Loading label="Loading the census…" />;
   if (census.isError) return <InlineError title="Census" error={census.error} onRetry={() => census.refetch()} />;
   const data = census.data;
   const waiting = waitingImport(data.imports);
   const hasRoster = data.summary.employees + data.summary.dependents > 0;
   const opens = waiting && waiting.id !== setAside && (!hasRoster || waiting.reformatted || waiting.needs_attention);
-  const open = reviewing || (opens ? waiting.id : null);
+  const asked = Number(params.get('import')) || null; // "Review it on the Census tab ▸" from Work with Claude (D29)
+  const open = reviewing || asked || (opens ? waiting.id : null);
   const close = () => {
     setSetAside(open);
     setReviewing(null);
+    if (asked) {
+      params.delete('import');
+      setParams(params, { replace: true });
+    }
   };
   if (open) return <ImportReview deal={deal} meta={meta} importId={open} hasRoster={hasRoster} onClose={close} />;
   if (hasRoster) {
@@ -146,7 +167,14 @@ export default function CensusTab({ deal }) {
       </div>
       {/* Worth saying before the roster arrives, which is when the client is still being asked for it (old app). */}
       <CobraCheck dealId={deal.id} cobra={data.cobra} onChanged={() => census.refetch()} />
-      <ImportDoor dealId={deal.id} meta={meta} onStarted={(imp) => setReviewing(imp.id)}>
+      {/* The old row of doors: Claude first (D41, C10; slice 51), then the import door and hand entry. */}
+      <ImportDoor
+        dealId={deal.id}
+        meta={meta}
+        primary={censusReader(meta).state !== 'on'}
+        first={<ClaudeCensusDoor meta={meta} autoOpen />}
+        onStarted={(imp) => setReviewing(imp.id)}
+      >
         <FirstByHand dealId={deal.id} onAdded={() => census.refetch()} />
       </ImportDoor>
     </div>

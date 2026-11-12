@@ -3,6 +3,7 @@ import { useRetryRead, useUndoRead } from '../../api/ai';
 import { errorText } from '../../lib/errors';
 import ConfirmDialog from '../../ui/ConfirmDialog';
 import { useToast } from '../../ui/useToast';
+import { RANK_UNDO_ASK, RANK_UNDONE, rankLandedText } from './rankWords';
 import { landedText, retryAsk, UNDO_ASK, undoneToast } from './readWords';
 
 /*
@@ -11,10 +12,11 @@ import { landedText, retryAsk, UNDO_ASK, undoneToast } from './readWords';
  * wrote, what it left out and why, ↶ Undo this run and, for someone who may use the next model up, ↻ Try again with it
  * (`retry`: {model, label}), which undoes this run and reads the same files again. Both ask first; when the server
  * refuses because something changed since (409 with `can_force`), it says what and offers "Undo anyway", which leaves
- * those as they are and puts back the rest.
+ * those as they are and puts back the rest. A rank's stars (slice 37) say so in their own words.
  */
 export default function LandedStrip({ dealId, news, onDismiss, retry = null }) {
   const toast = useToast();
+  const ranked = news.kind === 'rank'; // ⚖ Rank's stars (slice 37, D36): its own words, no Try again
   const undo = useUndoRead(dealId);
   const again = useRetryRead(dealId);
   const [asking, setAsking] = useState(null); // null, {force: false, retry?}, or {force: true, why, retry?}
@@ -27,7 +29,7 @@ export default function LandedStrip({ dealId, news, onDismiss, retry = null }) {
     try {
       const { undone } = await undo.mutateAsync({ jobId: news.job_id, force });
       setAsking(null);
-      toast.success(undoneToast(undone));
+      toast.success(ranked ? RANK_UNDONE : undoneToast(undone));
     } catch (error) {
       const data = error.response?.data;
       if (!force && error.response?.status === 409 && data?.can_force) {
@@ -60,19 +62,22 @@ export default function LandedStrip({ dealId, news, onDismiss, retry = null }) {
   return (
     <div className="bnf-claude-strip bnf-claude-strip-news" role="status" data-landed-job={news.job_id}>
       <span className="bnf-claude-strip-text">
-        {landedText(news)}
+        {ranked ? rankLandedText(news) : landedText(news)}
         {news.skipped?.length > 0 && <span className="bnf-claude-strip-line"> — {news.skipped.join(' ')}</span>}
       </span>
-      <button
-        type="button"
-        className="btn btn-secondary btn-sm"
-        disabled={busy}
-        onClick={() => setAsking({ force: false })}
-        title="Put the deal back to how it was before this read"
-      >
-        {undo.isPending ? 'Undoing…' : '↶ Undo this run'}
-      </button>
-      {retry && (
+      {/* A census import is undone by importing again, never here (slice 51): its strip has no Undo. */}
+      {news.undo !== false && (
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          disabled={busy}
+          onClick={() => setAsking({ force: false })}
+          title={ranked ? 'Put the stars back the way they were' : 'Put the deal back to how it was before this read'}
+        >
+          {undo.isPending ? 'Undoing…' : '↶ Undo this run'}
+        </button>
+      )}
+      {retry && !ranked && news.undo !== false && (
         <button
           type="button"
           className="btn btn-secondary btn-sm"
@@ -94,7 +99,9 @@ export default function LandedStrip({ dealId, news, onDismiss, retry = null }) {
             ? `${asking.why} Undo anyway leaves that as it is and puts back the rest.`
             : asking?.retry
               ? retryAsk(retry.label)
-              : UNDO_ASK
+              : ranked
+                ? RANK_UNDO_ASK
+                : UNDO_ASK
         }
         confirmLabel={asking?.force ? 'Undo anyway' : asking?.retry ? `Try again with ${retry.label}` : 'Undo this run'}
         busy={busy}

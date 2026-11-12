@@ -42,7 +42,8 @@ def _held(rows):
     return out
 
 
-def _check(first, second):
+def check(first, second):
+    """Refused with the sentence when `first` and `second` cannot print as one column (also Claude's `pair_plans`)."""
     if second.line != first.line:
         raise activity.Refused(f'{_words(first)} and {_words(second)} are on different lines.')
     if _carrier(first) != _carrier(second):
@@ -73,7 +74,7 @@ def pair(user, deal, first_id, second_id):
         locks.plans(deal, [first_id])
         raise activity.Refused('A plan cannot be paired with itself.')
     named = {plan.id: plan for plan in locks.plans(deal, [first_id, second_id])}
-    _check(named[first_id], named[second_id])
+    check(named[first_id], named[second_id])
     rows, _data = locks.line(deal, named[first_id].line)
     first, second = rows[first_id], rows[second_id]
     held = _held(rows)

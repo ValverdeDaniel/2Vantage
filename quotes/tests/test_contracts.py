@@ -71,6 +71,7 @@ def samples(world):
         'api/deals/<int:pk>/plans/as-quoted/': deal,  # slice 21: the printed tables (F42, E42)
         'api/plans/<int:plan_id>/sbc/': {'plan_id': world['current'].id},  # slice 22: Attach SBC… (D38)
         'api/deals/<int:pk>/plans/stop-loss/': {**deal, 'query': {'without': f"{world['current'].id}:1"}},  # s36
+        'api/deals/<int:pk>/ai/rank/': deal,  # slice 37: ⚖ Rank plans (D96, F111)
     }
 
 
@@ -140,6 +141,7 @@ def matrix(world):
         # slice 22: Attach SBC… reads nothing without a key (D26): refused before anything is stored
         ('POST', 'api/plans/<int:plan_id>/sbc/', ok(409)),
         ('GET', 'api/deals/<int:pk>/plans/stop-loss/', ok()),  # slice 36: the stop-loss analysis (F98–F107)
+        ('POST', 'api/deals/<int:pk>/ai/rank/', ok(409), medical),  # slice 37: without a key nothing is ranked (D26)
     ]
 
 

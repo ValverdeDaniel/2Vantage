@@ -1,6 +1,7 @@
 """Locks, the stored file and the roster the census services share (plan.md §3.7, O.3.7).
 
-Lock order: the Deal, then the import, then the deal's people by id, then `CensusFacts` (facts.refresh). A census
+Lock order: the Deal, then the Claude read that staged an import (an ai Job, to the left in the chain; slice 51),
+then the import, then the deal's people by id, then `CensusFacts` (facts.refresh). A census
 write's Activity is key-only (§3.7, rule 4): `member:<id>` with the keys that changed, never a value, so Revert
 refuses it with a sentence and the grid's own undo (slice 41) is the way back.
 """
@@ -12,7 +13,7 @@ from deals.models import Deal
 from deals.values import locked
 from documents.models import Document
 
-from ..importer import CensusFileError, open_table
+from ..importer import CensusFileError, Opened, open_table
 from ..models import CensusImport, Member
 
 AREA = 'census'
@@ -65,8 +66,18 @@ def file_bytes(imp):
         raise Refused(FILE_GONE) from exc
 
 
+def is_read(imp):
+    """A PDF roster Claude read (slice 51): its people wait on the import, not in a sheet."""
+    return bool(imp.job_id) and 'keys' in (imp.read or {})
+
+
 def opened(imp, **choices):
-    """The import's table as stored (or with `choices` over it): sheet, header row, first data row, reformat."""
+    """The import's table as stored (or with `choices` over it): sheet, header row, first data row, reformat. A read
+    roster's table is its people as read (census.reader.staged), with no sheet to choose."""
+    if is_read(imp):
+        from ..reader import staged
+
+        return Opened([], '', 1, 2, staged.table(imp.read or {}), {}, [])
     name, raw = file_bytes(imp)
     settings = {
         'sheet': imp.sheet_name or None,
@@ -79,6 +90,25 @@ def opened(imp, **choices):
         return open_table(name, raw, **settings)
     except CensusFileError as exc:
         raise BadFile(str(exc)) from exc
+
+
+def emptied(read):
+    """A read roster's `read` once its import is applied or set aside: its columns, no people (D74, B13)."""
+    return {'keys': list((read or {}).get('keys') or [])} if 'keys' in (read or {}) else {}
+
+
+def set_aside_waiting(deal_id, current_job=None):
+    """Set aside every proposal waiting on the deal (one mapping to review on the tab), after the Deal lock: the reads
+    that staged them are discarded too (their jobs first, the lock order), except `current_job`, the read staging now.
+    """
+    from ai.services.landing import owner_discarded
+
+    waiting = CensusImport.objects.filter(deal_id=deal_id, status=CensusImport.PROPOSED)
+    for job_id in sorted({job for job in waiting.values_list('job_id', flat=True) if job and job != current_job}):
+        owner_discarded(job_id)
+    for imp in waiting.select_for_update().order_by('id'):
+        imp.status, imp.read = CensusImport.DISCARDED, emptied(imp.read)
+        imp.save(update_fields=['status', 'read'])
 
 
 def roster_entries(members):

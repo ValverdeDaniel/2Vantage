@@ -184,6 +184,17 @@ def step_up(job, progress, first, work, extra, changes):
     return second, {**changes, 'cost_usd': f'{second.spent:.4f}', 'findings': findings}
 
 
+def _local_only(job, reader, local, failed, model):
+    """Every file was the owner's to read in code: its change set, without a Claude range (a census spreadsheet whose
+    columns the offline mapper and the mapping assist mapped)."""
+    spent = Job.objects.filter(pk=job.pk).values_list('cost_usd', flat=True).first() or 0
+    extra = {'failed_parts': failed, 'left_out_pages': [], 'model': model, 'cost_usd': f'{spent:.4f}'}
+    merged = reader.merge([], [])
+    changes = reader.build_changes(job.deal, job.created_by, merged, [], {**extra, 'job': job.id, 'local': local})
+    _wait(job, STAGED, 'Waiting for review.')
+    return changes
+
+
 def run(job, progress):
     """The `read` job's runner: returns the change set (Job.result); the land hook then lands it or leaves it
     waiting."""
@@ -193,6 +204,11 @@ def run(job, progress):
     found = {doc.id: doc for doc in Document.all_objects.filter(deal_id=job.deal_id, pk__in=job.documents)}
     files, failed = read_files.from_documents([found[i] for i in job.documents if i in found])
     model, effort = model_for(job), settings.AI_EFFORT.get('read', 'high')
+    local = None
+    if reader.local is not None:  # files the owner reads in code (a census spreadsheet: the importer, D109)
+        files, local = reader.local(job, progress, files)
+    if local and not files:
+        return _local_only(job, reader, local, failed, model)
     progress.step(f'Reading {len(files)} file{"s" if len(files) != 1 else ""} with Claude', 2)
     work, left_out = [], []
     only = (job.params or {}).get('pages') or None
@@ -205,6 +221,9 @@ def run(job, progress):
             left_out.append({'doc': file.id, 'pages': sorted(out), 'why': sorted(set(out.values()))})
     estimate = budget.run_estimate(model, [part for _file, part in work], prompt_tokens(reader))
     extra = {'failed_parts': failed, 'left_out_pages': left_out, 'estimate_usd': f'{estimate:.2f}', 'model': model}
+    extra['job'] = job.id  # the read an owner's staged proposal points back to (CensusImport.job; slice 51)
+    if local:
+        extra['local'] = local
     if (job.params or {}).get('plan'):
         extra['attached'] = job.params['plan']  # "Attach SBC…": the plan the file is for (D38; slice 22)
     try:

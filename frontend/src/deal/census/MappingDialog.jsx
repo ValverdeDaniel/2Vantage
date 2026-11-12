@@ -4,7 +4,9 @@ import { errorText } from '../../lib/errors';
 import Button from '../../ui/Button';
 import Select from '../../ui/Select';
 import { useToast } from '../../ui/useToast';
+import { readSubtitle } from './claudeCensus';
 import DryRunPanel from './DryRunPanel';
+import ReadWithClaude from './ReadWithClaude';
 import ReformatBanner from './ReformatBanner';
 import RowChoices from './RowChoices';
 import { badge, chooseField, fieldOptions, mappedCount, mappingChanges } from './mapping';
@@ -72,12 +74,19 @@ export default function MappingDialog({ dealId, imp, meta, hasRoster, onClose })
         <div>
           <div className="bb-tab-title">Map census columns</div>
           <div className="bb-subtitle">
-            {imp.document_name}
-            {imp.sheet_name ? ` · sheet "${imp.sheet_name}"` : ''} · header on row {imp.header_row} ·{' '}
-            {mappedCount(mapping)} of {mapping.length} columns mapped
+            {imp.read ? (
+              readSubtitle(imp, mappedCount(mapping), mapping.length)
+            ) : (
+              <>
+                {imp.document_name}
+                {imp.sheet_name ? ` · sheet "${imp.sheet_name}"` : ''} · header on row {imp.header_row} ·{' '}
+                {mappedCount(mapping)} of {mapping.length} columns mapped
+              </>
+            )}
           </div>
         </div>
         <div className="bb-toolbar-actions">
+          {!imp.read && <ReadWithClaude dealId={dealId} imp={imp} meta={meta} disabled={busy} onStarted={onClose} />}
           {hasRoster && (
             <Button size="sm" onClick={onClose} disabled={busy}>
               Close
@@ -100,7 +109,7 @@ export default function MappingDialog({ dealId, imp, meta, hasRoster, onClose })
         <DryRunPanel answer={answer} onApply={applyNow} onBack={() => setAnswer(null)} applying={apply.isPending} />
       )}
       <ReformatBanner imp={imp} busy={update.isPending} onUseOriginal={() => choose({ reformat: false })} />
-      <RowChoices imp={imp} busy={busy} onChange={choose} />
+      {!imp.read && <RowChoices imp={imp} busy={busy} onChange={choose} />}
 
       <div className="bb-panel">
         <div className="bnf-map-head">

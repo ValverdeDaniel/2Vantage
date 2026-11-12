@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAiState, useStopJob } from '../../api/ai';
 import { useMeta } from '../../api/meta';
+import CensusReadCard from './CensusReadCard';
 import LandedStrip from './LandedStrip';
 import { endedText, readerKinds, readsOn, runningText } from './readWords';
 import { RENDERERS } from './renderers';
@@ -22,7 +23,8 @@ export default function ReadReviews({ dealId, files, onOpen }) {
   const stop = useStopJob(dealId);
   const state = ai.data;
   if (!state?.claude || !meta?.ai) return null;
-  const kinds = [...readerKinds(meta), ...readerKinds(meta, 'sbc')]; // the SBC reader's files too (slice 22)
+  // the SBC reader's files too (slice 22), and the census and intake readers' (slice 51)
+  const kinds = ['quotes', 'sbc', 'census', 'intake'].flatMap((target) => readerKinds(meta, target));
   const ids = files.filter((file) => kinds.includes(file.kind) && !file.archived_at).map((file) => file.id);
   if (!ids.length) return null;
   const nameOf = (id) => files.find((file) => file.id === id)?.display_name || '';
@@ -66,6 +68,8 @@ export default function ReadReviews({ dealId, files, onOpen }) {
       {waiting.map((row) =>
         row.kind === 'recheck' ? (
           <RecheckCard key={row.job_id} dealId={dealId} jobId={row.job_id} nameOf={nameOf} onOpen={onOpen} />
+        ) : row.target === 'census' ? (
+          <CensusReadCard key={row.job_id} dealId={dealId} jobId={row.job_id} nameOf={nameOf} />
         ) : (
           <ReviewCard
             key={row.job_id}
