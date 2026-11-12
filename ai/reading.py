@@ -205,6 +205,8 @@ def run(job, progress):
             left_out.append({'doc': file.id, 'pages': sorted(out), 'why': sorted(set(out.values()))})
     estimate = budget.run_estimate(model, [part for _file, part in work], prompt_tokens(reader))
     extra = {'failed_parts': failed, 'left_out_pages': left_out, 'estimate_usd': f'{estimate:.2f}', 'model': model}
+    if (job.params or {}).get('plan'):
+        extra['attached'] = job.params['plan']  # "Attach SBC…": the plan the file is for (D38; slice 22)
     try:
         budget.check_run(job.deal_id, estimate, bool((job.params or {}).get('budget_override')))
     except budget.OverLimit as exc:

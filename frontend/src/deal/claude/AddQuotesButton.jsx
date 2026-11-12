@@ -21,3 +21,18 @@ export default function AddQuotesButton({ primary = false }) {
     </button>
   );
 }
+
+export function AddSbcsButton() {
+  const { data: meta } = useMeta();
+  if (!(meta?.ai?.targets || []).some((target) => target.key === 'sbc')) return null;
+  return (
+    <button
+      type="button"
+      className="btn btn-secondary btn-sm"
+      title="Read each plan's Summary of Benefits and Coverage into the plans on this deal — plan design only, never a rate, reviewed before anything changes"
+      onClick={() => claudeDoor.open('sbc')}
+    >
+      ＋ Add SBCs
+    </button>
+  );
+}

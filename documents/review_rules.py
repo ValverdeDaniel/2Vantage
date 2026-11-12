@@ -105,9 +105,10 @@ def with_marks(entry, marks):
     return out
 
 
-def apply_mark(entry, action, user_id, at):
+def apply_mark(entry, action, user_id, at, via=''):
     """The entry after a person's `action`, or None when nothing changes (E85; the old `_apply`):
-    - approve: confirmed by this person, any mark off (unchanged when already approved and unmarked);
+    - approve: confirmed by this person, any mark off (unchanged when already approved and unmarked); `via` says how
+      ('recheck': the person applied Claude's re-check, E77, slice 22);
     - ignore / check: the mark set, any approval off (unchanged when already so and not approved);
     - clear (Undo, F67): the mark off; an approval stays (unchanged when there is no mark).
     A blank value has no entry and takes no mark. `at` is an ISO time."""
@@ -124,7 +125,7 @@ def apply_mark(entry, action, user_id, at):
     if action == APPROVE:
         if confirmed and not mark:
             return None
-        return {**rest, 'confirmed': {'by': user_id, 'at': at}}
+        return {**rest, 'confirmed': {'by': user_id, 'at': at, **({'via': via} if via else {})}}
     state = IGNORED if action == IGNORE else CHECKING
     if mark_state(entry) == state and not confirmed:
         return None

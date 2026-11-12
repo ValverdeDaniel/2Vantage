@@ -4,6 +4,7 @@ import { useToast } from '../../ui/useToast';
 import { claudeDoor } from './door';
 import { stripDoing } from './drawerWords';
 import LandedStrip from './LandedStrip';
+import RecheckOffer from './RecheckOffer';
 
 /*
  * The Claude strip over the tables Claude reads into (plan.md §8.4, §8.17; A25, D34, D71; the old CaseWorkspace's
@@ -12,7 +13,8 @@ import LandedStrip from './LandedStrip';
  * - a read waiting for review: nothing on the table has changed — Review ▸ opens the drawer on it;
  * - a read used in the last minutes, by a person or by itself: what it wrote, ↶ Undo this run and ↻ Try again;
  * - a read that failed, or waits past its cost cap (Review ▸ opens the drawer's over-budget card).
- * The rank's news and "✦ Re-check N flags" join with their slices (37, 22).
+ * - past the server's count of flags, "✦ Re-check N flags ▸" (E80; slice 22, `RecheckOffer`).
+ * The rank's news joins with its slice (37).
  */
 export default function ClaudeStrip({ dealId, state, dismissed, retryFor }) {
   const toast = useToast();
@@ -74,7 +76,7 @@ export default function ClaudeStrip({ dealId, state, dismissed, retryFor }) {
   const ended = (state.recent || []).find(
     (job) => job.kind === 'read' && (job.status === 'failed' || job.land === 'budget') && !dismissed.includes(job.id),
   );
-  if (!ended) return null;
+  if (!ended) return <RecheckOffer dealId={dealId} flags={state.flags} dismissed={dismissed} />;
   return (
     <div className="bnf-claude-strip bnf-claude-strip-news bnf-claude-strip-failed" data-claude-strip="ended">
       <span className="bnf-claude-strip-text">

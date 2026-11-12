@@ -19,7 +19,7 @@ and each PDF's printed page numbers where they differ from its pages (`page_labe
 from documents.kinds import PHI_KINDS
 from documents.pages import printed_labels
 
-from .. import fields, read_checks
+from .. import fields, read_checks, split
 from . import counts as count_items
 from . import locating, rules
 from .match import match, ref_key
@@ -31,8 +31,9 @@ REPLACES_UNSURE = 'Check which plan this quote replaces.'
 
 
 class Builder:
-    def __init__(self, deal, plans, files):
+    def __init__(self, deal, plans, files, sbc_docs=()):
         self.deal, self.plans, self.files = deal, plans, files
+        self.sbc_docs = set(sbc_docs)  # the deal's SBC files: their values beat a quote's (D47)
         self.items, self.findings, self.kept = [], [], []
         self.by_key = {}  # merged plan key -> item
         self.matched = set()
@@ -58,10 +59,24 @@ class Builder:
             old_value = (plan.values or {}).get(key) if plan else None
             old_source = (plan.sources or {}).get(key) if plan else None
             value, problem = rules.staged_value(
-                key, entry, old_value=old_value, old_source=old_source, frozen=bool(plan and plan.sold)
+                key,
+                entry,
+                old_value=old_value,
+                old_source=old_source,
+                frozen=bool(plan and plan.sold),
+                sbc_docs=self.sbc_docs,
             )
             if problem:
                 self.findings.append({'text': f'{found["carrier"]} {found["name"]}: {problem}', 'hard': False})
+            if value and value['why'] == rules.LEFT_ALONE['sbc']:
+                label = fields.BY_KEY.get(key, {}).get('label', key)
+                self.findings.append(
+                    {
+                        'text': f'{found["carrier"]} {found["name"]}: the quote prints {label} as {value["new"]}, '
+                        f'its SBC as {value["old"]}; the SBC’s value stays.',
+                        'hard': False,
+                    }
+                )
             if value:
                 staged.append(value)
         order = {key: number for number, key in enumerate(fields.keys_for(found['line']))}
@@ -150,6 +165,13 @@ class Builder:
                 self.kept.append({'plan': plan.id, 'label': f'{plan.carrier} {plan.name}', 'line': plan.line})
 
 
+def sbc_documents(deal):
+    """The ids of the deal's SBC files, removed ones too (their values still name them)."""
+    from documents.models import Document
+
+    return set(Document.all_objects.filter(deal=deal, kind='sbc').values_list('id', flat=True))
+
+
 def _layouts(merged, builder, files):
     phi = {file.id for file in files if file.kind in PHI_KINDS}
     out = []
@@ -207,9 +229,12 @@ def build_changes(deal, user, merged, files, extra):
 
     lines = sorted({found['line'] for found in merged['plans']})
     plans = list(Plan.objects.filter(deal=deal).order_by('line', 'sort_order', 'id'))
-    builder = Builder(deal, plans, files)
-    for found in merged['plans']:
+    builder = Builder(deal, plans, files, sbc_docs=sbc_documents(deal))
+    found_plans, aliases, halves = split.prepare(merged['plans'], plans)  # D116: "A / B" plans take both halves
+    for found in found_plans:
         builder.plan_item(found)
+    builder.by_key.update({alias: builder.by_key[key] for alias, key in aliases.items() if key in builder.by_key})
+    builder.findings += halves
     count_items.add(builder, deal, merged, lines)
     builder.kept_plans({file.id for file in files})
     locating.locate_items(builder.items, files)

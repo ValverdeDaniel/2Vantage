@@ -61,6 +61,7 @@ export function buildBoard({ comparison, meta, line, preset, sort }) {
   const inProposal = sort.key === 'proposal';
   const sorted = inProposal ? quotes : sortBy(quotes, (plan) => sortValue(sort.key, plan, fields, order.rank), sort.dir);
   return {
+    line, // the board's line: what a plan's ⋯ menu offers depends on it (Attach SBC…, medical only; slice 22)
     plans,
     order,
     currents: order.currents,

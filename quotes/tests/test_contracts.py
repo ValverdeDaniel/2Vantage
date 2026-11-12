@@ -68,6 +68,7 @@ def samples(world):
         'api/deals/<int:pk>/plans/priced/': deal,  # slice 35: priced versions (F76)
         'api/plans/<int:plan_id>/priced/': {'plan_id': world['alternate'].id},  # slice 35: ✎ re-price (F82)
         'api/deals/<int:pk>/plans/as-quoted/': deal,  # slice 21: the printed tables (F42, E42)
+        'api/plans/<int:plan_id>/sbc/': {'plan_id': world['current'].id},  # slice 22: Attach SBC… (D38)
     }
 
 
@@ -133,6 +134,8 @@ def matrix(world):
         ('POST', 'api/deals/<int:pk>/plans/priced/', ok(201), {'plan_ids': [alternate.id], **FIVE_OFF}),
         ('POST', 'api/plans/<int:plan_id>/priced/', ok(409), {**FIVE_OFF, 'dry_run': True}),
         ('GET', 'api/deals/<int:pk>/plans/as-quoted/', ok()),  # slice 21: the printed tables (F42, E42)
+        # slice 22: Attach SBC… reads nothing without a key (D26): refused before anything is stored
+        ('POST', 'api/plans/<int:plan_id>/sbc/', ok(409)),
     ]
 
 

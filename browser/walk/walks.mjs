@@ -16,6 +16,7 @@ import { market40 } from './market40.mjs';
 import { pages14 } from './pages14.mjs';
 import { pdf29 } from './pdf29.mjs';
 import { pptx31 } from './pptx31.mjs';
+import { sbc22 } from './sbc22.mjs';
 import { quoteDoor20 } from './quoteDoor20.mjs';
 import { quoteFirst13 } from './quoteFirst13.mjs';
 import { scanQuotes19 } from './scanQuotes19.mjs';
@@ -64,6 +65,7 @@ export const WALKS = {
   1: { ...scanQuotes19, run: (ctx) => scanQuotes19.run(ctx, { signIn, openDeal }) }, // scan quotes; slice 19 (one real read)
   '1q': { ...quoteDoor20, run: (ctx) => quoteDoor20.run(ctx, { signIn }) }, // need 1 by the quote-first door; slice 20 (one real read)
   '5c': { ...boardClaude24, run: (ctx) => boardClaude24.run(ctx, { signIn, openDeal }) }, // needs 4–5 asked of Claude; slice 24 (one real turn)
+  2: { ...sbc22, run: (ctx) => sbc22.run(ctx, { signIn, openDeal }) }, // SBCs and the re-check; slice 22 (up to 3 real calls)
   3: { ...asQuoted21, run: (ctx) => asQuoted21.run(ctx, { signIn, openDeal }) }, // "As quoted"; slice 21 (a real read only when none waits)
   4: {
     title: 'Search plans by name: "UHC" finds the UnitedHealthcare quotes on every line (F14–F17, OQ14)',

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { cellCounts, flaggedKeys } from '../../../valuereview/marksCache';
 import { reviewToast, targetWords } from '../../../valuereview/reviewWords';
 import useMarks from '../../../valuereview/useMarks';
+import { useRecheck } from '../../claude';
 import { useToast } from '../../../ui/useToast';
 import UndoNote from './UndoNote';
 
@@ -11,12 +12,14 @@ import UndoNote from './UndoNote';
  * chip's own Approve, Ignore and Needs checking for one quote, and the review strip over the quotes being looked at —
  * the ticked plans, else the plans the finder and filters show, else every plan on the line (F65; the strip names
  * which). Each review is one Activity row; its toast offers Undo (F67, E54). The counts are the server's flags on the
- * compact cells (`s`, `m`), so the board agrees with the station (OQ28). Nothing on the board waits on a review.
+ * compact cells (`s`, `m`), so the board agrees with the station (OQ28). Nothing on the board waits on a review. The
+ * strip's ✦ Ask Claude to re-check (F66; slice 22) re-reads those quotes' flagged values; a person applies its card.
  */
 export default function useBoardReview({ dealId, comparison, meta, lineLabel, drawn, ticked, filtering }) {
   const toast = useToast();
   const navigate = useNavigate();
   const marks = useMarks(dealId, { toastDone: false });
+  const claude = useRecheck(dealId);
   const [menu, setMenu] = useState(null);
   const fields = Object.fromEntries((meta.plans?.fields ?? []).map((field) => [field.key, field]));
   const keys = (comparison.groups ?? []).flatMap((group) => group.fields);
@@ -62,6 +65,7 @@ export default function useBoardReview({ dealId, comparison, meta, lineLabel, dr
       counts: cellCounts(targets.flatMap((plan) => Object.values(plan.cells ?? {}))),
       target,
       onAction: (action) => review(action, targets.map((plan) => plan.id), target),
+      recheck: claude && { ...claude, run: () => claude.run({ planIds: targets.map((plan) => plan.id) }) },
     },
   };
 }

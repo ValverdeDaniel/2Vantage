@@ -29,7 +29,7 @@ export default function PlanCell({ plan, board, ui }) {
           ))}
           {plan.sold && <span className="bnf-plan-chip bnf-chip-sold">SOLD ✓</span>}
         </div>
-        <PlanActions plan={plan} actions={ui.actions} plans={board.plans} />
+        <PlanActions plan={plan} actions={ui.actions} plans={board.plans} line={board.line} />
       </div>
       {arrows && (
         <div className="bnf-advisor-order">

@@ -3,13 +3,13 @@ import { useAiState, useStartRead } from '../../api/ai';
 import { useMeta } from '../../api/meta';
 import { errorText } from '../../lib/errors';
 import { useToast } from '../../ui/useToast';
-import { firstPicks, rereadable } from './rereadFiles';
+import { byReader, firstPicks, rereadable } from './rereadFiles';
 
 /*
  * The Re-read panel's state (plan.md §8.16; E75, E76, D39; the old DocumentsTab's `rereadOpen`/`rereadPick`): offered
- * only with Claude set up (D26) on a file the quote reader reads (or 📚 All proposals). "↻ Re-read…" opens it with the
- * file on screen ticked; "Re-read N files" starts one read of the ticked files through the one read door, which waits
- * for review on this tab, and closes the panel. A refusal (no key, a cap, a kind it does not read) is a toast.
+ * only with Claude set up (D26) on a file a proposal reader reads (or 📚 All proposals). "↻ Re-read…" opens it with
+ * the file on screen ticked; "Re-read N files" starts one read of the ticked files per reader (quotes, SBCs) through
+ * the one read door, each waiting for review on this tab, and closes the panel. A refusal (no key, a cap) is a toast.
  */
 export default function useReread(dealId, files, shown, allOn) {
   const toast = useToast();
@@ -35,10 +35,12 @@ export default function useReread(dealId, files, shown, allOn) {
   }
 
   async function read() {
-    const ids = offered.filter((file) => picked.has(file.id)).map((file) => file.id);
+    const groups = byReader(offered.filter((file) => picked.has(file.id)), meta);
     setOpen(false);
     try {
-      await start.mutateAsync({ documentIds: ids, review: true }); // a re-read always waits, even a direct person's (E75)
+      for (const [target, ids] of Object.entries(groups)) {
+        await start.mutateAsync({ documentIds: ids, target, review: true }); // a re-read always waits (E75)
+      }
     } catch (error) {
       toast.error(errorText(error));
     }

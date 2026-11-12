@@ -5,8 +5,12 @@
 // quote-first door's drawer (D43).
 export { default as ReadReviews } from './ReadReviews';
 export { default as WorkWithClaude } from './WorkWithClaude';
-export { default as AddQuotesButton } from './AddQuotesButton';
+export { default as AddQuotesButton, AddSbcsButton } from './AddQuotesButton';
 export { default as QuoteDrop } from './QuoteDrop';
 export { claudeDoor, claudeRoom } from './door';
 // Slice 24: the plan table's lock switch on the Advisor's toolbar (F113, D104).
 export { default as TableLock } from './TableLock';
+// Slice 22: "＋ Add SBCs" on the board (F95) and "Attach SBC…" in a plan's ⋯ menu (D38).
+export { useAttachSbc } from './AttachSbc';
+// ✦ Ask Claude to re-check on a review strip (F66, E77): the station's List and strip and the Advisor's strip.
+export { default as useRecheck } from './useRecheck';

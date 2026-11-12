@@ -218,12 +218,7 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
             },
           }}
         />
-        <ReviewBulkBar
-          counts={review.strip.counts}
-          target={review.strip.target}
-          busy={review.busy}
-          onAction={review.strip.onAction}
-        />
+        <ReviewBulkBar {...review.strip} busy={review.busy} />
         <SelectBar
           count={ticks.count}
           todo={ticks.todo}

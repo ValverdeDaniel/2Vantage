@@ -8,6 +8,7 @@ from . import (
     move_views,
     priced_views,
     review_views,
+    sbc_views,
     source_views,
     template_views,
     views,
@@ -40,6 +41,7 @@ urlpatterns = [
     path('plans/<int:plan_id>/renewal/', views.RenewalView.as_view()),
     path('plans/<int:plan_id>/copy/', views.CopyView.as_view()),
     path('plans/<int:plan_id>/priced/', priced_views.RepriceView.as_view()),  # ✎ re-price a version (F82; slice 35)
+    path('plans/<int:plan_id>/sbc/', sbc_views.AttachSbcView.as_view()),  # Attach SBC…: a staged read (D38; s22)
     path('plans/<int:plan_id>/sold/', mark_views.SoldView.as_view()),
     path('plans/<int:plan_id>/recommend/', mark_views.RecommendView.as_view()),
     path('packages/<int:package_id>/', views.PackageView.as_view()),

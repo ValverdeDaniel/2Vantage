@@ -525,7 +525,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F14",
-      "why": "The filter card is built (F14–F28) on the old classes; it adds \"Monthly total ≤ $\" after the budget select (F19, New: the line's total rule), so PCP copay and the hides wrap to the card's second row, and Claude's rule chips show only once Work with Claude sets a rule (F24, slice 24). ▦ Pages (F37) slice 14; \"＋ Add SBCs\" (F95) slice 22; \"Claude can edit\" (F113) is built (slice 24), as the old toolbar's first action.",
+      "why": "The filter card is built (F14–F28) on the old classes; it adds \"Monthly total ≤ $\" after the budget select (F19, New: the line's total rule), so PCP copay and the hides wrap to the card's second row, and Claude's rule chips show only once Work with Claude sets a rule (F24, slice 24). ▦ Pages (F37) slice 14; \"＋ Add SBCs\" (F95) is built (slice 22), beside ＋ Add quotes; \"Claude can edit\" (F113) is built (slice 24), as the old toolbar's first action.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -613,7 +613,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F14",
-      "why": "The filter card is built (F14–F28) on the old classes; it adds \"Monthly total ≤ $\" after the budget select (F19, New: the line's total rule), so PCP copay and the hides wrap to the card's second row, and Claude's rule chips show only once Work with Claude sets a rule (F24, slice 24). The review bar (\"No AI warnings to review\", F63–F65) is pending slice 17; ▦ Pages (F37) slice 14; \"＋ Add SBCs\" (F95) slice 22; \"Claude can edit\" (F113) is built (slice 24), as the old toolbar's first action.",
+      "why": "The filter card is built (F14–F28) on the old classes; it adds \"Monthly total ≤ $\" after the budget select (F19, New: the line's total rule), so PCP copay and the hides wrap to the card's second row, and Claude's rule chips show only once Work with Claude sets a rule (F24, slice 24). The review bar (\"No AI warnings to review\", F63–F65) is pending slice 17; ▦ Pages (F37) slice 14; \"＋ Add SBCs\" (F95) is built (slice 22), beside ＋ Add quotes; \"Claude can edit\" (F113) is built (slice 24), as the old toolbar's first action.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -943,7 +943,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F14",
-      "why": "The filter card is built (F14–F28) on the old classes; it adds \"Monthly total ≤ $\" after the budget select (F19, New: the line's total rule), so PCP copay and the hides wrap to the card's second row, and Claude's rule chips show only once Work with Claude sets a rule (F24, slice 24). ▦ Pages (F37) slice 14; \"＋ Add SBCs\" (F95) slice 22; \"Claude can edit\" (F113) is built (slice 24), as the old toolbar's first action.",
+      "why": "The filter card is built (F14–F28) on the old classes; it adds \"Monthly total ≤ $\" after the budget select (F19, New: the line's total rule), so PCP copay and the hides wrap to the card's second row, and Claude's rule chips show only once Work with Claude sets a rule (F24, slice 24). ▦ Pages (F37) slice 14; \"＋ Add SBCs\" (F95) is built (slice 22), beside ＋ Add quotes; \"Claude can edit\" (F113) is built (slice 24), as the old toolbar's first action.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1174,7 +1174,7 @@
       "check": "pixels",
       "selector": null,
       "item": "D104",
-      "why": "＋ Add SBCs (slice 22) and ▦ Pages (slice 14) are pending their slices; \"Claude can edit\" (D104, F113) is built (slice 24).",
+      "why": "▦ Pages (slice 14) is pending its slice; ＋ Add SBCs (F95) is built (slice 22); \"Claude can edit\" (D104, F113) is built (slice 24).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1504,7 +1504,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F14",
-      "why": "The filter card is built (F14–F28) on the old classes; it adds \"Monthly total ≤ $\" after the budget select (F19, New: the line's total rule), so PCP copay and the hides wrap to the card's second row, and Claude's rule chips show only once Work with Claude sets a rule (F24, slice 24). ▦ Pages (F37) slice 14; \"＋ Add SBCs\" (F95) slice 22; \"Claude can edit\" (F113) is built (slice 24), as the old toolbar's first action.",
+      "why": "The filter card is built (F14–F28) on the old classes; it adds \"Monthly total ≤ $\" after the budget select (F19, New: the line's total rule), so PCP copay and the hides wrap to the card's second row, and Claude's rule chips show only once Work with Claude sets a rule (F24, slice 24). ▦ Pages (F37) slice 14; \"＋ Add SBCs\" (F95) is built (slice 22), beside ＋ Add quotes; \"Claude can edit\" (F113) is built (slice 24), as the old toolbar's first action.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1581,7 +1581,7 @@
       "check": "pixels",
       "selector": null,
       "item": "D104",
-      "why": "＋ Add SBCs (slice 22) and ▦ Pages (slice 14) are pending their slices; \"Claude can edit\" (D104, F113) is built (slice 24).",
+      "why": "▦ Pages (slice 14) is pending its slice; ＋ Add SBCs (F95) is built (slice 22); \"Claude can edit\" (D104, F113) is built (slice 24).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1713,7 +1713,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F14",
-      "why": "The filter card is built (F14–F28) on the old classes; it adds \"Monthly total ≤ $\" after the budget select (F19, New: the line's total rule), so PCP copay and the hides wrap to the card's second row, and Claude's rule chips show only once Work with Claude sets a rule (F24, slice 24). ▦ Pages (F37) slice 14; \"＋ Add SBCs\" (F95) slice 22; \"Claude can edit\" (F113) is built (slice 24), as the old toolbar's first action.",
+      "why": "The filter card is built (F14–F28) on the old classes; it adds \"Monthly total ≤ $\" after the budget select (F19, New: the line's total rule), so PCP copay and the hides wrap to the card's second row, and Claude's rule chips show only once Work with Claude sets a rule (F24, slice 24). ▦ Pages (F37) slice 14; \"＋ Add SBCs\" (F95) is built (slice 22), beside ＋ Add quotes; \"Claude can edit\" (F113) is built (slice 24), as the old toolbar's first action.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2241,7 +2241,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F96",
-      "why": "The board head carries \"＋ Add quotes\", Work with Claude's door opened on carrier quotes (F96, D37; slice 20), new against the old board, which had only ＋ Add SBCs (slice 22).",
+      "why": "The board head carries \"＋ Add quotes\", Work with Claude's door opened on carrier quotes (F96, D37; slice 20), new against the old board, which had only ＋ Add SBCs (built in slice 22, beside it).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2252,7 +2252,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F96",
-      "why": "The board head carries \"＋ Add quotes\", Work with Claude's door opened on carrier quotes (F96, D37; slice 20), new against the old board, which had only ＋ Add SBCs (slice 22).",
+      "why": "The board head carries \"＋ Add quotes\", Work with Claude's door opened on carrier quotes (F96, D37; slice 20), new against the old board, which had only ＋ Add SBCs (built in slice 22, beside it).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2263,7 +2263,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F96",
-      "why": "The board head carries \"＋ Add quotes\", Work with Claude's door opened on carrier quotes (F96, D37; slice 20), new against the old board, which had only ＋ Add SBCs (slice 22).",
+      "why": "The board head carries \"＋ Add quotes\", Work with Claude's door opened on carrier quotes (F96, D37; slice 20), new against the old board, which had only ＋ Add SBCs (built in slice 22, beside it).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2274,7 +2274,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F96",
-      "why": "The board head carries \"＋ Add quotes\", Work with Claude's door opened on carrier quotes (F96, D37; slice 20), new against the old board, which had only ＋ Add SBCs (slice 22).",
+      "why": "The board head carries \"＋ Add quotes\", Work with Claude's door opened on carrier quotes (F96, D37; slice 20), new against the old board, which had only ＋ Add SBCs (built in slice 22, beside it).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

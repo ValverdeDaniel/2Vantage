@@ -5,7 +5,9 @@
 - **The line's fields only**: a value for a field the plan's line does not have is left out (counted).
 - **Who wins** (D61): a read fills a blank and replaces a value Claude read before that no person approved. A value a
   person typed, imported, a client gave or someone approved is "Left alone": shown, unticked. An equal value writes
-  nothing and is not shown (D60). A sold plan is frozen: none of its values is touched (D59).
+  nothing and is not shown (D60). A sold plan is frozen: none of its values is touched (D59). The plan's SBC beats a
+  quote (D47; slice 22): a quote read leaves a value read from one of the deal's SBCs alone (`sbc_docs`), and an SBC
+  read replaces a quote's (`sbc.py` flags it).
 - **Doubt**: a value Claude was unsure of arrives unticked (D31); `low` says why, as a reason (O.3.1).
 - **Member data** (E93): a printed label that looks like a person's details is never kept as the value's `line`.
 """
@@ -26,6 +28,7 @@ LEFT_ALONE = {
     'in_force': 'In force',
     'agency': "The agency's",
     'approved': 'Approved by a person',
+    'sbc': 'Read from the plan’s SBC',
 }
 
 
@@ -50,9 +53,9 @@ def printed_line(label):
     return '' if not text or screening.phi_flags(text) else text
 
 
-def decide(old_value, old_source, new_value, *, frozen=False):
+def decide(old_value, old_source, new_value, *, frozen=False, sbc_docs=()):
     """How a read treats one value against what the plan holds: 'same' (nothing), 'fill', 'replace', or
-    ('left', why) — shown, unticked."""
+    ('left', why) — shown, unticked. `sbc_docs`: the deal's SBC files, whose values a quote read leaves (D47)."""
     if frozen:
         return ('left', 'Sold: left as sold')
     if old_value in (None, ''):
@@ -63,12 +66,14 @@ def decide(old_value, old_source, new_value, *, frozen=False):
     origin = source.get('origin') or 'typed'
     if is_approved(source):
         return ('left', LEFT_ALONE['approved'])
+    if origin == 'ai' and source.get('doc') in sbc_docs:
+        return ('left', LEFT_ALONE['sbc'])
     if origin == 'ai':
         return 'replace'
     return ('left', LEFT_ALONE.get(origin, 'Typed by a person'))
 
 
-def staged_value(key, entry, *, old_value=None, old_source=None, frozen=False):
+def staged_value(key, entry, *, old_value=None, old_source=None, frozen=False, sbc_docs=()):
     """The change set's entry for one merged value against the plan's (or None when it writes nothing), plus a
     finding text when the printed value cannot be taken."""
     value, why = clean(key, entry['value'])
@@ -78,7 +83,7 @@ def staged_value(key, entry, *, old_value=None, old_source=None, frozen=False):
             return None, None
         page = f', page {entry["page"]}' if entry.get('page') else ''
         return None, f'"{entry["value"]}" is not a value for {label}{page}, so it was left out.'
-    verdict = decide(old_value, old_source, value, frozen=frozen)
+    verdict = decide(old_value, old_source, value, frozen=frozen, sbc_docs=sbc_docs)
     if verdict == 'same':
         return None, None
     left = verdict if isinstance(verdict, tuple) else None

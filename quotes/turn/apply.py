@@ -4,8 +4,9 @@
 (the Deal and the job locked first): values through `update_plan` (dictated ones as typed, D85; the rest as Claude's,
 `origin: ai`), each plan's in an Activity row of its own marked as Claude's (`by_claude`), so ↶ Undo this run puts
 back only what the turn changed; removals through `delete_plans` (F60) and a line's clear through `clear_line`
-(F61), each its own `removed` row whose Revert restores the plans. A value lands only while the table still holds what
-Claude saw (else it is skipped and named); a plan sold or recommended since is never removed (D86).
+(F61), each its own `removed` row whose Revert restores the plans; a merge through the one merge service (F142; slice
+22), its `merged` row. A value lands only while the table still holds what Claude saw (else it is skipped and named); a
+plan sold or recommended since is never removed (D86).
 """
 
 from rest_framework.exceptions import ValidationError
@@ -13,6 +14,7 @@ from rest_framework.exceptions import ValidationError
 from deals.activity import Refused
 
 from ..models import Plan
+from ..services.merge import merge_plans
 from ..services.plans import update_plan
 from ..services.read_apply import AREAS
 from ..services.removal import clear_line, delete_plans
@@ -66,6 +68,14 @@ def _clear(user, deal, item, wrote):
         wrote['skipped'].append(removal.note)
 
 
+def _merge(user, deal, item, wrote):
+    _keep, _changed, row = merge_plans(user, deal, item['plan'], item['merge'], item.get('overwrite') or ())
+    if row is not None:
+        wrote['activity_ids'].append(row.id)
+        wrote['plan_ids'].append(item['plan'])
+        wrote['said'].append(item['label'][:1].lower() + item['label'][1:])
+
+
 def apply(user, deal, job, items):
     wrote = {'activity_ids': [], 'plan_ids': [], 'said': [], 'skipped': []}
     for item in items:
@@ -76,6 +86,8 @@ def apply(user, deal, job, items):
                 _remove(user, deal, item, wrote)
             elif item['op'] == 'clear_line':
                 _clear(user, deal, item, wrote)
+            elif item['op'] == 'merge_plans':
+                _merge(user, deal, item, wrote)
         except (Refused, ValidationError) as exc:
             detail = getattr(exc, 'sentence', '') or 'One change could not be made.'
             wrote['skipped'].append(str(detail)[:200])

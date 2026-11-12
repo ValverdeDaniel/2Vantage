@@ -82,6 +82,8 @@ export function movedPct(oldVal, newVal) {
 /** The chip over a plan's column: what using the read would do with it. */
 export function headChip(item) {
   if (item.frozen) return { text: 'Sold — left as sold', tone: 'sold' };
+  if (item.design_only) return { text: 'No match — not added', tone: 'sold' }; // an SBC's (slice 22, D47)
+  if (item.matched === 'attached') return { text: 'Attached to', tone: 'shortlist' }; // Attach SBC… (D38)
   if (item.op === 'pick_current') return { text: 'Which current plan?', tone: 'sold' };
   if (item.op === 'set_values') return { text: item.values?.length ? 'Fills' : 'No change', tone: 'shortlist' };
   return { text: `NEW · ${ROLE_WORDS[item.role] || item.role}`, tone: 'shortlist' };

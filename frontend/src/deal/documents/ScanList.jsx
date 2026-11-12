@@ -4,7 +4,8 @@ import { checkLabel } from './checkWords';
 
 /*
  * The Scanned data panel's List (plan.md §8.16, §10.7; E56–E59, D121, D122; slice 17): the values read from the files
- * in scope, worst first, with the bucket chips, the bulk bar with "Check this file", the keys and ↶ Undo. Every
+ * in scope, worst first, with the bucket chips, the bulk bar with "Check this file" and ✦ Ask Claude to re-check (slice
+ * 22), the keys and ↶ Undo. Every
  * review goes through the one marks door (`marks`, useMarks). With Find, the List marks and steps through the loaded
  * rows that match (E63); in Review mode a click opens the value in the file, the arrows follow, and E or a
  * double-click hands it to the Grid for editing (E65). `ref` takes the tab's keys (`act`) and the focus.
@@ -22,6 +23,7 @@ export default function ScanList({
   valueOf,
   activeRef,
   check,
+  recheck,
   review,
   find,
   onOpen,
@@ -60,6 +62,7 @@ export default function ScanList({
         pageSize: head.page_size,
       }}
       check={check && { busy: check.busy, run: check.check, label: checkLabel(scope.ids.length, false) }}
+      recheck={recheck}
       find={find}
       review={review}
       onFollow={onFollow}

@@ -3,10 +3,12 @@
  * checking" on what the page names (`target`: "this file", "the 2 ticked plans", "every plan on Medical"), with
  * ✓ Approve, Ignore and ⚑ Needs checking on exactly those open warnings. Nothing waits on it: it is a count with three
  * doors (OQ28). With nothing open it says so in one muted line. `counts` = {open, check, unflagged}. Ignore and Needs
- * checking are off when every open warning is already flagged. Claude's re-check joins in slice 22 (F66); the old
- * walkthrough link is dropped (E49).
+ * checking are off when every open warning is already flagged. `recheck` ({run, busy, suggest}; slice 22, F66, E77,
+ * E80) adds "✦ Ask Claude to re-check": Claude reads just these flagged values again against their pages and proposes
+ * which are right and which need a fix; past `suggest` open warnings the strip says a second read often settles them.
+ * The old walkthrough link is dropped (E49).
  */
-export default function ReviewBulkBar({ counts, target, busy = '', onAction }) {
+export default function ReviewBulkBar({ counts, target, busy = '', onAction, recheck = null }) {
   const { open = 0, check = 0, unflagged = 0 } = counts || {};
   if (!open) {
     return (
@@ -51,7 +53,24 @@ export default function ReviewBulkBar({ counts, target, busy = '', onAction }) {
         >
           {busy === 'check' ? 'Flagging…' : `⚑ Needs checking ${unflagged || ''}`.trim()}
         </button>
+        {recheck && (
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm bnf-review-btn-claude"
+            disabled={Boolean(busy) || recheck.busy}
+            title="Claude reads just these flagged values again against their pages, then proposes which are right and which need a fix. Nothing changes until you apply."
+            onClick={recheck.run}
+          >
+            ✦ Ask Claude to re-check
+          </button>
+        )}
       </span>
+      {recheck?.suggest && open > recheck.suggest && (
+        <span className="bnf-review-bar-note">
+          {open} flags is a lot: a second read of just the flagged values often settles them. Ask Claude to re-check,
+          then approve what it agrees with.
+        </span>
+      )}
     </div>
   );
 }

@@ -110,4 +110,5 @@ def retry(user, job_id, *, model='', force=False, budget_override=False):
         budget_override=budget_override,
         review=bool(params.get('review')),
         retry_of=job.id,
+        plan=params.get('plan'),
     )

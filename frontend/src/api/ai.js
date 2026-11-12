@@ -104,6 +104,36 @@ export function useStartRead(dealId) {
   );
 }
 
+/**
+ * "Attach SBC…" on a plan column (D38; slice 22): ({planId, file}) → the SBC read (201), filed on the deal as the plan's
+ * SBC. It always waits for review (OQ33), so nothing on the plan changes until a person uses it.
+ */
+export function useAttachSbc(dealId) {
+  return useJobWrite(dealId, async ({ planId, file }) => {
+    const form = new FormData();
+    form.append('file', file);
+    return (await api.post(`plans/${planId}/sbc/`, form)).data;
+  });
+}
+
+/**
+ * ✦ Ask Claude to re-check (D40, D93; slice 22): ({refs, planIds, documentIds}) → the re-check job. With none of them,
+ * every flagged value on the deal. Its card waits for a person: nothing changes until they apply it.
+ */
+export function useStartRecheck(dealId) {
+  return useJobWrite(
+    dealId,
+    async ({ refs, planIds, documentIds } = {}) =>
+      (
+        await api.post(`deals/${dealId}/ai/recheck/`, {
+          ...(refs ? { refs } : {}),
+          ...(planIds ? { plan_ids: planIds } : {}),
+          ...(documentIds ? { document_ids: documentIds } : {}),
+        })
+      ).data,
+  );
+}
+
 export const jobKey = (jobId) => ['ai-job', Number(jobId)];
 
 /** One job with its change set (D28): fetched when a card shows it; it changes only by Discard, apply or Undo. */

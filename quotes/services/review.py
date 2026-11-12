@@ -125,8 +125,9 @@ def _summary(action, count, plans):
 
 
 @transaction.atomic
-def mark_values(user, deal, action, *, refs=None, plan_ids=None, document_ids=None):
-    """Mark plan values; returns `Marked` (only what changed, and the Activity row, None when nothing did)."""
+def mark_values(user, deal, action, *, refs=None, plan_ids=None, document_ids=None, via=''):
+    """Mark plan values; returns `Marked` (only what changed, and the Activity row, None when nothing did). `via`
+    'recheck': approvals a person applied from Claude's re-check (E77; slice 22), said so on the value and the row."""
     _check_action(action)
     wanted = parse_refs(refs) if refs is not None else None
     plan_ids = _ids(plan_ids, 'plan_ids', 'Name the plans to review.') if plan_ids is not None else None
@@ -149,7 +150,7 @@ def mark_values(user, deal, action, *, refs=None, plan_ids=None, document_ids=No
             if key not in plan.values:
                 continue  # a blank takes no mark
             entry = plan.sources.get(key)
-            after = apply_mark(entry, action, by, at)
+            after = apply_mark(entry, action, by, at, via)
             if after is None:
                 continue
             plan.sources[key] = after
@@ -168,7 +169,7 @@ def mark_values(user, deal, action, *, refs=None, plan_ids=None, document_ids=No
         user,
         'quotes',
         MARKED,
-        _summary(action, count, result.plans),
+        _summary(action, count, result.plans) + (' from Claude’s re-check' if via == 'recheck' else ''),
         count=count,
         changes=changes,
         document_id=document_ids[0] if document_ids and len(document_ids) == 1 else None,

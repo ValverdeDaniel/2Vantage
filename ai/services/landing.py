@@ -14,6 +14,8 @@
   asks `ai/land.py` whether the read lands by itself and, if so, lands it as proposed through the reader, exactly as
   "Use this scan ▸" would, with the same ↶ Undo this run. A landing the owner refuses (the deal changed meanwhile) is
   taken back and the read waits for review with the refusal's sentence.
+- `on_recheck(job, change_set)` is the `recheck` kind's (slice 22): a re-check always waits for a person (D-119);
+  `apply` and `undo` then go through the owner's checker (`registry.checkers`) as a read's go through its reader.
 Each locks the Deal first, then the job (O.3.7), then the reader locks its owner's rows.
 """
 
@@ -40,6 +42,7 @@ USED = 'This read was already used.'
 NOT_USED = 'This read was not used, so there is nothing to undo.'
 NOTHING_WRITTEN = 'Using this read changed nothing on the deal, so there is nothing to undo.'
 NO_LANDING = 'Reads of this kind cannot be used here yet.'
+RECHECK_WAITS = 'A re-check waits for you: nothing changes until you apply it.'
 COULD_NOT = 'Claude’s read could not be put on the deal by itself, so it waits for review.'
 KEPT = ('v', 'target', 'documents', 'summary', 'counts', 'model', 'cost_usd', 'estimate_usd', 'reply_id', 'board')
 
@@ -102,10 +105,10 @@ def apply(user, job_id, select=None, picks=None):
 
             landed = land_turn(user, job, select)
         else:
-            reader = registry.readers.get(job.target)
-            if reader is None or reader.apply is None:
+            owner = _owner(job)
+            if owner is None or owner.apply is None:
                 raise Refused(NO_LANDING)
-            landed = reader.apply(user, job.deal, job, select=select, picks=picks)
+            landed = owner.apply(user, job.deal, job, select=select, picks=picks)
         landed = {**landed, 'by': getattr(user, 'id', None), 'at': clock.now().isoformat()}
         job.result = {**(job.result or {}), 'landed': landed}
         job.resolution = APPLIED
@@ -132,11 +135,11 @@ def undo(user, job_id, force=False):
             job.resolution = UNDONE
             job.save(update_fields=['result', 'resolution', 'updated_at'])
             return job, True
-        reader = registry.readers.get(job.target)
-        if reader is None or reader.undo is None:
+        owner = _owner(job)
+        if owner is None or owner.undo is None:
             raise Refused(NO_LANDING)
         try:
-            undone = reader.undo(user, job.deal, job, force=force)
+            undone = owner.undo(user, job.deal, job, force=force)
         except Refused as exc:
             if force:
                 raise
@@ -145,6 +148,20 @@ def undo(user, job_id, force=False):
         job.resolution = UNDONE
         job.save(update_fields=['result', 'resolution', 'updated_at'])
     return job, True
+
+
+def _owner(job):
+    """Who lands the job's change set: a re-check's checker, else a read's reader."""
+    if job.kind == kinds.RECHECK:
+        return registry.checkers.get(job.target)
+    return registry.readers.get(job.target)
+
+
+def on_recheck(job, change_set):
+    """A finished re-check's fields: waiting for a person whenever it proposes something (D-119)."""
+    if not (change_set or {}).get('items'):
+        return {}
+    return {'land': land.STAGED, 'wait_reason': RECHECK_WAITS}
 
 
 def is_direct(user):

@@ -9,7 +9,8 @@ class QuotesConfig(AppConfig):
         from deals import activity, providers, stored_counts
         from intake import providers as intake_providers
 
-        from . import facts, flags, locate_hooks, reader, revert, revert_enrollment, revert_read, turn
+        from . import facts, flags, locate_hooks, reader, recheck, revert, revert_enrollment, revert_read, turn
+        from .reader import sbc as sbc_reader
         from .selectors.intake_facts import quote_lines
         from .selectors.sales import client_has_sold
         from .services import enrollment, read_apply, saved_views
@@ -24,5 +25,9 @@ class QuotesConfig(AppConfig):
         # "Check this file" (E59): which plan values came from a file, and where the locator's answers go.
         ai_registry.register_locate('quotes', locate_hooks.queries, locate_hooks.save)
         reader.register()  # Claude's quote reader (slice 18): prompt, schema, merge and change set
+        sbc_reader.register()  # the SBC reader: design values only, always reviewed (slice 22, D47, OQ33)
+        ai_registry.register_checker(recheck.checker())  # ✦ Ask Claude to re-check: a person applies it (D93, E77)
+        if recheck.open_flags not in ai_registry.flag_counts:
+            ai_registry.flag_counts.append(recheck.open_flags)  # the strip's "✦ Re-check N flags" (E80)
         turn.register()  # Work with Claude's chat (slice 24): set_board, propose_changes, clear_line, the table
         stored_counts.register('plan flags', flags.rebuild)  # Plan.flags against a rebuild (O.3.7, Q.3 #9)

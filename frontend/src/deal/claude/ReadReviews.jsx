@@ -4,6 +4,7 @@ import { useMeta } from '../../api/meta';
 import LandedStrip from './LandedStrip';
 import { endedText, readerKinds, readsOn, runningText } from './readWords';
 import { RENDERERS } from './renderers';
+import RecheckCard from './RecheckCard';
 import ReviewCard from './ReviewCard';
 
 /*
@@ -21,7 +22,7 @@ export default function ReadReviews({ dealId, files, onOpen }) {
   const stop = useStopJob(dealId);
   const state = ai.data;
   if (!state?.claude || !meta?.ai) return null;
-  const kinds = readerKinds(meta);
+  const kinds = [...readerKinds(meta), ...readerKinds(meta, 'sbc')]; // the SBC reader's files too (slice 22)
   const ids = files.filter((file) => kinds.includes(file.kind) && !file.archived_at).map((file) => file.id);
   if (!ids.length) return null;
   const nameOf = (id) => files.find((file) => file.id === id)?.display_name || '';
@@ -62,17 +63,21 @@ export default function ReadReviews({ dealId, files, onOpen }) {
       {landed.map((row) => (
         <LandedStrip key={row.job_id} dealId={dealId} news={row} onDismiss={() => dismiss(row.job_id)} />
       ))}
-      {waiting.map((row) => (
-        <ReviewCard
-          key={row.job_id}
-          dealId={dealId}
-          jobId={row.job_id}
-          renderer={RENDERERS[row.target]}
-          meta={meta}
-          nameOf={nameOf}
-          onOpen={onOpen}
-        />
-      ))}
+      {waiting.map((row) =>
+        row.kind === 'recheck' ? (
+          <RecheckCard key={row.job_id} dealId={dealId} jobId={row.job_id} nameOf={nameOf} onOpen={onOpen} />
+        ) : (
+          <ReviewCard
+            key={row.job_id}
+            dealId={dealId}
+            jobId={row.job_id}
+            renderer={RENDERERS[row.target]}
+            meta={meta}
+            nameOf={nameOf}
+            onOpen={onOpen}
+          />
+        ),
+      )}
     </div>
   );
 }

@@ -27,6 +27,7 @@ RECENT = timedelta(minutes=15)
 RECENT_KEPT = 10
 WAITING_KEPT = 10
 STEPS_SHOWN = 8  # the running card's last steps (D22)
+RECHECK_SUGGEST = 20  # past this many open warnings, Claude's re-check is offered on the strip (E80; the old app's)
 
 
 def _last_step(job):
@@ -71,6 +72,7 @@ def waiting_payload(job):
     result = job.result or {}
     return {
         'job_id': job.id,
+        'kind': job.kind,  # a read or a re-check (slice 22): which card shows it
         'target': job.target,
         'documents': job.documents,
         'summary': result.get('summary', ''),
@@ -87,6 +89,7 @@ def landed_payload(job):
     return {
         'type': 'landed',
         'job_id': job.id,
+        'kind': job.kind,
         'target': job.target,
         'documents': job.documents,
         'summary': landed.get('summary', ''),
@@ -130,7 +133,7 @@ def deal_state(deal, user):
         .order_by('-finished_at', '-id')[:WAITING_KEPT]
     )
     landed = (
-        Job.objects.filter(deal=deal, kind=kinds.READ, resolution='applied', updated_at__gte=since)
+        Job.objects.filter(deal=deal, kind__in=(kinds.READ, kinds.RECHECK), resolution='applied', updated_at__gte=since)
         .exclude(activity__isnull=True)
         .order_by('-updated_at', '-id')[:WAITING_KEPT]
     )
@@ -149,6 +152,8 @@ def deal_state(deal, user):
         'waiting': [waiting_payload(job) for job in staged if is_waiting(job)],  # change sets to review (D28)
         'news': [landed_payload(job) for job in landed],  # reads used lately, by a person or by themselves, with Undo
         'read_documents': sorted({doc for ids in read for doc in ids or []}),  # files a finished read read (D13)
+        # the values to review on the deal, and past how many the strip offers Claude's re-check (E80; slice 22)
+        'flags': {'open': sum(count(deal) for count in registry.flag_counts), 'suggest': RECHECK_SUGGEST},
         'lock': {'by': person(row.locked_by), 'at': row.locked_at} if row and row.locked_at else None,
         'spend': {
             'usd': f'{spent:.2f}',

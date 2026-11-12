@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firstPicks, readKinds, rereadable } from './rereadFiles';
+import { byReader, firstPicks, readKinds, rereadable } from './rereadFiles';
 
 const meta = { ai: { targets: [{ key: 'quotes', kinds: ['quote', 'renewal'] }] } };
 const files = [
@@ -20,5 +20,21 @@ describe('E75 the Re-read panel', () => {
     expect([...firstPicks(offered, files[2], false)]).toEqual([3]);
     expect([...firstPicks(offered, files[1], false)]).toEqual([]);
     expect([...firstPicks(offered, null, true)]).toEqual([1, 3]);
+  });
+});
+
+describe('E76 every proposal reader', () => {
+  const both = {
+    ai: {
+      targets: [
+        { key: 'quotes', kinds: ['quote', 'renewal'] },
+        { key: 'sbc', kinds: ['sbc'] },
+      ],
+    },
+  };
+  it('offers SBCs too, and reads each file with the reader of its kind', () => {
+    const offered = rereadable([...files, { id: 5, kind: 'sbc' }], both);
+    expect(offered.map((file) => file.id)).toEqual([1, 3, 5]);
+    expect(byReader(offered, both)).toEqual({ quotes: [1, 3], sbc: [5] });
   });
 });

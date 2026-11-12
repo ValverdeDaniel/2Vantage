@@ -3921,7 +3921,14 @@ chat_id?, document_ids? (≤ 3, none that list members), tab?, board?, viewer?, 
 `{chat_id, message, job, queue_position}` (409 without a key, for Opus or Run anyway by someone neither admin nor
 direct; 400 for bad ids, text, tab or page state); PATCH `deals/{id}/ai/` `{locked?, budget_usd?}` → the state plus
 `activity_ids` (anyone locks; only an admin changes the budget, 403 otherwise, OQ34). A turn's changes use the same
-`apply/` (`select`: item ids), `undo/`, `discard/` and `retry/` (Run anyway, Try again) doors as a read.
+`apply/` (`select`: item ids), `undo/`, `discard/` and `retry/` (Run anyway, Try again) doors as a read. Built in
+slice 22: POST `deals/{id}/ai/recheck/` `{refs? | plan_ids? | document_ids?, model?}` (✦ Ask Claude to re-check, D40,
+D93) → 201 the `recheck` job (target the owner, `quotes`; `params.refs` the values it checks), 200 the same one going;
+409 without a key, with nothing flagged there ("Nothing there is flagged for review…") or past 400 values; 400 for ids
+or refs not the deal's. Its change set (`kind: recheck`) always waits for a person and uses the same `apply/` (`select`:
+item ids, one item per value), `undo/` and `discard/` doors. The state's `waiting` and `news` rows add `kind`, `news`
+lists used re-checks too, and the state adds `flags: {open, suggest}` (the deal's open warnings, from the owners'
+`registry.flag_counts`, and the 20 past which the strip offers "✦ Re-check N flags", E80).
 
 | Method | Path | Auth | Request and response |
 |---|---|---|---|
@@ -4063,7 +4070,7 @@ the design; a path with no plan id sits under `deals/{id}/`.
 | `plans/sources/`, `plans/marks/` | The station's values and marks (F.6's `plans/review/`). GET `sources/?documents=1,2&bucket=&page=` (no `documents`: every value with a file) → `{rows: [{ref, plan_id, key, label, sub, value, bucket, where, doc, origin, low, loc, mark, confirmed (each with by_name), open, potential, dealt, hint, what}], page, pages, total, page_size: 200, counts: {bucket: {open, done}}, all: {open, done}, warnings: {open, check, unflagged}, quality: {high, low, missing}, headline: {label, tone}}`, worst first (`review_rules.review_bucket`), dealt values last in their bucket, then board order. POST `marks/` `{action: approve\|ignore\|check\|clear, refs: ["plan:41:rate_ee"] \| plan_ids \| document_ids}`: refs name exactly those values; plans and files take only their open warnings (for clear, their marks); nothing named takes the whole deal; → `{action, changed, activity_id, truncated, values: [{ref, plan_id, key, cell: {s?, m?, p?}, mark, confirmed, open, potential, dealt, bucket}], plans: [{id, flags, incomplete}]}` (no `values` past 2,000: refetch). One Activity row (`marked`, never merged) with each value's marks before and after under `mark.<key>`, never the value; Revert (Undo) restores the values still as it left them and is refused, naming them, when none is | E.6, F63–F67 | built; 17 |
 | `plans/{id}/source/?key=` | One value's full source, for ↗: `{plan_id, key, label, value, hint, what, source: {origin, doc, page, cell, line, loc, low, mark, confirmed}}`; read only | F.6, E18 | built; 15 |
 | `plans/as-quoted/?document=&line=` | "As quoted", from `QuoteLayout`. GET with no `document`: `{files: [{document, line, line_label, label, where, page_label, plans, rows, written_at}]}`, one per table on a file not removed, in upload order; with `?document=<id>[&line=]`: `{document, line, line_label, label, kind, where, page_label, written_at, job, columns: [{col, plan, head}], left_out, rows: [{label, keys, printed?}]}` — the plans still on the deal in printed order (a removed one is left out and counted), rows in printed order, `printed` one cell per column (blank for a PHI kind, even one filed so after the read). Live values come from the comparison. 400 a bad id or line; 404 no table | F42, E42 | built; 21 |
-| `plans/{id}/sbc/` | Attach SBC: a staged read of design values | D47 | 22 |
+| `plans/{id}/sbc/` | Attach SBC: a staged read of design values. POST multipart `{file}` (filed on the deal as kind `sbc`, the plan's carrier and role, medical) or `{document_id}` (an SBC already there), `model?` → 201 the `read` job (target `sbc`, `params.plan`), 200 the same read going. 409 without a key, on a plan of another line, on a priced version or copy ("takes its design from the plan it was made from"); 400 no file, a file not the deal's or not an SBC, a bad id; 404 no plan | D38, D47 | built; 22 |
 | `plans/pair/` | Pair two halves into one printed column, or split them | J15, O.6 #4 | 33 |
 | `plans/priced/`, `plans/{id}/priced/` | Priced versions: a dry-run preview, then the commit. POST `deals/{id}/plans/priced/` `{plan_ids, kind: concession\|bundle\|holiday, all?: {op, value}, each?: {rate key: {op, value} \| "keep"}, parts?: [{line, op, value, plan_id? \| carrier?}], conditional?, credit?: {annual} \| {months}, note?, name?, dry_run?}` → 201 (200 for a dry run) `{dry_run, drafts: [{original_id, name, label, derived, starred, changes: {key: value}, premium, change, part_of, credit, enrollment_used, enrollment_source}], plans: [the versions written], warning, activity_id}`; one version per plan named, all on one line, one `created` row. POST `plans/{id}/priced/` (✎) takes the same body on a version and re-prices it from its original (one revertible `updated` row; the same body again writes nothing). `op`: `pct_off`, `pct_up`, `flat_off`, `flat_up`, `set` (a bundle has no `set`). Malformed → 400 with the sentence; refusals → 409 (a sold plan, a concession or bundle on the in-force plan, a bundle on an `included` quote, a rate below zero, a dollar credit across several plans, two lines, a version's kind, an original gone). Remove a version with `plans/delete/` (Undo restores it). The board's words are `/api/meta/` `board.priced` | F76–F84 | built; 35 |
 | `plans/stop-loss/`, `plans/stop-loss/workbook/` | Stop-loss analysis and its five-tab workbook | F98–F107, J166 | 36 |
@@ -4714,7 +4721,12 @@ Part D (D1–D45, D134; D.6). Slices 18–20, 24 and 66. Shown only when a key i
   (D35).
 - **Doors on other tabs:** ＋ Add quotes, ＋ Add SBCs, Attach SBC…, Re-read, Ask Claude to re-check, "Not our template?
   Read it with Claude ▸" and Intake's ✦ (D37–D40, D42, D134); the quote-first door (D43); `?claude=read&docs=…` opens
-  the quote reader on named files (I53).
+  the quote reader on named files (I53). **Built in slice 22:** "＋ Add SBCs" beside "＋ Add quotes" (opens the drawer
+  on SBCs, F95); "Attach SBC…" in a medical plan's ⋯ menu on the Advisor's board (not on a priced version or a copy;
+  the file uploads and its read waits, the drawer opening on it, D38); the Re-read panel offers SBCs too, each file
+  read by its reader (E76); "✦ Ask Claude to re-check" on the review strips (the Advisor's, the station's strip and
+  List, F66, E77) and "✦ Re-check N flags ▸" on the Claude strip past 20 open warnings (E80); the re-check's card
+  (`deal/claude/RecheckCard`, the old flag re-check's words) in the drawer and under its file on Documents.
 - Claude Unleashed, lessons and saved readers wait (D2, D10, D30, D33; OQ4).
 - **Built in slice 20** (`src/deal/claude/`): `WorkWithClaude` (the strip, the pill and the drawer, mounted once in the
   deal shell under the header; the shell's section is `bnf-claude-section`, where landed plans flash, and the workspace
@@ -5333,6 +5345,31 @@ finding, when allowed → landing (§10.5).
   sharing a code, a current plan left without its renewal on a line with renewals — step the read up (D76 is live);
   soft ones (values not found, tier order, printed counts × rates against the printed premium) are listed. Each read's
   per-call note carries its file's carrier note (`ai/carrier_notes.py`).
+- **Built in slice 22:** the SBC reader (`quotes/reader/sbc.py`, `sbc_prompt.py`; the old phase 10e rules): the quote
+  reader's row-major answer, read with the SBC prompt (one plan's design, never a rate, the coverage examples skipped);
+  values outside the medical design fields are dropped in code (rates, contributions, level-funded and stop-loss, said
+  in a finding). Its plan goes to the plan "Attach SBC…" named (`params.plan`), else to the plans of the first tier
+  that names them — plan-number half, strong code, carrier and name — over every role but never a priced version or a
+  copy; a current plan and its renewal named alike both take it; several unrelated plans, or none, make an unticked
+  design-only plan (an alternate). The SBC beats a quote: a value a quote read put on the plan that the SBC prints
+  differently is replaced and flagged (`low` names both figures; listed as the change set's `conflicts`, the card's
+  "Where the SBC and the quote disagree"), typed, imported and approved values are left alone (D61), and a quote read
+  leaves a value read from one of the deal's SBCs alone (`rules.decide`'s `sbc_docs`, with a finding). The reader is
+  `must_review` (OQ33), its change set lands through `read_apply` (no printed table) and ↶ Undo this run. The re-check
+  (`ai/recheck.py`, `recheck_prompt.py`; the old `flag_check` and `scan_audit.audit_claims`): the owner's checker
+  (`registry.checkers`; quotes' `recheck.py`) names the open warnings with a file, Claude reads each file only on the
+  pages its claims name (a value with no page rides a PDF of at most 30 pages, else it is listed as not checked), 40
+  claims a call, and the best verdict across calls wins; formatting is no difference. The change set has one item per
+  value: `confirm` (Claude agrees, ticked) and `set_values` (a fix, the page's value cleaned as typed; unticked when
+  Claude was unsure; frozen on a sold plan), and `unverified` (not found, still flagged). A person applies it
+  (`quotes/services/recheck_apply.py`): fixes land as a read's values (`read_plans.Landing`, area `quote_read`, action
+  `recheck`), approvals through `mark_values(..., via='recheck')` as the person who pressed Apply (E77); ↶ Undo this run
+  reverts both. `quotes/split.py` (D116): two plans of one carrier, line and side are halves of one plan when their
+  numbers differ only in a last digit one apart (05182 / 05183) or one prices employees only and the other the
+  dependent tiers; a read's fresh halves stay two plans (a finding says so); a deal's one "A / B" plan takes both
+  halves of a read (each tier's rate from the half that prints it; a disagreement keeps the employee-only half's, said).
+  Not built: the reader's `combine` op (O.6 #32) — fresh halves are never combined (D-219), and two plans that are one
+  are joined by Claude's `merge_plans` or by hand.
 
 ### 10.5 Landing, review and Undo
 
@@ -5413,7 +5450,8 @@ finding, when allowed → landing (§10.5).
   board patch through `deal/shared/boardBridge.js` (F108): the Advisor's `useBoardBridge` sets the line and the
   config in the URL, and Claude's pick (F25) shows as its chip. Not built here: `read_documents`, `check_values`,
   `rank_plans`, `merge_plans`, `pair_plans`, `add_lines`, `set_table_note`, `set_rows` (slices 22, 37 and the
-  builder's); creating a plan from a chat (Claude adds plans by reading their file). **Decision (slice 24):** a turn's
+  builder's; slice 22 built `merge_plans` — the one merge service, F142, refusing the two halves of one plan, D-219 —
+  and `check_values`, which starts ✦ Ask Claude to re-check in a job of its own that waits for the producer); creating a plan from a chat (Claude adds plans by reading their file). **Decision (slice 24):** a turn's
   changes land at once for an admin or a direct person (§2's `claude_direct`: "chat changes land at once, with Undo"),
   removals included — the person asked for them, and sold or recommended plans are refused when proposed (D86) —
   unless the table is locked or the deal lost; everyone else's wait in the chat for "Apply N selected ▸"
@@ -6450,7 +6488,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | **Slice 21: AI-4** | | | | |
 | OQ32 | Need 3: show "As quoted" in the Advisor, on Documents, or both? Should printed rows that match no field reach the client files? | Open. Default: both screens; client files keep the quote's plan order but the house rows. Built in slice 21 on the default: the Advisor's "As quoted" view and Documents' "▤ As in the file"; printed rows that fill no field stay in `QuoteLayout` only and never reach values or client files | Open (default built) | 21 |
 | **Slice 22: AI-5** | | | | |
-| OQ33 | Should SBC reads wait for review even for direct people? | Open. Default: yes (D71) | Open | 22 |
+| OQ33 | Should SBC reads wait for review even for direct people? | Open. Default: yes (D71). Built in slice 22 on the default: the SBC reader is `must_review`, so every SBC read waits for a person's "Use this scan ▸", an admin's and a direct person's too | Open (default built) | 22 |
 | **Slice 24: AI-6** | | | | |
 | OQ34 | Should only admins change a deal's AI budget? | Open. Default: yes. Built in slice 24: `PATCH deals/{id}/ai/` `{budget_usd}` answers 403 for anyone but an admin; admins set it with ✎ Budget in the drawer's head bar (D100) | Open (default built) | 24 |
 | **Slice 69: STG-1 (after slice 16)** | | | | |

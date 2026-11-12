@@ -3,6 +3,7 @@ Slice 18: the one read door (`deals/{id}/ai/reads/`, D39) and Discard on a waiti
 Slice 19: using a read (`ai/jobs/{id}/apply/`, D72) and ↶ Undo this run (`ai/jobs/{id}/undo/`, D73).
 Slice 20: attaching files to Claude (`deals/{id}/ai/sends/`, D16, D17) and ↻ Try again (`ai/jobs/{id}/retry/`, D76);
 the read door's `review` (the Re-read panel's reads always wait, E75).
+Slice 22: ✦ Ask Claude to re-check (`deals/{id}/ai/recheck/`, D40, D93); its change set uses apply/undo/discard.
 
 The two GETs a browser polls (`deals/{id}/ai/` and `ai/jobs/{id}/`) use the `ai_poll` throttle alone, so polling
 every 2 s on two tabs never uses up the user rate (§3.5, E.6). Any signed-in person may start or stop a job on any
@@ -139,6 +140,34 @@ class ReadsView(APIView):
             model=_model(request.data),
             budget_override=request.data.get('budget_override') is True,
             review=request.data.get('review') is True,
+        )
+        job = _job(job.id)
+        return Response(selectors.job_payload(job), status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+
+def _refs(raw):
+    if raw is None:
+        return None
+    if not isinstance(raw, list) or not all(isinstance(item, str) for item in raw):
+        raise ValidationError({'refs': ['Name the values as a list of refs.']})
+    return raw
+
+
+class RecheckView(APIView):
+    """POST {refs? | plan_ids? | document_ids?, model?}: ✦ Ask Claude to re-check (D40, D93, E77; slice 22) → 201 the
+    job, or 200 the same re-check already going. Its change set waits for a person. 409 without a key, with nothing
+    flagged there or too many values; 400 for ids or refs that are not the deal's."""
+
+    def post(self, request, pk):
+        deal = _deal(pk)
+        plan_ids, document_ids = request.data.get('plan_ids'), request.data.get('document_ids')
+        job, created = services.start_recheck(
+            request.user,
+            deal,
+            refs=_refs(request.data.get('refs')),
+            plan_ids=_ids(plan_ids, 'plan_ids') if plan_ids is not None else None,
+            document_ids=_ids(document_ids) if document_ids is not None else None,
+            model=_model(request.data),
         )
         job = _job(job.id)
         return Response(selectors.job_payload(job), status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)

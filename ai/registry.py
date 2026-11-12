@@ -27,6 +27,9 @@ ai sits left of every value owner in the chain, so it never imports them: they f
 - `turn_owners` {owner: TurnOwner(order, apply)}: who lands a turn's items (`item['owner']`), in the chain's lock
   order. `apply(user, deal, job, items) -> {activity_ids, plan_ids, areas, summary, skipped}` writes them through the
   owner's services in the caller's transaction; ↶ Undo this run reverts those Activity rows.
+- `checkers` {owner: Checker}: the value owners whose flagged values Claude re-checks (D40, D93, E77; slice 22). The
+  `recheck` job (`ai/recheck.py`) asks the owner for its claims, has Claude read each against its page, and hands
+  the verdicts back to the owner, whose change set a person applies (D-119: never by itself).
 """
 
 from collections import namedtuple
@@ -122,3 +125,32 @@ def register_reader(reader):
     if reader.target not in kinds.TARGETS:
         raise ValueError(f'Unknown reader target: {reader.target}')
     readers[reader.target] = reader
+
+
+@dataclass(frozen=True)
+class Checker:
+    """One owner's re-check (D93's one check mode: agree, fix or not found; slice 22).
+    - `claims(deal, scope) -> [claim]`: the values to re-check, each `{ref, doc, page, cell, label, value}` (`ref` is
+      the owner's and opaque here; `label` names the plan and the field, never a person). `scope` is `{refs?,
+      plan_ids?, document_ids?}`; none of them: every open warning on the deal. Raises ValidationError for ids that
+      are not the deal's.
+    - `build_changes(deal, claims, verdicts, extra) -> change set`: D.6's shape; items the person applies (`confirm`
+      for a value Claude agrees with, `set_values` for a fix), `unverified` for the values not found on their page.
+    - `apply(user, deal, job, select=None, picks=None) -> landed` and `undo(user, deal, job, force=False)`: as a
+      Reader's: a person applies the change set through the owner's services, and ↶ Undo this run takes it back."""
+
+    owner: str
+    claims: object
+    build_changes: object
+    apply: object
+    undo: object
+
+
+checkers = {}
+flag_counts = []  # fn(deal) -> the open warnings on the deal's values (quotes): the strip's "✦ Re-check N flags" (E80)
+
+
+def register_checker(checker):
+    if checker.owner not in kinds.TARGETS:
+        raise ValueError(f'Unknown checker owner: {checker.owner}')
+    checkers[checker.owner] = checker

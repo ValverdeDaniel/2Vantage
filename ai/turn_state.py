@@ -3,7 +3,7 @@
 Tools never write (D81): each adds items to the turn's change set (`add`) or sets the board (`board`). The change set
 is D.6's shape with each item's `owner` (the app that lands it: quotes, intake) and `label` (what it does, in words):
   quotes: set_values {plan, line, values: [{key, label, old, new, dictated}]} · remove_plan {plan, line} ·
-          clear_line {line, plans}
+          clear_line {line, plans} · merge_plans {plan, merge, overwrite, line} (slice 22)
   intake: guidance {old, new}
 Items are ticked; a person may untick some before applying a change set that waits. When the turn ends the change set
 lands by itself or waits (`services/turns.py`); the board patch goes to the browser, which applies it (F108).
@@ -51,6 +51,8 @@ class TurnState:
             parts.append(f'Clear {counts["clear_line"]} line{"s" if counts["clear_line"] != 1 else ""}')
         if counts['values']:
             parts.append(f'Set {counts["values"]} value{"s" if counts["values"] != 1 else ""}')
+        if counts['merge_plans']:
+            parts.append(f'Merge {counts["merge_plans"]} plan{"s" if counts["merge_plans"] != 1 else ""}')
         if counts['guidance']:
             parts.append('Update the client guidance')
         return ' · '.join(parts)

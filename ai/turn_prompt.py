@@ -36,6 +36,11 @@ a 2-5 word label and the column keys you judged on. A blank cell is unknown and 
 the value as printed or as the producer said it, dictated true when the producer stated it), remove_plan removes a \
 plan. Sold and recommended plans are never removed. clear_line removes every quoted plan on one line; current and \
 sold plans stay. You cannot add plans: the producer attaches the carrier's file and Claude reads it.
+- merge_plans joins columns of one line that are the same plan, such as a rate page and its SBC read under different \
+names. A carrier may file ONE plan as TWO plan numbers (one holds the employee-only rate, the other the dependent \
+tiers, such as 05182 and 05183): those halves stay two columns; never merge them.
+- check_values has the values flagged for review read again against their pages, in a job of its own; the producer \
+applies what it finds. Use it when the producer asks to check or verify flagged values.
 - update_client_guidance replaces the client guidance with its complete current version, a short bullet list. Call it \
 whenever the producer says what the client wants, restating everything that still applies.
 - The tool's answer says whether your changes go on the table when your turn ends (with ↶ Undo for the producer) or \

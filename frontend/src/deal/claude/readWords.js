@@ -8,20 +8,26 @@ export function readerKinds(meta, target = 'quotes') {
 
 /** The read jobs (queued or running) that read any of these files. */
 export function readsOn(jobs, ids) {
-  return (jobs || []).filter((job) => job.kind === 'read' && job.documents.some((id) => ids.includes(id)));
+  const reading = (job) => job.kind === 'read' || job.kind === 'recheck'; // a re-check reads them again (slice 22)
+  return (jobs || []).filter((job) => reading(job) && job.documents.some((id) => ids.includes(id)));
 }
 
 /** "Claude is reading the file · 40% — Reading pages 1–2". */
 export function runningText(job) {
   const where = job.status === 'queued' ? 'Waiting to start' : `${job.progress || 0}%`;
-  return { text: `Claude is reading ${job.documents.length > 1 ? 'these files' : 'the file'} · ${where}`, line: job.step };
+  const doing = job.kind === 'recheck' ? 'Claude is re-checking the flagged values in' : 'Claude is reading';
+  return { text: `${doing} ${job.documents.length > 1 ? 'these files' : 'the file'} · ${where}`, line: job.step };
 }
 
 /** A read that ended without a change set to review: failed, or waiting past a cap. '' when there is nothing to say. */
 export function endedText(job) {
-  if (!job || job.kind !== 'read') return '';
+  if (!job || (job.kind !== 'read' && job.kind !== 'recheck')) return '';
   if (job.status === 'failed') return job.error || 'The read failed.';
   if (job.land === 'budget') return job.wait_reason;
+  if (job.kind === 'recheck' && job.status === 'done' && !job.counts?.items && job.counts?.unverified) {
+    const n = job.counts.unverified;
+    return `Claude re-checked ${n} flagged value${n === 1 ? '' : 's'} and could not find ${n === 1 ? 'it' : 'them'} on ${n === 1 ? 'its page' : 'their pages'}: still flagged, check by hand.`;
+  }
   return '';
 }
 
@@ -64,6 +70,7 @@ export function landedToast(landed) {
 /** The strip under a used read: "✓ Used Claude's read — 2 current plans · 2 renewals"; a read that landed by itself
  *  (an admin's or a direct person's, D71) says so: "✓ Claude's read landed — …". */
 export function landedText(news) {
+  if (news.kind === 'recheck') return `✓ Applied Claude’s re-check — ${news.summary}`; // slice 22 (D93, E77)
   return news.auto ? `✓ Claude’s read landed — ${news.summary}` : `✓ Used Claude’s read — ${news.summary}`;
 }
 

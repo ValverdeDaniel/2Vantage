@@ -104,11 +104,13 @@ def start_read(
     budget_override=False,
     review=False,
     retry_of=None,
+    plan=None,
 ):
     """A read of these files by `target`'s reader (the one read door, D39; D46, D48). Refused with a sentence when
     Claude is not set up (409), the files are not this deal's or not of a kind the reader reads (400), or the person
     may not pick Opus or run past the cap (403-style sentences, 409). `review`: the read waits for review whoever
-    starts it (the Re-read panel, E75); `retry_of`: the read it tries again (D76)."""
+    starts it (the Re-read panel, E75); `retry_of`: the read it tries again (D76); `plan`: the plan an attached SBC is
+    for ("Attach SBC…", D38; slice 22)."""
     from .. import client, pricing, reading, registry
 
     if not client.available():
@@ -141,4 +143,6 @@ def start_read(
         params['review'] = True
     if retry_of:
         params['retry_of'] = int(retry_of)
+    if plan:
+        params['plan'] = int(plan)
     return start(user, deal, kinds.READ, documents=[doc.id for doc in ordered], params=params, target=target)

@@ -6,6 +6,7 @@ import { claudeDoor } from './door';
 import LandedStrip from './LandedStrip';
 import OverBudget from './OverBudget';
 import { RENDERERS } from './renderers';
+import RecheckCard from './RecheckCard';
 import ReviewCard from './ReviewCard';
 import RunningCard from './RunningCard';
 
@@ -85,17 +86,21 @@ export default function DrawerNews({ dealId, state, meta, onDocuments, dismissed
         </div>
       )}
       {!onDocuments &&
-        waiting.map((row) => (
-          <ReviewCard
-            key={row.job_id}
-            dealId={dealId}
-            jobId={row.job_id}
-            renderer={RENDERERS[row.target]}
-            meta={meta}
-            nameOf={nameOf}
-            onOpen={open}
-          />
-        ))}
+        waiting.map((row) =>
+          row.kind === 'recheck' ? (
+            <RecheckCard key={row.job_id} dealId={dealId} jobId={row.job_id} nameOf={nameOf} onOpen={open} />
+          ) : (
+            <ReviewCard
+              key={row.job_id}
+              dealId={dealId}
+              jobId={row.job_id}
+              renderer={RENDERERS[row.target]}
+              meta={meta}
+              nameOf={nameOf}
+              onOpen={open}
+            />
+          ),
+        )}
     </>
   );
 }

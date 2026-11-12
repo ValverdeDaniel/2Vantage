@@ -7,6 +7,7 @@ urlpatterns = [
     path('deals/<int:pk>/ai/locate/', views.LocateView.as_view()),
     path('deals/<int:pk>/ai/reads/', views.ReadsView.as_view()),
     path('deals/<int:pk>/ai/sends/', views.SendsView.as_view()),
+    path('deals/<int:pk>/ai/recheck/', views.RecheckView.as_view()),
     path('deals/<int:pk>/ai/chats/', chat_views.ChatsView.as_view()),
     path('deals/<int:pk>/ai/messages/', chat_views.SendView.as_view()),
     path('ai/chats/<int:chat_id>/', chat_views.ChatView.as_view()),

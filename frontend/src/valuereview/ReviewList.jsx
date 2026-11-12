@@ -38,6 +38,7 @@ export default function ReviewList({
   undoing,
   more,
   check,
+  recheck = null,
   find = null,
   review = false,
   onFollow = null,
@@ -170,6 +171,17 @@ export default function ReviewList({
         >
           {busy === 'check' ? 'Saving…' : '⚑ Needs checking'}
         </button>
+        {recheck && head?.warnings?.open > 0 && (
+          <button
+            type="button"
+            className="btn btn-sm btn-secondary bnf-review-btn-claude"
+            disabled={Boolean(busy) || recheck.busy}
+            onClick={recheck.run}
+            title="Claude re-reads just the flagged values against their pages and proposes approvals and fixes for you to apply"
+          >
+            ✦ Ask Claude to re-check {head.warnings.open}
+          </button>
+        )}
         {check && (
           <button
             type="button"

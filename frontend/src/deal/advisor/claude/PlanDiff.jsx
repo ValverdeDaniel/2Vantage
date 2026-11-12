@@ -10,7 +10,8 @@ import { byLine, headChip, linkText, movedPct, printedRows, rowsFor, valueRef } 
  * that fill no field close the table, greyed, with their printed text (need 3). Slice 19: a value that arrived
  * unticked (left alone, or unsure) has its own "use" tick; ↗ shows a value's page in the file (E78's pin); a "Which
  * current plan?" column says where it goes (D117): one of the plans the read named, a new current plan, or an
- * alternate.
+ * alternate. Slice 22: an SBC read shows here too (its design values for the plan it names, "SBC: …"); a value the
+ * SBC disagrees with lands flagged to review, and an SBC that matched no plan says why its design-only plan is off.
  */
 const MOVES = new Set(['amount', 'rate', 'rate4', 'percent', 'number']);
 
@@ -54,6 +55,11 @@ function ValueCell({ entry, field, item, picked, onToggle, onOpen }) {
       )}
       {left && <span className="bnf-staged-old">{left} — left alone</span>}
       {!left && entry.low && !entry.tick && <span className="bnf-staged-old">unsure — unticked</span>}
+      {!left && entry.low && entry.tick && (
+        <span className="bnf-staged-absent" title={entry.low}>
+          ⚑ lands flagged to review
+        </span>
+      )}
       {!entry.tick && (
         <label className="bnf-pchg-all" title="Use this value too">
           <input type="checkbox" checked={picked.has(ref)} onChange={() => onToggle(ref, item.id)} /> use
@@ -93,6 +99,8 @@ function PlanHead({ item, items, picked, onToggle, places, onPlace }) {
           <div className="bnf-plan-name">{item.name}</div>
           {item.plan_number && <div className="bnf-staged-line">Plan {item.plan_number}</div>}
           {link && <div className="bnf-staged-line">{link}</div>}
+          {item.sbc_name && <div className="bnf-staged-line">SBC: {item.sbc_name}</div>}
+          {item.design_only && <div className="bnf-staged-line">{item.why}</div>}
           {item.op === 'pick_current' && <PickCurrent item={item} places={places} onPlace={onPlace} />}
           <label className="bnf-pchg-all">
             <input type="checkbox" checked={picked.has(item.id)} onChange={() => onToggle(item.id)} /> Use

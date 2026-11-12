@@ -32,6 +32,7 @@ def samples(world):
         'api/ai/jobs/<int:job_id>/undo/': {'job_id': job.id},
         'api/deals/<int:pk>/ai/sends/': {'pk': deal.id},
         'api/ai/jobs/<int:job_id>/retry/': {'job_id': job.id},
+        'api/deals/<int:pk>/ai/recheck/': {'pk': deal.id},  # slice 22: ✦ Ask Claude to re-check (D93)
         'api/deals/<int:pk>/ai/chats/': {'pk': deal.id},
         'api/deals/<int:pk>/ai/messages/': {'pk': deal.id},
         'api/ai/chats/<int:chat_id>/': {'chat_id': world['chat'].id},
@@ -58,6 +59,8 @@ def matrix(world):
         # attaching without a key reads nothing (D26), and a rank job is no read to try again (slice 20)
         ('POST', 'api/deals/<int:pk>/ai/sends/', REFUSED, {'document_ids': [world['document'].id]}),
         ('POST', 'api/ai/jobs/<int:job_id>/retry/', REFUSED),
+        # slice 22: without a key nothing is re-checked (D26)
+        ('POST', 'api/deals/<int:pk>/ai/recheck/', REFUSED, {}),
         # slice 24: chats; without a key Claude is not asked (D26); anyone locks the table (D104)
         ('GET', 'api/deals/<int:pk>/ai/chats/', ALL),
         ('POST', 'api/deals/<int:pk>/ai/messages/', REFUSED, {'text': 'Hello'}),

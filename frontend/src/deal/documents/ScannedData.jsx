@@ -10,6 +10,7 @@ import { REVIEW_KEYS, REVIEW_MODE_KEYS } from '../../valuereview/keys';
 import { listHits } from '../../valuereview/listFind';
 import ReviewBulkBar from '../../valuereview/ReviewBulkBar';
 import useMarks from '../../valuereview/useMarks';
+import { useRecheck } from '../claude';
 import useReviewHotkeys from '../../valuereview/useReviewHotkeys';
 import FindBar from './FindBar';
 import OwnerFileView from './OwnerFileView';
@@ -57,6 +58,7 @@ export default function ScannedData({ deal, meta, scope, expanded, modes, viewer
   const proposal = scope.bucket === 'proposal';
   const sources = usePlanSources(deal.id, { documentIds: scope.ids, bucket, enabled: proposal });
   const marks = useMarks(deal.id);
+  const claude = useRecheck(deal.id); // ✦ Ask Claude to re-check (slice 22): null without Claude
   const find = useStationFind(meta.carriers);
   const fields = useMemo(() => Object.fromEntries((meta.plans?.fields ?? []).map((f) => [f.key, f])), [meta.plans]);
   const pages = sources.data?.pages;
@@ -123,6 +125,7 @@ export default function ScannedData({ deal, meta, scope, expanded, modes, viewer
     setAsk((now) => ({ ref: row.ref, n: (now?.n ?? 0) + 1 }));
   };
   const strip = (action) => marks.run(action, { document_ids: scope.ids }, { where: words });
+  const recheck = claude && proposal && { ...claude, run: () => claude.run({ documentIds: scope.ids }) }; // F66, E77
   const toggleReview = () => {
     modes.setReview(!modes.review);
     (gridOn ? gridRef.current : listRef.current)?.focus();
@@ -189,6 +192,7 @@ export default function ScannedData({ deal, meta, scope, expanded, modes, viewer
         valueOf={valueOf}
         activeRef={viewer.ref}
         check={check}
+        recheck={recheck}
         review={modes.review}
         find={{ hits: listFound, current: at.current, only: find.only, nonce: find.nonce, words: find.words }}
         onOpen={open}
@@ -234,7 +238,7 @@ export default function ScannedData({ deal, meta, scope, expanded, modes, viewer
         />
       )}
       {gridPlans && !modes.editing && (
-        <ReviewBulkBar counts={head.warnings} target={words} busy={marks.busy} onAction={strip} />
+        <ReviewBulkBar counts={head.warnings} target={words} busy={marks.busy} onAction={strip} recheck={recheck} />
       )}
       <div className={cx('bnf-scan-body', gridPlans && 'bnf-scan-fill')}>{body}</div>
       {clipTip.tip && (
