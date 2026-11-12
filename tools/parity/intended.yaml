@@ -8,7 +8,8 @@
 #
 #   - item: J25                  # the plan item that causes it (an X.3 row ID or an OQ)
 #     deal: GD1                  # the golden deal it shows on: GD1, a list "GD1, GD3", or all
-#     file: proposal-pdf         # workbook | proposal-pdf | deck (paper, carrier:<name>, … when the lane compares them)
+#     file: proposal-pdf         # workbook | proposal-pdf | deck | paper (carrier:<name>, … when the lane compares
+#                                #   them), or a list: "proposal-pdf, paper" (Paper is read back at the PDF's page size)
 #     where: "page * «Dental*"   # a glob over the difference's place: "Medical!B12", "Cover!row 8", "page 6 «…»",
 #                                #   "slide 3 «…»", "file name"; or all
 #     kind: words                # optional: a glob or a list over its kind (value, formula, row-added, words, …)
@@ -42,6 +43,17 @@ intended:
     old: "Golden Manufacturing (synthetic) - 2027 Benefits Proposal.pdf"
     new: "Golden Manufacturing synthetic - 2027 Benefits Proposal-DRAFT.pdf"
     why: "J104: the old name through safe_filename, which drops the parentheses (-DRAFT is masked)."
+    signed_by: null
+    signed_on: null
+  - item: J104
+    deal: all
+    file: paper
+    where: "file name"
+    kind: file-name
+    match: "\\(synthetic\\) - .* \\(Letter\\)\\.pdf → .* synthetic - .* Letter\\.pdf$"
+    old: "Golden Manufacturing (synthetic) - 2027 Benefits Proposal (Letter).pdf"
+    new: "Golden Manufacturing synthetic - 2027 Benefits Proposal-DRAFT Letter.pdf"
+    why: "J104: the old Letter PDF's name through safe_filename, which keeps letters, digits, spaces and ._- only, so the client name's and \"(Letter)\"'s parentheses go (-DRAFT is masked)."
     signed_by: null
     signed_on: null
   - item: J104
@@ -81,7 +93,7 @@ intended:
     signed_on: null
   - item: OQ41
     deal: all
-    file: proposal-pdf
+    file: "proposal-pdf, paper"
     where: "page *"
     kind: words
     match: "^(Vantage Risk Solutions|None) → Dev$"
@@ -105,7 +117,7 @@ intended:
   # ---- The PDF's pages are the slides (J122) -------------------------------------------------------------------------
   - item: J122
     deal: all
-    file: proposal-pdf
+    file: "proposal-pdf, paper"
     where: "page * «Thank you»"
     kind: words
     match: "Prepared <date> VANTAGE RISK SOLUTIONS Rates as quoted .* → None$"
@@ -139,7 +151,7 @@ intended:
     signed_on: null
   - item: F144
     deal: all
-    file: proposal-pdf
+    file: "proposal-pdf, paper"
     where: "page * «Medical*"
     kind: words
     match: "^None → Other Plan Details Funding( Fully insured)+$"
@@ -161,12 +173,12 @@ intended:
     signed_on: null
   - item: F144
     deal: "GD2, GD3, GD4, GD6"
-    file: proposal-pdf
+    file: "proposal-pdf, paper"
     where: "page * «Medical — *»"
     kind: word-position
-    match: "dx up to [+-]0\\.0 pt, dy up to \\+4[01]\\.[0-9] pt$"
+    match: "dx up to [+-]0\\.0 pt, dy up to \\+42\\.8 pt$"
     old: "the rows below the design block"
-    new: "the same rows about 41 pt lower"
+    new: "the same rows 42.8 pt lower: two rows at 12 pt, each 14.4 pt of type and 3.5 pt of padding above and below"
     why: "plan.md §4.3: the Funding band and row (two rows of the table) push everything under them down."
     signed_by: null
     signed_on: null
@@ -175,9 +187,9 @@ intended:
     file: deck
     where: "slide * «Medical*"
     kind: shape-position
-    match: "(TABLE \\(19\\)\\| → h\\+4[01](\\.[0-9]+)? |Enrollment basis.* → y\\+4[01](\\.[0-9]+)? w-)"
+    match: "(TABLE \\(19\\)\\| → h\\+42\\.8 |Enrollment basis.* → y\\+42\\.8 w-)"
     old: "the medical table and the basis note under it"
-    new: "the table about 41 pt taller, the note 41 pt lower"
+    new: "the table 42.8 pt taller (two more 21.4 pt rows at 12 pt), the note 42.8 pt lower"
     why: "plan.md §4.3: the Funding band and row are two more table rows."
     signed_by: null
     signed_on: null
@@ -275,7 +287,7 @@ intended:
     signed_on: null
   - item: OQ19
     deal: GD3
-    file: proposal-pdf
+    file: "proposal-pdf, paper"
     where: "page * «Accident*"
     kind: "words, word-position"
     old: "rates without counts, no premium"
@@ -305,7 +317,7 @@ intended:
     signed_on: null
   - item: F92
     deal: GD3
-    file: proposal-pdf
+    file: "proposal-pdf, paper"
     where: "page * «Telehealth*"
     kind: "words, word-position"
     old: "no premium"
@@ -338,7 +350,7 @@ intended:
   # ---- GD4: census by plan name (C41) --------------------------------------------------------------------------------
   - item: C41
     deal: GD4
-    file: proposal-pdf
+    file: "proposal-pdf, paper"
     where: "page * «Medical — plan comparison»"
     kind: words
     match: "^Monthly premium .* Enrollment basis: .* → None$"
@@ -553,7 +565,7 @@ intended:
   # ---- Lines wrap where PowerPoint can wrap them (J142) -------------------------------------------------------------
   - item: J142
     deal: all
-    file: proposal-pdf
+    file: "proposal-pdf, paper"
     where: "page * «Important information»"
     kind: "word-offset, word-position"
     match: "dy up to [+-]0\\.0 pt$|dx up to -[0-9.]+ pt, dy up to \\+1[89]\\.[0-9] pt$"
@@ -566,12 +578,12 @@ intended:
   # ---- GD1's PDF and PowerPoint: the presented set (F119), picks per current plan (J165), U5 (F52), packages ----
   - item: F119
     deal: GD1
-    file: proposal-pdf
+    file: "proposal-pdf, paper"
     where: "page*"
     kind: "page-count, page-added"
     old: "14 pages"
-    new: "17: Vision — your options and Vision — VSP (the recommended VSP renewal presented), and the premium chart page"
-    why: "F119 (recommended plans are presented) and J128 (the chart prints with 2+ at-a-glance rows, which J165 gives medical)."
+    new: "18: Vision — your options and Vision — VSP (the recommended VSP renewal presented), the premium chart page, and Medical — your options (continued): the presented HMO renewal and U5 listed under both plans it replaces are two more rows, so the 12 pt summary runs on as the old one did"
+    why: "F119 (recommended plans are presented), F52 (U5 replaces B and C) and J128 (the chart prints with 2+ at-a-glance rows, which J165 gives medical); the package summary keeps the old table's type and runs on with its header repeated (J132)."
     signed_by: null
     signed_on: null
   - item: F119
@@ -580,18 +592,28 @@ intended:
     where: "slide*"
     kind: "slide-count, slide-added"
     old: "14 slides"
-    new: "17: Vision — your options and Vision — VSP, and the premium chart slide"
-    why: "F119 (recommended plans are presented) and J128 (the chart prints with 2+ at-a-glance rows, which J165 gives medical)."
+    new: "18: Vision — your options and Vision — VSP, the premium chart slide, and Medical — your options (continued)"
+    why: "F119 (recommended plans are presented), F52 (U5 replaces B and C) and J128 (the chart prints with 2+ at-a-glance rows, which J165 gives medical); the package summary runs on as the old one did (J132)."
     signed_by: null
     signed_on: null
   - item: J165
     deal: GD1
-    file: proposal-pdf
+    file: "proposal-pdf, paper"
     where: "page * «[MVOE]*»"
     kind: "words, word-position"
     old: "the old pages of GD1's medical and vision: one pick per current plan, the HMO renewal and VSP renewal not presented, U5 priced on B alone, each Cigna Dual half changed against the whole current plan"
     new: "a row per answer under each current plan (J165), the recommended renewals presented (F119), U5 priced on B and C and listed under both (F52), no change on a package's half (rule 5: packages only from package()), the cards' Funding rows (§4.3), the basis note counting plans typed for themselves (F87)"
     why: "J165, F119, F52 and F134 (GD1's parity profile leaves out CG1N, U5's second current plan and the packages); every figure is quotes' (rule 5)."
+    signed_by: null
+    signed_on: null
+  - item: J165
+    deal: GD1
+    file: "proposal-pdf, paper"
+    where: "page * «Medical — Replacing: *»"
+    kind: word-offset
+    old: "the Replacing pages' tables at the old app's type (its columns: one pick per current plan, U5 on B alone, no Funding rows)"
+    new: "the same words a few points off: the tables hold J165's columns and the Funding rows, so the type steps down a half point to keep each on its page (J140), and each column's heading wraps differently"
+    why: "J165, F52 and plan.md §4.3 (the Funding rows) change what these tables hold, and J140 fits each table by stepping its type: the offsets follow from the content, not from the layout's measure (every other golden deal's tables now sit within 0.5 pt)."
     signed_by: null
     signed_on: null
   - item: J165

@@ -115,16 +115,26 @@ def _image(c, it, pictures):
     c.restoreState()
 
 
+def _first_size(para):
+    """The type a paragraph's first baseline drops by: its first line's largest."""
+    first = para['lines'][0] if para['lines'] else []
+    return max((seg['size'] for seg in first), default=para['size'])
+
+
 def _text(c, it, _pictures):
+    """Each paragraph's first baseline `drop` × its first line's type below the paragraph's top, every later line one
+    leading under the one before, as reportlab placed a Paragraph's lines (and the old canvas its words): a smaller
+    second line sits a full leading down, not its own size."""
     top = _fy(it['y'])
     used = 0.0
+    drop = it.get('drop', tokens.BASELINE_DROP)
     for para in it['paragraphs']:
         leading = para['leading']
+        first = top - used - drop * _first_size(para)
         for number, segments in enumerate(para['lines']):
             if not segments:
                 continue
-            size = max(seg['size'] for seg in segments)
-            baseline = top - used - number * leading - it.get('drop', tokens.BASELINE_DROP) * size
+            baseline = first - number * leading
             room, wide = it['w'], line_width(segments)
             x = it['x'] + {'c': (room - wide) / 2, 'r': room - wide}.get(para['align'], 0)
             for seg in segments:

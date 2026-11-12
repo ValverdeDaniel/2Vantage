@@ -6,7 +6,8 @@ flat entries, each `- key: value` then `  key: value`, the values plain, "double
 starts a comment outside quotes. An entry covers a difference when every matcher it gives agrees:
 
 - `deal`: GD1, a list "GD1, GD3", or all;
-- `file`: workbook | proposal-pdf | deck (the files this lane compares);
+- `file`: workbook | proposal-pdf | deck | paper (the files this lane compares; paper is the Letter PDF), or a list
+  ("proposal-pdf, paper": Paper is the PDF's pages on Letter, read back at the page's size, so one entry fits both);
 - `where`: a glob over the difference's place ("Medical!B12", "page 6 «Dental — Delta Dental»", "slide 3 *"), or
   all;
 - `kind` (optional): a glob or a list over its kind (value, formula, row-added, words, run-font, …);
@@ -18,7 +19,7 @@ starts a comment outside quotes. An entry covers a difference when every matcher
 import fnmatch
 import re
 
-FILES = {'xlsx': 'workbook', 'pdf': 'proposal-pdf', 'pptx': 'deck'}
+FILES = {'xlsx': 'workbook', 'pdf': 'proposal-pdf', 'pptx': 'deck', 'letter': 'paper'}
 _KEY = re.compile(r'^(-\s+)?([A-Za-z_]+):\s*(.*)$')
 
 
@@ -87,7 +88,7 @@ def _listed(value, wanted):
 
 
 def covers(entry, deal, file, difference):
-    if not _listed(entry.get('deal'), deal) or entry.get('file') != FILES.get(file, file):
+    if not _listed(entry.get('deal'), deal) or not _listed(entry.get('file') or '-', FILES.get(file, file)):
         return False
     where = entry.get('where')
     if where != 'all' and not fnmatch.fnmatchcase(difference['where'], where):

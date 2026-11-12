@@ -13,8 +13,6 @@ page (the cover, the agenda, a divider, the thank-you page) wears no chrome and 
 draws chrome then frames; the PowerPoint replays the same frames (J141).
 """
 
-from reportlab.platypus import Spacer
-
 from . import chrome as chrome_
 from . import items, tokens
 from .flowables import FullPage, Note, Title
@@ -71,16 +69,21 @@ def _page(continued_from=None):
 
 
 class _Flow:
+    """The body frame as reportlab's Frame fills it: a flowable's space before is skipped at the top of a page and
+    overlaps the space the one above left under it (the larger of the two, `overlapAttachedSpace`); a zero-size
+    flowable (a title, a note) leaves none."""
+
     def __init__(self):
         self.pages = []
         self.page = None
         self.used = 0.0
         self.filled = False
+        self.after = 0.0  # the space the last flowable left under it
 
     def start(self, continued_from=None):
         self.page = _page(continued_from)
         self.pages.append(self.page)
-        self.used, self.filled = 0.0, False
+        self.used, self.filled, self.after = 0.0, False, 0.0
 
     def room(self):
         return tokens.BODY_H - self.used
@@ -90,7 +93,8 @@ class _Flow:
         top = tokens.BODY_TOP + self.used + before
         bottom = tokens.PAGE_H - top - height
         flowable.drawOn(Recorder(self.page), tokens.BODY_X, bottom, _sW=tokens.BODY_W - width)
-        self.used += before + height + flowable.getSpaceAfter()
+        self.after = flowable.getSpaceAfter()
+        self.used += before + height + self.after
         self.filled = True
 
     def flow(self, chunk):
@@ -100,15 +104,14 @@ class _Flow:
             flowable = queue.pop(0)
             if isinstance(flowable, (Title, Note, FullPage)):
                 flowable.drawOn(Recorder(self.page), 0, 0)
+                self.after = 0.0
                 continue
-            before = flowable.getSpaceBefore() if self.filled else 0.0
+            before = max(flowable.getSpaceBefore() - self.after, 0.0) if self.filled else 0.0
             room = self.room() - before
             _width, height = flowable.wrap(tokens.BODY_W, max(room, 0))
             if height <= room + 0.01:
                 self.place(flowable, before)
                 continue
-            if isinstance(flowable, Spacer):
-                continue  # space at a page's end goes with the break
             parts = flowable.split(tokens.BODY_W, room) if room > 0 else []
             if len(parts) > 1:
                 self.place(parts[0], before)

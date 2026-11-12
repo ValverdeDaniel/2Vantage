@@ -213,6 +213,7 @@ def test_S31_J133_J141_each_table_is_its_recorded_grid(built):
                 written = grid.cell(cell['row'], cell['col'])
                 span = cell.get('span') or 1
                 assert written.span_width == span
+                assert written.span_height == (cell.get('rowspan') or 1)  # the WE RECOMMEND panel's plan cell
                 assert written.text_frame.text == _recorded_text(cell['text'])
                 room = sum(it['cols'][cell['col'] : cell['col'] + span])
                 room -= _pt(written.margin_left) + _pt(written.margin_right)

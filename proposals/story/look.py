@@ -58,19 +58,27 @@ def note(text):
     return flowables.Note(text)
 
 
-def para(text, kind, colours, bold=False, align='l', space_before=0.0, space_after=0.0):
-    """A paragraph in one of the story's text styles (`tokens.TEXT`): intro, rationale, caption, sub, note."""
+def para(text, kind, colours, bold=False, align='l', space_before=None, space_after=None):
+    """A paragraph in one of the story's text styles (`tokens.TEXT`): intro, rationale, caption, sub, note, value. Its
+    space above and below is the style's own (`tokens.TEXT_SPACE`) unless given."""
     size, leading = tokens.TEXT[kind]
     ink = colours['ink2'] if kind in ('note', 'sub') else colours['navy'] if kind == 'caption' else colours['ink']
     runs = [words.run(text, size, ink, bold or kind == 'caption')]
-    return flowables.Text(runs, leading=leading, align=align, space_before=space_before, space_after=space_after)
+    before, after = _space(kind, space_before, space_after)
+    return flowables.Text(runs, leading=leading, align=align, space_before=before, space_after=after)
 
 
-def lead_para(lead, text, kind, colours, space_before=0.0):
+def lead_para(lead, text, kind, colours, space_before=None):
     """A paragraph opening with a bold lead ("Why we recommend it. …")."""
     size, leading = tokens.TEXT[kind]
     runs = [words.run(f'{lead} ', size, colours['ink'], True), words.run(text, size, colours['ink'])]
-    return flowables.Text(runs, leading=leading, space_before=space_before)
+    before, after = _space(kind, space_before, None)
+    return flowables.Text(runs, leading=leading, space_before=before, space_after=after)
+
+
+def _space(kind, before, after):
+    found = tokens.TEXT_SPACE[kind]
+    return (found[0] if before is None else before), (found[1] if after is None else after)
 
 
 def gap(height):
@@ -82,23 +90,27 @@ def block(placed, height=None):
 
 
 # --- Tables ---------------------------------------------------------------------------------------------------------
-def heads(labels, colours, size=CELL, center_from=1):
-    """A header row: white bold labels, centred from column `center_from`."""
+def heads(labels, colours, size=None, center_from=1):
+    """A header row: white bold labels, centred from column `center_from`. At the table's own type (12 pt, its 1.2
+    leading) unless the page sets a size, which leads at 1.25 × (old `_heads`)."""
+    leading = round(size * tokens.HEAD_LEADING, 2) if size else None
+    size = size or CELL
     cells = [
-        table.cell(label, size, '#ffffff', bold=True, align='c' if number >= center_from else 'l')
+        table.cell(label, size, '#ffffff', bold=True, align='c' if number >= center_from else 'l', leading=leading)
         for number, label in enumerate(labels)
     ]
     return {'kind': 'head', 'cells': cells}
 
 
-def row(texts, colours, size=CELL, center_from=1, bold_first=True, kind='plain', bold=False):
+def row(texts, colours, size=CELL, center_from=1, bold_first=True, kind='plain', bold=False, leading=None):
     """A body row of plain texts: the first cell bold (the row's name), the figures centred."""
     cells = []
     for number, text in enumerate(texts):
         first = number == 0
         ink = colours['ink']
         strong = (first and bold_first) or bold
-        cells.append(table.cell(text, size, ink, bold=strong, align='c' if number >= center_from else 'l'))
+        align = 'c' if number >= center_from else 'l'
+        cells.append(table.cell(text, size, ink, bold=strong, align=align, leading=leading))
     return {'kind': kind, 'cells': cells}
 
 

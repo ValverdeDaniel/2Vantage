@@ -6,12 +6,12 @@
     python files.py --compare <folder>                  the second half alone, inside the parity tools image
 
 1. On the host, with the standard library only (`fidelity/fetch.py`): sign in to both apps and download each golden
-   deal's client spreadsheet, PDF and PowerPoint (old `presentation-workbook/`, `proposal-pdf/`, `proposal-deck/`;
-   new `proposal/files/{xlsx,pdf,pptx}/`) into %LOCALAPPDATA%/2vantage-fidelity/<time>/<GDn>/ (FIDELITY_OUT or
-   --out overrides). Paper (the Letter PDF) joins when 2Vantage builds it (slice 30).
+   deal's client spreadsheet, PDF, PowerPoint and Paper, the Letter PDF (old `presentation-workbook/`,
+   `proposal-pdf/`, `proposal-deck/`, `proposal-paper/`; new `proposal/files/{xlsx,pdf,pptx,letter}/`) into
+   %LOCALAPPDATA%/2vantage-fidelity/<time>/<GDn>/ (FIDELITY_OUT or --out overrides).
 2. In the parity tools image (no network; the repository read-only at /work; the folder at /data): compare each
-   pair (`fidelity/xlsx.py`, `pdf.py`, `pptx.py`) with dates, version and Draft stamps, ids and authors masked on both
-   sides (`mask.py`), within Q.5's tolerances; label each difference `tools/parity/intended.yaml` lists
+   pair (`fidelity/xlsx.py`, `pdf.py` for the PDF and Paper, `pptx.py`) with dates, version and Draft stamps, ids
+   and authors masked on both sides (`mask.py`), within Q.5's tolerances; label each difference `intended.yaml` lists
    (`intended.py`); write report.md and differences.json beside the files (`report.py`).
 
 Exit 0 when every difference is a match, within tolerance or intended; 1 when any is unexplained; 2 on a bad setup.

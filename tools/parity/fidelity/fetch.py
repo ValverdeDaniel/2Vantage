@@ -4,7 +4,7 @@ Old Vantage (the parity stack, :8005) signs in with a DRF token; 2Vantage (:8004
 browser/shared/apps.mjs does. A deal is found by its client's name (the spec's `client`). Both apps' dev servers can
 be reloading (other lanes edit code), so a refused connection or a 5xx is retried for a while before it counts.
 
-    <out>/<GDn>/old.xlsx  old.pdf  old.pptx  new.xlsx  new.pdf  new.pptx
+    <out>/<GDn>/old.xlsx  old.pdf  old.pptx  old.letter  new.xlsx  new.pdf  new.pptx  new.letter (a PDF)
     <out>/<GDn>/fetch.json   per file: the status, the file name the app gave, or the refusal's words
 """
 
@@ -21,11 +21,12 @@ OLD_API = os.environ.get('PARITY_OLD_API', 'http://localhost:8005')
 NEW_API = os.environ.get('PARITY_NEW_API', 'http://localhost:8004')
 OLD_USER = (os.environ.get('PARITY_USER', 'parity-admin'), os.environ.get('PARITY_PASSWORD', 'parity-only-pw'))
 NEW_USER = (os.environ.get('LOOK_NEW_USER', 'golden-admin'), os.environ.get('LOOK_NEW_PASSWORD', 'golden-admin-pw'))
-# The three client files (Paper, the Letter PDF, waits for 2Vantage's slice 30): (extension, old path, new path).
+# The client files: (extension, old path, new path). Paper, the Letter PDF, is the PDF's pages on US Letter (slice 30).
 FILES = (
     ('xlsx', 'presentation-workbook', 'xlsx'),
     ('pdf', 'proposal-pdf', 'pdf'),
     ('pptx', 'proposal-deck', 'pptx'),
+    ('letter', 'proposal-paper', 'letter'),
 )
 RETRY_FOR = 90  # seconds a reloading server may take
 TIMEOUT = 120

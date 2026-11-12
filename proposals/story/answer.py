@@ -125,10 +125,11 @@ def chart(facts, glance):
 def _line_cell(block, size, colours):
     runs = [words.run(block.get('value_label') or '—', size, colours['ink'], True)]
     if block.get('delta_label'):
-        runs.append(words.run(f' {block["delta_label"]}', size - 1, colours['ink']))
+        # The space before the change is the cell's own type, as the old markup's space outside its <font> was.
+        runs += [words.run(' ', size, colours['ink']), words.run(block['delta_label'], size - 1, colours['ink'])]
     if block.get('sub'):
         runs.append(words.run(f'\n{block["sub"]}', size - 1.5, colours['ink2']))
-    return tb.rich(runs)
+    return tb.rich(runs, leading=size + 2.5)
 
 
 def summary(facts, overview_printed):
@@ -146,7 +147,7 @@ def summary(facts, overview_printed):
         entries = [(b['label'], b.get('value_label') or '—', (b.get('sub') or '')[:70], False) for b in deal[:4]]
         story.append(look.block(cards.tiles(entries, colours, BODY_W, 92, 22), 100))
         for block in deal[4:]:
-            story.append(look.lead_para(f'{block["label"]}:', block.get('value_label') or '', 'sub', colours))
+            story.append(look.lead_para(f'{block["label"]}:', block.get('value_label') or '', 'value', colours))
     if lines:
         labels, by_line = [], {}
         for block in lines:
@@ -159,10 +160,12 @@ def summary(facts, overview_printed):
         size = 11 if len(by_line) <= 6 else 9.5
         rows = [look.heads(['Coverage', *labels], colours, size)]
         for name, row in by_line.items():
-            cells = [tb.cell(name, size, colours['ink'], True)]
+            lead = size + 2.5
+            cells = [tb.cell(name, size, colours['ink'], True, leading=lead)]
             for label in labels:
                 block = row.get(label)
-                cells.append(_line_cell(block, size, colours) if block else tb.cell('—', size, colours['ink']))
+                found = _line_cell(block, size, colours) if block else None
+                cells.append(found or tb.cell('—', size, colours['ink'], leading=lead))
             rows.append({'kind': 'plain', 'cells': cells})
         story.append(look.grid(rows, [label_w] + [width] * len(labels), colours))
     return [story]
@@ -175,14 +178,14 @@ def experience(facts):
     colours = look.colours_of(facts)
     story = [look.title('Your plan experience')]
     if found['summary']:
-        story += [look.para(found['summary'], 'intro', colours, space_after=10)]
+        story += [look.para(found['summary'], 'intro', colours), look.gap(10)]
     if found['rows']:
-        rows = [look.heads(['Period', 'Premium', 'Paid claims', 'Loss ratio'], colours)]
+        size, lead, ink = 12, 15, colours['ink']
+        rows = [look.heads(['Period', 'Premium', 'Paid claims', 'Loss ratio'], colours, size)]
         for row in found['rows']:
-            cells = [tb.cell(row['period'], 12, colours['ink'], True)]
-            cells += [
-                tb.cell(row[key], 12, colours['ink'], key == 'ratio', 'c') for key in ('premium', 'claims', 'ratio')
-            ]
+            cells = [tb.cell(row['period'], size, ink, True, leading=lead)]
+            keys = ('premium', 'claims', 'ratio')
+            cells += [tb.cell(row[key], size, ink, key == 'ratio', 'c', leading=lead) for key in keys]
             rows.append({'kind': 'plain', 'cells': cells})
         story.append(look.grid(rows, look.shares([0.4, 0.2, 0.2, 0.2]), colours, pad=6))
     return [story]
@@ -205,10 +208,12 @@ def markets(facts):
                 continue
             ink = colours['ink']
             carrier = row['carrier'] + (' (current)' if row['current'] else '')
-            cells = [tb.cell(carrier, size, ink), tb.cell(QUOTED_WORD.get(row['quoted'], '–'), size, ink, align='c')]
+            lead = size + 2.5
+            cells = [tb.cell(carrier, size, ink, leading=lead)]
+            cells.append(tb.cell(QUOTED_WORD.get(row['quoted'], '–'), size, ink, align='c', leading=lead))
             cells += [
-                tb.cell('Yes' if row['presented'] else 'No', size, ink, align='c'),
-                tb.cell(row['note'], size, ink),
+                tb.cell('Yes' if row['presented'] else 'No', size, ink, align='c', leading=lead),
+                tb.cell(row['note'], size, ink, leading=lead),
             ]
             rows.append({'kind': 'plain', 'cells': cells})
         story += [look.grid(rows, widths, colours, pad=2.6), look.gap(8)]

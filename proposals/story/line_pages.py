@@ -9,8 +9,9 @@ employees pay (only when a plan other than today's has an employee cost); then t
 pages are the one splitter's (`pages.sequence`, laid out as Pages shows them), so the screen and the files cannot part.
 """
 
-from ..layout import fit, tokens
 from ..layout import table as tb
+from ..layout import text as measure
+from ..layout import tokens
 from . import exhibit, look, recommend
 
 TIER_WORDS = {'EE': 'Employee only', 'ES': 'Employee + spouse', 'EC': 'Employee + child(ren)', 'FAM': 'Family'}
@@ -73,56 +74,59 @@ def renewal_pages(line, pages, colours, with_cost):
     return out
 
 
-def fitted(build):
-    """A page of tables at the largest type (12 down to the 8 pt floor) at which they all share one page; at the floor
-    it runs on, "(continued)". `build(size)` gives the page's flowables, its title first."""
-    for size in fit.sizes(look.CELL):
-        found = build(size)
-        if fit.height_under(found[1:]) <= tokens.BODY_H:
-            return found
-    return build(tokens.TABLE_TYPE['floor'])
+def _head(labels, colours):
+    """A header row in the table's own type, every label left as the old Paragraphs were (`cellHead`)."""
+    return look.heads(labels, colours, center_from=len(labels))
+
+
+def _plain(texts, colours):
+    """A body row in the table's own type, every cell left and none bold (the old `value` style)."""
+    return look.row(texts, colours, center_from=len(texts), bold_first=False)
 
 
 def option_index(line, colours, title):
-    """Every option on a long line, on one page: where a reader finds their way when the comparison runs on."""
+    """Every option on a long line, on one page: where a reader finds their way when the comparison runs on (old
+    `proposal_pdf._option_index`: the table's own type, every cell left; it runs on with its header repeated)."""
     options = [line['plans'][pid] for pid in line['order'] if not line['plans'][pid]['current']]
-
-    def build(size):
-        rows = [look.heads(['Option', 'Carrier', 'Plan', 'Monthly', '% change'], colours, size, center_from=3)]
-        for plan in options:
-            option = f'Option {plan["option"]}' if plan['option'] else ''
-            pct = look.pct((plan['change'] or {}).get('pct')) if plan['change'] else '—'
-            texts = [option, plan['carrier'], plan['name'], look.money(plan['monthly']), pct]
-            rows.append(look.row(texts, colours, size, center_from=3, bold_first=False))
-        return [look.title(title), look.grid(rows, look.shares([0.12, 0.26, 0.38, 0.12, 0.12]), colours)]
-
-    return fitted(build)
-
-
-def _summary_table(current, options, colours, size):
-    # Every cell left-aligned, as the old package summary's Paragraphs were (`proposal_pdf._package_summary`).
-    heads = ['Option', 'Plan', 'Monthly', 'Annual', 'Change', '% change']
-    rows = [look.heads(heads, colours, size, center_from=len(heads))]
-    figures = [look.money(current['monthly']), look.money(current['annual']), '—', '—']
-    texts = ['Current', f'{current["carrier"]} — {current["name"]}', *figures]
-    rows.append(look.row(texts, colours, size, center_from=len(heads), bold_first=False))  # old 'value' style
-    rows[-1]['fill'] = colours['current']
+    rows = [_head(['Option', 'Carrier', 'Plan', 'Monthly', '% change'], colours)]
     for plan in options:
-        change = plan['change'] or {}
+        option = f'Option {plan["option"]}' if plan['option'] else ''
+        pct = look.pct((plan['change'] or {}).get('pct')) if plan['change'] else '—'
+        rows.append(_plain([option, plan['carrier'], plan['name'], look.money(plan['monthly']), pct], colours))
+    return [look.title(title), look.grid(rows, look.shares([0.12, 0.26, 0.38, 0.12, 0.12]), colours)]
+
+
+OPTION_W, PLAN_W, NUMBER_W = 1.5 * 72, 4.4 * 72, 1.6 * 72  # the old package summary's columns
+
+
+def _summary_table(current, options, colours):
+    """One current plan's options (old `proposal_pdf._package_summary`): every cell left, the current plan's row grey,
+    a first-year credit and its net in two more columns when any option has one."""
+    credit = any((plan['credit'] or {}).get('annual') for plan in options)
+    heads = ['Option', 'Plan', 'Monthly', 'Annual', 'Change', '% change']
+    heads += ['First-year credit', 'Net annual'] if credit else []
+    rows = [_head(heads, colours)]
+    texts = ['Current', f'{current["carrier"]} — {current["name"]}']
+    texts += [look.money(current['monthly']), look.money(current['annual']), '—', '—'] + ['—', '—'] * credit
+    rows.append(dict(_plain(texts, colours), fill=colours['current']))
+    for plan in options:
+        change, found = plan['change'] or {}, plan['credit'] or {}
         label = f'Option {plan["option"]}' if plan['option'] else plan['priced_label'] or 'Option'
-        figures = [look.money(plan['monthly']), look.money(plan['annual'])]
-        figures += [look.signed(change.get('delta')), look.pct(change.get('pct'))]
-        texts = [label, f'{plan["carrier"]} — {plan["name"]}', *figures]
-        rows.append(look.row(texts, colours, size, center_from=len(heads), bold_first=False))
-    widths = [1.5 * 72, 4.4 * 72] + [(tokens.BODY_W - 5.9 * 72) / 4] * 4
-    return look.grid(rows, widths, colours)
+        texts = [label, f'{plan["carrier"]} — {plan["name"]}', look.money(plan['monthly']), look.money(plan['annual'])]
+        texts += [look.signed(change.get('delta')), look.pct(change.get('pct'))]
+        if credit:
+            given = found.get('annual')
+            texts += [f'− {look.money(given)}' if given else '—', look.money(found.get('net_annual', plan['annual']))]
+        rows.append(_plain(texts, colours))
+    figures = len(heads) - 2
+    number_w = min(NUMBER_W, (tokens.BODY_W - OPTION_W - PLAN_W) / figures)
+    return look.grid(rows, [OPTION_W, PLAN_W] + [number_w] * figures, colours)
 
 
 def package_summary(line, colours, title, shown):
     """Every option the pages show against what it replaces (J39; old `_package_summaries`): monthly, annual, the
     change in dollars and percent; one table, or one per current plan on a line with several, each under the words
-    its comparison pages carry, all at one type size that lets them share the page. [] when no option has a price
-    (why is the builder's to say)."""
+    its comparison pages carry, 10 points apart. [] when no option has a price (why is the builder's to say)."""
     plans = line['plans']
     currents = [plans[pid] for pid in line['order'] if plans[pid]['current']]
     options = [plans[pid] for pid in line['order'] if pid in shown and not plans[pid]['current']]
@@ -136,17 +140,13 @@ def package_summary(line, colours, title, shown):
     groups = [(current, mine) for current, mine in groups if mine]
     if not groups:
         return []
-
-    def build(size):
-        out = [look.title(title)]
-        for current, mine in groups:
-            if len(currents) > 1:
-                words = f'Replacing: {current["carrier"]} {current["name"]}'
-                out.append(look.para(words, 'caption', colours, space_before=10))
-            out.append(_summary_table(current, mine, colours, size))
-        return out
-
-    return fitted(build)
+    out = [look.title(title)]
+    for number, (current, mine) in enumerate(groups):
+        if len(currents) > 1:
+            out += [look.gap(10)] if number else []
+            out.append(look.para(f'Replacing: {current["carrier"]} {current["name"]}', 'caption', colours))
+        out.append(_summary_table(current, mine, colours))
+    return out
 
 
 def cost_flags(plans):
@@ -159,18 +159,29 @@ def cost_flags(plans):
     }
 
 
-def cost_table(page_plans, flags, colours, picks):
-    """The cost rows alone: the premium, the year, the change, a credit and its net, what employees pay per tier."""
-    size, ink, soft = look.CELL, colours['ink'], colours['ink2']
-    rows = [{'kind': 'head', 'cells': [tb.cell('Cost', size, '#ffffff', True)]}]
-    rows[0]['cells'] += [tb.rich(exhibit.heading_runs(p, size, colours, p['id'] in picks), 'c') for p in page_plans]
+def _cost_heading(plan, picked):
+    """A cost table's plan heading (old `proposal_pdf._plan_header`): its carrier line, the plan's name under it in
+    smaller type, RECOMMENDED under a pick; white, regular, left, at the table's own type."""
+    small, white = tokens.HEAD_NOTE, tokens.WHITE
+    runs = [measure.run(exhibit.plan_title(plan), look.CELL, white), measure.run(f'\n{plan["name"]}', small, white)]
+    if picked:
+        runs.append(measure.run('\nRECOMMENDED', small, white, True))
+    return tb.rich(runs)
 
-    def add(label, texts, bold=False):
-        cells = [tb.cell(label, size, soft, bold)] + [tb.cell(text, size, ink, align='c') for text in texts]
+
+def cost_table(page_plans, flags, colours, picks):
+    """The cost rows alone (old `proposal_pdf._cost_table`): the premium, the year, the change, a credit and its net,
+    what employees pay per tier; the labels grey and the figures left, at the table's own type."""
+    size, ink, soft = look.CELL, colours['ink'], colours['ink2']
+    rows = [{'kind': 'head', 'cells': [tb.cell('Cost', size, tokens.WHITE)]}]
+    rows[0]['cells'] += [_cost_heading(p, p['id'] in picks) for p in page_plans]
+
+    def add(label, texts):
+        cells = [tb.cell(label, size, soft)] + [tb.cell(text, size, ink) for text in texts]
         rows.append({'kind': 'plain', 'cells': cells})
 
     if flags['monthly']:
-        add('Est. group monthly premium', [look.money(p['monthly']) for p in page_plans], True)
+        add('Est. group monthly premium', [look.money(p['monthly']) for p in page_plans])
     if flags['annual']:
         add('Est. group annual premium', [look.money(p['annual']) for p in page_plans])
     if flags['pct']:

@@ -66,19 +66,22 @@ python tools/parity/files.py --fetched <folder>   # compare files fetched before
 
 1. **Fetch** (`fidelity/fetch.py`, standard library only, on the host): signs in to old Vantage (:8005, token) and
    2Vantage (:8004, session and CSRF), finds each golden deal by its client's name, and downloads both apps' client
-   spreadsheet, PDF and PowerPoint (old `presentation-workbook/`, `proposal-pdf/`, `proposal-deck/`; new
-   `proposal/files/{xlsx,pdf,pptx}/`) into `%LOCALAPPDATA%/2vantage-fidelity/<time>/<GDn>/` (`FIDELITY_OUT` or
-   `--out`), with `fetch.json` (statuses, the file names the apps gave, refusals). A refused connection or a 5xx is
-   retried for 90 s, since both dev servers reload when code changes. Paper (the Letter PDF) joins when 2Vantage
-   builds it (slice 30). Old downloads stamp option numbers in the parity database, as the old app always did.
+   spreadsheet, PDF, PowerPoint and Paper, the Letter PDF (old `presentation-workbook/`, `proposal-pdf/`,
+   `proposal-deck/`, `proposal-paper/`; new `proposal/files/{xlsx,pdf,pptx,letter}/`) into
+   `%LOCALAPPDATA%/2vantage-fidelity/<time>/<GDn>/` (`FIDELITY_OUT` or `--out`), with `fetch.json` (statuses, the file
+   names the apps gave, refusals). A refused connection or a 5xx is retried for 90 s, since both dev servers reload
+   when code changes. Old downloads stamp option numbers in the parity database, as the old app always did.
 2. **Compare** (in the tools image, no network; `files.py --compare /data`):
    - `xlsx.py`, `xlsx_cells.py`, `xlsx_setup.py`: sheets and the tab the file opens on; rows lined up by their label
      and columns by their headings (`align.py`), formulas, merges, drop-downs and print ranges read through that
      alignment (`refs.py`); per cell the value or formula, number format, font, fill and border; heights ±0.75 pt,
      widths ±0.5 character; frozen panes, zoom, gridlines, conditional fills, pictures, print setup.
-   - `pdf.py`, `pictures.py`: pages lined up by title; fonts; words in reading order; each word's box ±0.5 pt, a word
-     nudged a few points (`word-offset`) told apart from one the layout moved (`word-position`); the page picture at
-     110 DPI (≤0.05% of pixels) where the words agree.
+   - `pdf.py`, `pictures.py` (the PDF, and Paper, a PDF of Letter sheets): pages lined up by title; fonts; words in
+     reading order; each word's box ±0.5 pt, a word nudged a few points (`word-offset`) told apart from one the
+     layout moved (`word-position`); the page picture at
+     110 DPI (≤0.05% of pixels) where the words agree, the masked lines (a stamp, a date, the Draft mark with its
+     badge) left out of both pictures. The footer page number is placed by its right edge, so a renumbered page's
+     "10" sits where the other file's "9" does.
    - `pptx.py`: layouts, master, slide size; slides lined up by title, shapes by kind and text; every paragraph's
      text and run's font (with kerning), each shape's box ±0.5 pt and shadow, charts, notes.
    - `mask.py`, on both sides: dates, Draft and version stamps (with their " · "), ids; footer page and slide numbers

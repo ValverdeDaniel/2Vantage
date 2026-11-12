@@ -106,6 +106,14 @@ def column_name(plan):
     return name[: -len(suffix)] if suffix and name.endswith(suffix) else name
 
 
+def plan_title(plan):
+    """A plan column's carrier line: CURRENT first on a current plan, its number first on an option, a priced version's
+    own label after it (old `proposal_pdf._plan_title`)."""
+    prefix = 'CURRENT — ' if plan['current'] else (f'Option {plan["option"]} · ' if plan['option'] else '')
+    suffix = f' ({plan["priced_label"]})' if plan['priced_label'] else ''
+    return f'{prefix}{plan["carrier"]}{suffix}'
+
+
 def heading_runs(plan, size, colours, recommended=False, plain=False):
     """A plan column's heading. `plain` on a renewal set's page, whose title says what its offers are: TODAY over the
     current plan and RENEWAL over its offer, because the pair share one name."""
@@ -116,9 +124,7 @@ def heading_runs(plan, size, colours, recommended=False, plain=False):
         top = 'TODAY' if plan['current'] else 'RENEWAL'
         runs = [words.run(f'{top}\n', small, white, True), words.run(plan['carrier'], head, white, True)]
     else:
-        prefix = 'CURRENT — ' if plan['current'] else (f'Option {plan["option"]} · ' if plan['option'] else '')
-        suffix = f' ({plan["priced_label"]})' if plan['priced_label'] else ''
-        runs = [words.run(f'{prefix}{plan["carrier"]}{suffix}', head, white, True)]
+        runs = [words.run(plan_title(plan), head, white, True)]
     runs.append(words.run(f'\n{column_name(plan) if plain else plan["name"]}', small, white))
     if recommended:
         runs.append(words.run('\nRECOMMENDED', small, white, True))
@@ -134,19 +140,21 @@ def build(entries, page_plans, picks, colours, size, pad, offers=None, plain=Fal
     all_picked = len(options) > 1 and all(p['id'] in picks for p in options)
     badge = not offers and not all_picked
     rows = [{'kind': 'head', 'cells': [tb.cell('', size, '#ffffff')]}]
+    # The plan headings lead at 1.25 × their type (old `_plan_cell`).
+    lead = round(max(size, 9) * tokens.HEAD_LEADING, 2)
     rows[0]['cells'] += [
-        tb.rich(heading_runs(p, size, colours, badge and p['id'] in picks, plain), align='c') for p in page_plans
+        tb.rich(heading_runs(p, size, colours, badge and p['id'] in picks, plain), align='c', leading=lead)
+        for p in page_plans
     ]
     ink, soft = colours['ink'], colours['ink2']
     first_cost = True
     for kind, item, cells in entries:
         if kind == 'band':
-            rows.append(
-                {'kind': 'band', 'cells': [tb.cell(cells[0], size, ink, True, span=count + 1)], 'keep_with_next': True}
-            )
+            band = [tb.cell(cells[0], size, ink, True, span=count + 1)]
+            rows.append({'kind': 'band', 'cells': band, 'keep_with_next': True, 'blanks': True})
         elif kind == 'total':
             cells_ = [tb.cell(cells[0], size, ink, True), tb.cell(cells[1], size, ink, True, 'c', span=count)]
-            rows.append({'kind': 'total', 'cells': cells_, 'fill': colours['blue_bg']})
+            rows.append({'kind': 'total', 'cells': cells_, 'fill': colours['blue_bg'], 'blanks': count > 1})
         elif kind == 'cost':
             row = {'kind': 'cost', 'cells': [tb.cell(cells[0], size, ink, True)]}
             row['cells'] += [tb.cell(text, size, ink, True, 'c') for text in cells[1:]]
@@ -183,7 +191,7 @@ def page_notes(line, page_plans, colours):
         notes.append(f'Enrollment basis: {line["basis"]}')
     if any((p['credit'] or {}).get('reason') == 'credit_exceeds_year' for p in page_plans):
         notes.append(CREDIT_EXCEEDS)
-    return [look.para(text, 'note', colours, space_before=3) for text in notes]
+    return [look.para(text, 'note', colours) for text in notes]
 
 
 def page(
@@ -199,12 +207,12 @@ def page(
     if not rows:
         return []
     below = page_notes(line, page_plans, colours)
-    note_flowables = [look.para(text, 'note', colours, space_before=3) for text in notes]
+    note_flowables = [look.para(text, 'note', colours) for text in notes]
 
     def at(size, pad):
         return build(rows, page_plans, set(picks), colours, size, pad, offers, plain)
 
-    table, fitted = fit.exhibit(at, fit.height_under(note_flowables + below))
+    table, fitted = fit.exhibit(at, fit.height_under(note_flowables + below), notes=len(note_flowables))
     chunk = [look.title(title, line=line['key'], fit=fitted), table, *note_flowables, *below]
     if speak:
         chunk.append(look.note(speak))

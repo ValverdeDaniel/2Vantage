@@ -7,7 +7,8 @@ two files that draw the same page in a different order still read the same. Each
 before it is split back into words, so "Prepared November 12, 2026" reads "Prepared <date>" on both sides. Pages are
 lined up by their first line (the slide title), so a page one file adds is one difference, not a shift.
 
-`compare(old_path, new_path, work)` → [{where, kind, old, new}]; `work` is a scratch folder for the page pictures.
+`compare(old_path, new_path, work, sheets=False)` → [{where, kind, old, new}]; `work` is a scratch folder for the page
+pictures; `sheets` compares Paper, the Letter PDF, page by page as the PDF (`paper.py`).
 """
 
 import difflib
@@ -18,7 +19,7 @@ from pathlib import Path
 
 from pypdf import PdfReader
 
-from . import align, mask, pictures
+from . import align, mask, paper, pictures
 
 BOX_TOLERANCE = 0.5  # points
 # A word nudged at most this far (dx, dy in points) sits where the old one did, give or take its spacing and baseline
@@ -26,6 +27,9 @@ BOX_TOLERANCE = 0.5  # points
 NUDGE = (5.0, 2.0)
 LINE_GAP = 2.0  # points between baselines that still read as one line
 PAGE_NUMBER_BOX = (60.0, 24.0)  # the footer corner a page number sits in: points from the right and the bottom
+# A masked line is left out of the page picture with what is drawn just around its words: the Draft mark's badge
+# reaches 12 pt past its words on each side and 5 pt above and below them.
+MASK_MARGIN = (14.0, 7.0)
 _PAGE = re.compile(r'<page width="([\d.]+)" height="([\d.]+)">(.*?)</page>', re.S)
 _WORD = re.compile(r'<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="([\d.]+)">(.*?)</word>', re.S)
 
@@ -55,13 +59,14 @@ def _pages(path):
 
 def _numbered(page):
     """The page with its footer page number read as <page>: a page one file adds renumbers every page after it,
-    which the page alignment already reports once."""
+    which the page alignment already reports once. The number is right-aligned, so it is placed by its right edge (its
+    box shrunk to that edge): 9 and 10 end at the same point but start a digit apart."""
     width, height = page['size']
     lines = []
     for line in page['lines']:
         lines.append([
-            ('<page>', box) if word.isdigit() and box[0] > width - PAGE_NUMBER_BOX[0] and box[1] > height
-             - PAGE_NUMBER_BOX[1] else (word, box)
+            ('<page>', (box[2], box[1], box[2], box[3])) if word.isdigit() and box[0] > width - PAGE_NUMBER_BOX[0]
+             and box[1] > height - PAGE_NUMBER_BOX[1] else (word, box)
             for word, box in line
         ])  # fmt: skip
     return {**page, 'lines': lines}
@@ -78,6 +83,17 @@ def _tokens(page):
         else:
             out.extend((word, None) for word in masked.split())
     return out
+
+
+def _masked_boxes(page):
+    """The boxes (points, with MASK_MARGIN) of the lines `_tokens` masks: what the page picture leaves out."""
+    boxes = []
+    for line in _numbered(page)['lines']:
+        text = ' '.join(word for word, _box in line)
+        if mask.line(text) != ' '.join(text.split()):
+            mx, my = MASK_MARGIN
+            boxes.extend(paper.on_sheet(page, (b[0] - mx, b[1] - my, b[2] + mx, b[3] + my)) for _word, b in line)
+    return boxes
 
 
 def _title(page):
@@ -126,8 +142,11 @@ def _page_differences(where, old_page, new_page):
     return out
 
 
-def compare(old_path, new_path, work):
+def compare(old_path, new_path, work, sheets=False):
+    """`sheets` for Paper: each Letter sheet's words read back on the page placed on it (`paper.unplaced`)."""
     old, new = _pages(old_path), _pages(new_path)
+    if sheets:
+        old, new = [paper.unplaced(p) for p in old], [paper.unplaced(p) for p in new]
     old_fonts, new_fonts = _fonts(old_path), _fonts(new_path)
     out = []
     if len(old) != len(new):
@@ -150,7 +169,8 @@ def compare(old_path, new_path, work):
             if images is None:
                 folder = Path(work)
                 images = (pictures.rasterize(old_path, folder, 'old'), pictures.rasterize(new_path, folder, 'new'))
-            share = pictures.differing_share(images[0][o], images[1][n])
+            hidden = _masked_boxes(old[o]) + _masked_boxes(new[n])
+            share = pictures.differing_share(images[0][o], images[1][n], hidden)
             if share > pictures.PIXEL_TOLERANCE:
                 found.append((where, 'picture', None, f'{share * 100:.3f}% of pixels differ'))
         out.extend({'where': w, 'kind': k, 'old': a, 'new': b} for w, k, a, b in found)

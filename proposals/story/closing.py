@@ -24,8 +24,8 @@ def next_steps(facts):
             {
                 'kind': 'plain',
                 'cells': [
-                    tb.cell(when, size, colours['ink'], True),
-                    tb.cell(step.get('text') or '', size, colours['ink']),
+                    tb.cell(when, size, colours['ink'], True, leading=size + 4),
+                    tb.cell(step.get('text') or '', size, colours['ink'], leading=size + 4),
                 ],
             }
         )
@@ -41,10 +41,12 @@ def calendar(facts):
     rows = [look.heads(['Meeting', 'What we cover', 'When'], colours, size, center_from=9)]
     for meeting in meetings:
         topics = [str(topic) for topic in meeting.get('topics') or [] if str(topic).strip()]
+        # Each topic a line at the cell's leading, as the old cell held a paragraph a topic.
+        lead = size + 4
         cells = [
-            tb.cell(str(meeting.get('meeting') or ''), size, ink, True),
-            tb.cell('\n'.join(topics), size, ink),
-            tb.cell(str(meeting.get('when') or ''), size, ink),
+            tb.cell(str(meeting.get('meeting') or ''), size, ink, True, leading=lead),
+            tb.cell('\n'.join(topics), size, ink, leading=lead),
+            tb.cell(str(meeting.get('when') or ''), size, ink, leading=lead),
         ]
         rows.append({'kind': 'plain', 'cells': cells})
     table = look.grid(rows, look.shares([0.26, 0.5, 0.24]), colours, pad=6)
@@ -78,5 +80,5 @@ def thank_you(facts):
 
 def important(facts):
     colours = look.colours_of(facts)
-    paragraphs = [look.para(text, 'rationale', colours, space_before=8) for text in tokens.DOCUMENT_DISCLAIMERS]
+    paragraphs = [look.para(text, 'rationale', colours) for text in tokens.DOCUMENT_DISCLAIMERS]
     return [[look.title('Important information'), *paragraphs]]

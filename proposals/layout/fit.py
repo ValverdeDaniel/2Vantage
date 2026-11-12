@@ -69,9 +69,10 @@ def fitted(build, room, largest=tokens.TABLE_TYPE['cell'], short_rows=False):
     return build(best, tokens.TIGHTEST_PAD), best, tokens.TIGHTEST_PAD
 
 
-def exhibit(build, under, body=tokens.BODY_H):
+def exhibit(build, under, body=tokens.BODY_H, notes=0):
     """A plan set's table and how it fitted: (table, fit). `under` is the height of what must sit under it (its notes
-    and the page's own lines). `fit`: {outcome, size, pad, floor, room, height, spare, rows_over}."""
+    and the page's own lines); `notes` how many long values moved to notes under it. `fit`: {outcome, size, pad, floor,
+    notes, room, height, spare, rows_over}."""
     outcome, room = 'fits', body - under - 2
     found = fitted(build, room, short_rows=True)
     if found is None:
@@ -88,6 +89,7 @@ def exhibit(build, under, body=tokens.BODY_H):
         'size': size,
         'pad': pad,
         'floor': tokens.TABLE_TYPE['floor'],
+        'notes': notes,
         'room': round(room, 1),
         'height': round(height, 1),
         'spare': round(room - height, 1) if outcome != 'runs_on' else None,

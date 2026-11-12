@@ -5078,6 +5078,14 @@ disclaimer can never differ between the PDF and the PowerPoint (J122; slice 29).
   line, fit, notes, frames, chrome}, each frame plain JSON (`layout/items.py`); `story/build.deck(deal)` gives them
   with the pictures' bytes. The plan sets' rows are the client spreadsheet's house maps (`workbook/rows.py`,
   `workbook/design.py`, J133). Stock pictures are cropped once under `assets/images/stock_images/` (B12).
+- **The old files' geometry** (the Fidelity fix-up after slice 28; §12.7): frames sit where old Vantage's reportlab put
+  the same things, within the lane's 0.5 pt. A paragraph's first baseline is one size of its first line below its top
+  (0.96 for the furniture's words) and every later line one leading under it; each kind keeps its old style's leading
+  and space (a header row the page sizes leads at 1.25 ×, the overview's and dashboard's cells at the size + 2.5), and
+  space before overlaps the space after, as reportlab's frame does. Tables keep reportlab's geometry
+  (`layout/grid.py`): words centred between each cell's own padding, an empty cell one 12 pt line, a cell spanning rows
+  sharing what it needs among them. The WE RECOMMEND panel is one table in both files, the plan in a cell spanning
+  every row (J136); "Your options" keeps the table's 12 pt and runs on, as the old one did (J132).
 
 ### 9.6 PowerPoint (`proposals/paint/pptx/`)
 
@@ -5096,7 +5104,8 @@ wraps where the layout did (J142). Each text box equals its recorded frame (J.6.
   measured them. Tables are native ("No Style, No Grid"), the premium chart a native clustered column chart. One
   known difference from the PDF: PowerPoint and LibreOffice put a line's extra leading above its baseline, the PDF
   below it, so text whose leading is not 1.2× its size sits a few points off on the slide (13/19 body text ~3 pt
-  lower, the cover's 44/48 name ~3 pt higher); tables, at 1.2×, agree.
+  lower, the cover's 44/48 name ~3 pt higher); tables, at 1.2×, agree. Old Vantage's PDF and deck differ the same
+  way; the PDF keeps reportlab's placement, which the Fidelity lane holds it to (§9.5).
 
 ### 9.7 PDF, Paper and the Letter PDF (`proposals/paint/`)
 

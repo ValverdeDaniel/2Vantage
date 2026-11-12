@@ -71,7 +71,7 @@ def overview(facts, plans_by_id):
     heading = f'{facts["year"]} renewal overview' if facts['renewal'] and facts['year'] else None
     story = [look.title(heading or 'Our recommendation at a glance')]
     if facts['intro']:
-        story += [look.para(facts['intro'], 'intro', colours, space_after=6)]
+        story += [look.para(facts['intro'], 'intro', colours), look.gap(6)]
     tiles = _tiles(total, saved, colours)
     if tiles:
         story.append(tiles)
@@ -99,7 +99,8 @@ def overview(facts, plans_by_id):
         )
 
     def build(size, pad):
-        small, ink, soft = size - 1.5, colours['ink'], colours['ink2']
+        # Body cells lead at the size plus 2.5 points (old `_overview_page`); the header at 1.25 × (`look.heads`).
+        small, ink, soft, lead = size - 1.5, colours['ink'], colours['ink2'], size + 2.5
         data = [look.heads(heads, colours, size, center_from=2)]
         for row in rows:
             runs = [words.run(row['label'], size, ink, True)]
@@ -113,11 +114,11 @@ def overview(facts, plans_by_id):
                         soft,
                     )
                 )
-            cells = [tb.rich(runs), tb.cell(row['name'] or '—', size, ink)]
+            cells = [tb.rich(runs, leading=lead), tb.cell(row['name'] or '—', size, ink, leading=lead)]
             texts = ([nexts[id(row)] or '—'] if with_next else []) + ([firsts[id(row)] or '—'] if with_first else [])
             texts += [look.money(row['today']), look.money(row['recommended']), look.signed(row['delta'])]
             texts += [look.pct(row['pct'])]
-            cells += [tb.cell(text, size, ink, align='c') for text in texts]
+            cells += [tb.cell(text, size, ink, align='c', leading=lead) for text in texts]
             data.append({'kind': 'plain', 'cells': cells})
         for line in kept:
             card = line['incumbent']
@@ -125,14 +126,15 @@ def overview(facts, plans_by_id):
             keep = f'Keep {card.get("carrier") or "your current plan"}'
             if through:
                 keep += f' · rate guaranteed through {look.long_date(look.iso_date(through))}'
-            cells = [tb.cell(line['label'], size, ink, True), tb.cell(keep, size, ink)]
+            cells = [tb.cell(line['label'], size, ink, True, leading=lead), tb.cell(keep, size, ink, leading=lead)]
             texts = ([kept_next[line['key']] or '—'] if with_next else []) + (['—'] if with_first else []) + ['—'] * 4
-            data.append({'kind': 'plain', 'cells': cells + [tb.cell(t, size, ink, align='c') for t in texts]})
+            cells += [tb.cell(text, size, ink, align='c', leading=lead) for text in texts]
+            data.append({'kind': 'plain', 'cells': cells})
         if total:
-            lead = len(heads) - 4
+            first = len(heads) - 4
             figures_ = (look.money(total['today']), look.money(total['recommended']), look.signed(total['delta']))
-            cells = [tb.cell('Total', size, ink, True), *[tb.cell('', size, ink) for _ in range(lead - 1)]]
-            cells += [tb.cell(text, size, ink, True, 'c') for text in (*figures_, look.pct(total['pct']))]
+            cells = [tb.cell('Total', size, ink, True, leading=lead), *[tb.blank() for _ in range(first - 1)]]
+            cells += [tb.cell(text, size, ink, True, 'c', leading=lead) for text in (*figures_, look.pct(total['pct']))]
             data.append({'kind': 'total', 'cells': cells, 'fill': colours['blue_bg'], 'rule_above': colours['navy']})
         return look.grid(data, widths, colours, pad=pad)
 

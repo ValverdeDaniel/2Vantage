@@ -38,7 +38,9 @@ def image(x, y, w, h, src, fit='cover', r=0):
 
 
 def words(x, y, w, text, size, color, bold=False, italic=False, align='l', leading=None, title=False):
-    """A text box of plain words, its height measured; typed line breaks are their own lines."""
+    """A text box of plain words, its height measured; typed line breaks are their own lines. Leading 1.2 × the size to
+    a tenth of a point unless given, as the old furniture's words led."""
+    leading = leading or round(size * 1.2, 1)
     para = words_.paragraph([words_.run(text, size, color, bold, italic)], w, leading=leading, align=align)
     return {'t': 'text', 'x': x, 'y': y, 'w': w, 'h': para['h'], 'title': title, 'wrap': True, 'paragraphs': [para]}
 
@@ -47,7 +49,8 @@ def one_line(x, y, text, size, color, bold=False, align='l', width=None, title=F
     """A line that never wraps; `x` is its right edge when `align` is 'r'."""
     measured = words_.width(text, size, bold) * 1.03 + 2
     room = width or measured
-    para = words_.paragraph([words_.run(text, size, color, bold)], room + 4, align=align, wrap=False)
+    leading = round(size * 1.2, 1)
+    para = words_.paragraph([words_.run(text, size, color, bold)], room + 4, leading=leading, align=align, wrap=False)
     para['h'] = round(size * 1.2, 1)
     left = x - room - 4 if align == 'r' else x
     return {

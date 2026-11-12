@@ -15,6 +15,7 @@ COMPARERS = {
     'xlsx': lambda old, new, work: xlsx.compare(old, new),
     'pdf': lambda old, new, work: pdf.compare(old, new, work),
     'pptx': lambda old, new, work: pptx.compare(old, new),
+    'letter': lambda old, new, work: pdf.compare(old, new, work, sheets=True),  # Paper: the PDF's pages on Letter
 }
 
 
@@ -47,7 +48,7 @@ def compare(folder, register):
     with tempfile.TemporaryDirectory() as scratch:
         for deal_folder in sorted(path for path in folder.iterdir() if (path / 'fetch.json').exists()):
             record = json.loads((deal_folder / 'fetch.json').read_text(encoding='utf-8'))
-            for kind in ('xlsx', 'pdf', 'pptx'):
+            for kind in COMPARERS:
                 work = Path(scratch) / deal_folder.name / kind
                 found, state = _pair(deal_folder, record, kind, work)
                 intended.label(entries, deal_folder.name, kind, found)

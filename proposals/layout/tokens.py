@@ -26,9 +26,10 @@ BODY_H = PAGE_H - BODY_TOP - FOOTER_BAR - 8 - BODY_BOTTOM_SLACK
 # --- Type -----------------------------------------------------------------------------------------------------------
 # Helvetica in the PDF, Arial in the PowerPoint: the same metrics, so PowerPoint wraps where the layout did (J142).
 FONTS = {'regular': 'Helvetica', 'bold': 'Helvetica-Bold', 'italic': 'Helvetica-Oblique', 'family': 'Arial'}
-# A line's baseline sits this many sizes below its top: the furniture's, as the old canvas drew it. A paragraph's
-# text (a Text flowable, a table cell) sits one size below, as reportlab's Paragraph placed its first line in the old
-# files (`height - fontSize` at 891f1b3); its frames carry `drop`.
+# A paragraph's first baseline sits this many times its first line's type below its top, and each later line one
+# leading below the one before (the leading's extra space falls under the line): the furniture's 0.96, as the old canvas
+# drew it; a paragraph's (a Text flowable, a table cell) 1.0, as reportlab's Paragraph placed its first line in the
+# old files (`height - fontSize` at 891f1b3); its frames carry `drop`.
 BASELINE_DROP = 0.96
 PARAGRAPH_DROP = 1.0
 # A content page's title steps down from the largest to the smallest until it fits one line (J139).
@@ -54,8 +55,24 @@ TEXT = {
     'rec_name': (24, 29),
     'rationale': (13, 19),
     'note': (8, 10),
+    'value': (12, 14.4),
+}
+# The space each kind keeps above and below it (the old paragraph styles' spaceBefore and spaceAfter).
+TEXT_SPACE = {
+    'title': (0, 2),
+    'cover_title': (0, 6),
+    'sub': (0, 8),
+    'intro': (0, 6),
+    'section': (6, 4),
+    'caption': (0, 4),
+    'rec_name': (0, 4),
+    'rationale': (8, 0),
+    'note': (3, 0),
+    'value': (0, 0),
 }
 HEAD_NOTE = 10
+# A header row's leading when the page sets its type (old `_heads(..., size)`, `_plan_cell`): 1.25 × the size.
+HEAD_LEADING = 1.25
 
 # --- A plan table's columns -----------------------------------------------------------------------------------------
 LABEL_W = 2.3 * 72

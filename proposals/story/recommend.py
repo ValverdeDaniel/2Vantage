@@ -10,12 +10,12 @@ The words are `why_for`'s (J57): the line's own, else the deal-wide ones only wh
 """
 
 from .. import catalog, formatting
-from ..layout import items, tokens
 from ..layout import table as tb
+from ..layout import text as words
+from ..layout import tokens
 from . import exhibit_rows, look
 
 KEEP_CURRENT_WORDS = 'We recommend keeping your current plan.'
-BODY_W = tokens.BODY_W
 
 
 def answers(line):
@@ -28,13 +28,13 @@ def answers(line):
     return [(plans[pid], only if only and only['id'] != pid else None) for pid in line['order'] if pid in line['picks']]
 
 
-def _why(line, rationale, colours):
+def _why(line, rationale, colours, gap=12):
+    """The producer's reasons under the panel or the table: `gap` points, then the rationale (which keeps its own
+    space above it, as the old style did)."""
     if not rationale:
         return []
-    return [
-        look.lead_para('Why we recommend it.', rationale, 'rationale', colours, space_before=12),
-        look.note(rationale),
-    ]
+    why = look.lead_para('Why we recommend it.', rationale, 'rationale', colours)
+    return [look.gap(gap), why, look.note(rationale)]
 
 
 # The panel's rows (old `composition.highlights`): the line's card stats, then its price rows, in a client's words.
@@ -86,11 +86,13 @@ def _facts(plan, line):
     return found[:MAX_FACTS]
 
 
+PANEL_PAD = (20, 16, 16, 16)  # the plan's cell: left, right, top, bottom
+FIGURE_PAD = (14, 6, 8, 8)
+
+
 def panel(plan, current, line, colours):
-    """The WE RECOMMEND panel and the plan's figures beside it, as one block of frames."""
-    left_w, label_w = BODY_W * 0.44, BODY_W * 0.3
-    value_w = BODY_W - left_w - label_w
-    inner = left_w - 36
+    """The WE RECOMMEND panel: one table, the plan on the brand's navy down its first column (one cell spanning every
+    row), each of its figures a row beside it, a hairline under each (old `_recommendation_pages`' Table)."""
     silver, white = colours['silver'], tokens.WHITE
     lines = [('WE RECOMMEND', 11, silver, True, 15)]
     if plan['option'] and not plan['current']:
@@ -101,33 +103,30 @@ def panel(plan, current, line, colours):
         lines.append((KEEP_CURRENT_WORDS, 12, silver, False, 17))
     if current is not None and line['several']:
         lines.append((f'In place of {current["carrier"]} {current["name"]}', 12, silver, False, 17))
-    words = []
-    y = 0.0
-    for text, size, ink, bold, leading in lines:
-        if not text:
-            continue
-        item = items.words(20, y, inner, text, size, ink, bold=bold, leading=leading)
-        words.append(item)
-        y += item['h']
-    rows, row_y = [], 0.0
-    for name, value in _facts(plan, line) or [('', '')]:
-        label = items.words(left_w + 14, 0, label_w - 20, name, 11.5, colours['ink2'], leading=15)
-        figure = items.words(left_w + label_w + 14, 0, value_w - 20, value, 12.5, colours['ink'], True, leading=16)
-        tall = max(label['h'], figure['h']) + 16
-        label['y'] = row_y + (tall - label['h']) / 2
-        figure['y'] = row_y + (tall - figure['h']) / 2
-        rows += [label, figure, items.line(left_w, row_y + tall, BODY_W, row_y + tall, colours['hairline'])]
-        row_y += tall
-    height = max(y + 32, row_y)
-    for item in words:
-        item['y'] += (height - y) / 2
-    return look.block([items.rect(0, 0, left_w, height, fill=colours['navy']), *words, *rows], height + 4)
+    paras = [
+        {'runs': [words.run(text, size, ink, bold)], 'leading': leading, 'align': 'l'}
+        for text, size, ink, bold, leading in lines
+    ]
+    facts = _facts(plan, line) or [('', '')]
+    rows = []
+    for number, (name, value) in enumerate(facts):
+        cells = []
+        if number == 0:
+            plate = {'runs': [], 'paras': paras, 'rowspan': len(facts), 'pad': PANEL_PAD, 'fill': colours['navy']}
+            cells.append(plate)
+        cells.append(dict(tb.cell(name, 11.5, colours['ink2'], leading=15), pad=FIGURE_PAD))
+        cells.append(dict(tb.cell(value, 12.5, colours['ink'], True, leading=16), pad=FIGURE_PAD))
+        rows.append({'kind': 'plain', 'cells': cells})
+    widths = look.shares([0.44, 0.3, 0.26])
+    rule = {'color': colours['hairline'], 'lw': 0.5, 'col': 1}
+    return tb.Table(rows, widths, colours, head=0, zebra=False, rule=rule)
 
 
 def several(pairs, line, colours, rationale):
     """One table: what each current plan becomes and what it does to the bill."""
     size = 12
     ink = colours['ink']
+    lead = size + 4
     rows = [look.heads(['What you have today', 'What we recommend', 'Annual premium', 'Change', '%'], colours, size, 2)]
     last = None
     for plan, current in pairs:
@@ -141,16 +140,17 @@ def several(pairs, line, colours, rationale):
         )
         last = current
         change = plan['change'] if not kept else {'delta': 0, 'pct': 0.0}
-        cells = [tb.cell(today, size, ink), tb.cell('Keep this plan' if kept else plan['name'], size, ink, True)]
+        cells = [tb.cell(today, size, ink, leading=lead)]
+        cells.append(tb.cell('Keep this plan' if kept else plan['name'], size, ink, True, leading=lead))
         figures = [
             look.money(plan['annual']),
             look.signed((change or {}).get('delta')),
             look.pct((change or {}).get('pct')),
         ]
-        cells += [tb.cell(text, size, ink, align='c') for text in figures]
+        cells += [tb.cell(text, size, ink, align='c', leading=lead) for text in figures]
         rows.append({'kind': 'plain', 'cells': cells})
     table = look.grid(rows, look.shares([0.34, 0.3, 0.14, 0.12, 0.1]), colours, pad=7)
-    return [look.title(f'{line["label"]} — our recommendation'), table, *_why(line, rationale, colours)]
+    return [look.title(f'{line["label"]} — our recommendation'), table, *_why(line, rationale, colours, gap=14)]
 
 
 def pages(line, colours):

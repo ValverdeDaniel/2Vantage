@@ -6,6 +6,7 @@ import copy
 import pytest
 
 from proposals.layout import flowables, furniture, items, tokens
+from proposals.layout import table as tb
 from proposals.story import build, facts, glance, recommend, sequence
 
 pytestmark = pytest.mark.django_db
@@ -175,12 +176,21 @@ def test_J136_J165_one_panel_for_one_pick_one_table_when_several_answer(found):
     dental = next(line for line in found['lines'] if line['key'] == 'dental')
     assert len(recommend.answers(dental)) == 1
     page = recommend.pages(dental, _colours())[0]
-    assert any(isinstance(f, flowables.Block) for f in page)  # the WE RECOMMEND panel
+    panel = next(f for f in page if isinstance(f, tb.Table))  # the WE RECOMMEND panel: one table, as the old one was
+    assert panel.rows[0]['cells'][0]['rowspan'] == len(panel.rows)  # the plan down its first column
+    assert panel.rows[0]['cells'][0]['paras'][0]['runs'][0]['text'] == 'WE RECOMMEND'
     medical = next(line for line in found['lines'] if line['key'] == 'medical')
     pairs = recommend.answers(medical)
     currents = [current['id'] for _plan, current in pairs]
     assert len(pairs) > len(set(currents))  # two plans answer one current plan (J165)
     assert any(f.__class__.__name__ == 'Table' for f in recommend.several(pairs, medical, _colours(), ''))
+
+
+def test_J136_GD1_the_reasons_sit_20_points_under_the_panel_as_the_old_page_put_them(found):
+    page = next(p for p in build.lay_out(found) if p['title'] == 'Dental — our recommendation')
+    panel = next(item for item in page['frames'] if item['t'] == 'table')
+    why = next(item for item in page['frames'] if item['t'] == 'text' and items.plain(item).startswith('Why'))
+    assert why['y'] == pytest.approx(panel['y'] + panel['h'] + 12 + 8)  # a 12 pt gap, then the rationale's own 8
 
 
 def _colours():
