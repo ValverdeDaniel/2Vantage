@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'accounts',
     'deals',
     'documents',
+    'ai',  # jobs and the worker (slice 16); Claude from slice 18
     'quotes',
     'proposals',
     'golden',  # seed only, last in the chain (§3.3)
@@ -137,6 +138,8 @@ AI_MODEL = _env('AI_MODEL')
 AI_READ_LIMIT_USD = _env('AI_READ_LIMIT_USD')
 # On: Claude's reads leave out the pages the member-data screen flagged at upload; off, files are read whole (OQ22).
 AI_MEMBER_DATA_SCREEN = _flag('AI_MEMBER_DATA_SCREEN')
+# Jobs run in the worker service (`manage.py run_worker`, §3.4); tests run them inline, in the request (§3.5).
+AI_JOBS_INLINE = False
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ['accounts.auth.SessionAuth'],
@@ -147,7 +150,14 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
         'rest_framework.throttling.ScopedRateThrottle',
     ],
-    'DEFAULT_THROTTLE_RATES': {'anon': '200/hour', 'user': '5000/hour', 'login': '10/minute', 'portal': '1000/hour'},
+    # `ai_poll`: the AI state and job polls alone (useAiState every 2 s on two tabs, §3.5, E.6).
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '200/hour',
+        'user': '5000/hour',
+        'login': '10/minute',
+        'portal': '1000/hour',
+        'ai_poll': '3600/hour',
+    },
     'UNAUTHENTICATED_USER': 'django.contrib.auth.models.AnonymousUser',
 }
 
@@ -159,6 +169,6 @@ LOGGING = {
     'root': {'handlers': ['console'], 'level': 'WARNING'},
     'loggers': {
         **{name: {'level': 'WARNING'} for name in ('anthropic', 'httpx', 'httpcore')},
-        **{name: {'level': 'INFO'} for name in ('accounts', 'deals', 'documents', 'quotes', 'proposals')},
+        **{name: {'level': 'INFO'} for name in ('accounts', 'deals', 'documents', 'ai', 'quotes', 'proposals')},
     },
 }

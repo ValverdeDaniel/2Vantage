@@ -1,6 +1,7 @@
 """Values that live in JSON on their row, with one `sources` entry per key (plan.md §3.7, O.3.1).
 
-`apply()` is the only writer of a row's values and sources. Its rules (A31–A33, E66, F141):
+`apply()` is the only writer of a row's values and sources, and `set_loc()` of the locator's answer on an entry
+(slice 16). Its rules (A31–A33, E66, F141):
 - a value equal to the stored one (after cleaning) changes nothing: not the value, not its source;
 - a changed value gets a new source entry, so a review `mark` or a `confirmed` never outlives its value;
 - a typed value over a read one keeps `doc`, `page`, `cell`, `line` and `read_value` (the ↗ still opens the file)
@@ -56,6 +57,22 @@ def _read_back(old):
     entry = source(READ_ORIGIN)
     entry.update({name: old[name] for name in KEPT_UNDER_TYPED if name in old})
     return entry
+
+
+def set_loc(values, sources, key, value, doc, loc):
+    """Store the locator's answer `loc` on the entry of `key` (E83, O.3.1), when the value is still `value` and its
+    entry still names file `doc`: a value changed while its file was searched keeps no answer about the old value.
+
+    The answer is bookkeeping: it never changes the value, its origin, a mark or an approval, and an answer equal to
+    the stored one (its time apart) writes nothing. Returns True when the entry changed."""
+    entry = sources.get(key)
+    if not isinstance(entry, dict) or values.get(key) != value or entry.get('doc') != doc:
+        return False
+    stored = entry.get('loc') or {}
+    if {k: v for k, v in stored.items() if k != 'at'} == {k: v for k, v in loc.items() if k != 'at'}:
+        return False
+    sources[key] = {**entry, 'loc': dict(loc)}
+    return True
 
 
 def apply(values, sources, changes, make_source):

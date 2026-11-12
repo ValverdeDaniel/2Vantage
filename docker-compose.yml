@@ -21,7 +21,7 @@ services:
     build: .
     ports: ["8004:8000"]
     volumes: [".:/app", "media:/data/media"]
-    environment:
+    environment: &backend-env
       ENVIRONMENT: local
       DJANGO_DEBUG: "True"
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-only-not-secret}
@@ -35,6 +35,18 @@ services:
       AGENCY_TIME_ZONE: ${AGENCY_TIME_ZONE:-America/New_York}
     depends_on:
       db: {condition: service_healthy}
+    restart: unless-stopped
+
+  # Runs queued jobs (reads, chats, re-checks, Rank, locate, Issue): plan.md §3.4, O.3.3. The backend image, no port.
+  # It does not reload on code changes: `docker compose restart worker` after changing code it runs.
+  worker:
+    build: .
+    entrypoint: ["python", "manage.py", "run_worker"]
+    volumes: [".:/app", "media:/data/media"]
+    environment: *backend-env
+    depends_on:
+      db: {condition: service_healthy}
+      backend: {condition: service_started}
     restart: unless-stopped
 
   frontend:

@@ -11,6 +11,7 @@ if os.environ.get('TEST_DB_NAME'):
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 REST_FRAMEWORK = {**REST_FRAMEWORK, 'DEFAULT_THROTTLE_CLASSES': []}
 ANTHROPIC_API_KEY = ''
+AI_JOBS_INLINE = True  # a started job runs at once, in the test (plan.md §3.5)
 MEDIA_ROOT = tempfile.mkdtemp(prefix='vantage2-test-media-')
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 LOGGING = {**LOGGING, 'loggers': {**LOGGING['loggers'], 'django.request': {'level': 'ERROR'}}}

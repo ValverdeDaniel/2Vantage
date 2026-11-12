@@ -20,6 +20,8 @@ import { useToast } from '../../ui/useToast';
 import DocumentViewer from '../../viewer/DocumentViewer';
 import FileBar from '../../viewer/FileBar';
 import AddFilesRow from './AddFilesRow';
+import CheckStrip from './CheckStrip';
+import { locWords } from './checkWords';
 import FileAsList from './FileAsList';
 import FileControls from './FileControls';
 import FilePanel from './FilePanel';
@@ -27,14 +29,16 @@ import FileTabs from './FileTabs';
 import RemovedFiles from './RemovedFiles';
 import { chooseFile, inUploadOrder, proposalFiles } from './stationFiles';
 import { sourceDocument, viewerFind } from './sourceTarget';
+import useCheckFile from './useCheckFile';
 import useFileDrop from './useFileDrop';
 import useStationState, { ALL_PROPOSALS } from './useStationState';
 
 /*
  * The Documents tab (plan.md §8.16; Part E): every file on the deal, one on screen at a time, where a value opens with
  * its figure boxed (E1–E32). Slice 15 builds the file row, the File panel, Remove and "Show removed files", "File as"
- * by drop, the viewers and ↗'s deep links; the Scanned data panel beside the file (List, Grid, review) is slices
- * 17 and 23's, Re-read and the Claude drawer slices 19 and 20's, the pop-out window slice 65's.
+ * by drop, the viewers and ↗'s deep links; slice 16 "Check this file" (the locator, a job in the worker) and what it
+ * found on the file bar; the Scanned data panel beside the file (List, Grid, review) is slices 17 and 23's, Re-read
+ * and the Claude drawer slices 19 and 20's, the pop-out window slice 65's.
  */
 export default function DocumentsTab({ deal }) {
   const toast = useToast();
@@ -67,6 +71,8 @@ export default function DocumentsTab({ deal }) {
     allKey: ALL_PROPOSALS,
   });
   const shown = choice.file;
+  const checking = choice.all ? proposalFiles(files).map((file) => file.id) : shown ? [shown.id] : [];
+  const check = useCheckFile(deal.id, checking);
   const showsValue = Boolean(shown && source && sourceDocument(source) === shown.id);
   const find = showsValue
     ? viewerFind(source, value.data.value, value.data.hint, station.page)
@@ -199,7 +205,10 @@ export default function DocumentsTab({ deal }) {
                   onEdit={() => setEditing(true)}
                   onRemove={() => setRemoving(shown)}
                   onExpand={() => setExpanded((v) => !v)}
+                  check={check}
+                  checkCount={checking.length}
                 />
+                <CheckStrip check={check} count={checking.length} />
                 {editing && !isRemoved && (
                   <FilePanel
                     key={shown.id}
@@ -219,6 +228,7 @@ export default function DocumentsTab({ deal }) {
                   bucket={isRemoved ? 'Removed' : bucketLabel(shown.bucket)}
                   page={(viewed.id === shown.id && viewed.page) || find.page || 1}
                   what={showsValue ? value.data.what : ''}
+                  note={showsValue ? locWords(source.loc) : null}
                 />
                 <DocumentViewer
                   document={shown}

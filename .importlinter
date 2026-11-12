@@ -8,6 +8,7 @@ root_packages =
     accounts
     deals
     documents
+    ai
     quotes
     proposals
     golden
@@ -19,6 +20,7 @@ layers =
     golden
     proposals
     quotes
+    ai
     documents
     deals
     accounts

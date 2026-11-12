@@ -711,7 +711,7 @@ slice 44), questionnaire (42), commission (48), review (53), agenda (60) and ove
 |---|---|---|
 | frontend (Vite dev server) | http://localhost:4001 | `frontend/Dockerfile.dev` (Node 22) |
 | backend (Django) | http://localhost:8004 (container 8000) | `Dockerfile` (Python 3.12-slim) |
-| worker (`manage.py run_worker`, slice 16) | no port | the backend image |
+| worker (`manage.py run_worker`, built in slice 16) | no port | the backend image |
 | db (Postgres) | localhost:5436 (container 5432), database `vantage2` | `postgres:15` |
 
 These ports deliberately differ from the older Vantage app (4000 / 8003 / 5435) and other local stacks
@@ -770,7 +770,9 @@ volumes:
 ```
 
 **The worker** claims jobs from the database, so it needs no port. It does not reload when code changes: run
-`docker compose restart worker` after changing code it runs. Tests never need it; they run jobs inline (§3.5).
+`docker compose restart worker` after changing code it runs. Tests never need it; they run jobs inline (§3.5). Built
+in slice 16 as above, with `restart: unless-stopped`; SIGTERM ends it at the running job's next step and puts that job
+back in the queue, so a worker restart loses nothing, and a backend restart never touches a running job.
 
 **Old Vantage beside 2Vantage (slice 3).** `tools/parity/` runs the old app (Django 4.2) as its own Compose project:
 its code at the commit the port follows (891f1b3, §13.3), mounted read-only; its own database and media volumes; an
@@ -889,7 +891,8 @@ at 30 MB (`FILE_UPLOAD_MAX_BYTES`), under Cloud Run's 32 MiB request limit (E7, 
 **DRF settings:** authentication `accounts.auth.SessionAuth` (DRF's `SessionAuthentication`, which enforces CSRF on
 writes, with a named scheme so a signed-out request answers 401, not 403); default permission `IsAuthenticated`;
 throttles: anonymous 200/hour, user 5,000/hour, scope `login` 10/minute, and scope `ai_poll` 3,600/hour for the AI
-state polls (slice 16), so `useAiState` polling every 2 s on two tabs never uses up the user rate (E.6). The portal
+state polls (built in slice 16: the state and job GETs use this throttle alone), so `useAiState` polling every 2 s on
+two tabs never uses up the user rate (E.6). The portal
 (slice 54) has no authentication classes and its own throttles, keyed by token: `portal_read` 300/hour, `portal_write`
 3,600/hour, `portal_poll` 600/hour and `portal_pin` 10/hour on top of the five-try PIN lock. The anonymous rate never
 applies to it (L.6). They replace the baseline's single `portal` scope (1,000/hour), which slice 54 removes.
@@ -898,7 +901,9 @@ applies to it (L.6). They replace the baseline's single `portal` scope (1,000/ho
 `ANTHROPIC_API_KEY = ''`, `MEDIA_ROOT` = a temporary directory, locmem email backend, `django.request` logging at
 ERROR. `pytest.ini` points `DJANGO_SETTINGS_MODULE` at it.
 The root `conftest.py` adds a socket guard (slice 3), so a test can open only the database socket (Q.2), and jobs run
-inline with the fake Claude client of `ai/testing.py` (slice 16; Q.6).
+inline with the fake Claude client of `ai/testing.py` (slice 16; Q.6): `settings.AI_JOBS_INLINE` (a fixed setting,
+False; True in `settings_test.py`) runs a started job at once in the request, and `ai.testing.run_jobs()` runs queued
+ones when a test turns it off. The fake client joins `ai/testing.py` in slice 18.
 
 **Logging:** one console handler at WARNING. Loggers `anthropic`, `httpx` and `httpcore` (built), and `httpx2`, which
 the 1.x SDK uses (slice 18), pinned at WARNING: their DEBUG output contains document contents. App loggers at INFO (they
@@ -3171,9 +3176,13 @@ and no layout field; a scanned quote's printed table is quotes' `QuoteLayout` (�
 
 ### 6.4 ai
 
-Not built (slices 16 and 24). `ai` holds jobs, the worker, chats and the Claude client, but no business data: owners
-register readers, job kinds, context providers, chat tools and locate hooks in `ai.registry` from `apps.ready()` (O.1,
-O.3.3, §10).
+`ai` holds jobs, the worker, chats and the Claude client, but no business data: owners register readers, job kinds,
+context providers, chat tools and locate hooks in `ai.registry` from `apps.ready()` (O.1, O.3.3, §10).
+
+Built (slice 16): `Job` (every field below; no `chat` until slice 24's Chat, and `worker` names the worker that
+claimed it), `DealAi` (its fields; nothing writes it until slice 24's lock and budget, and reads return the defaults),
+`ai.registry` (`job_kinds`, `locate_hooks`; `readers`, `context` and `tools` empty until slices 18–24), the worker and
+reaper, the `locate` job and quotes' locate hooks. Chat, ChatMessage and CarrierNote are slice 24's.
 
 **Job** — one row per read, chat turn, re-check, rank, locate or issue (D.6, O.3.3; slice 16)
 
@@ -3190,7 +3199,10 @@ O.3.3, §10).
 | times, `heartbeat_at` | The worker beats on stream events; the reaper takes jobs silent for 10 minutes (D105) |
 
 A partial unique constraint allows one running job per (deal, lane). `manage.py run_worker` claims jobs as its own
-Compose service; tests run jobs inline with a fake client (O.3.3).
+Compose service; tests run jobs inline with a fake client (O.3.3). Starting or stopping a job records no Activity (a
+job is the AI's working record, not deal data); what a job changes on the deal is one Activity row, `Job.activity`.
+A locate job writes only `loc` (bookkeeping, through `deals.values.set_loc`): one non-revertible `ai`/`checked` row
+per file with counts and the document id, and no per-key changes, so a check never blocks a later Revert (slice 16).
 
 **Change set** (`Job.result`), one shape for every target (D.6, O.3.3):
 
@@ -3732,7 +3744,15 @@ job at `deals/{id}/ai/locate/` (§7.5). Full list: Part E, E.6.
 
 ### 7.5 AI — `ai/`
 
-Not built (slices 16–24).
+Built in slice 16: GET `deals/{id}/ai/` (PATCH waits for slice 24), POST `deals/{id}/ai/locate/`, GET `ai/jobs/{id}/`
+and POST `ai/jobs/{id}/cancel/`. The state is `{deal, claude, jobs (queued and running, oldest first, each with
+queue_position), recent (finished in the last 15 minutes, newest first, at most 10), waiting: [], news: [], lock,
+spend: {usd, budget_usd}, can: {direct, budget}}`; a job is `{id, kind, lane, target, status, progress, step,
+documents, stopping, queue_position, counts, landed: {areas, plan_ids}, error, resolution, activity_id, created_by,
+created_at, started_at, finished_at}`, and `ai/jobs/{id}/` adds `steps`, `params` and `result`. `locate/` takes
+`{document_ids, recheck?}` (this deal's files, removed ones too) and answers 201 with the new job, or 200 with the same
+check already queued or running. Stop on a finished job answers 409 with a sentence; on a stopped one it changes
+nothing. The two polled GETs use the `ai_poll` throttle alone.
 
 | Method | Path | Auth | Request and response |
 |---|---|---|---|
@@ -4926,6 +4946,13 @@ AI door hides and the manual flow is unchanged (D26). Slices 16–24 build it; 3
 - **The browser** polls one endpoint, `GET deals/{id}/ai/`, through `useAiState`: every 2 s, slowing to 10 s while jobs
   run. A finished job refetches the areas it landed in and flashes its plans (O.4; D35). The state GET writes nothing.
   The endpoints are D.6's (§7).
+- **Built in slice 16:** the models, the registry, `services.jobs` (start, which returns the same job already queued or
+  running instead of a second; cancel), the worker (`claim`, `reap`, the loop) and its Compose service, the `locate`
+  job, `check_sources`, the four endpoints of §7.5 and `src/api/ai.js` (`useAiState`, `useStartLocate`,
+  `useStopJob`). `useAiState` polls only while a job is queued or running: 2 s for its first 20 s, then a second
+  slower every 10 s, to 10 s (`api/aiPolling.js`); a job started in the page lands even if it finished between polls.
+  Beats come from the work (each page read, each file), written at most once a second; Stop and the reaper are seen at
+  the next beat.
 
 ### 10.3 The Claude client, models and budgets
 
@@ -5027,6 +5054,14 @@ Part E (E.6); the screens are §8.16.
 - **The locator** (`documents/locate/`; E81–E84) is pure and reads visible cells only. Its states are found, derived,
   weak, absent and "check by eye". It runs inside every read and in **Check this file**, a `locate` job in the system
   lane (E59; slice 16). A scanned page is never "not in the file"; browser OCR only draws (E25; slice 65; OQ98).
+  Built in slice 16 (`fold`, `query`, `pdf_text` with form answers, `pdf_index`, `sheet_cells`, `sheet_index`), the
+  old rules ported, with one change: in a sheet the cell where the plan's words (column) and the field's words (row)
+  cross wins, so one figure printed under two plans opens each plan's own cell (the old scored row or column alone).
+  Quotes' hooks (`quotes/locate_hooks.py`) check every live plan value whose source names the file, as it stands: a
+  value typed over a read one keeps its file (E66), so it is checked too, and one typed to something the file does
+  not print is "not in the file" (GD1's negotiated copy). "Check this file" sits in the file's controls row with the
+  old strip's progress and Stop until slice 17's List takes it; the file bar says "Not in the file" or "Check by eye"
+  for the value a ↗ opened.
 - **"As in the file"** shows a scanned quote's columns and printed rows from `QuoteLayout` (E42, F42; O.3.5).
 - This replaces v1.1's "Values from this document" panel and its `confirmed_by/at`.
 
@@ -5791,7 +5826,7 @@ An app imports only from apps to its left (lint-imports); a fact read by an app 
 To reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
 AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client,
 never business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far:
-accounts, deals, documents, quotes, proposals, golden. The chain orders imports, not screens: the deal sidebar keeps old
+accounts, deals, documents, ai, quotes, proposals, golden. The chain orders imports, not screens: the deal sidebar keeps old
 Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review & requests, Intake, Census,
 Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close: Advisor, Proposal · Shared: Documents.
 Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry the Advisor and Proposal.

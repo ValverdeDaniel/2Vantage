@@ -140,3 +140,31 @@ def test_A31_the_source_entry_has_one_shape():
         values.source('guessed')
     with pytest.raises(ValueError):
         values.source('typed', note='not a source key')
+
+
+# ---- set_loc: the locator's answer on an entry (slice 16; E83) ------------------------------------------------------
+FOUND_P3 = {'state': 'found', 'page': 3, 'hits': 1, 'v': 1, 'at': AT}
+
+
+def test_E83_set_loc_stores_the_answer_and_keeps_everything_else():
+    vals, srcs = {'deductible_single': '3300'}, {'deductible_single': dict(READ)}
+    assert values.set_loc(vals, srcs, 'deductible_single', '3300', 41, FOUND_P3)
+    assert srcs['deductible_single'] == {**READ, 'loc': FOUND_P3}
+    assert vals == {'deductible_single': '3300'}
+
+
+@pytest.mark.parametrize(
+    'value, doc',
+    [('3400', 41), ('3300', 42)],  # the value changed while its file was searched, or it names another file now
+)
+def test_E83_set_loc_writes_nothing_about_an_old_value(value, doc):
+    vals, srcs = {'deductible_single': '3300'}, {'deductible_single': dict(READ)}
+    assert not values.set_loc(vals, srcs, 'deductible_single', value, doc, FOUND_P3)
+    assert srcs['deductible_single'] == READ
+
+
+def test_E83_the_same_answer_again_writes_nothing():
+    vals, srcs = {'deductible_single': '3300'}, {'deductible_single': {**READ, 'loc': FOUND_P3}}
+    later = {**FOUND_P3, 'at': '2026-11-21T10:00:00+00:00'}
+    assert not values.set_loc(vals, srcs, 'deductible_single', '3300', 41, later)
+    assert srcs['deductible_single']['loc']['at'] == AT

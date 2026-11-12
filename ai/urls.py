@@ -1,0 +1,10 @@
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    path('deals/<int:pk>/ai/', views.DealAiView.as_view()),
+    path('deals/<int:pk>/ai/locate/', views.LocateView.as_view()),
+    path('ai/jobs/<int:job_id>/', views.JobView.as_view()),
+    path('ai/jobs/<int:job_id>/cancel/', views.CancelView.as_view()),
+]
