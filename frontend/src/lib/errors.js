@@ -7,7 +7,7 @@ const STATUS_TEXT = {
   404: 'Not found.',
   409: 'That conflicts with the current state. Refresh and try again.',
   410: 'This link has expired or was revoked.',
-  413: 'The file is too large (50 MB at most).',
+  413: 'The file is too large (30 MB at most).',
   429: 'Too many requests. Wait a moment and try again.',
 };
 

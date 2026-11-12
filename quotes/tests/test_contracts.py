@@ -52,6 +52,7 @@ def samples(world):
         'api/deals/<int:pk>/plans/template/': deal,
         'api/deals/<int:pk>/plans/import/': deal,
         'api/plans/<int:plan_id>/': {'plan_id': world['alternate'].id},
+        'api/plans/<int:plan_id>/source/': {'plan_id': world['current'].id, 'query': {'key': 'rate_ee'}},
         'api/plans/<int:plan_id>/renewal/': {'plan_id': world['current'].id},
         'api/plans/<int:plan_id>/copy/': {'plan_id': world['current'].id},
         'api/plans/<int:plan_id>/sold/': {'plan_id': world['alternate'].id},
@@ -95,6 +96,7 @@ def matrix(world):
         ('POST', 'api/deals/<int:pk>/plans/packages/', ok(201), {'name': 'Switch', 'plan_ids': []}),
         ('GET', 'api/deals/<int:pk>/plans/template/', ok()),
         ('POST', 'api/deals/<int:pk>/plans/import/', ok(400)),  # no file: refused after the permission check
+        ('GET', 'api/plans/<int:plan_id>/source/', ok()),  # slice 15: ↗ open in file (E18)
         ('PATCH', 'api/plans/<int:plan_id>/', ok(), {'values': {'rate_ee': '500'}}),
         ('POST', 'api/plans/<int:plan_id>/renewal/', ok(201)),
         ('POST', 'api/plans/<int:plan_id>/copy/', ok(201), {'name': 'HMO 1500 negotiated'}),

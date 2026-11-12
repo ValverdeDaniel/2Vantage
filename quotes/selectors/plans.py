@@ -21,7 +21,8 @@ class Documents:
         return self.index.setdefault(document_id, len(self.index))
 
     def listed(self):
-        names = dict(Document.objects.filter(id__in=list(self.index)).values_list('id', 'original_name'))
+        # A removed (archived) file keeps its values' link and its name (E15).
+        names = dict(Document.all_objects.filter(id__in=list(self.index)).values_list('id', 'original_name'))
         return [{'id': doc_id, 'name': names.get(doc_id, '')} for doc_id in self.index]
 
 

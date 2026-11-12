@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { errorText } from '../../lib/errors';
 import { formatWhen } from '../../lib/format';
 import cx from '../../ui/cx';
+import SourcePin from '../../viewer/SourcePin';
 import { displayValue, ORIGIN_ICON } from './display';
 
 // The old cell colours (App.css): a required blank is `bb-cell-missing`, a value to check is `bb-cell-low`.
@@ -94,8 +95,10 @@ export default function ValueCell({ plan, field, update, labelId }) {
         STATUS_CLASS[status],
         plan.role === 'current' && 'bnf-plan-col-current',
         error && 'bnf-cell-error',
+        source?.doc && 'bnf-has-src', // ↗ on hover opens the value in its file (E18, slice 15)
       )}
     >
+      {source?.doc && <SourcePin docId={source.doc} valueRef={`plan:${plan.id}:${field.key}`} />}
       <div className="bnf-plan-head">
         {control}
         {source && source.origin !== 'typed' && (

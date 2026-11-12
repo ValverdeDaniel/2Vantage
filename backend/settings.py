@@ -103,7 +103,8 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_ROOT = _env('MEDIA_ROOT', '/data/media')
 MEDIA_URL = '/media-not-served/'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
-FILE_UPLOAD_MAX_BYTES = 50 * 1024 * 1024
+# One file per request, under Cloud Run's 32 MiB request limit (§3.5, E7, OQ24).
+FILE_UPLOAD_MAX_BYTES = 30 * 1024 * 1024
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -134,6 +135,8 @@ EMAIL_BACKEND = (
 ANTHROPIC_API_KEY = _env('ANTHROPIC_API_KEY')
 AI_MODEL = _env('AI_MODEL')
 AI_READ_LIMIT_USD = _env('AI_READ_LIMIT_USD')
+# On: Claude's reads leave out the pages the member-data screen flagged at upload; off, files are read whole (OQ22).
+AI_MEMBER_DATA_SCREEN = _flag('AI_MEMBER_DATA_SCREEN')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ['accounts.auth.SessionAuth'],

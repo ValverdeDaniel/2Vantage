@@ -1,7 +1,9 @@
-"""Documents API, version 1 (plan.md §7.4)."""
+"""Documents API (plan.md §7.4; E.6): the list and upload, the File panel, Remove and Restore, the admin purge and the
+file itself. Sheets are sheet_views.py."""
 
 import json
 
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -10,33 +12,23 @@ from rest_framework.views import APIView
 
 from deals.downloads import file_response
 from deals.models import Deal
-from deals.selectors import person
 
-from . import services
+from . import selectors, services
 from .models import Document
 
+MAX_ID = 2**63 - 1  # a bigger id is not a row: 404, never a database error
+FORM_FIELDS = ('kind', 'role', 'carrier', 'label')
 
-def document_payload(document):
-    return {
-        'id': document.id,
-        'original_name': document.original_name,
-        'label': document.label,
-        'kind': document.kind,
-        'role': document.role,
-        'carrier': document.carrier,
-        'lines': document.lines,
-        'size': document.size,
-        'page_count': document.page_count,
-        'source': document.source,
-        'review_state': document.review_state,
-        'uploaded_by': person(document.uploaded_by),
-        'uploaded_at': document.uploaded_at,
-        'issued': hasattr(document, 'proposal_issue'),
-    }
+
+def document_or_404(document_id):
+    """Any document, removed or not: a removed file still opens, and still restores (E15)."""
+    if document_id > MAX_ID:
+        raise Http404
+    return get_object_or_404(Document.all_objects.select_related('deal__client'), pk=document_id)
 
 
 def _form_meta(request):
-    meta = {key: request.data.get(key) for key in ('kind', 'role', 'carrier', 'label') if key in request.data}
+    meta = {key: request.data.get(key) for key in FORM_FIELDS if key in request.data}
     if 'lines' in request.data:
         raw = request.data.get('lines')
         try:
@@ -47,33 +39,72 @@ def _form_meta(request):
 
 
 class DocumentsView(APIView):
+    """GET the deal's files (`?archived=1`: the removed ones); POST one file (multipart, `kind` required)."""
+
     def get(self, request, pk):
+        if pk > MAX_ID:
+            raise Http404
         deal = get_object_or_404(Deal, pk=pk)
-        return Response([document_payload(d) for d in deal.documents.select_related('uploaded_by')])
+        archived = request.query_params.get('archived') == '1'
+        return Response(selectors.deal_documents(deal, archived=archived))
 
     def post(self, request, pk):
+        if pk > MAX_ID:
+            raise Http404
         deal = get_object_or_404(Deal, pk=pk)
-        upload = request.FILES.get('file')
-        if not upload:
+        files = request.FILES.getlist('file')
+        if not files:
             raise ValidationError({'file': ['Choose a file.']})
-        document = services.upload(request.user, deal, upload, _form_meta(request))
-        return Response(document_payload(document), status=status.HTTP_201_CREATED)
+        if len(files) > 1:
+            raise ValidationError({'file': ['Send one file per request.']})
+        document = services.upload(request.user, deal, files[0], _form_meta(request))
+        return Response(selectors.document_payload(document), status=status.HTTP_201_CREATED)
 
 
 class DocumentView(APIView):
+    """PATCH the File panel's fields; DELETE purges (admins only, OQ23)."""
+
     def patch(self, request, document_id):
-        get_object_or_404(Document, pk=document_id)
-        return Response(document_payload(services.update(request.user, document_id, request.data)))
+        document_or_404(document_id)
+        if not isinstance(request.data, dict):
+            raise ValidationError({'non_field_errors': ['Send the fields as an object.']})
+        document, _changed = services.update(request.user, document_id, request.data)
+        return Response(selectors.document_payload(document))
 
     def delete(self, request, document_id):
-        get_object_or_404(Document, pk=document_id)
-        services.delete(request.user, document_id)
+        document_or_404(document_id)
+        if not request.user.is_staff:
+            return Response({'detail': 'Only an admin can delete a file for good.'}, status=status.HTTP_403_FORBIDDEN)
+        services.purge(request.user, document_id)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class ArchiveView(APIView):
+    """POST: Remove (archive) a file; its values keep their link (E15)."""
+
+    def post(self, request, document_id):
+        document_or_404(document_id)
+        return Response(selectors.document_payload(services.archive(request.user, document_id)))
+
+
+class RestoreView(APIView):
+    """POST: put a removed file back (E16)."""
+
+    def post(self, request, document_id):
+        document_or_404(document_id)
+        return Response(selectors.document_payload(services.restore(request.user, document_id)))
+
+
 class DownloadView(APIView):
+    """GET the bytes: an attachment, or `?inline=1` for the viewer under a sandbox CSP (E17). A file with member data
+    writes its `downloaded` or `viewed` row (E99) and downloads under the client's name and its kind."""
+
     def get(self, request, document_id):
-        document = get_object_or_404(Document, pk=document_id)
+        document = document_or_404(document_id)
         inline = request.query_params.get('inline') == '1'
-        services.record_download(request.user, document, inline)
-        return file_response(document.file.open('rb'), document.original_name, inline=inline)
+        try:
+            handle = document.file.open('rb')
+        except (FileNotFoundError, OSError, ValueError) as exc:
+            raise Http404('This file is missing from storage.') from exc
+        services.record_access(request.user, document, inline)
+        return file_response(handle, services.download_name(document), inline=inline)

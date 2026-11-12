@@ -43,6 +43,7 @@ class TemplateImportView(APIView):
             return Response({**template.dry_run(operations), 'errors': []})
         with transaction.atomic():  # the stored file and every change, or nothing
             stored = SimpleUploadedFile(upload.name, content)
-            document = documents.upload(request.user, deal, stored, {'kind': 'other', 'label': 'Plan template import'})
+            meta = {'kind': 'plan_template', 'label': 'Plan template import'}  # E8: imports are plan templates
+            document = documents.upload(request.user, deal, stored, meta)
             result = services.apply_template(request.user, deal, operations, document)
         return Response({**result, 'errors': []})

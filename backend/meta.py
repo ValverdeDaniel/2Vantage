@@ -21,8 +21,7 @@ class MetaView(APIView):
                 'stages': _pairs(stages.STAGES),
                 'relationships': lifecycle.meta(),
                 'funding': _pairs(lines.FUNDING),
-                'document_kinds': _pairs(kinds.KINDS),
-                'document_roles': _pairs(kinds.ROLES),
+                **kinds.meta(),  # document_kinds (with their flags), document_buckets, document_roles
                 'plans': fields.meta(),
                 'carriers': carriers.meta(),
             }

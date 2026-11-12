@@ -14,7 +14,7 @@ from deals.services import create_client, delete_client, set_status
 from proposals import services as proposals
 from quotes import services as plans
 
-from . import specs
+from . import files, specs
 
 Golden = namedtuple('Golden', 'deal refs spec')  # refs: {spec ref: plan id}
 
@@ -41,12 +41,16 @@ def remove(spec, user):
         delete_client(user, client_id)
 
 
-def _plan(user, deal, plan, refs):
+def _plan(user, deal, plan, refs, printed=None):
+    """Create one plan. `printed` (files.Attached) names the synthetic file that prints some of its values: a
+    workbook's values carry their file and cell; a PDF's values, typed after the rest, carry their file (slice 15)."""
     if plan.get('copy_of'):  # the negotiated option is made the way a member would: Duplicate and name it, then rates
         copy = plans.copy_plan(user, refs[plan['copy_of']], plan['name'])
         plans.update_plan(user, copy.id, {'values': plan['values']})
         return copy.id
     links = [refs[ref] for ref in plan['links']]
+    from_file = {key: plan['values'][key] for key in (printed.keys if printed else []) if key in plan['values']}
+    with_cells = bool(printed and printed.cells)
     created = plans.create_plan(
         user,
         deal,
@@ -54,10 +58,14 @@ def _plan(user, deal, plan, refs):
         role=plan['role'],
         carrier=plan['carrier'],
         name=plan['name'],
-        values=plan['values'],
+        values=plan['values'] if with_cells else {k: v for k, v in plan['values'].items() if k not in from_file},
         renews_id=links[0] if plan['role'] == 'renewal' else None,
         replaces_ids=links if plan['role'] == 'alternate' else [],
+        document=printed.document if with_cells else None,
+        cells=printed.cells if with_cells else None,
     )
+    if from_file and not with_cells:
+        plans.update_plan(user, created.id, {'values': from_file}, document=printed.document)
     return created.id
 
 
@@ -75,9 +83,10 @@ def build(spec, user):
     )
     if status == NEW_CLIENT:  # a New client is made only by a sale or Convert to client (CL6)
         set_status(user, deal.client_id, NEW_CLIENT)
+    printed = files.attach(user, deal, spec)
     refs = {}
     for plan in spec['plans']:
-        refs[plan['ref']] = _plan(user, deal, plan, refs)
+        refs[plan['ref']] = _plan(user, deal, plan, refs, printed.get(plan['ref']))
     typed = [
         {'id': refs[plan['ref']], 'enrollment': plan['enrollment'], 'on': True}
         for plan in spec['plans']

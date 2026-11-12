@@ -8,6 +8,7 @@ from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 from deals import lines
+from documents.xlsx_safe import put  # the one spreadsheet-injection guard (§3.8, D114; moved left in slice 15)
 
 from . import fields, selectors
 from . import values as cleaning
@@ -27,23 +28,12 @@ FIRST_FIELD_ROW = 11
 FIRST_PLAN_COLUMN = 3
 EMPTY_COLUMNS = 3
 GREY = PatternFill('solid', fgColor='E7E9EE')
-RISKY = ('=', '+', '-', '@', '\t', '\r')
 
 
 def sheet_name(line_key):
     return re.sub(r'[\[\]:*?/\\]', '-', lines.label(line_key))[:31]
 
 
-def put(ws, row, column, value):
-    """Write a value; text that a spreadsheet would read as a formula is written as literal text (§3.8)."""
-    cell = ws.cell(row=row, column=column)
-    if isinstance(value, str) and value.startswith(RISKY):
-        cell.value = value
-        cell.data_type = 's'
-        cell.quotePrefix = True
-    else:
-        cell.value = value
-    return cell
 
 
 def _link(plan):

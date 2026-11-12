@@ -544,7 +544,7 @@ the rest). "Slice N" says when a piece arrives (§13). Untagged text in §3 is t
 | Server | gunicorn 23 (production), `runserver` (local) | built | |
 | Job worker | `manage.py run_worker`, the backend image run as its own service | slice 16 | Runs every job (reads, chat turns, re-checks, Rank, locate, the Issue build), so no long call runs inside a web request (§3.4, §10; O.3.3) |
 | Spreadsheets — writing | XlsxWriter 3.3.0 | slice 15 | Generated workbooks (the client proposal workbook, the stop-loss workbook, the Book export) go through `documents/xlsx_safe.py` (§3.8); every formula is written with the app's number as its stored result (§9) |
-| Spreadsheets — reading, templates | openpyxl 3.1 | built | Reading imports and the sheet viewer; the plan template and census templates. Carrier templates are filled by XML patching, never re-saved by openpyxl (§9) |
+| Spreadsheets — reading, templates | openpyxl 3.1; xlrd 2.0.1 (the old app's) for `.xls` | built; xlrd: slice 15 | Reading imports and the sheet viewer; the plan template and census templates. Carrier templates are filled by XML patching, never re-saved by openpyxl (§9). A legacy `.xls`, which openpyxl cannot open, reads through xlrd (E29) |
 | PDF — writing | reportlab 4.2.5 | slice 29 | The client PDF, through platypus's public API with our own flowables (J122); `deals/pdfkit.py` (letterhead, RFP cover); questionnaire stamps (G.6) |
 | PDF — reading | pypdf 5 | slice 15 | Page counts at upload; the locator's page text; Paper and Letter placement at 75% (J114); AcroForm read-back (G.6). No server OCR (D-122) |
 | PowerPoint | python-pptx 1.0.2 | slice 31 | Replays the PDF's recorded frames (J141) |
@@ -879,7 +879,7 @@ Other fixed settings: `TIME_ZONE = 'UTC'` and `USE_TZ = True` (storage and API t
 `AGENCY_TIME_ZONE`); default file storage is the local filesystem (Cloud Storage on Cloud Run is a settings change only,
 §11); `DEFAULT_AUTO_FIELD = BigAutoField`; Django admin mounted at `/admin/` for staff; Django's `PasswordChangeView`
 and `PasswordChangeDoneView` mounted at `/accounts/password_change/` (nothing else from `auth.urls`). Uploads are capped
-at 30 MB (`FILE_UPLOAD_MAX_BYTES`), under Cloud Run's 32 MiB request limit (E7, OQ24; slice 15, 50 MB today).
+at 30 MB (`FILE_UPLOAD_MAX_BYTES`), under Cloud Run's 32 MiB request limit (E7, OQ24; built in slice 15).
 
 **Sessions and CSRF:** `SESSION_COOKIE_HTTPONLY = True`, `SESSION_COOKIE_SAMESITE = 'Lax'`, `CSRF_COOKIE_SAMESITE =
 'Lax'`; in production `SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = True`. `CSRF_TRUSTED_ORIGINS` is `FRONTEND_URL` plus
@@ -953,7 +953,7 @@ runs `select 1`, counts unapplied migrations (cached once zero), returns
   naming the keys. The grid's Undo always sends it (J74, O.6 #33).
 - **Downloads** are `GET`s that stream a file through `deals.downloads.file_response`. The content type comes from an
   explicit map by extension (xlsx, xlsm, docx, csv, pdf, zip, eml), never from the upload or Python's `mimetypes`
-  (slice 15, with E17 and K63; `deals/downloads.py` uses `mimetypes` today).
+  (built in slice 15, with E17 and K63: `deals.downloads.CONTENT_TYPES`).
   Headers: `Content-Disposition: attachment` (or `inline` under a sandbox CSP for the viewer, E17),
   `X-Content-Type-Options: nosniff`, `Cache-Control: private, no-store`. Zips and `.eml` drafts stream in chunks, so a
   large file never meets Cloud Run's 32 MiB limit (K.5 #39). File names come from `safe_filename` (characters outside
@@ -1123,7 +1123,7 @@ Rules:
 - **Uploads** go through `documents.services.upload`, the only door (E6, E7, E15, E96):
   - one file per request; the kind is required (a blank kind answers 400), the extension must be on the kind's accept
     list (`documents/kinds.py`), and the file's first bytes must match its extension; at most 30 MB (OQ24); a PDF's
-    page count is stored at upload (slice 15; today a blank kind becomes `other`, no byte check, 50 MB);
+    page count is stored at upload (built in slice 15);
   - stored through Django's storage API under `deals/<deal_id>/<uuid>-<name>` in `MEDIA_ROOT`, never served by a
     public URL;
   - bytes an upload stored are removed if its transaction fails, and a deleted row's bytes go only after commit;
@@ -3136,8 +3136,8 @@ Logo and brand colour stay here, edited in Django admin (O.6 #20).
 
 ### 6.3 documents
 
-Built: `Document` with v1.1's fields. A user's DELETE removes the row and its bytes at once (`post_delete`), uploads
-take up to 50 MB, and a blank kind becomes `other` (E.5 #27–39). Slice 15 changes it to E.6's design.
+Built (slice 15): E.6's design below. Remove archives; only an admin's DELETE purges, and a deleted row's bytes go
+once the deletion commits; `manage.py sweep_orphan_files [--delete]` finds bytes no row names (E98).
 
 **Document**
 
@@ -3719,12 +3719,14 @@ client" (§5.1).
 | GET | `documents/{id}/sheet/` | user | `?sheet=&start=&look=1` | a sheet window from `sheets.look()` |
 | POST | `documents/{id}/sheet/find/` | user | `{value, line, hint}` | `{sheet, cell, state}` |
 
-`document` = `{id, original_name, label, kind, role, carrier, lines, size, page_count, source, review_state,
-uploaded_by: {id, name} | null, uploaded_at}`. The baseline also returns `issued`, which slice 15 drops (issued
-files are `protected`).
+`document` = `{id, original_name, label, display_name, kind, bucket, role, carrier, lines, size, page_count, shape,
+source, review_state, screen: {left_out_pages, image_pages, lists_members}, protected, archived_at, archived_by,
+uploaded_by: {id, name} | null, uploaded_at}` (slice 15). `display_name` is the label, else "<effective year> <kind>"
+for an unnamed renewal, invoice or claims file (E95), else the file name; `shape` (pdf, image, sheet or null) picks the
+viewer. Issued files are `protected` (the baseline's `issued` is dropped). The sheet window also takes `cell`
+("Medical!C7"), which opens its sheet around that cell and names it as the window's `match`.
 
-Slice 15 adds the new fields the station shows (E.6). Built today: the list, upload (up to 50 MB; a blank kind becomes
-`other`), PATCH, a DELETE by any user that removes the file at once, and download. Each value owner (intake, census,
+Built in slice 15: every row above. Each value owner (intake, census,
 quotes, questionnaire) serves the station's `sources/` and `marks/` (§7.6–§7.9), and "Check this file" starts a `locate`
 job at `deals/{id}/ai/locate/` (§7.5). Full list: Part E, E.6.
 
@@ -3852,7 +3854,7 @@ the design; a path with no plan id sits under `deals/{id}/`.
 | `plans/find/` | The finder: names, numbers, carriers, codes and aliases | F14–F17, OQ14 | 10 |
 | `saved-views/`, `saved-views/{id}/` | Saved board and stop-loss setups, Mine and Shared; others' private views answer 404 | F28, F29 | 10, 36 |
 | `plans/sources/`, `plans/marks/` | The station's values and marks (F.6's `plans/review/`) | E.6, F63–F67 | 17 |
-| `plans/{id}/source/?key=` | One value's full source, for ↗ | F.6 | — |
+| `plans/{id}/source/?key=` | One value's full source, for ↗: `{plan_id, key, label, value, hint, what, source: {origin, doc, page, cell, line, loc, low, mark, confirmed}}`; read only | F.6, E18 | built; 15 |
 | `plans/as-quoted/?document=&line=` | "As quoted", from `QuoteLayout` | F42, E42 | 21 |
 | `plans/{id}/sbc/` | Attach SBC: a staged read of design values | D47 | 22 |
 | `plans/pair/` | Pair two halves into one printed column, or split them | J15, O.6 #4 | 33 |

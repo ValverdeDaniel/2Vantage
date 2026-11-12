@@ -7,6 +7,12 @@ gunicorn==23.0.0
 openpyxl==3.1.5
 # Agency logo re-encoding (§6.2)
 pillow==13.0.0
+# Page counts, the member-data screen and (slice 16) the locator's page text (§3.1; slice 15, the old app's 5.7.0)
+pypdf==5.7.0
+# Generated workbooks, through documents/xlsx_safe.py (§3.8; slice 15, the old app's writer)
+XlsxWriter==3.3.0
+# Legacy .xls workbooks, which openpyxl cannot open: viewed on Documents (E29; slice 15, the old app's 2.0.1)
+xlrd==2.0.1
 
 # Tests and lint
 pytest==8.4.2

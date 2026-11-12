@@ -602,7 +602,7 @@
       "check": "pixels",
       "selector": null,
       "item": "E1",
-      "why": "Documents v1 (2V's file table with Upload, Edit and Delete) on the old tab's title, adder row and the archived-list table, until slice 15 brings the station (file tabs, viewer, Scanned data).",
+      "why": "Slice 15's station (E1–E32): 2Vantage's GD1 carries two synthetic files (an Aetna renewal PDF and a Cigna quote workbook, golden/files.py) that the old parity load does not upload, so 2V shows the file tabs with bucket tags, 📚 All proposals, ✎ File / Remove / Expand, the file bar and the viewer where the old app says \"No documents yet\"; \"＋ Add files\" and the File-as list stand in for the ✦ Work with Claude button and drawer until slice 20 (E4); the subtitle names only what is built. The Scanned data panel (List, Grid, review keys) waits for slices 17 and 23 (E34–E58), Change history for slice 17 (E73).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -613,7 +613,18 @@
       "check": "classes",
       "selector": null,
       "item": "E73",
-      "why": "Change history from Activity (E73, E74) arrives with slice 17; the Scanned data panel with slices 15–17.",
+      "why": "The Scanned data panel's, the review toolbar's and Change history's classes (bnf-scan-*, gs-*, sf-*, hst-*) arrive with slices 17 and 23 (E34–E58, E73, E74); the station's own (bb-doc-tab*, bnf-doc-*, bnf-file-bar*, bb-pdf-*, bnf-sheet-*) are new against an old GD1 that has no files.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.advisor",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "E18",
+      "why": "Values printed in GD1's synthetic files (slice 15, golden/files.py) carry the old ↗ pin on hover (bnf-has-src, bnf-src-pin), which opens the value in Documents; the old parity load has no files, so its cells have none.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
