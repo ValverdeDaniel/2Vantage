@@ -29,13 +29,23 @@ const storage = () => (typeof window === 'undefined' ? null : window.localStorag
  * EnrollmentStrip and the rows card; then the Executive summary, Next steps and the line's Markets checked. The cover,
  * pictures, team and templates join with slice 34.
  *
- * "Open proposal ▸" calls `onExport`: the Advisor shows its Export viewer (J27; slice 28).
+ * "Open proposal ▸" calls `onExport`: the Advisor shows its Export viewer (J27; slice 28); "See the slides ▸" on the
+ * Plans card calls `onSlides`: the viewer on the PowerPoint, at the line's first plan set (J58; slice 30).
  *
  * The payload is the server's (GET deals/{id}/proposal/): this holds only which card is open, which line is shown, Key
  * rows / All rows and whether the checks are open. An edit clears its card's mark on the server (J19); there is no save
  * queue (J20).
  */
-export default function ProposalBuilder({ dealId, meta, line: wantedLine, onLine, onQuotes, onGoTab, onExport }) {
+export default function ProposalBuilder({
+  dealId,
+  meta,
+  line: wantedLine,
+  onLine,
+  onQuotes,
+  onGoTab,
+  onExport,
+  onSlides,
+}) {
   const proposal = useProposal(dealId);
   const writes = useBuilderWrites(dealId);
   const [showChecks, setShowChecks] = useState(false);
@@ -83,6 +93,7 @@ export default function ProposalBuilder({ dealId, meta, line: wantedLine, onLine
   const actions = {
     resetOrder: () => writes.resetOrder(key),
     toQuotes: onQuotes,
+    toSlides: onSlides,
     recommendAll: writes.recommendAll,
     reasons: (text) => set(`reasons.${key}`, text),
   };

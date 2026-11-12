@@ -1,12 +1,12 @@
-"""`GET deals/{id}/proposal/preview/?file=workbook&tab=`: the Export viewer's payloads (plan.md §7.12, §8.14; J107,
-J116–J118; J.6.5, J.6.6).
+"""`GET deals/{id}/proposal/preview/?file=workbook&tab=` and `?file=deck`: the Export viewer's payloads (plan.md §7.12,
+§8.14; J107–J111, J114, J116–J118; J.6.5, J.6.6).
 
 Built on each request from the deal as it stands, from the downloads' own builders; `Cache-Control: private,
 no-store`; writes nothing at all (Q.3 #2): a preview is not a download, so not even a `downloaded` row. A proposal
 with nothing to present answers 409 in the download's own words (J107: "refusals in the downloads' words").
 
-`PREVIEWS` maps `file` to its builder: the client spreadsheet (`workbook`, one tab a request) today; slice 30 adds the
-deck (`deck`: the PowerPoint, PDF and Paper pages) beside it.
+`PREVIEWS` maps `file` to its builder: the client spreadsheet (`workbook`, one tab a request; slice 28) and the deck
+(`deck`: one build behind the PowerPoint, PDF and Paper views, the PDF's bytes with its page log; slice 30).
 """
 
 from django.shortcuts import get_object_or_404
@@ -16,11 +16,12 @@ from rest_framework.views import APIView
 
 from deals.models import Deal
 
-from .viewer import workbook
+from .viewer import deck, workbook
 from .workbook.build import NothingToPresent
 
 PREVIEWS = {
     workbook.FILE: lambda deal, params: workbook.preview(deal, (params.get('tab') or '').strip() or None),
+    deck.FILE: lambda deal, params: deck.preview(deal),
 }
 
 

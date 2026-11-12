@@ -4218,7 +4218,13 @@ opens_on, tabs: [{title, counts, capped}], tab: {title, rows, cols, col_px, row_
 styles, looks, cells: [[r, c, text, flags, extra]], dropdowns, images, checks, counts, print, cut}}`; `?file=deck` is
 slice 30's; any other file answers 400; `409 {detail}` in the download's words; no-store; writes nothing, not even a
 `downloaded` row), and the builder payload's `stamps {files, firm}` (`proposals/stamps.py`). The client PDF and
-PowerPoint take the spreadsheet's name rule, `<Client> - <year> Benefits Proposal-DRAFT.pdf` / `.pptx` (J104).
+PowerPoint take the spreadsheet's name rule, `<Client> - <year> Benefits Proposal-DRAFT.pdf` / `.pptx` (J104). Slice 30:
+`?file=deck` (one build behind the Export viewer's PowerPoint, PDF and Paper views: `{file, built_at, style, draft,
+slides: [{n, title, kind: cover | table | page, line, continued, notes, chart, fit}], paper: {scale, sheet, as_is,
+inner}, pdf}`, `pdf` the download's own bytes as base64, `fit` on a plan set's first slide the recorder's fit log plus
+`{slides, money_slide, tall_rows}`; writes nothing) and `GET …/proposal/files/letter/` (the client PDF on US Letter,
+`paint/paper.letter`; `<Client> - <year> Benefits Proposal-DRAFT Letter.pdf`; it writes only its `downloaded` row).
+The "Not printing" chips read the builder payload's `ledger`, not the preview's.
 
 | Method | Path | What it does |
 |---|---|---|
@@ -4715,6 +4721,19 @@ checks per tab; downloads and **Print…**. Previews build only while shown and 
   no refetch on focus or mount, the last copy kept while the next builds, enabled only while shown and nothing is
   saving. "Open proposal ▸" on the builder opens it (J27). The grid lives in `deal/proposal/export/` (one screen uses
   it), not `src/viewer/`.
+- **Built (slice 30):** the deck view (J108–J111, J114, J115): PowerPoint, PDF and Paper page through one build's
+  PDF, drawn with the one pdf.js build (`src/viewer/pdfjs.js`), so switching files never builds again and keeps the
+  page. It opens on the first Medical plan set and keeps the slide picked by title and position across rebuilds (J108,
+  J109); ←→, ↑↓, PgUp/PgDn, Home/End; rail thumbnails; Jump chips with fit dots; the fit report above a plan set
+  (J110: fits, notes moved on, runs on, the smallest type, rates apart from the benefits, rows over two lines); the
+  PowerPoint's speaker notes (J111); a chart slide says PowerPoint draws it as a native chart (J.5 B22); "Not printing"
+  from the builder's ledger, each opening the builder (J112). Paper sets each page on its Letter sheet with "Prints on
+  US Letter landscape at 75%… This table's 9 pt type prints at 6.8 pt." (J114). Downloads: ⬇ Download PowerPoint,
+  ⬇ Download PDF, ⬇ Download Letter PDF and **Print…**, whose window opens on the click and falls back to a download
+  with a toast when pop-ups are blocked (J115, `export/printPdf.js`). Work with Claude is sent the viewer's state with
+  each message (file, slide or tab, the fits; `deal/shared/viewerBridge.js`) and proposals' context provider puts it
+  in words, building nothing (J120). "See the slides ▸" on the builder's Plans card opens the PowerPoint on that
+  line's first plan set (J58, `?view=export&file=powerpoint`).
 
 ### 8.15 Proposal (`proposal`)
 
@@ -5089,6 +5108,10 @@ wraps where the layout did (J142). Each text box equals its recorded frame (J.6.
   a PDF's type comes out too small (2026-11-05).
 - **Letter PDF** (`paint/paper.py`, pypdf): the same placement, as a file. A draft's is made from the draft PDF; an
   issue's is made from its stored PDF bytes, so it never differs from what was issued (J103, J115).
+- **Built (slice 30):** `paint/paper.py`: `placement(w, h)` (a Letter page as it is; any other on a Letter sheet of
+  its own orientation, scaled into the half-inch margin and centred: a slide at 75%), `summary(w, h)` → `{scale, sheet,
+  as_is, inner}` for the Paper view, `letter(pdf_bytes)` (pypdf's `merge_transformed_page`; links move with their
+  page). The draft's Letter PDF is `GET …/proposal/files/letter/`; Issue (slice 32) calls `letter` on the stored bytes.
 
 ### 9.8 Carrier census files (`rfp/formats/`, `rfp/xlsx/`)
 

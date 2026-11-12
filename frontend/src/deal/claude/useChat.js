@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useChatMessages, useChats, useSendMessage } from '../../api/chats';
 import { current as boardNow } from '../shared/boardBridge';
+import { current as viewerNow } from '../shared/viewerBridge';
 
 /*
  * The drawer's chat state (plan.md §8.17, §10.6; D7, D19; the old ScanChat): which chat is open — the one this person
  * last wrote in on the deal (the server's pick, the old D-096 rule), another picked in Chats ▾, or ＋ New chat, a draft
  * the server numbers on its first message — its messages, and sending. A message carries the tab and, on the Advisor,
- * what the board shows (F108), so Claude answers about what the person sees. One turn runs per deal at a time (the
- * chat lane): `running` is it, and the composer waits for it (D19).
+ * what the board shows (F108) or what the Export viewer shows (J120), so Claude answers about what the person sees.
+ * One turn runs per deal at a time (the chat lane): `running` is it, and the composer waits for it (D19).
  */
 export default function useChat({ dealId, tab, model, state }) {
   const chats = useChats(dealId);
@@ -24,6 +25,7 @@ export default function useChat({ dealId, tab, model, state }) {
       chatId: chatId === 'new' ? null : chatId,
       tab,
       board: tab === 'advisor' ? boardNow(dealId) : null,
+      viewer: tab === 'advisor' ? viewerNow(dealId) : null,
       model,
       ...options,
     });

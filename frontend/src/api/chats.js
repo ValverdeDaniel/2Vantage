@@ -28,13 +28,14 @@ export function useChatMessages(chatId) {
 }
 
 /**
- * Send a message (D19): ({text, chatId, documentIds, tab, board, model, budgetOverride}) → {chat_id, message, job,
- * queue_position}. The turn runs in the chat lane; useAiState watches it until it ends.
+ * Send a message (D19): ({text, chatId, documentIds, tab, board, viewer, model, budgetOverride}) → {chat_id, message,
+ * job, queue_position}; `viewer` is what the Export viewer shows (J120). The turn runs in the chat lane; useAiState
+ * watches it until it ends.
  */
 export function useSendMessage(dealId) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ text, chatId, documentIds, tab, board, model, budgetOverride }) =>
+    mutationFn: async ({ text, chatId, documentIds, tab, board, viewer, model, budgetOverride }) =>
       (
         await api.post(`deals/${dealId}/ai/messages/`, {
           text,
@@ -42,6 +43,7 @@ export function useSendMessage(dealId) {
           ...(documentIds?.length ? { document_ids: documentIds } : {}),
           ...(tab ? { tab } : {}),
           ...(board ? { board } : {}),
+          ...(viewer ? { viewer } : {}),
           ...(model ? { model } : {}),
           ...(budgetOverride ? { budget_override: true } : {}),
         })

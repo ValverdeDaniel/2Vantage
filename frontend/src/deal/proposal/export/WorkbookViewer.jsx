@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ClientSpreadsheetButton from '../builder/ClientSpreadsheetButton';
+import { publish } from '../../shared/viewerBridge';
 import { builtWords } from './exportFiles';
 import { tabModel } from './gridModel';
 import usePreviewCopy from './usePreviewCopy';
@@ -9,6 +10,7 @@ import WorkbookGrid from './WorkbookGrid';
 import WorkbookPages from './WorkbookPages';
 import WorkbookTabs from './WorkbookTabs';
 import { checkList, markMap, readMode, stepCell, writeMode } from './workbookModel';
+import { workbookState } from './viewerState';
 import { columnLetter } from './gridModel';
 
 const FILE = 'workbook';
@@ -21,7 +23,8 @@ const storage = () => (typeof window === 'undefined' ? null : window.localStorag
  * (proposals/viewer/workbook.py); this draws it. It opens on the tab Excel opens on and keeps to the tab picked
  * (`selected`, held by the Advisor so a view switch keeps it); Screen or Printed pages, kept per browser; the checks per
  * tab, each jumping to its cell; Ctrl+PgUp and Ctrl+PgDn between tabs and the arrows between cells, as in Excel.
- * The root says what it is doing for the walks: `data-render` loading | ready | error, `data-viewer-tab`.
+ * The tab on screen is published for Work with Claude (J120). The root says what it is doing for the walks:
+ * `data-render` loading | ready | error, `data-viewer-tab`.
  */
 export default function WorkbookViewer({ dealId, chips, selected, onSelect }) {
   const [mode, setMode] = useState(() => readMode(storage()));
@@ -43,6 +46,9 @@ export default function WorkbookViewer({ dealId, chips, selected, onSelect }) {
   useEffect(() => {
     rootRef.current?.focus({ preventScroll: true });
   }, []);
+  // Work with Claude is told the tab on screen (J120; slice 30).
+  const told = useMemo(() => (tab ? workbookState(tab.title) : null), [tab]);
+  useEffect(() => (told ? publish(dealId, told) : undefined), [dealId, told]);
 
   const pickMode = (next) => {
     setMode(next);

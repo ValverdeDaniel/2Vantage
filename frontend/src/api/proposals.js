@@ -77,7 +77,9 @@ export const previewKey = (dealId, file, tab, stamps) => [
  * staleTime Infinity, no retry, no refetch on focus or mount; a superseded build is aborted (the signal). Enabled only
  * while its file is on screen and nothing is saving (the caller's `enabled`). Until a copy for this key arrives, the
  * last copy of the same file stays on screen (`isPlaceholderData`), from this view or an earlier visit.
- * → workbook: {file, built_at, draft, opens_on, tabs: [{title, counts, capped}], tab: {…}} · 409 {detail}.
+ * → workbook: {file, built_at, draft, opens_on, tabs: [{title, counts, capped}], tab: {…}} · deck (slice 30; one copy
+ * behind the PowerPoint, PDF and Paper views): {file, built_at, style, draft, slides: [{n, title, kind, line, continued,
+ * notes, chart, fit}], paper: {scale, sheet, as_is, inner}, pdf (base64)} · 409 {detail}.
  */
 export function usePreview(dealId, { file, tab, stamps, enabled }) {
   const queryClient = useQueryClient();

@@ -7,9 +7,9 @@ import { plansSummary } from './builderModel';
  * Plans on the proposal (plan.md §8.14; J47, J49–J55; the old ProposalPlansCard.jsx at 891f1b3, D-221): the line's
  * comparison pages as the PowerPoint prints them ("What the client will see", the pages folder's PagesView), with
  * Key rows / All rows (display only: the files print every row; J16), "Our recommendation" under each page (J52),
- * ⋯ More for the name on client documents (J14), "Back to the default order" (F48, J6), the off notice and the
- * EnrollmentStrip above, and the recommendation's status and words below. A gap line reads "New coverage — options
- * only". Every write is quotes' (stars, slots, order, links, recommend) or the config's (the words).
+ * ⋯ More for the name on client documents (J14), "See the slides ▸" (J58), "Back to the default order" (F48, J6), the
+ * off notice and the EnrollmentStrip above, and the recommendation's status and words below. A gap line reads "New
+ * coverage — options only". Every write is quotes' (stars, slots, order, links, recommend) or the config's (the words).
  */
 export default function PlansCard({ dealId, line, card, rowsMode, onRowsMode, notice, strip, busy, actions }) {
   const gap = line.state === 'gap';
@@ -89,6 +89,7 @@ export default function PlansCard({ dealId, line, card, rowsMode, onRowsMode, no
           preset={rowsMode}
           recommend={{ keepable: rec.keepable, disabled: rec.sold.length > 0 }}
           withMenu
+          onSlides={actions.toSlides}
         />
       </div>
       <RecommendationWords line={line} busy={busy} onRenewals={actions.recommendAll} onReasons={actions.reasons} />

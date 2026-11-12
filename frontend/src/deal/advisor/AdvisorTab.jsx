@@ -28,7 +28,8 @@ import { AddQuotesButton } from '../claude'; // Work with Claude's door on the b
  * (slice 25; J17), on the line the Advisor shows. "As quoted" shows one scanned quote as printed (F42; slice 21),
  * offered once a read has landed a printed table. The Export viewer, last, mounts the proposal folder's viewer (slice
  * 28; F3, F136): its file is kept with the view and line, and where it stands in each file (`exportPlace`) is held
- * here, so a switch to the builder and back finds the same tab; "Open proposal ▸" on the builder opens it (J27).
+ * here, so a switch to the builder and back finds the same tab; "Open proposal ▸" on the builder opens it (J27), and
+ * "See the slides ▸" on its Plans card opens the PowerPoint on that line's first plan set (J58; slice 30).
  */
 
 function EmptyPanel({ title, children, actions }) {
@@ -103,6 +104,10 @@ export default function AdvisorTab({ deal }) {
           onQuotes={() => prefs.pickView('quotes')}
           onGoTab={(tab) => navigate(`/deals/${deal.id}/${tab}`)}
           onExport={() => prefs.pickView('export')}
+          onSlides={() => {
+            setExportPlace((now) => ({ ...now, deck: { line: prefs.line } }));
+            prefs.openExport('powerpoint');
+          }}
         />
       </div>
     );
@@ -115,6 +120,7 @@ export default function AdvisorTab({ deal }) {
           onFile={prefs.pickFile}
           place={exportPlace}
           onPlace={setExportPlace}
+          onGoBuild={() => prefs.pickView('build')}
         />
       </div>
     );

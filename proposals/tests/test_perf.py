@@ -62,3 +62,17 @@ def test_Q7_J116_one_workbook_tab_of_600_plans_builds_within_the_budget(api, gd_
     assert response.status_code == 200
     print(f'\nworkbook preview, 600 plans, {tab or "opening tab"}: {len(response.content) / MB:.2f} MB, {best:.2f} s')
     assert best <= 1.5 * 600 / 236
+
+
+def test_Q7_J109_the_deck_preview_of_600_plans_builds_within_4_s(api, gd_big):
+    """Q.7: the deck preview ≤4 s: one layout pass and the PDF it draws, sent whole (J.6.12 ch21; slice 30)."""
+    best, response = None, None
+    for _ in range(3):
+        start = time.perf_counter()
+        response = api.get(f'/api/deals/{gd_big.id}/proposal/preview/', {'file': 'deck'})
+        took = time.perf_counter() - start
+        best = took if best is None else min(best, took)
+    assert response.status_code == 200
+    slides = len(response.json()['slides'])
+    print(f'\ndeck preview, 600 plans: {slides} slides, {len(response.content) / MB:.2f} MB, {best:.2f} s')
+    assert best <= 4

@@ -1,18 +1,22 @@
 /*
  * The Export viewer's files (plan.md §8.14; J105, F136; the old ExportViewer FORMATS and AdvisorTab EXPORT_FILES at
  * 891f1b3): Excel, PowerPoint, Paper and PDF, in the 2026-11-05 call's order (the "Web form" chip is dropped, J106).
- * `live` files have a view; the others show greyed with "next" until their view is built — the PowerPoint, Paper
- * and PDF pages are slice 30's deck view, one build behind the three. `?file=` picks one on landing, else the one
- * picked last in this browser, else the spreadsheet. Pure.
+ * `live` files have a view (a file without one would show greyed with "next", as the old chips did): the spreadsheet
+ * is the Excel view (slice 28); the PowerPoint, Paper and PDF are the deck view (slice 30), one build behind the three
+ * (`previewOf`), so switching between them never builds again. `?file=` picks one on landing, else the one picked last
+ * in this browser, else the spreadsheet. Pure.
  */
 
 export const FILES = [
   { id: 'excel', label: 'Excel', live: true, title: 'The client spreadsheet, tab by tab' },
-  { id: 'powerpoint', label: 'PowerPoint', live: false, title: 'The client PowerPoint, slide by slide' },
-  { id: 'paper', label: 'Paper', live: false, title: 'The client PDF on US Letter, page by page as it prints' },
-  { id: 'pdf', label: 'PDF', live: false, title: 'The client PDF, page by page as it downloads' },
+  { id: 'powerpoint', label: 'PowerPoint', live: true, title: 'The client PowerPoint, slide by slide' },
+  { id: 'paper', label: 'Paper', live: true, title: 'The client PDF on US Letter, page by page as it prints' },
+  { id: 'pdf', label: 'PDF', live: true, title: 'The client PDF, page by page as it downloads' },
 ];
 export const DEFAULT_FILE = 'excel';
+
+/** The server's preview a file is drawn from (`?file=` of `proposal/preview/`): the spreadsheet's, or the deck's. */
+export const previewOf = (file) => (file === 'excel' ? 'workbook' : 'deck');
 
 /** The file to show: the wanted one (the URL's, else the kept one) when it has a view; else the spreadsheet. */
 export function chooseFile(wanted, files = FILES) {

@@ -23,9 +23,19 @@ import usePageWrites from './usePageWrites';
  * a page, a page per current plan once quotes say what they replace. Nothing here works out a page, a figure or a rule.
  * Clicking an option's name opens the plan picker; the arrows reorder; ✕ takes a plan off; "Replacing:" links it;
  * "＋ Add a plan" puts one beside a current plan. With nothing starred it shows the first two pages; a write that adds
- * a page says which plan moved.
+ * a page says which plan moved. On the builder, "See the slides ▸" (`onSlides`) opens the Export viewer's PowerPoint
+ * (J58).
  */
-export default function PagesView({ dealId, line, lineLabel, preset, intro = null, recommend = null, withMenu = false }) {
+export default function PagesView({
+  dealId,
+  line,
+  lineLabel,
+  preset,
+  intro = null,
+  recommend = null,
+  withMenu = false,
+  onSlides = null,
+}) {
   const query = usePages(dealId, line, preset);
   const payload = query.data?.line === line ? query.data : null;
   const writes = usePageWrites(dealId, line, payload);
@@ -124,6 +134,11 @@ export default function PagesView({ dealId, line, lineLabel, preset, intro = nul
                 ＋ Add a plan
               </button>
               {!payload.several && payload.landing[''] && <span className="bnf-pg-addnote">{payload.landing['']}</span>}
+              {onSlides && (
+                <button type="button" className="bnf-override-link bnf-pg-slides" onClick={onSlides}>
+                  See the slides ▸
+                </button>
+              )}
             </div>
           )}
         </div>
