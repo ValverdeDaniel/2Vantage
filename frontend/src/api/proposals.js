@@ -24,3 +24,20 @@ export function useSaveProposal(dealId) {
     },
   });
 }
+
+/**
+ * "What the client will see" (slice 14; F37–F39, J49): one line's proposal page by page as the PowerPoint prints it.
+ * `preset` is the Advisor's Columns tab, which picks the rows. → {line, label, per_page, cap, room, nothing_starred,
+ * several, off, quotes, currents, presented_ids, pages, plans (each column's facts and words), rows (formatted cells
+ * by plan id), others (the plans off the proposal, for the picker), landing, full_words}. Every quotes write
+ * refetches it (invalidateDeal); the previous line's pages stay on screen while the same line refetches.
+ */
+export function usePages(dealId, line, preset) {
+  return useQuery({
+    queryKey: dealKey(dealId, 'proposal', 'pages', line, preset),
+    queryFn: async () => (await api.get(`deals/${dealId}/proposal/pages/`, { params: { line, preset } })).data,
+    enabled: Boolean(line),
+    staleTime: 0,
+    placeholderData: (previous) => (previous?.line === line ? previous : undefined),
+  });
+}

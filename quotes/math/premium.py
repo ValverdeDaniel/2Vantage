@@ -69,6 +69,15 @@ def change(annual, base_annual):
     return {'delta': plain(delta), 'pct': None if pct is None else float(pct)}
 
 
+def monthly_change(monthly, base_monthlies):
+    """A plan's change a month against the plans it is compared with, their monthly premiums summed: {delta, pct}, or
+    None when a figure is missing (Pages' "Change vs current", J.6.7 `monthly_delta`; slice 14)."""
+    bases = [decimal(base) for base in base_monthlies]
+    if not bases or any(base is None for base in bases):
+        return None
+    return change(monthly, sum(bases, Decimal(0)))
+
+
 def employee_cost(plan):
     """What an employee pays a month per tier: max(0, rate − contribution) to the cent; None when either is blank."""
     cost = {}

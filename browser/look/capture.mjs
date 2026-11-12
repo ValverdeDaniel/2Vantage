@@ -23,6 +23,10 @@ export async function capture({ context, app, screen, dealId, width, dir, droppe
   watch(page, errors, app);
   try {
     await page.setViewportSize({ width, height: HEIGHT });
+    // `storage`: localStorage entries the page reads as it loads (the Advisor's ▦ Pages layout, slice 14).
+    if (screen.storage) {
+      await page.addInitScript((pairs) => Object.entries(pairs).forEach(([k, v]) => localStorage.setItem(k, v)), screen.storage);
+    }
     const url = urlFor(app, screen, dealId);
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
     // `pick`: a file tab to click once the tab has drawn (Documents' census file, slice 65); absent, nothing is clicked.

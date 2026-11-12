@@ -9,6 +9,7 @@
 //             it has not landed: the old side is captured and the key is reported "pending slice N"
 //   ready     a selector each app shows once the screen has drawn (optional; networkidle always applies)
 //   pick      (in old or new) a file tab, by its visible name, to click before the capture (Documents; optional)
+//   storage   localStorage entries both apps read as the page loads, e.g. a layout kept per browser (optional)
 //   styles    key selectors whose computed font, colours, borders, radius, padding and box are compared
 //
 // Order of work: the screens that exist in both apps today first, then the old-only states later slices match.
@@ -50,6 +51,7 @@ export const SCREENS = [
   { key: 'gd6.intake', title: 'GD6 Intake: the four question cards answered (slice 39); contacts, checklist and BOR in 40', deal: 'GD6', widths: 'workspace', old: { tab: 'intake' }, new: { tab: 'intake' }, ready: '.bnf-intake-section', styles: [...WORKSPACE, '.bnf-intake-section', '.bb-account-row', '.bb-account-label', '.bb-account-value', '.bnf-qb-star', '.bnf-intake-row .bb-badge', '.bnf-note-line', '.bnf-viewtab'] },
   { key: 'gd6.advisor', title: "GD6 Advisor: the filter card with the client's budget hints (F139)", deal: 'GD6', old: { tab: 'advisor' }, new: { tab: 'advisor' }, styles: [...WORKSPACE, '.bnf-advisor-filtercard'] },
   { key: 'gd3.advisor', title: 'GD3 Advisor at checkpoint A: ten quotes priced from the medical line’s typed counts, ✎ counts (slice 13; F85–F88)', deal: 'GD3', old: { tab: 'advisor' }, new: { tab: 'advisor' }, styles: [...WORKSPACE, '.bnf-pc-mark', '.bnf-advisor-boardhead .btn-secondary'] },
+  { key: 'gd1.pages', title: 'GD1 Advisor ▦ Pages, “What the client will see”: medical, a page per current plan (slice 14; F37–F39, J49, J50)', deal: 'GD1', widths: 'workspace', old: { tab: 'advisor' }, new: { tab: 'advisor' }, storage: { 'vantage.bnf.advisor': '{"layout":"pages","line":"medical"}' }, ready: '.bnf-pg-page', styles: [...WORKSPACE, '.bnf-pg-pagehead', '.bnf-pg-count.is-full', '.bnf-pg-col.is-option', 'button.bnf-pg-name', '.bnf-pg-title', '.bnf-pg-table tbody th', '.bnf-link-picker select'] },
   { key: 'gd1.census', title: 'GD1 Census: the empty roster (slice 12; C10)', deal: 'GD1', old: { tab: 'census' }, new: { tab: 'census' }, styles: WORKSPACE },
   { key: 'gd4.census', title: 'GD4 Census: the roster grid, outside ✎ Edit (slice 41; C1–C10, C25)', deal: 'GD4', widths: 'workspace', old: { tab: 'census' }, new: { tab: 'census' }, ready: '.bb-grid-card', styles: [...WORKSPACE, '.bnf-cobra-check', '.bb-sov-toolbar', '.bb-legend-item', '.bb-sov-page .bnf-line-chips .bb-chip.active', '.bb-col-header', '.bnf-census-person', '.bb-grid-row .bb-cell', '.bnf-census-empid'] },
   { key: 'gd4.documents', title: 'GD4 Documents: the census file beside its whole roster (slice 65; E43, OQ97)', deal: 'GD4', widths: 'workspace', old: { tab: 'documents' }, new: { tab: 'documents', pick: 'census (synthetic).xlsx' }, ready: '.bnf-scan-panel', styles: [...WORKSPACE, '.bb-doc-tab', '.bnf-doc-bucket', '.bnf-file-bar', '.bnf-scan-head', '.bb-col-header', '.bb-grid-row .bb-cell'] },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PREFS_KEY, chooseLine, chooseOrientation, chooseView, readPrefs, writePrefs } from './advisorPrefs';
+import { PREFS_KEY, chooseLayout, chooseLine, chooseOrientation, chooseView, readPrefs, writePrefs } from './advisorPrefs';
 
 function memory() {
   const items = new Map();
@@ -33,5 +33,13 @@ describe('F1 F5 the kept choices', () => {
     expect(chooseView(null, 'quotes')).toBe('quotes');
     expect(chooseOrientation('cols')).toBe('cols');
     expect(chooseOrientation('sideways')).toBe('rows');
+  });
+});
+
+describe('F37 ▦ Pages is kept per browser, as the old app kept it', () => {
+  it('reads the old key’s layout: pages, else the board', () => {
+    expect(chooseLayout('pages')).toBe('pages');
+    expect(chooseLayout('grid')).toBe('grid');
+    expect(chooseLayout(undefined)).toBe('grid');
   });
 });

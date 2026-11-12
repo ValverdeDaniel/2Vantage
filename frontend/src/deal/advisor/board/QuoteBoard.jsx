@@ -43,9 +43,10 @@ import useTicks from './useTicks';
  * changes the sort or a filter (F33). Under the board header, the review strip: "N AI values to review" on the ticked,
  * filtered or line's plans, with Approve, Ignore and Needs checking (F65; slice 17). In ✎ Edit, ＋ on a plan prices a
  * version of it (slice 35, F76–F84): the draft lives in the table, or docked above it in PricedComposer. Above the
- * table, `enrollment.panel`: the counts card or the split and census notices (slice 13, F85–F91).
+ * table, `enrollment.panel`: the counts card or the split and census notices (slice 13, F85–F91). ▦ Pages swaps the
+ * table for `pages.render(preset)`, "What the client will see" (slice 14, F37), the Columns tab picking its rows.
  */
-export default function QuoteBoard({ deal, meta, lines, line, onLine, data, prefs, onDialog, enrollment }) {
+export default function QuoteBoard({ deal, meta, lines, line, onLine, data, prefs, onDialog, enrollment, pages }) {
   const toast = useToast();
   const boardMeta = meta.board;
   const view = useBoardConfig(boardMeta, prefs);
@@ -250,18 +251,21 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
             currents={board.currents.length}
             sizes={sizes}
             transpose={{ shown, blocked, max, count: drawn.length, pick: prefs.pickOrientation }}
+            pages={pages}
           />
-          <div
-            className={cx('bb-grid-scroll gk-grid', shown === 'cols' && 'bnf-freeze')}
-            onScroll={clipTip.hide}
-            {...grid.containerProps}
-          >
-            {shown === 'rows' ? (
-              <RowsTable board={board} drawn={drawn} ui={ui} win={win} bodyRef={bodyRef} />
-            ) : (
-              <TransposedTable board={board} drawn={drawn} sections={sectionList} ui={ui} sizes={sizes} clipTip={clipTip} />
-            )}
-          </div>
+          {pages?.on ? pages.render(preset) : (
+            <div
+              className={cx('bb-grid-scroll gk-grid', shown === 'cols' && 'bnf-freeze')}
+              onScroll={clipTip.hide}
+              {...grid.containerProps}
+            >
+              {shown === 'rows' ? (
+                <RowsTable board={board} drawn={drawn} ui={ui} win={win} bodyRef={bodyRef} />
+              ) : (
+                <TransposedTable board={board} drawn={drawn} sections={sectionList} ui={ui} sizes={sizes} clipTip={clipTip} />
+              )}
+            </div>
+          )}
         </div>
       </div>
       <EditModePrompt {...prompt} />

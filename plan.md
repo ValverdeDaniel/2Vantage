@@ -4053,13 +4053,14 @@ chunks; census and PHI files write `downloaded` rows. No query parameter is name
 
 ### 7.12 Proposal — `proposals/`
 
-Built: `GET` and `PUT deals/{id}/proposal/`, v1.1's selection and preview, which slice 25 replaces.
+Built: `GET` and `PUT deals/{id}/proposal/`, v1.1's selection and preview, which slice 25 replaces; `GET
+proposal/pages/` (slice 14).
 
 | Method | Path | What it does |
 |---|---|---|
 | GET / PATCH | `deals/{id}/proposal/` | The builder payload / `{path: value}` changes, merged by path under a lock |
 | POST | `deals/{id}/proposal/marks/` | `{card, line?, done}` |
-| GET | `deals/{id}/proposal/pages/?line=` | The page split, columns, formatted cells and `others` (slice 14) |
+| GET | `deals/{id}/proposal/pages/?line=&preset=` | The page split (`proposals.pages`, six a page), each column's facts and words, the rows of the Advisor's Columns tab `preset` (default Primary; client fields only) as formatted cells, `others` for the picker and where "＋ Add a plan" lands (slice 14) |
 | GET | `deals/{id}/proposal/preview/?file=deck` or `?file=workbook&tab=` | The export viewer's payloads; `no-store`; writes nothing |
 | GET | `deals/{id}/proposal/files/{pdf,pptx,xlsx,letter}/` | Draft files; writes nothing |
 | POST | `deals/{id}/proposal/issue/` | `202 {version, state}` · `409 {blockers}` |

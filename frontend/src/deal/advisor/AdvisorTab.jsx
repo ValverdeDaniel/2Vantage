@@ -4,6 +4,7 @@ import * as q from '../../api/quotes';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import RefreshChip from '../../ui/RefreshChip';
+import { PagesView } from '../proposal';
 import BoardDialogs from './BoardDialogs';
 import EnrollmentPanel from './enrollment/EnrollmentPanel';
 import LineTabs from './LineTabs';
@@ -18,7 +19,8 @@ import ViewPills from './ViewPills';
  * load shows the old load panel with how many plans are coming; a refetch keeps the board on screen with the
  * Refreshing chip (§8.22). Queries are ['deal', id, 'advisor', …] with staleTime 0. The finder, filters and saved
  * setups (slice 10) are the board's filter card, above its header; the counts card and the enrollment notices
- * (slice 13) sit between the board's header and its table.
+ * (slice 13) sit between the board's header and its table. ▦ Pages mounts the proposal folder's PagesView in the
+ * table's place (slice 14; F37), kept per browser.
  */
 
 function EmptyPanel({ title, children, actions }) {
@@ -30,6 +32,13 @@ function EmptyPanel({ title, children, actions }) {
     </div>
   );
 }
+
+const PAGES_INTRO = (
+  <div className="bb-panel-sub">
+    What the client will see: each block is one comparison page of the PowerPoint, columns left to right. Click a plan
+    name to change it; the arrows reorder. The Columns tabs above pick the rows.
+  </div>
+);
 
 export default function AdvisorTab({ deal }) {
   const { data: meta } = useMeta();
@@ -114,12 +123,13 @@ export default function AdvisorTab({ deal }) {
     );
   } else {
     const counts = dialog?.kind === 'counts';
+    const lineLabel = meta.lines.find((entry) => entry.key === prefs.line)?.label ?? prefs.line;
     const panel = (
       <EnrollmentPanel
         dealId={deal.id}
         meta={meta}
         line={prefs.line}
-        lineLabel={meta.lines.find((entry) => entry.key === prefs.line)?.label ?? prefs.line}
+        lineLabel={lineLabel}
         data={data}
         open={counts}
         preselect={dialog?.preselect}
@@ -127,6 +137,13 @@ export default function AdvisorTab({ deal }) {
         onClose={() => setDialog(null)}
       />
     );
+    const pages = {
+      on: prefs.layout === 'pages',
+      pick: prefs.pickLayout,
+      render: (preset) => (
+        <PagesView dealId={deal.id} line={prefs.line} lineLabel={lineLabel} preset={preset} intro={PAGES_INTRO} />
+      ),
+    };
     body = (
       <>
         <QuoteBoard
@@ -139,6 +156,7 @@ export default function AdvisorTab({ deal }) {
           prefs={prefs}
           onDialog={setDialog}
           enrollment={{ open: counts, panel }}
+          pages={pages}
         />
         <PackagesPanel comparison={data} create={packages.create} update={packages.update} remove={packages.remove} />
       </>

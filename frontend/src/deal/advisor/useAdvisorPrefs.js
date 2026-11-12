@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { chooseLine, chooseOrientation, chooseView, offeredViews, readPrefs, writePrefs } from './advisorPrefs';
+import { chooseLayout, chooseLine, chooseOrientation, chooseView, offeredViews, readPrefs, writePrefs } from './advisorPrefs';
 
 const storage = () => (typeof window === 'undefined' ? null : window.localStorage);
 
@@ -16,6 +16,7 @@ export default function useAdvisorPrefs(lines) {
   const view = chooseView(params.get('view'), kept.view, offered);
   const line = chooseLine(params.get('line'), kept.line, lines);
   const orientation = chooseOrientation(kept.orientation);
+  const layout = chooseLayout(kept.layout);
 
   const remember = (patch, urlKey) => {
     writePrefs(storage(), patch);
@@ -37,8 +38,10 @@ export default function useAdvisorPrefs(lines) {
     view,
     line,
     orientation,
+    layout,
     pickView: (next) => remember({ view: next }, 'view'),
     pickLine: (next) => remember({ line: next }, 'line'),
     pickOrientation: (next) => remember({ orientation: next }),
+    pickLayout: (next) => remember({ layout: next }),
   };
 }

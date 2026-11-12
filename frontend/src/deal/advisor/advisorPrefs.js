@@ -1,6 +1,6 @@
 /*
- * The Advisor's choices kept per browser (plan.md §8.14; F1, F5, F34): the view, the line and the board's layout,
- * under the old key `vantage.bnf.advisor`. Not per deal, so an unavailable view or a line the deal does not have
+ * The Advisor's choices kept per browser (plan.md §8.14; F1, F5, F34, F37): the view, the line, the board's layout
+ * and ▦ Pages, under the old key `vantage.bnf.advisor`. Not per deal, so an unavailable view or a line the deal does not have
  * falls back rather than drawing nothing. `?view=` and `?line=` win over the kept choice. Pure.
  *
  * Views (F1): only Quote comparison is built. The Stop-loss analysis pill (only with a stop-loss line, F2), the
@@ -51,4 +51,9 @@ export function chooseLine(param, kept, lines) {
 /** 'rows' (plans as rows, the board) or 'cols' (transposed, plans as columns). */
 export function chooseOrientation(kept) {
   return kept === 'cols' ? 'cols' : 'rows';
+}
+
+/** 'grid' (the board) or 'pages' (▦ Pages, "What the client will see"; slice 14), as the old app kept it. */
+export function chooseLayout(kept) {
+  return kept === 'pages' ? 'pages' : 'grid';
 }

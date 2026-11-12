@@ -4,9 +4,9 @@ import cx from '../../../ui/cx';
  * The table card's own toolbar (plan.md §8.14; F31, F32, F34, F36; the old `bnf-advisor-tablebar`): the column
  * presets from `/api/meta/`, the sort select (Proposal order, the default; Sort by column; Closest to current), ⇄
  * Transpose (kept per browser, refused above the limit with its tooltip) and, transposed with sizes of your own,
- * ↺ Reset sizes. ▦ Pages joins with slice 14.
+ * ↺ Reset sizes. ▦ Pages (slice 14; F37) swaps the table for "What the client will see", kept per browser like ⇄.
  */
-export default function TableBar({ board, preset, onPreset, sort, onSort, transpose, sizes, currents }) {
+export default function TableBar({ board, preset, onPreset, sort, onSort, transpose, sizes, currents, pages }) {
   const presets = board?.presets ?? [];
   const sorts = board?.sorts ?? [];
   const special = sort.key === 'proposal' || sort.key === 'closest';
@@ -67,6 +67,21 @@ export default function TableBar({ board, preset, onPreset, sort, onSort, transp
         >
           ⇄ Transpose
         </button>
+        {pages && (
+          <button
+            type="button"
+            className={cx('bnf-preset-tab', pages.on && 'active')}
+            aria-pressed={pages.on}
+            title={
+              pages.on
+                ? 'Back to the board: every quote on this line, with its filters and sorts'
+                : 'What the client will see: the proposal page by page as the PowerPoint prints it; click a plan name to change it'
+            }
+            onClick={() => pages.pick(pages.on ? 'grid' : 'pages')}
+          >
+            ▦ Pages
+          </button>
+        )}
         {transpose.shown === 'cols' && sizes.custom && (
           <button
             type="button"

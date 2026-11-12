@@ -260,3 +260,9 @@ def test_5_5_new_line_has_no_current_and_no_carrier_package():
     assert pk.line_packages(line, results) == []
     built = pk.package([1, 2], line, results)
     assert built['annual'] == (5 * 40 + 5 * 45) * 12 and built['change'] is None
+
+
+def test_F37_monthly_change_against_the_plans_replaced_summed():
+    assert m.monthly_change(17_743.4, [18_251.2]) == {'delta': -507.8, 'pct': -2.8}
+    assert m.monthly_change(27_200, [16_978, 10_663]) == {'delta': -441, 'pct': -1.6}  # a consolidation: B + C
+    assert m.monthly_change(1_000, [None]) is None and m.monthly_change(1_000, []) is None

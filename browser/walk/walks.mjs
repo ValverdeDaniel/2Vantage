@@ -7,6 +7,7 @@ import { census41 } from './census41.mjs';
 import { documents23 } from './documents23.mjs';
 import { documents65 } from './documents65.mjs';
 import { intake39 } from './intake39.mjs';
+import { pages14 } from './pages14.mjs';
 import { quoteFirst13 } from './quoteFirst13.mjs';
 
 const signIn = async ({ page, step, base, user }) => {
@@ -163,6 +164,8 @@ export const WALKS = {
     },
   },
   6: { ...quoteFirst13, run: (ctx) => quoteFirst13.run(ctx, { signIn, openDeal }) }, // quote-first; slice 13's done-when
+  8: { ...pages14[8], run: (ctx) => pages14[8].run(ctx, { signIn, openDeal }) }, // Replacing: on ▦ Pages; slice 14
+  9: { ...pages14[9], run: (ctx) => pages14[9].run(ctx, { signIn, openDeal }) }, // slot picks on ▦ Pages; slice 14
   10: {
     title: "Transpose the table: GD1's medical board as plans-as-columns, header frozen, kept per browser (F34, F35)",
     deal: 'GD1',
