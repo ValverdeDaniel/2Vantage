@@ -38,6 +38,10 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       AI_MODEL: ${AI_MODEL:-claude-sonnet-5-5}
       AI_TOTAL_BUDGET_USD: ${AI_TOTAL_BUDGET_USD:-20}
+      # The PHI-gate switch (plan.md 11.4 item 7; slice 47): on for local development, whose data is synthetic only,
+      # so the census, intake and questionnaire readers (slices 51-52, 59) register. Staging and production keep it off
+      # until deploy/phi-gate.md is signed.
+      AI_PHI_READERS: ${AI_PHI_READERS:-true}
     depends_on:
       db: {condition: service_healthy}
     restart: unless-stopped
