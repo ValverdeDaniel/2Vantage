@@ -1147,7 +1147,9 @@ Rules:
   password on Django's built-in page (`/accounts/password_change/`); an admin resets one in Django admin. There is no
   self-service reset by email in version 1 (Microsoft 365 sign-in replaces passwords before real PHI).
 - **Client links** (`review`, slices 53–54; L.6):
-  - one link per person under a request; tokens are `secrets.token_urlsafe(32)`;
+  - one link per person under a request; a token is 32 random-looking bytes, URL-safe (43 characters), and is never
+    stored: the row keeps a random seed and the token's SHA-256, the token is the seed signed with the server's key
+    (`review.tokens`; slice 53), and the portal finds a link by the hash. Rotating SECRET_KEY ends every open link;
   - a link lasts 7 days, sliding on each save (at most once a day), under a ceiling of 30 days from creation, and can
     be revoked (OQ81);
   - an unknown token answers 404; an expired, revoked or closed link 410, with the agency's contact; a write on a lost
@@ -2947,6 +2949,10 @@ upload slots each expose one owner contract (O.3.4, L.6). The rules:
 - **SSN is never asked** on a link, and a masked SSN is blank wherever it arrives (§5.3.2; OQ16 default).
 - Portal writes answer 410 on a lost or archived deal and on a closed request (`deals.rules.client_asks_open`, §5.1).
 
+**Built (slice 53):** `review/rules/` `asks` (the shape and its refusals), `ask_words`, `requests` (`request_state`,
+`link_state`, `carries`, `ready`, `in_progress`, `soonest_first`), `policy` (`floor`, the life rules, `nudge_open`)
+and `badges`; the request and link services with the PIN (shown once, hashed, five tries); `review.summary.facts`.
+
 **Full rules:** Part L (L.3; L.6: models, the owner contract, `rules/`, portal security) and O.3.4. **Slices:** 53–59.
 
 ### 5.9 Next step and agenda — `agenda/steps/`, `agenda/rows.py`
@@ -3638,20 +3644,23 @@ a JPEG with a long side ≤ 2,400 px and a thumbnail ≤ 600 px, no metadata; `l
 
 ### 6.12 review
 
-Not built (slices 53–59). L.6. v1.1's `ClientValue` goes: client answers wait on the owners' rows (§6, O.3.1).
+Built in slice 53 (all four models; services for requests and links); the portal, notes and seen with slices 54–59.
+L.6. v1.1's `ClientValue` goes: client answers wait on the owners' rows (§6, O.3.1).
 
 - **ClientRequest**: `deal`, `asks` (below), `message` (≤ 1,000), `created_by`/`at`, `closed_at`/`by`, `close_reason`,
   and `form_version`, which every change to the asks bumps. `rules/requests.carries(asks, ref)` is the one rule for
   what a link asks.
-- **ClientLink** — one per person: `request`; `token` (unique, `token_urlsafe(32)`); `contact` (`deals.Contact`,
+- **ClientLink** — one per person: `request`; `token_hash` (unique, the SHA-256 of the token) and `seed` (the token
+  is the seed signed with the server's key, `review.tokens`, so it is never stored; §3.8); `contact` (`deals.Contact`,
   SET_NULL) with name and email snapshots; `security` (`link` or `pin`), `pin_hash`, `pin_tries`, `pin_version`;
   `blank`; `slides`; `expires_at` and `ceiling_at` (creation plus 30 days); `nudge` `{on, by, at, done_at, done_by}`
   (O.2, I.6); `sent_at`, `opened_at`, `last_opened_at`, `open_count`, `first_submitted_at`, `submitted_at`,
   `attested_form_version`, `last_saved_at`; `revoked_at`/`by`, `created_by`/`at`.
 - **ReviewNote**: `deal`, `surface`, `key` (an intake key, a census column, `<form>:<slot>`, a form key, a document
-  slot or `census_file`), `member` (PROTECT), `request` and `link` (SET_NULL), `parent`, `audience`, `kind`, `text`
-  (≤ 1,000), `author` (null for the client), the time, `sent_at`, `resolved_at`/`by`. One open ask or send-back draft
-  per (deal, surface, key, member), with nulls not distinct.
+  slot or `census_file`), `member` (RESTRICT: a person is never deleted under a note, while a deal's own delete still
+  takes both; slice 53), `request` and `link` (SET_NULL), `parent`, `audience`, `kind`, `text` (≤ 1,000), `author`
+  (null for the client), the time, `sent_at`, `resolved_at`/`by`. One open ask or send-back draft per (deal, surface,
+  key, member), with nulls not distinct.
 - **Seen**: `deal`, a user or a link, `seen_at`; it only moves forward.
 
 `ClientRequest.asks`:
@@ -4229,7 +4238,23 @@ Full list: Part J, J.6.6.
 
 ### 7.13 Review & requests — `review/` (staff)
 
-Not built (slices 53–59, 64).
+Built in slice 53: `board/` (no separate `badges/`: the tab's counts ride its own payload, O.6 #3), `requests/` with
+its dry run, `requests/{rid}/close/` and `PATCH links/{lid}/` for mark_sent, unsend, extend, revoke, restore and
+new_pin. The rest with slices 54–59 and 64.
+- `GET deals/{id}/review/board/` → `{deal_id, asks_closed, counts: {to_send, to_review, waiting, questions},
+  readiness: {pct, state}, lanes: {waiting: [request]}, in_progress: [{link_id, request_id, name, last_saved_at}]}`;
+  a request is `{id, created_at, created_by, message, asks: [words], sections, state, first_sent_at, answered_at,
+  answered_by, closed_at, closed_by, close_reason, close_reason_label, expiring, soonest_days, recipients}`, a
+  recipient `{link_id, contact_id, name, email, role, security, blank, path, sent, sent_at, opened, opened_at,
+  last_opened_at, opens, submitted_at, last_saved_at, expires_at, ceiling_at, days_left, expired, revoked,
+  revoked_at, revoked_by, covered, state, in_progress, can_extend, can_restore}`; `path` (`/portal/<token>`) only
+  while the link can still open or be turned back on.
+- `POST deals/{id}/review/requests/` `{people: [{contact_id} | {name, email?}], asks, message?, security?, expires_on?,
+  blank?}` → 201 `{request, links: [{link_id, name, email, path, pin, security, expires_at}], activity_id}`, each PIN
+  shown this once; `?dry_run=1` → `{floor: {level, because}, security, people, asks}` and writes nothing. 400 by
+  field; 409 when `deals.rules.client_asks_open` refuses.
+- `POST …/requests/{rid}/close/` `{reason}` → `{request, changed, activity_id}`; `PATCH links/{lid}/` `{action,
+  copied?}` → `{link, request, changed, activity_id, pin?}`; refusals are 409 with a sentence.
 
 | Method | Path | What it does |
 |---|---|---|
@@ -6337,13 +6362,13 @@ An app imports only from apps to its left (lint-imports); a fact read by an app 
 reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
 AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client, never
 business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far: accounts, deals,
-documents, ai, intake, census, quotes, questionnaire, rfp, proposals, golden. The chain orders imports, not screens: the
-deal sidebar keeps old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review & requests,
-Intake, Census, Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close: Advisor, Proposal · Shared:
-Documents. Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry the Advisor and
-Proposal. Tab folders take the app's name except advisor/ (quotes) and proposal/ (proposals); from slice 4 a tab
-folder's index.js exports only what others mount. Other pages live in pages/ (home; Archived, slice 38; client page,
-67).
+documents, ai, intake, census, quotes, questionnaire, rfp, proposals, review, golden. The chain orders imports, not
+screens: the deal sidebar keeps old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review &
+requests, Intake, Census, Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close: Advisor,
+Proposal · Shared: Documents. Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry
+the Advisor and Proposal. Tab folders take the app's name except advisor/ (quotes) and proposal/ (proposals); from slice
+4 a tab folder's index.js exports only what others mount. Other pages live in pages/ (home; Archived, slice 38; client
+page, 67).
 
 ## Rules
 1. Vocabularies are Python constants (deals/lines.py, deals/stages.py, documents/kinds.py, quotes/fields.py; from their

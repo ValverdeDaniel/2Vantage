@@ -2784,6 +2784,226 @@
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A6",
+      "why": "The top bar keeps Benefits, Commissions and Admin; Dashboard, P&C, Joint Ventures and the other old links are modules out of scope (A2, A22, A40), and the Calendar link waits with the Radar (I88).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "M112",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A21",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Commission 48 (OQ9); Review & requests is built (slice 53) and sits first in 1 · Get to Market, in the old place.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "L3",
+      "why": "Slice 53 builds the Board’s head with its readiness strip (L2), the View row with its own counts (L1, L28) and the Waiting lane (L7, L8); the Next banner (L3, L4), the client’s questions (L5), the Missing lane (L6) and the To review lane (L9, L10, L135) arrive with slices 55–56, so Waiting stands alone in the lanes row.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "L2",
+      "why": "The readiness strip reads intake’s own count of the needed questions answered (intake.summary.facts, §5.2): GD1 has 0 of 8 answered (0%), since intake does not prefill Legal Company Name from the client (plan.md §6, M.5 B34); the old filled it from the account, 1 of 8 (12%), so its bar shows a sliver.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "A24",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "L3",
+      "why": "The Next banner’s and the Missing lane’s classes (bnf-board-next*, bnf-board-lane-rose, bnf-board-card*, bnf-board-section) wait for slices 55–56 (L3–L6); the header strip’s bnf-ov-*, bb-stage-pill, bnf-select, bnf-archive-*, bnf-line-chips and bb-chip are new (M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "style",
+      "selector": "body",
+      "item": "L3",
+      "why": "The page is shorter: the Next banner and the Missing and To review lanes wait for slices 55–56 (L3–L10).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "style",
+      "selector": ".btn-primary",
+      "item": "L3",
+      "why": "The old page’s one primary button is the Next banner’s Go ▸ (L3, L4), which waits for slices 55–56.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "style",
+      "selector": ".btn-secondary",
+      "item": "M112",
+      "why": "The secondary buttons are the header strip’s Activity, Stage, Mark as lost… and Archive… (M112); the old page had none.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-nav",
+      "item": "A21",
+      "why": "The sidebar is shorter and starts higher: no client status chip or readiness meters (A24, slice 61) and fewer built tabs (Overview, Agenda and Commission wait; OQ9).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-nav-item.active",
+      "item": "A21",
+      "why": "Only the box moves: the sidebar has no client status chip above the nav and no Overview or Agenda tabs above 1 · Get to Market yet (A24, OQ9); the font, colours and padding are the old ones.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-nav-group-label",
+      "item": "A21",
+      "why": "Only the box moves: the group label sits higher, with no Overview or Agenda tabs above it yet (OQ9).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-tab-title",
+      "item": "M112",
+      "why": "Only the box moves: the header strip above every tab (M112) replaces the journey stepper, so the tab sits lower; the font, colours, borders and padding are the old ones.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-panel",
+      "item": "M112",
+      "why": "The first .bb-panel is 2Vantage’s header strip (M112); the old Review tab has no panel.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-viewtab",
+      "item": "M112",
+      "why": "Only the box moves: the View row sits below the header strip (M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-board-head",
+      "item": "M112",
+      "why": "Only the box moves: the Board’s head sits below the header strip (M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-board-ready",
+      "item": "L2",
+      "why": "The readiness strip is narrower by the width of its percentage: GD1 reads 0% here and 12% in the old (Legal Company Name is not prefilled; M.5 B34); it sits lower because of the header strip (M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-board-lane-head",
+      "item": "L3",
+      "why": "The lanes sit lower (the header strip, M112) though there is no Next banner above them yet (L3, slices 55–56).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.review",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-board-empty",
+      "item": "L3",
+      "why": "The first empty lane is Waiting’s, the first lane on the page until Missing joins it (L6, slices 55–56); the old’s first empty lane is Waiting’s too, in the second column.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
     }
   ]
 }

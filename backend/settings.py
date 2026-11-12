@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'questionnaire',  # the carrier forms (slice 42): Florida Blue 51+, Warner 51+, the SIIA disclosure; PDFs slice 43
     'rfp',  # RfpRequest and asked_by_line (slice 26); the RFP tab from slices 44–46
     'proposals',
+    'review',  # requests, client links and the tab's counts (slice 53); the portal from slice 54
     'golden',  # seed only, last in the chain (§3.3)
 ]
 
