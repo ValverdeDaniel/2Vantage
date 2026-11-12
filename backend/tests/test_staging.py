@@ -57,7 +57,9 @@ def probe(env, host):
         cwd=settings.BASE_DIR,
         capture_output=True,
         text=True,
-        timeout=60,
+        # A cold Django start under staging settings; generous, because the whole suite runs it beside `-n 8` workers
+        # (60 s was exceeded under load). The test checks what the settings do, never how fast.
+        timeout=240,
     )
     assert run.returncode == 0, run.stderr
     return json.loads(run.stdout.strip().splitlines()[-1]), run.stderr
