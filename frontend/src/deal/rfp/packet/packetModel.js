@@ -1,10 +1,32 @@
-// The packet card's ticks, pure (plan.md §8.12, §9.10; K34–K41; old CarriersTab.jsx TriTick, includeBody, RowNotes
+// The packet card's ticks, pure (plan.md §8.12, §9.10; K34–K56; old CarriersTab.jsx TriTick, includeBody, RowNotes
 // at 891f1b3). The server keeps only ticks that differ from the default (K35); these build what a click sends.
 
 const plural = (count, noun) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
-/** A row that can ride the packet: one that can be built (no census yet: K41). */
-export const tickable = (row) => Boolean(row) && row.available !== false;
+/** A row that can ride the packet: one that can be built (no census yet: K41), never a download-only row (K42). */
+export const tickable = (row) => Boolean(row) && row.available !== false && row.packet_eligible !== false;
+
+/** One section's rows, in the server's order (the old page's sections). */
+export function sectionRows(packet, section) {
+  return (packet?.rows || []).filter((row) => row.section === section);
+}
+
+/** "XLSX", "PDF", "CSV" for the Format column. */
+export const formatWords = (row) => (row.file_format || 'file').toUpperCase();
+
+/** The footer's line (K55): what "Download packet" zips, by name. */
+export function membersWords(packet) {
+  if (!packet?.count) return 'Nothing ticked yet — choose the documents this RFP should carry.';
+  return `${plural(packet.count, 'document')}: ${(packet.members || []).join(' · ')}`;
+}
+
+/** A row's pill (K52): "Ready", "N problems", "Not signed"; null while the checks load. */
+export function pillWords(pill) {
+  if (!pill) return null;
+  if (pill.status === 'ready') return { text: 'Ready', ok: true };
+  if (pill.status === 'unsigned') return { text: 'Not signed', ok: false };
+  return { text: plural(pill.count, 'problem'), ok: false };
+}
 
 /**
  * The ONE rule every bulk tick follows (D-063): write only disagreements. A row already where the target puts it is not

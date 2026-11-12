@@ -1,12 +1,15 @@
 """/api/meta/ `rfp` (plan.md §7.1, K.6): the RFP tab's words and vocabularies, so the browser holds none (rule 1).
 `formats` (slice 45): the census files of the one key space, each with its carrier, label, format and, for a second
-format, the workbook it is saved from; the form variants join with slice 46."""
+format, the workbook it is saved from; `forms` (slice 46): Warner's request form variants (K46) and `sections`: the
+packet grid's section titles."""
 
 from deals import carriers as identities
 
 from . import carriers, cleaners, request, services
 from .cards import census as packet
+from .cards import packet as packet_cards
 from .formats import definitions, scope
+from .forms import maps
 
 GROUPS = ((identities.MEDICAL, 'Medical carriers'), (identities.ANCILLARY, 'Ancillary carriers'))
 
@@ -27,6 +30,11 @@ def meta():
         'warner_inbox': carriers.WARNER_QUOTING_EMAIL,
         'formats': formats(),
         'no_census': packet.NO_CENSUS,
+        'forms': [
+            {'key': key, 'label': spec['label'], 'version': spec['version'], 'size_band': spec['size_band']}
+            for key, spec in maps.VARIANTS.items()
+        ],
+        'sections': [{'key': key, 'title': title} for key, title in packet_cards.SECTIONS],
     }
 
 

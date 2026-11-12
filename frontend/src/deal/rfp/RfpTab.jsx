@@ -7,7 +7,9 @@ import RefreshChip from '../../ui/RefreshChip';
 import { ChecklistCard, CoverageIntentCard } from '../intake';
 import BuilderCard from '../shared/BuilderCard';
 import CompletedMark from '../shared/CompletedMark';
+import { useToast } from '../../ui/useToast';
 import CensusLine from './CensusLine';
+import DraftsCard from './drafts/DraftsCard';
 import PacketCard from './packet/PacketCard';
 import RequestCard from './RequestCard';
 import { requestSummary } from './requestModel';
@@ -19,14 +21,15 @@ import useRfpWrites from './useRfpWrites';
  * title and subtitle with the legal name (K4), "✓ N of M completed" and Collapse all (K6, K7), the census line (K8),
  * then the cards in working order, each collapsible and marked completed (K9): 1 What we're shopping, intake's
  * Coverage & marketing intent card with its own Confirmed beside this page's mark (K12–K16; OQ60: both); 2 What we're
- * requesting (K17–K29); 3 intake's Marketing readiness checklist (K31, K32); 4 RFP packet, its carrier census rows
- * (K34–K41, slice 45; the other rows and the zip join with 46). The emails join with slice 46, and with the Emails card
- * the Mark as marketed footer (K33). "Show me how ▸" is dropped (K5).
+ * requesting (K17–K29); 3 intake's Marketing readiness checklist (K31, K32); 4 RFP packet (K34–K56: census formats,
+ * Warner forms with the census, questionnaires, the request form and cover, attachments, pills and the zip); 5 Emails
+ * to send (K57–K68, K120, and intake's Mark as marketed once a draft is sent, K33). "Show me how ▸" is dropped (K5).
  */
 export default function RfpTab({ deal }) {
   const meta = useMeta().data;
   const rfp = useRfp(deal.id);
   const intake = useIntake(deal.id);
+  const toast = useToast();
   const rfpMeta = meta?.rfp;
   const writes = useRfpWrites(deal.id, (rfpMeta?.funding || []).map((entry) => entry.key));
   const page = rfp.data;
@@ -37,6 +40,7 @@ export default function RfpTab({ deal }) {
       request: Boolean(page),
       checklist: Boolean(intake.data?.checklist),
       packet: Boolean(page?.packet),
+      emails: Boolean(page?.drafts),
     },
     done: page?.done,
     writes,
@@ -49,6 +53,11 @@ export default function RfpTab({ deal }) {
   const mark = (key) => {
     const card = cards.card(key);
     return <CompletedMark done={card.done} busy={card.busy} onToggleDone={card.onToggleDone} />;
+  };
+  const title = (key) => rfpMeta.cards.find((entry) => entry.key === key)?.label;
+  const openChecklist = () => {
+    cards.card('checklist').open || cards.card('checklist').onToggleOpen();
+    document.querySelector('[data-guide="rfp-checklist"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
   const panel = (key) => {
     const card = cards.card(key);
@@ -88,7 +97,7 @@ export default function RfpTab({ deal }) {
       )}
 
       <BuilderCard
-        title={rfpMeta.cards.find((entry) => entry.key === 'request')?.label}
+        title={title('request')}
         summary={requestSummary(page.request, rfpMeta.routes)}
         card={cards.card('request')}
         guide="carriers-request"
@@ -111,10 +120,23 @@ export default function RfpTab({ deal }) {
 
       <PacketCard
         dealId={deal.id}
-        title={rfpMeta.cards.find((entry) => entry.key === 'packet')?.label}
+        title={title('packet')}
         packet={page.packet}
+        stamp={page.checks_stamp}
         card={cards.card('packet')}
         onTicks={writes.save}
+        onForm={(form) => writes.save({ form })}
+        onOpenChecklist={openChecklist}
+      />
+
+      <DraftsCard
+        deal={deal}
+        title={title('emails')}
+        drafts={page.drafts}
+        card={cards.card('emails')}
+        ready={intake.data?.ready}
+        marketedAt={intake.data?.marketed?.at}
+        toast={toast}
       />
     </div>
   );

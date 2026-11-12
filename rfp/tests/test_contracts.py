@@ -18,7 +18,10 @@ def samples(deal):
     return {
         'api/deals/<int:pk>/rfp/': {'pk': deal.id},
         'api/deals/<int:pk>/rfp/done/': {'pk': deal.id},
-        'api/deals/<int:pk>/rfp/files/<str:key>/': {'pk': deal.id, 'key': 'census-uhc'},
+        'api/deals/<int:pk>/rfp/checks/': {'pk': deal.id},
+        'api/deals/<int:pk>/rfp/check/': {'pk': deal.id, 'query': {'file': 'census-uhc'}},
+        'api/deals/<int:pk>/rfp/drafts/<str:key>/sent/': {'pk': deal.id, 'key': 'warner'},
+        'api/deals/<int:pk>/rfp/files/<str:key>/': {'pk': deal.id, 'key': 'packet'},
         'api/deals/<int:pk>/rfp/files/<str:key>/look/': {'pk': deal.id, 'key': 'census-angle-csv'},
         'api/deals/<int:pk>/rfp/formats/': {'pk': deal.id},
         'api/deals/<int:pk>/rfp/formats/<str:key>/': {'pk': deal.id, 'key': 'census-warner'},
@@ -30,6 +33,9 @@ MATRIX = [
     ('GET', 'api/deals/<int:pk>/rfp/', ALL),
     ('PATCH', 'api/deals/<int:pk>/rfp/', ALL, {'carriers': {'add': ['aetna']}}),
     ('POST', 'api/deals/<int:pk>/rfp/done/', ALL, {'card': 'request', 'done': True}),
+    ('GET', 'api/deals/<int:pk>/rfp/checks/', ALL),
+    ('GET', 'api/deals/<int:pk>/rfp/check/', ALL),
+    ('POST', 'api/deals/<int:pk>/rfp/drafts/<str:key>/sent/', ALL, {'sent': True}),
     ('GET', 'api/deals/<int:pk>/rfp/files/<str:key>/', ALL),
     ('GET', 'api/deals/<int:pk>/rfp/files/<str:key>/look/', ALL),
     ('GET', 'api/deals/<int:pk>/rfp/formats/', ALL),
@@ -53,6 +59,8 @@ def test_Q3_ids_past_bigint_answer_404(api):
     assert api.get(f'/api/deals/{2**64}/rfp/formats/').status_code == 404
     assert api.patch(f'/api/deals/{2**64}/rfp/', {}, format='json').status_code == 404
     assert api.post(f'/api/deals/{2**64}/rfp/done/', {}, format='json').status_code == 404
+    assert api.post(f'/api/deals/{2**64}/rfp/drafts/warner/sent/', {'sent': True}, format='json').status_code == 404
+    assert api.get(f'/api/deals/{2**64}/rfp/checks/').status_code == 404
 
 
 def test_Q3_settings_write_path(user, deal):

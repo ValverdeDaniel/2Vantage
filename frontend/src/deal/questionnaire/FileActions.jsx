@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { downloadBlank, downloadFilled, fetchCheck } from '../../api/questionnaire';
 import { useToast } from '../../ui/useToast';
-import CheckModal from './CheckModal';
+import CheckModal from '../../exportcheck/CheckModal';
+import useDownloadCheck from '../../exportcheck/useDownloadCheck';
 import DownloadMenu from './DownloadMenu';
-import useDownloadCheck from './useDownloadCheck';
 
 const FILLED = 'The form with every answer in place, marked DRAFT until it is signed; checked before it downloads.';
 const FILED = 'The signed copy, as filed in Documents; checked before it downloads.';

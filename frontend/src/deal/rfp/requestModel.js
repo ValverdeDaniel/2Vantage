@@ -79,12 +79,16 @@ export function optimistic(page, body, fundingOrder) {
   for (const key of ['other_carriers', 'due_date', 'notes']) {
     if (key in body) request[key] = body[key] ?? '';
   }
+  if ('form' in body) request.form = body.form || 'simplified';
   const packet = 'include' in body ? optimisticTicks(page.packet, body.include) : page.packet;
   return { ...page, request, carriers, packet };
 }
 
-/** A write's answer into the page: the blocks the request and packet cards redraw. */
+/** A write's answer into the page: the blocks the request, packet and emails cards redraw, and the checks' stamp. */
 export function adopt(page, answer) {
   const packet = answer.packet ?? page.packet;
-  return { ...page, request: answer.request, carriers: answer.carriers, packet, done: answer.done };
+  const drafts = answer.drafts ?? page.drafts;
+  const stamp = answer.checks_stamp ?? page.checks_stamp;
+  const { request, carriers, done } = answer;
+  return { ...page, request, carriers, packet, drafts, done, checks_stamp: stamp };
 }

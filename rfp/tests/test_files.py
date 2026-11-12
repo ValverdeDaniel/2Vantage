@@ -125,7 +125,7 @@ def test_Q9_45_no_member_value_reaches_a_files_warnings(user, deal):
 def test_K41_no_census_answers_409_and_an_unknown_key_400(api, deal):
     assert download(api, deal, 'census-uhc').status_code == 409
     assert download(api, deal, 'census-cigna').status_code == 400
-    assert download(api, deal, 'packet').status_code == 400
+    assert download(api, deal, 'questionnaire-nobody').status_code == 400  # a key this deal's packet does not have
 
 
 def test_K82_the_real_file_look_is_the_built_file_in_windows_and_is_logged(api, user, deal):

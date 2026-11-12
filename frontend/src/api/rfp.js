@@ -2,6 +2,7 @@
 // blocks they redraw, which the tab writes into the cache (deal/rfp/useRfpWrites.js); intake's doors refetch it with
 // the rest of the deal (invalidateDeal).
 import { useQuery } from '@tanstack/react-query';
+import { downloadFile } from '../lib/download';
 import api from './client';
 import { dealKey } from './deals';
 
@@ -16,9 +17,12 @@ async function getRfp(dealId) {
  * funding, funding_default, due_date, notes}, carriers: [{key, name, group, selected, eligible, reason, lines,
  * line_labels, census_format, on_form, note}], done: {card: {by, by_id, at}}, band: {key, label, count, source,
  * estimate, from}, enrollment: {intake, census, advisor, differ, warning}, lines: [{key, label}], commission: {text,
- * breakdown, source}, census: {has_roster, employees, dependents, readiness_pct, errors}, packet: {count, rows: [{key,
- * kind, format_key, alt_of, carrier, label, version, file_format, columns, include, default_include, deliberate,
- * available, reason, required_by, universal, rows, max_rows, capped}]}}. A GET makes no row.
+ * breakdown, source}, census: {has_roster, employees, dependents, readiness_pct, errors}, packet: {count, members,
+ * sections: [{key, title}], notices: [{kind, title, text}], rows: [{key, section, title, label, sub, file_format,
+ * include, default_include, deliberate, packet_eligible, available, reason, hint, required_by, for_fallback, rows,
+ * max_rows, capped, lens, phi, …}]}, drafts: {route, rows: [{key, label, name, to, cc, subject, body,
+ * attachment_keys, attachments, size, sent: {on, shown, by} | null, changed: [sentence]}], sent_count, total,
+ * sent_earlier: [{key, label, on, shown, by}], any_sent}, checks_stamp}. A GET makes no row.
  */
 export function useRfp(dealId) {
   return useQuery({ queryKey: rfpKey(dealId), queryFn: () => getRfp(dealId), staleTime: 0 });
@@ -42,6 +46,35 @@ export async function patchRfp(dealId, body) {
 /** POST deals/{id}/rfp/done/ {card, done} → {done: {card: {by, by_id, at}}, activity_id} (K9). */
 export async function markRfpCard(dealId, body) {
   return (await api.post(`deals/${dealId}/rfp/done/`, body)).data;
+}
+
+// ---- the check, the files and the sends (slice 46) ----------------------------------------------------------------
+
+/** GET deals/{id}/rfp/check/?file=<key> → {key, label, ok, problems: [{code, text, count, fix, where?, people?}], ack}
+ * for a row of the one key space, 'packet' or 'draft-<key>' (K69). */
+export async function fetchRfpCheck(dealId, key) {
+  return (await api.get(`deals/${dealId}/rfp/check/`, { params: { file: key } })).data;
+}
+
+/** GET deals/{id}/rfp/checks/ → {checks_stamp, cards: {key: {status ready|problems|unsigned, count}}, deal}: the
+ * packet grid's pills (K52), asked again only when the page's `checks_stamp` moves (staleTime Infinity). */
+export function useRfpChecks(dealId, stamp) {
+  return useQuery({
+    queryKey: dealKey(dealId, 'rfp', 'checks', stamp),
+    queryFn: async () => (await api.get(`deals/${dealId}/rfp/checks/`)).data,
+    staleTime: Infinity,
+    enabled: Boolean(stamp),
+  });
+}
+
+/** Any RFP file under the server's name; with `ack`, a check that changed since answers 409 {detail, report} (K70). */
+export function downloadRfpFile(dealId, key, ack) {
+  return downloadFile(`deals/${dealId}/rfp/files/${key}/`, { params: ack ? { ack } : undefined });
+}
+
+/** POST deals/{id}/rfp/drafts/{key}/sent/ {sent} → {drafts, done, stage, activity_id} (K64–K68, K120). */
+export async function markDraftSent(dealId, key, sent) {
+  return (await api.post(`deals/${dealId}/rfp/drafts/${key}/sent/`, { sent })).data;
 }
 
 // ---- the carrier census files and the lens (slice 45) ------------------------------------------------------------

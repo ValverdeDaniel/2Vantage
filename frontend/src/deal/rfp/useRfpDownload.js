@@ -1,26 +1,44 @@
-import { useState } from 'react';
-import { rfpFilePath } from '../../api/rfp';
-import { downloadFile } from '../../lib/download';
-import { errorText } from '../../lib/errors';
+import { createElement, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { downloadRfpFile, fetchRfpCheck } from '../../api/rfp';
+import CheckModal from '../../exportcheck/CheckModal';
+import useDownloadCheck from '../../exportcheck/useDownloadCheck';
 import { useToast } from '../../ui/useToast';
 
 /*
- * One door for the RFP's file downloads (plan.md §7.11; K50, K51, K113): the file is built on the server and named
- * there; the button says "Building…" while it is; a refusal (no census yet, 409) or a failure is a toast in words. The
- * check before the download (K69, K70) joins with slice 46.
+ * One door for every RFP download (plan.md §7.11; K50, K51, K69, K70, K113): a census file, a form, the cover, a
+ * questionnaire, an attachment, the packet or a draft's `.eml`. "Before you download: …" opens first with the check of
+ * exactly that key (the shared modal, src/exportcheck/); the download sends its `ack`, and a check that changed since
+ * comes back as the fresh report (409). The server builds and names the file; the button says "Building…" while it
+ * does; a refusal (no census yet, a file that cannot be built) shows in the modal, in words. Fix ▸ goes where the problem is.
+ *   const files = useRfpDownload(dealId); files.download(key, label); render files.modal
  */
 export default function useRfpDownload(dealId) {
   const toast = useToast();
-  const [busy, setBusy] = useState('');
-  const download = async (key, fallbackName = 'census.xlsx') => {
-    setBusy(key);
-    try {
-      await downloadFile(rfpFilePath(dealId, key), { fallbackName });
-    } catch (error) {
-      toast.error(errorText(error, { fallback: 'Could not build that file.' }));
-    } finally {
-      setBusy('');
-    }
+  const navigate = useNavigate();
+  const [current, setCurrent] = useState('');
+  const check = useDownloadCheck({ onDone: (name) => toast.success(`${name || 'File'} downloaded`) });
+
+  const download = (key, label) => {
+    setCurrent(key);
+    check.run({
+      label,
+      check: () => fetchRfpCheck(dealId, key),
+      download: (ack) => downloadRfpFile(dealId, key, ack),
+    });
   };
-  return { busy, download };
+
+  const fix = (target) => {
+    check.close();
+    const params = new URLSearchParams();
+    for (const name of ['lens', 'form', 'view']) if (target[name]) params.set(name, target[name]);
+    const query = params.toString();
+    navigate(`/deals/${dealId}/${target.tab}${query ? `?${query}` : ''}`);
+  };
+
+  const modal = check.state
+    ? createElement(CheckModal, { state: check.state, onClose: check.close, onDownload: check.download, onFix: fix })
+    : null;
+  const working = check.state && (check.state.loading || check.state.busy);
+  return { busy: working ? current : '', download, modal };
 }

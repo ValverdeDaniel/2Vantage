@@ -10,8 +10,8 @@ the commission text and the band's words. Pure: the facts come in as arguments (
   medical current-coverage row), else fully insured and level-funded both, as UHC's own template defaults to "Both".
 - Eligibility (K24): advice, never a block: a carrier fits when its Warner columns at the band cover a requested line.
 - Commission text (K29, K106): one label when every line agrees ("5%"), else the lines grouped by label, larger groups
-  first ("5% Med · 15% Den/Vis"). Per-line rates come from commission once it is built (slice 48); until then every
-  line takes `AgencySettings.default_commission`. Ported from old Vantage 891f1b3 `market/rfp.py`.
+  first ("5% Med · 15% Den/Vis"). The page passes each line's rate from `commission.selectors.requested_rates` (the
+  deal's agreed rate, else the agency default; slice 48). Ported from old Vantage 891f1b3 `market/rfp.py`.
 """
 
 from deals import comp, lines
@@ -122,7 +122,7 @@ def _comp(raw):
 
 
 def commission_text(requested, rates, default):
-    """(the text the form prints, ['Medical: 5%', …]). `rates` is {line: comp} (empty until commission is built);
+    """(the text the form prints, ['Medical: 5%', …]). `rates` is {line: comp} (commission's `requested_rates`);
     a line with no rate takes `default`. Blank when no line has one."""
     fallback = _comp(default)
     pairs = []

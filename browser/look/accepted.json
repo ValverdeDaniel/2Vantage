@@ -2406,7 +2406,7 @@
       "check": "pixels",
       "selector": null,
       "item": "K34",
-      "why": "Slices 44–45 build the page shell, the census line, cards 1–3 (K1–K33) and the RFP packet's carrier census rows (K34–K41, slice 45: with no census on GD1 every row says \"No census yet\" and cannot be ticked, K41). The packet's other sections (Warner forms + census K42, questionnaires K43, request form and cover K46–K47, attachments K49), its download (K55) and Emails to send (K57–K68) are slice 46's, so the toolbar counts \"✓ 0 of 4 completed\" over the cards on the page (K6), where the old counted five.",
+      "why": "Slices 44–46 build the whole page: the shell, the census line, cards 1–3 (K1–K33), the RFP packet (K34–K56: with no census on GD1 every census row and Warner form with the census says \"No census yet\" and cannot be ticked or checked, K41; the old offered them on an empty census) and the Emails card (K57–K68). The census formats list Warner's universal census first (definition order); every row that can be built carries a check pill, the Warner forms with the census and Angle's CSV included (K52).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2461,7 +2461,7 @@
       "check": "style",
       "selector": ".bb-panel",
       "item": "M112",
-      "why": "The first .bb-panel is 2Vantage's header strip where the old one is the coverage card; the nav, the tab title, the toolbar and the cards sit elsewhere because the header strip replaces the journey stepper and the sidebar has fewer tabs, and the page is shorter without the packet and the emails (slices 45–46).",
+      "why": "The first .bb-panel is 2Vantage's header strip where the old one is the coverage card; the nav, the tab title, the toolbar and the cards sit elsewhere because the header strip replaces the journey stepper and the sidebar has fewer tabs (A21, A24).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2472,7 +2472,7 @@
       "check": "classes",
       "selector": null,
       "item": "K34",
-      "why": "The packet's census rows bring bnf-rfp-packetcard, bnf-rfp-grid*, bnf-rfp-row-alt, bnf-rfp-include-off and bnf-rfp-rownote (slice 45); the other sections' classes (form variants, questionnaire notices, attachments, bnf-rfp-packet's download) wait for slice 46; the form pickers' bnf-cvg-forms and bnf-cvg-formpick for slice 42, ＋ Add request's bnf-ask-form for 53; the header strip's bnf-ov-*, bb-stage-pill, bnf-line-chips and bb-chip are new against the old app (M112).",
+      "why": "The packet brings bnf-rfp-include-off on the rows that cannot be built yet (K41); the form pickers' bnf-cvg-forms and bnf-cvg-formpick and the checklist's bnf-ask-form wait with slice 42's pickers and the request tray (B22, K32).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -3628,6 +3628,61 @@
       "selector": null,
       "item": "F1",
       "why": "bnf-advisor-views and bnf-viewtab show with the Proposal builder's pill (slice 25), four pills, the old row's four (F4 waits); bnf-plan-head, bnf-plan-menu-btn and bnf-link-picker-text are F134's ⋯ menu and F52's renewal text; the Packages panel (bb-panel) is 2V's, kept (F134); bnf-filter-num-wrap appears once more for \"Monthly total ≤ $\" (F19).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "K45",
+      "why": "\"Not set up\" rows offer \"Open the checklist ▸\" (the readiness checklist card on this page holds the form pickers, K15) where the old offered \"Open Overview ▸\"; the words name the checklist.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "K54",
+      "why": "The packet's \"Recommended\" button is renamed \"↺ Reset to recommended\" (X-183).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "OQ68",
+      "why": "The comparison workbook, benefit guide, contribution model and stop-loss workbook leave the RFP (K48); \"Client proposal\" attaches the latest issued proposal, off on purpose, and says none has been issued on GD1 yet (J169).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "OQ65",
+      "why": "The Warner draft is copied to the returns inbox, the deal owner's email until one is set (OQ65), so its To line reads \"· cc dev@example.com\"; the old copied no one.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.rfp",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "K49",
+      "why": "2Vantage's GD1 holds the medical renewal filed for it (golden spec), so \"Attachments from the file\" lists \"Renewal / rates\", ticked; the old parity GD1 has no file.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

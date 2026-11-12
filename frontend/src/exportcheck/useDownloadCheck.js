@@ -1,11 +1,11 @@
 import { useCallback, useRef, useState } from 'react';
-import { errorText } from '../../lib/errors';
+import { errorText } from '../lib/errors';
 
 /*
- * The check before a download (G65, G66; the old useExportCheck): `run` reads the check for what is about to go out
- * and opens the modal; `download` sends the report's `ack` with the file request. When the form changed since the
- * modal opened, the server answers 409 with the fresh report and the modal shows that one instead, so a new problem
- * is never sent unseen. Count and warn: nothing is refused.
+ * The check before a download (G65, G66, K69, K70; the old useExportCheck): `run` reads the check for what is about
+ * to go out and opens the modal; `download` sends the report's `ack` with the file request. When the file changed
+ * since the modal opened, the server answers 409 with the fresh report and the modal shows that one instead, so a new
+ * problem is never sent unseen. Count and warn: nothing is refused.
  *   run({label, check: () => report, download: (ack) => file name})
  *   state: {request, report, loading, busy, error, stale} | null
  */

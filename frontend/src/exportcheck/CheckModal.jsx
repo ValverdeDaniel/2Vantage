@@ -1,13 +1,15 @@
 import { useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useModalLayer } from '../../ui/useModalLayer';
+import { useModalLayer } from '../ui/useModalLayer';
 
 const SILENT = 'nothing is dropped silently.';
 
 /*
- * "Before you download: …" (G65; the old ExportCheckModal, words and classes kept): what is wrong with the file, each
- * with Fix ▸, then "Not now" or "Download (anyway) ⬇". Nothing blocks. After a stale `ack` the fresh report shows with
- * "Something changed since you opened this." (G66). Escape and the backdrop close it.
+ * "Before you download: …" (G65, K69; the old ExportCheckModal at 891f1b3, words and classes kept): what is wrong with
+ * the file — each row with where it is (a packet's or a draft's file), the text, up to 20 people named on our own
+ * screen, and Fix ▸ — then "Not now" or "Download (anyway) ⬇". Nothing blocks (count and warn). After a stale `ack`
+ * the fresh report shows with "Something changed since you opened this." (G66, K70). Escape and the backdrop close it.
+ * Shared by every door that checks before it downloads: the questionnaire's (slice 43) and the RFP's (slice 46).
  */
 export default function CheckModal({ state, onClose, onDownload, onFix }) {
   const ref = useRef(null);
@@ -48,9 +50,13 @@ export default function CheckModal({ state, onClose, onDownload, onFix }) {
             <div className="bnf-export-ok">✓ Nothing to fix: the file is ready to go.</div>
           )}
           {problems.map((problem) => (
-            <div key={`${problem.code}:${problem.text}`} className="bnf-xcheck-row">
+            <div key={`${problem.code}:${problem.where || ''}:${problem.text}`} className="bnf-xcheck-row">
               <span className="bnf-xcheck-icon">⚠</span>
-              <div className="bnf-xcheck-text">{problem.text}</div>
+              <div className="bnf-xcheck-text">
+                {problem.where && <span className="bnf-xcheck-where">{problem.where}</span>}
+                {problem.text}
+                {problem.people?.length > 0 && <span className="bnf-xcheck-people">{problem.people.join(', ')}</span>}
+              </div>
               {problem.fix && onFix && (
                 <button type="button" className="bnf-override-link" onClick={() => onFix(problem.fix)}>
                   Fix ▸

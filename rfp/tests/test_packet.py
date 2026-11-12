@@ -144,8 +144,12 @@ def test_K124_census_marks_a_picked_carriers_blanks_once_the_pick_commits(
 def test_K34_the_page_and_a_tick_answer_the_packets_census_rows(api, user, deal):
     family(user, deal)
     page = api.get(f'/api/deals/{deal.id}/rfp/').json()
-    assert page['packet']['count'] == 4 and page['packet']['rows'][0]['rows'] == 4
+
+    def census_in(packet):  # the census section; the request form rides too since slice 46
+        return sum(1 for row in packet['rows'] if row['section'] == 'census' and row['include'])
+
+    assert census_in(page['packet']) == 4 and page['packet']['rows'][0]['rows'] == 4
     answer = api.patch(f'/api/deals/{deal.id}/rfp/', {'include': {'census-angle-csv': True}}, format='json').json()
     assert answer['changed'] == {'include': {'census-angle-csv': True}}
-    assert answer['packet']['count'] == 5
+    assert census_in(answer['packet']) == 5 and answer['packet']['count'] == page['packet']['count'] + 1
     assert api.patch(f'/api/deals/{deal.id}/rfp/', {'include': {'x': 1}}, format='json').status_code == 400

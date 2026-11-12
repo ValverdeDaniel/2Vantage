@@ -1,4 +1,6 @@
-"""Revert of an RFP Activity row (plan.md §3.7, O.3.2; K115): a burst of settings edits, or a card's mark.
+"""Revert of an RFP Activity row (plan.md §3.7, O.3.2; K115): a burst of settings edits, a card's mark, or a send (slice
+46: `sends.<draft>` put back as it was, the route a first send pinned with it; the stage a first send moved stays,
+forward only).
 Registered as `activity.reverters['rfp']` in RfpConfig.ready().
 
 `deals.activity.revert` has already locked the Deal; this locks the RfpRequest row. It refuses after a later write to
@@ -9,7 +11,7 @@ on commit, as the edit did (K124). Notes rows name the key only, so `deals.activ
 
 from deals import activity
 
-from . import cleaners, services
+from . import cleaners, drafts, services
 from .models import RfpRequest
 
 WORDS = {
@@ -20,6 +22,7 @@ WORDS = {
     'due_date': 'Quotes due back',
     'notes': 'The notes for the carriers',
     'include': 'The packet’s ticks',
+    'form': 'The request form',
 }
 
 
@@ -27,6 +30,8 @@ def label(key):
     if key.startswith('done.'):
         card = key.removeprefix('done.')
         return f'The completed mark on {services.CARD_TITLES.get(card, card)}'
+    if key.startswith('sends.'):
+        return f'The {drafts.label_of(key.removeprefix("sends."))} email’s send'
     return WORDS.get(key, key)
 
 
@@ -47,6 +52,12 @@ def revert(row, user):  # noqa: ARG001 (the reverters' signature)
                 marks = {name: stamp for name, stamp in (stored.done or {}).items() if name != card}
                 stored.done = {**marks, card: before} if before else marks
                 fields.add('done')
+            elif key.startswith('sends.'):
+                draft = key.removeprefix('sends.')
+                diff[key] = [(stored.sends or {}).get(draft), before]
+                others = {name: send for name, send in (stored.sends or {}).items() if name != draft}
+                stored.sends = {**others, draft: before} if before else others
+                fields.add('sends')
             else:
                 diff[key] = [now[key], before]
                 settings[key] = before

@@ -7,11 +7,14 @@ changes, default_funding)` answers the new value of each key sent, or raises `In
 puts the funding back to its default and empties the carriers. The route takes 'warner', 'direct', or ''/null to
 follow the band again (K20). The due date is a date (K26; the old one was raw text). Other carriers ≤ 300 characters,
 notes ≤ 2,000, both trimmed. `done` and `sends` have their own doors (old `WRITER_OWNED`). The packet's ticks,
-`include` (slice 45), take `{key: true | false | null}` over the census file keys, or 'reset'; what is stored is worked
-out by the service against the defaults the request will have (`cards.include.merged`). The form chip arrives with
-slice 46.
+`include`, take `{key: true | false | null}` over the one key space (K.6: the census files, `form`, `cover`,
+`proposal`, `questionnaire-<form>`, `disclosure-<form>`, `doc-<id>`), or 'reset'; this checks the key's shape, and the
+service checks it names a row this deal's packet has and works out what is stored against the defaults the request
+will have (`cards.include.merged`). The form chip (slice 46, K46) sends `form`: 'simplified' (or ''/null),
+'small_group' or 'large_group'; blank is stored for the Simplified form, the standard at every size.
 """
 
+import re
 from datetime import date
 
 from deals import carriers as identities
@@ -19,11 +22,13 @@ from deals import carriers as identities
 from . import request
 from .cards import include as ticks
 from .formats import scope
+from .forms import maps
 
 LIMITS = {'other_carriers': 300, 'notes': 2000}
-SETTINGS = ('route', 'carriers', 'other_carriers', 'funding', 'due_date', 'notes', 'include')
+SETTINGS = ('route', 'carriers', 'other_carriers', 'funding', 'form', 'due_date', 'notes', 'include')
 EMPTY = {
     'route': '',
+    'form': '',
     'carriers': [],
     'other_carriers': '',
     'funding': None,
@@ -42,6 +47,10 @@ BAD_PICKS = 'Send {"add": [...], "remove": [...]} with known keys.'
 BAD_DATE = 'Enter a date like 2027-01-15, or leave it blank.'
 BAD_TEXT = 'Send text.'
 BAD_INCLUDE = 'Send {"<file key>": true, false or null}, or "reset".'
+BAD_FORM = 'Send simplified, small_group or large_group.'
+# The packet's keys beyond the census files (K.6's one key space): a document by id, a questionnaire by form.
+FIXED_KEYS = ('form', 'cover', 'proposal')
+PATTERNS = re.compile(r'^(?:doc-[1-9][0-9]{0,18}|questionnaire-[a-z0-9_]{1,40}|disclosure-[a-z0-9_]{1,40})$')
 TOO_LONG = 'At most {limit:,} characters.'
 
 
@@ -62,6 +71,7 @@ def stored(row):
         'carriers': list(row.carriers or []),
         'other_carriers': row.other_carriers or '',
         'funding': None if row.funding is None else list(row.funding),
+        'form': row.form or '',
         'due_date': row.due_date.isoformat() if row.due_date else None,
         'notes': row.notes or '',
         'include': dict(row.include or {}),
@@ -101,16 +111,28 @@ def _date(raw):
         raise ValueError(BAD_DATE) from None
 
 
+def is_file_key(key):
+    """A key of the packet's one key space, by its shape (whether this deal has the row is the service's check)."""
+    return isinstance(key, str) and (key in scope.keys() or key in FIXED_KEYS or bool(PATTERNS.match(key)))
+
+
 def _include(raw):
-    """The change asked for: 'reset', or {known file key: bool | None}."""
+    """The change asked for: 'reset', or {file key: bool | None}."""
     if raw == ticks.RESET:
         return ticks.RESET
-    known = set(scope.keys())
     if not isinstance(raw, dict) or not raw:
         raise ValueError(BAD_INCLUDE)
-    if any(key not in known or not (value is None or isinstance(value, bool)) for key, value in raw.items()):
+    if any(not is_file_key(key) or not (value is None or isinstance(value, bool)) for key, value in raw.items()):
         raise ValueError(BAD_INCLUDE)
     return dict(raw)
+
+
+def _form(raw):
+    if raw in (None, ''):
+        return ''
+    if raw not in maps.VARIANTS:
+        raise ValueError(BAD_FORM)
+    return maps.STORED[raw]
 
 
 def _one(key, raw, current, default_funding):
@@ -137,6 +159,8 @@ def _one(key, raw, current, default_funding):
         return _date(raw)
     if key == 'include':
         return _include(raw)
+    if key == 'form':
+        return _form(raw)
     return _text(raw, key)
 
 

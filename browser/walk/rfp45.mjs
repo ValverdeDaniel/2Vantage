@@ -11,8 +11,12 @@ import path from 'node:path';
 const CARRIERS = ['Warner Pacific', 'Aetna', 'Angle Health', 'UnitedHealthcare'];
 
 async function saved(page, row, wanted) {
-  const download = page.waitForEvent('download', { timeout: 60000 });
+  // Since slice 46 every download opens "Before you download" first (K69): download (anyway) from there.
   await row.getByRole('button', { name: 'Download ⬇' }).click();
+  const go = page.getByRole('dialog', { name: 'Before you download' }).getByRole('button', { name: /^Download/ });
+  await go.waitFor({ timeout: 60000 });
+  const download = page.waitForEvent('download', { timeout: 60000 });
+  await go.click();
   const got = await download;
   if (got.suggestedFilename() !== wanted) throw new Error(`the file is named ${got.suggestedFilename()}`);
   const folder = process.env.WALK_FILES || path.join(os.tmpdir(), 'walk-s45');

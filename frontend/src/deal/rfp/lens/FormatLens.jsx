@@ -28,6 +28,7 @@ function Stat({ label, value, tone = '', of = null }) {
  * queue (K84), what it still needs, the warnings, column by column (K87), what we do not store (K88) and the first rows
  * exactly as the carrier receives them. Everything is the server's, from the builder the download runs.
  * "Make these required on this deal" is dropped (K86): the request's formats already make their columns required.
+ * "⬇ Export" goes through the check before the download (K69, slice 46).
  */
 export default function FormatLens({ dealId, format }) {
   const found = useRfpFormat(dealId, format.key);
@@ -65,7 +66,7 @@ export default function FormatLens({ dealId, format }) {
                     type="button"
                     className="btn btn-secondary btn-sm"
                     disabled={files.busy === key}
-                    onClick={() => files.download(key, `census.${kind}`)}
+                    onClick={() => files.download(key, `${detail.carrier} census (${kind.toUpperCase()})`)}
                   >
                     {files.busy === key ? 'Building…' : `⬇ Export ${kind.toUpperCase()}`}
                   </button>
@@ -132,6 +133,7 @@ export default function FormatLens({ dealId, format }) {
       <LensGaps detail={detail} />
       <LensPreview carrier={carrier} preview={detail.preview} />
       {checking && <RealFile dealId={dealId} format={detail} onClose={() => setChecking(false)} />}
+      {files.modal}
     </div>
   );
 }

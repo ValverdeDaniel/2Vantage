@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import CarrierChips from './CarrierChips';
 import Chip from './Chip';
 import RequestFields from './RequestFields';
@@ -10,6 +11,9 @@ import { bandWords, routeBody, toggleBody } from './requestModel';
  * empty pick is kept and says so (K21, K22); the carrier chips (K23–K25); the commission the form prints (K29); then
  * Other carriers, Quotes due back and the notes (K26). Every control saves at once; none waits for another (K11).
  */
+// Where the printed commission came from (K29, H109): the deal's agreed rates, else the agency's default rate.
+const COMMISSION_FROM = { deal: 'the agreed rates', agency: "the agency's default rate" };
+
 export default function RequestCard({ page, rfpMeta, onSave }) {
   const { request, band, enrollment, commission } = page;
   const funding = request.funding || [];
@@ -72,8 +76,9 @@ export default function RequestCard({ page, rfpMeta, onSave }) {
         <div className="bnf-rfp-group-label">Commission requested</div>
         <div className="bnf-rfp-sub" title={commission.breakdown.join(' · ')}>
           {commission.text
-            ? `${commission.text} — the agency's default rate, printed on the request form and in the emails`
-            : "None set — the agency's default commission (Django admin, Agency settings) prints here once it is set"}
+            ? `${commission.text} — ${COMMISSION_FROM[commission.source] || COMMISSION_FROM.agency}, printed on the request form and in the emails`
+            : 'None set — agree a rate per line on the Commission tab; the agency default is under Commissions, Settings'}{' '}
+          <Link to={`/deals/${page.deal_id}/commission`}>Commission ▸</Link>
         </div>
       </div>
 

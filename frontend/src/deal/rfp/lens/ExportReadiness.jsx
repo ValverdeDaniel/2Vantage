@@ -6,7 +6,7 @@ import { readinessCards, rowsWords, statusWords } from './lensModel';
  * Export readiness (plan.md §8.12; K79; OQ63 keeps both these cards and the lens chips; old ExportReadiness.jsx at
  * 891f1b3, same classes): a card per carrier format this request sends — ready, or N things to fix — each opening its
  * lens on a click or Enter (Enter again closes it), and exporting every format it has. Export is always allowed: the
- * card says what is wrong rather than refusing. The check before the download joins with slice 46.
+ * card says what is wrong rather than refusing; the check opens before the download (K69, slice 46).
  */
 export default function ExportReadiness({ dealId, formats, active, onPick }) {
   const files = useRfpDownload(dealId);
@@ -50,7 +50,7 @@ export default function ExportReadiness({ dealId, formats, active, onPick }) {
                       disabled={files.busy === key}
                       onClick={(event) => {
                         event.stopPropagation();
-                        files.download(key, `census.${kind}`);
+                        files.download(key, `${format.carrier} census (${kind.toUpperCase()})`);
                       }}
                     >
                       {files.busy === key
@@ -64,6 +64,7 @@ export default function ExportReadiness({ dealId, formats, active, onPick }) {
           );
         })}
       </div>
+      {files.modal}
     </div>
   );
 }

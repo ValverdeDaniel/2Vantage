@@ -2887,9 +2887,9 @@ ledger, waits (OQ6).
 - **Commission request text** (one cell on the form, one line in emails): the effective commission label for each RFP
   line (§5.6), built in `deals/comp.py` (K106). If all lines share one label, print it (`5%`); otherwise group
   lines by label, larger groups first: `5% Med · 15% Den/Vis` (short labels from §4.1). Built in slice 44 as
-  `rfp.request.commission_text(lines, rates, default)` over `deals.comp`'s parser and labels (K29): every line takes
-  `AgencySettings.default_commission` until commission's rates exist (slice 48); the builder moves to `deals/comp.py`
-  when a left app (intake's in-force commission) needs it.
+  `rfp.request.commission_text(lines, rates, default)` over `deals.comp`'s parser and labels (K29). From slice 48 each
+  line's rate is `commission.selectors.requested_rates(deal)`: the deal's agreed rate, else the agency default (H109);
+  the RFP card says which and links "Commission ▸". The builder moves to `deals/comp.py` when a left app needs it.
 - **Group facts** (`quotes.facts.group_facts` and `rfp/printed.py`, built once per request; K101) used to fill forms,
   cover pages and emails:
 
@@ -3612,6 +3612,13 @@ out against the request as the write leaves it; `'reset'`; stale keys pruned; th
 `rfp/formats/` (the four definitions, generated from a migrated old database, the bundled workbooks and their drift
 guard, the row builder, the fill, the scope, census's `carrier_required`, the lens), `rfp/xlsx/` (the old `fill_xlsx`),
 `rfp/printed.py`, `rfp/cards/` (the packet's census rows and ticks).
+Built in slice 46 (no migration): `rfp/context.py` (`Request`: the request read once), `rfp/forms/` (`VARIANTS` and
+the filler; the three Warner workbooks in `assets/forms/`), `rfp/cover/`, `rfp/cards/` (every row of the one key space:
+`forms.py`, `docs.py`, `packet.py`), `rfp/audience.py`, `rfp/drafts.py`, `rfp/members.py`, `rfp/packet.py`,
+`rfp/eml.py`, `rfp/check/` (report, pills, `checks_stamp`), `rfp/summary.py` (`facts(deal_ids)`, K123) and
+`rfp/services/sends.py` (`mark_sent`; `services` became a package, OQ9 d). `form` is a PATCH setting (the packet
+card's), `include` covers the whole key space (a key the deal's packet lacks answers 400), and a send also stores the
+questionnaires it carried (`forms: {form: sent_with}`, G113), shown as "changed since" on the draft.
 
 **RfpRequest** — one per deal, created on the first write (it replaces v1.1's `RfpConfig`): `route` (blank follows the
 band until the first send pins it, `warner` or `direct`), `carriers` (JSON list of carrier keys, in registry order),
@@ -4191,6 +4198,11 @@ Slice 45 builds `include` on the PATCH (`{file key: true | false | null}` or `'r
 census files of the one key space (`files/census-warner|aetna|angle|angle-csv|uhc/`, no `ack` until slice 46's check;
 400 an unknown key, 409 no census), their `look/` windows (`documents.sheets.window`'s shape plus `warnings`) and the
 lens (`formats/`, `formats/{key}/?rows=1–200`).
+Slice 46 builds the rest of the table below: `files/{key}/` for every key (`form`, `form-census-<variant>`, `cover`,
+`questionnaire-<form>`, `disclosure-<form>`, `proposal` — the latest issued proposal, OQ68 — `doc-<id>`, `packet`,
+`draft-<key>`) with `?ack=`; `checks/` → `{checks_stamp, cards: {key: {status, count}}, deal}`; `check/?file=` →
+`{key, label, ok, problems, ack}`; `drafts/{key}/sent/ {sent}` → `{drafts, done, stage, activity_id}`. The page adds
+`packet` (sections, rows, members, notices), `drafts` (rows, sent_count, total, sent_earlier) and `checks_stamp`.
 
 | Method | Path | What it does |
 |---|---|---|
@@ -4648,6 +4660,10 @@ the route is `/deals/:id/rfp` (K1). Slice 44 builds the shell, the census line a
 and checklist mounted with this page's marks; OQ60: Confirmed and Mark completed both), and the idle warm-up (K3).
 Slice 45 builds card 4's carrier census rows (K34–K41) and the lens with its Export readiness cards (K79–K88; OQ63:
 both), which the Census tab mounts around its roster ("Our census"; `?lens=<key>` is where "Check ▸" lands).
+Slice 46 builds the rest of card 4 (K42–K56: Warner's forms with the census, questionnaires and "Not set up", the form
+with its variant chips and the cover by route, the issued proposal, attachments, pills, Reset to recommended and the
+zip), card 5 (K57–K68, K120: drafts, Copy, Open in Outlook, the Sent tick, Sent earlier, and intake's Mark as marketed
+once a draft is sent, K33) and the check modal before every download, shared from `src/exportcheck/` (K69, K70).
 - Title and subtitle, "✓ N of M completed", the census line, and five collapsible cards with **Mark completed**
   (K4–K12).
 - Cards: 1 What we're shopping (K13–K16); 2 What we're requesting (K17–K30); 3 Marketing readiness checklist
@@ -5200,7 +5216,9 @@ Each carrier's own workbook, filled the way a careful person would fill it in Ex
   group and its size, with the band's enrolled count (K17); the coverage requested beside what is in force; the funding
   boxes; the broker (`deals.rules.agent_name`) and the return-to address (`rfp_return_email`, else the owner's email;
   OQ65); BOR on file; the commission by line; the notes; the date in agency time. It never names a carrier.
-- Slice 46.
+- Built in slice 46: `rfp/forms/maps.py` and `fill.py` (label guard, header, boxes, matrix, Notes with wrap,
+  Additional Carriers, the census inside at Warner's geometry), `rfp/cover/` (the kit and the page; K.6 named
+  `deals/pdfkit.py`, rfp is its only user so far). The ASO box the 2–50 form lacks is a check problem.
 
 ### 9.10 RFP packet (`rfp/packet.py`)
 
@@ -5210,7 +5228,8 @@ Each carrier's own workbook, filled the way a careful person would fill it in Ex
   - the Warner request form (Warner route) or the cover page (direct route);
   - the questionnaire PDFs and disclosures (K43; §9.12);
   - the attachments: renewal, claims, invoice, SBCs and paper questionnaires, by their default ticks (K49; OQ66, OQ69),
-    under `Documents/` with their original names, duplicates suffixed ` (2)`;
+    under `Documents/` with their original names (a file carrying member data under documents' `<Client> - <Kind>`
+    name, rule 10), duplicates suffixed ` (2)`;
   - off by default, the latest issued proposal (OQ68; J169).
 - `README.txt`: the group, the date, the files, the lines and funding asked for and the notes, signed with the agency's
   name. It names no carrier and carries no warnings; what to fix is the check's job (D-143; K103).
@@ -5218,7 +5237,7 @@ Each carrier's own workbook, filled the way a careful person would fill it in Ex
 - Nothing ticked answers 400. A member that cannot be built refuses the whole download with 409, naming its label only
   (K55); v1.1's "Could not include" list is gone.
 - The zip streams in chunks and is logged when it carries a census or PHI documents (K.6).
-- Slice 46.
+- Built in slice 46 (`rfp/packet.py`, `rfp/members.py`): the cover that leads is the zip's first file.
 
 ### 9.11 Email drafts (`rfp/drafts.py`, `rfp/eml.py`)
 
@@ -5263,7 +5282,8 @@ Thank you,
   the attachments.
 - Attachments are typed from an explicit map, and the message streams in chunks. A member that cannot be built answers
   409 naming its label only, never a member's value (K63).
-- Slice 46.
+- Built in slice 46 (`rfp/drafts.py`, `rfp/audience.py`, `rfp/eml.py`). Outlook itself was not used: the `.eml` is
+  proven by reading it back (headers, `X-Unsent: 1`, no From, the attachments and their types).
 
 ### 9.12 Questionnaire PDFs (`questionnaire/pdf/`)
 

@@ -15,8 +15,12 @@
 
 A change to the carriers, "Other carriers" or the ticks moves which census cells the RFP's files require (K124), so
 census's stored counts are rewritten once the write commits (`census.services.refresh_facts`, K.6).
-Lost deals keep every edit (K111); sends, refused there, arrive with slice 46. The row is made by the first write, never
-by a GET. Lock order (rule 3): the Deal first (it serializes the row's creation), then the RfpRequest row.
+Lost deals keep every edit (K111). The row is made by the first write, never by a GET. Lock order (rule 3): the Deal
+first (it serializes the row's creation), then the RfpRequest row.
+
+The packet's ticks are kept against the defaults of every row the deal's packet has (`cards.packet.defaults`, slice 46:
+the census files, the forms, the cover, the questionnaires, the issued proposal, the attachments); a tick for a row the
+deal does not have answers 400. The sends live in `sends.py` (`mark_sent`, slice 46).
 """
 
 from collections import namedtuple
@@ -31,10 +35,9 @@ from deals import activity, clock
 from deals.models import Deal
 from quotes import facts as quote_facts
 
-from . import cleaners, request
-from .cards import include as ticks
-from .formats import scope
-from .models import RfpRequest
+from .. import cleaners, request
+from ..cards import include as ticks
+from ..models import RfpRequest
 
 AREA = 'rfp'
 MARKED = 'marked'  # a mark's Activity action: never merged (deals.activity.NEVER_MERGE)
@@ -49,7 +52,7 @@ CARDS = (
 )
 CARD_KEYS = tuple(key for key, _ in CARDS)
 CARD_TITLES = dict(CARDS)
-CARD_OF = {**dict.fromkeys(cleaners.SETTINGS, REQUEST), 'include': PACKET}  # the form chip joins with slice 46
+CARD_OF = {**dict.fromkeys(cleaners.SETTINGS, REQUEST), 'include': PACKET, 'form': PACKET}  # the form chip: K46
 REQUIRES = ('carriers', 'other_carriers', 'include')  # what moves the census cells the files require (K124)
 PRIVATE = ('notes',)  # never in Activity, by value
 
@@ -80,11 +83,19 @@ def route_now(deal, stored_route):
     return request.route('', request.band(quote_facts.enrolled_headcount(deal)['count']))[0]
 
 
-def _ticks(deal, current, wanted):
+def _ticks(deal, row, current, wanted):
     """The include map to store: the change against the defaults the request will have after this write."""
+    from ..cards import packet
+    from ..context import Request
+
     after = {**current, **{key: value for key, value in wanted.items() if key != 'include'}}
-    defaults = scope.defaults(after, route_now(deal, after['route']))
-    return ticks.merged(current['include'], wanted['include'], defaults)
+    defaults = packet.defaults(Request(deal, row, loaded=True, stored=after))
+    change = wanted['include']
+    if change != ticks.RESET:
+        unknown = sorted(key for key in change if key not in defaults)
+        if unknown:
+            raise ValidationError({'include': [f'This deal’s packet has no row "{unknown[0]}".']})
+    return ticks.merged(current['include'], change, defaults)
 
 
 def refresh_census_on_commit(deal_id):
@@ -144,7 +155,7 @@ def update(user, deal_id, changes):
     except cleaners.Invalid as exc:
         raise ValidationError(exc.errors) from exc
     if 'include' in wanted:
-        wanted['include'] = _ticks(deal, current, wanted)
+        wanted['include'] = _ticks(deal, row, current, wanted)
     diff = {key: [current[key], value] for key, value in wanted.items() if value != current[key]}
     if not diff:
         return Updated({}, [], None)
@@ -196,3 +207,6 @@ def clear_marks(deal_id, cards):
 def clear_coverage_mark(sender, **kwargs):
     """intake's `coverage_changed` receiver (O.1; K10): inside intake's transaction, after its locks and census's."""
     clear_marks(kwargs['deal_id'], (COVERAGE,))
+
+
+from .sends import mark_sent  # noqa: E402, F401 (the sends read this module's names; re-exported)

@@ -22,6 +22,7 @@ import { questionnaire42 } from './questionnaire42.mjs';
 import { questionnaire43 } from './questionnaire43.mjs';
 import { rfp44 } from './rfp44.mjs';
 import { rfp45 } from './rfp45.mjs';
+import { rfp46 } from './rfp46.mjs';
 import { review53 } from './review53.mjs';
 import { pptx31 } from './pptx31.mjs';
 import { sbc22 } from './sbc22.mjs';
@@ -252,6 +253,7 @@ export const WALKS = {
   s43: { ...questionnaire43, run: (ctx) => questionnaire43.run(ctx, { signIn, openDeal }) }, // slice 43's done-when
   s44: { ...rfp44, run: (ctx) => rfp44.run(ctx, { signIn, openDeal }) }, // slice 44's done-when (re-seed GD2 after)
   s45: { ...rfp45, run: (ctx) => rfp45.run(ctx, { signIn, openDeal }) }, // slice 45's done-when (GD4; files to $WALK_FILES)
+  s46: { ...rfp46, run: (ctx) => rfp46.run(ctx, { signIn, openDeal }) }, // slice 46's done-when (fresh GD6; re-seed after)
   s48: { ...commission48, run: (ctx) => commission48.run(ctx, { signIn, openDeal }) }, // slice 48's done-when (re-seed GD1 after)
   s53: { ...review53, run: (ctx) => review53.run(ctx, { signIn, openDeal }) }, // slice 53's done-when (re-seed GD4 after)
 };

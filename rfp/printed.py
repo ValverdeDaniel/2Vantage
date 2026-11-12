@@ -1,6 +1,8 @@
 """What the RFP's files print on top of `quotes.facts.group_facts` (plan.md §5.7 "Group facts"; K.6 `printed.py`; K17,
 K101). Built once per file. Slice 45 prints what the census files carry: UHC's Group Info tab (19 facts) and Aetna's
-AFA UW / FI UW selector; the forms, cover and drafts add theirs with slice 46 (due date, broker, return-to, boxes).
+AFA UW / FI UW selector; slice 46's `form_facts` adds what the request forms and the cover print: the due date, the
+commission request, BOR on file (ticked, else blank: an unknown is never answered "No"), the funding boxes and the
+current funding in words.
 
 Values are typed the way a person types them into the carrier's cell (old `market/rfp._typed_count`): a count is a
 number unless it keeps a leading zero (a SIC code like 0742 stays text), dates are dates. `group.enrolled` is the one
@@ -12,6 +14,7 @@ from datetime import date
 
 from census import facts as census_facts
 from census import rollup
+from deals import lines
 from intake.models import Intake
 from quotes import facts as quote_facts
 
@@ -27,6 +30,7 @@ UHC_QUOTE_LINES = {
     'std': ('std', 'voluntary_std'),
     'ltd': ('ltd', 'voluntary_ltd'),
 }
+FUNDING_WORDS = dict(lines.FUNDING)  # the current coverage's funding as the forms print it ("Level-funded")
 TYPED = ('group.sic', 'group.eligible', 'group.waiving', 'group.atne', 'group.total_employees', 'group.enrolled')
 
 
@@ -69,11 +73,11 @@ def funding_asked(deal):
     return request.funding(stored, services.default_funding(deal) if stored is None else [])
 
 
-def fte(deal):
+def fte(deal, people=None):
     """Full-time employees counted off the roster at the intake's hours threshold (C45); '' with no employees."""
     answers = Intake.objects.filter(deal_id=deal.id).values_list('answers', flat=True).first() or {}
     threshold = str(answers.get('hours_threshold') or '').strip() or None
-    found = rollup.fte(census_facts.people(deal.id), threshold)
+    found = rollup.fte(census_facts.people(deal.id) if people is None else people, threshold)
     return '' if found is None else found
 
 
@@ -92,3 +96,17 @@ def from_facts(group, funding, quoted, fte_count):
 
 def facts(deal):
     return from_facts(quote_facts.group_facts(deal), funding_asked(deal), list(deal.requested_lines or []), fte(deal))
+
+
+def form_facts(ctx):
+    """{source: value} the request forms and the cover print (K101), from one request (`context.Request`)."""
+    out = from_facts(ctx.group, ctx.funding, ctx.lines, ctx.fte)
+    due = ctx.stored['due_date']
+    out['deal.due_date'] = date.fromisoformat(due) if due else ''
+    out['broker.commission'] = ctx.commission[0]
+    out['broker.is_bor'] = True if ctx.group.get('broker.is_bor') else None
+    current = ctx.group.get('group.current_funding') or ''
+    out['group.current_funding'] = FUNDING_WORDS.get(current, current)
+    for key in request.FUNDING_KEYS:
+        out[f'funding.{key}'] = True if key in ctx.funding else None
+    return out
