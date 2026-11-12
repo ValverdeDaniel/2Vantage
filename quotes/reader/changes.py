@@ -11,9 +11,13 @@ numbered in that order and the board opens as the carrier printed it (D62). One 
 Then `counts.py` adds the printed tier counts (OQ30) and the lines no one asked for (D56); `locating.py` finds every
 value in its file (E79). The plans from these files the read did not return are listed as `kept` (D60). Last,
 `read_checks` adds its findings (D88; slice 24): a hard one steps the read up to Opus 5.5 where allowed (D76).
+The set also carries the printed tables (`layout`, D66: item ids in printed column order, rows in printed order, the
+printed cells of rows that fill no field, none for PHI kinds), which `read_apply` keeps as `QuoteLayout` (slice 21),
+and each PDF's printed page numbers where they differ from its pages (`page_labels`, E94).
 """
 
 from documents.kinds import PHI_KINDS
+from documents.pages import printed_labels
 
 from .. import fields, read_checks
 from . import counts as count_items
@@ -165,6 +169,17 @@ def _layouts(merged, builder, files):
     return out
 
 
+def _page_labels(files):
+    """{document id: {"<pdf page>": "<printed>"}} for the PDFs whose printed page numbers differ from their pages."""
+    out = {}
+    for file in files:
+        if file.extension == '.pdf' and isinstance(file.id, int):
+            labels = printed_labels(file.raw, file.texts)
+            if labels:
+                out[str(file.id)] = labels
+    return out
+
+
 def _summary(items, findings):
     plans = [item for item in items if item['op'] in ('create_plan', 'set_values', 'pick_current')]
     new = [item for item in plans if item['op'] == 'create_plan']
@@ -235,6 +250,7 @@ def build_changes(deal, user, merged, files, extra):
         },
         'items': builder.items,
         'layout': _layouts(merged, builder, files),
+        'page_labels': _page_labels(files),
         'kept': builder.kept,
         'findings': builder.findings,
         'landed': {'plan_ids': [], 'areas': []},

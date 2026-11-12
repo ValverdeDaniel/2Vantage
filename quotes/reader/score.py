@@ -1,8 +1,10 @@
 """Scoring a read against its corpus key (plan.md §12.8; Q.6's metrics). Pure: counts only, never a value.
 
 `score(key, merged)` compares the plans a read found (`merge.merge`'s answer) with the plans the file prints:
-plans found and invented, sides and renewal links, the printed column order, rate cells to the cent, wrong rates with
-no doubt, design values after house formats, and values written where the key has none. `ai/eval` adds the counts up
+plans found and invented, sides and renewal links, the printed column and row order (Q.6's "printed column and row
+order exact", need 3: the read's printed layout lists every printed row, those that fill no field too, in the file's
+order; `rows_exact` counts the row half alone), rate cells to the cent, wrong rates with no doubt, design values after
+house formats, and values written where the key has none. `ai/eval` adds the counts up
 per set and checks Q.6's thresholds.
 """
 
@@ -34,6 +36,7 @@ def score(key, merged):
             'roles_right',
             'order_cases',
             'order_exact',
+            'rows_exact',
             'rates',
             'rates_exact',
             'rates_wrong_unflagged',
@@ -78,6 +81,21 @@ def score(key, merged):
         counts['key_blank'] += max(len(hit['values']), len(plan['values'])) - len(plan['values'])
     order_key = [(p['side'], norm(p['name'])) for p in key['plans']]
     order_found = [(f['side'], norm(f['name'])) for f in found if any(_same(f, p) for p in key['plans'])]
+    rows_key, rows_found = _collapsed(key.get('rows') or []), _collapsed(_printed_rows(merged))
     counts['order_cases'] = 1
-    counts['order_exact'] = int(order_key == order_found)
+    counts['rows_exact'] = int(rows_key == rows_found)
+    counts['order_exact'] = int(order_key == order_found and bool(counts['rows_exact']))
     return counts
+
+
+def _printed_rows(merged):
+    return [row['label'] for layout in merged.get('layouts') or [] for row in layout.get('rows') or []]
+
+
+def _collapsed(labels):
+    """The labels in order, a row the read split into two fields (a deductible's halves) counted once."""
+    out = []
+    for label in labels:
+        if not out or out[-1] != norm(label):
+            out.append(norm(label))
+    return out

@@ -3228,7 +3228,7 @@ once the deletion commits; `manage.py sweep_orphan_files [--delete]` finds bytes
 | `size` | PositiveBigInt | bytes |
 | `content_type` | Char(100) | from the extension |
 | `page_count` | PositiveInt, null | PDFs only (pypdf), read at upload (E7) |
-| `page_labels` | JSON, e.g. `{"3": "2"}` | Printed page labels, from the quote reader (E94) |
+| `page_labels` | JSON, e.g. `{"3": "2"}` | Printed page labels, from the quote reader (E94). Built in slice 21: the reader finds them in the PDF it read (`documents.pages.printed_labels`, the old D-149 rules: /PageLabels, else a bare number on a page's first or last lines; only pages that differ) and the landing keeps them (`documents.services.set_page_labels`); derived from the bytes like `page_count`, so no Activity and Undo leaves them |
 | `kind` | Char(20), required | `documents/kinds.py`: each kind has `label`, `bucket`, `accept`, `file_as`, `asks_role` and `phi` (§4.6, E.6). A blank kind answers 400 (E6) |
 | `role` | Char(12), blank | §4.6; asked of quote, renewal, sbc, stop_loss_quote and tpa_proposal files (E13) |
 | `carrier` | Char(200), blank | Who the document is from |
@@ -3309,7 +3309,8 @@ pick's current plans); each value adds `doc`, `tick` and `loc` (the locator's an
 `add_lines` items `lines`. Left-alone values sit in `values` with `tick: false` and `why`, so there is no separate
 `left_alone`. The set adds `counts {items, values, unticked, findings}`, `model`, `cost_usd`, `estimate_usd`,
 `partial` and `halted`. `layout` is `[{doc, line, where, columns: [item ids], rows: [{label, keys, printed}]}]`, with
-no printed text for PHI kinds; slice 21 turns it into `QuoteLayout`.
+no printed text for PHI kinds; slice 21 turns it into `QuoteLayout` (`where` is the first page the table's cells name)
+and adds `page_labels` (`{document id: {"<pdf page>": "<printed>"}}`, E94).
 
 Ops: `create_plan`, `set_values`, `set_plan`, `pick_current`, `combine`, `summary_counts`, `add_lines`, `remove_plan`,
 `confirm`, `table_note`, `rows`. Census and intake jobs hold only a pointer.
@@ -3505,7 +3506,13 @@ Census filter sets wait (OQ7).
 (`{"page": 3}` or `{"sheet": "Medical"}`), `columns` (`[{"col": 0, "plan": 41, "head": "Gold PPO 1500"}]`), `rows`
 (each `{label, keys}`; an unmapped row is `{"label": "Chiro visits", "keys": [], "printed": ["20/yr"]}`), `job` and
 `written_at`. `read_apply` writes it while landing, and a re-read replaces it. `printed` is never kept for PHI kinds.
-It orders nothing.
+It orders nothing. **Built in slice 21:** one per file and line (unique); `services/layouts.write` maps each column to
+the plan its item landed on, else the plan the read matched (a re-read that changes nothing), and leaves out a column
+whose plan is not on the deal; two printed rows in a row under one label become one row with both keys; `printed` has
+one cell per column. An equal table writes nothing; a new or replaced one is recorded in the landing's `quote_read` row
+as `{"t": "layout:<doc>:<line>", "k": {"layout.job": [earlier job, this job]}}` (never the table's text in Activity),
+and the table it replaced goes in the job's `landed.layouts`, so ↶ Undo this run (and the row's Revert) puts it back,
+or removes it; a table a later read replaced refuses the Undo (409) and Undo anyway leaves it.
 
 ### 6.8 questionnaire
 
@@ -4039,7 +4046,7 @@ the design; a path with no plan id sits under `deals/{id}/`.
 | `saved-views/`, `saved-views/{id}/` | Saved board and stop-loss setups, Mine and Shared. GET `?view=&line=`: mine and the shared ones offered on that line; POST `{name, description, view, line, shared, config}` → 201; GET/PATCH/DELETE `{id}`: others' private views answer 404, Update and Delete are for the owner or an admin (403 with the sentence). The config goes through `board.clean_config` (an unknown key or value is a 400 naming it) | F28, F29 | built (quotes view); 10, 36 |
 | `plans/sources/`, `plans/marks/` | The station's values and marks (F.6's `plans/review/`). GET `sources/?documents=1,2&bucket=&page=` (no `documents`: every value with a file) → `{rows: [{ref, plan_id, key, label, sub, value, bucket, where, doc, origin, low, loc, mark, confirmed (each with by_name), open, potential, dealt, hint, what}], page, pages, total, page_size: 200, counts: {bucket: {open, done}}, all: {open, done}, warnings: {open, check, unflagged}, quality: {high, low, missing}, headline: {label, tone}}`, worst first (`review_rules.review_bucket`), dealt values last in their bucket, then board order. POST `marks/` `{action: approve\|ignore\|check\|clear, refs: ["plan:41:rate_ee"] \| plan_ids \| document_ids}`: refs name exactly those values; plans and files take only their open warnings (for clear, their marks); nothing named takes the whole deal; → `{action, changed, activity_id, truncated, values: [{ref, plan_id, key, cell: {s?, m?, p?}, mark, confirmed, open, potential, dealt, bucket}], plans: [{id, flags, incomplete}]}` (no `values` past 2,000: refetch). One Activity row (`marked`, never merged) with each value's marks before and after under `mark.<key>`, never the value; Revert (Undo) restores the values still as it left them and is refused, naming them, when none is | E.6, F63–F67 | built; 17 |
 | `plans/{id}/source/?key=` | One value's full source, for ↗: `{plan_id, key, label, value, hint, what, source: {origin, doc, page, cell, line, loc, low, mark, confirmed}}`; read only | F.6, E18 | built; 15 |
-| `plans/as-quoted/?document=&line=` | "As quoted", from `QuoteLayout` | F42, E42 | 21 |
+| `plans/as-quoted/?document=&line=` | "As quoted", from `QuoteLayout`. GET with no `document`: `{files: [{document, line, line_label, label, where, page_label, plans, rows, written_at}]}`, one per table on a file not removed, in upload order; with `?document=<id>[&line=]`: `{document, line, line_label, label, kind, where, page_label, written_at, job, columns: [{col, plan, head}], left_out, rows: [{label, keys, printed?}]}` — the plans still on the deal in printed order (a removed one is left out and counted), rows in printed order, `printed` one cell per column (blank for a PHI kind, even one filed so after the read). Live values come from the comparison. 400 a bad id or line; 404 no table | F42, E42 | built; 21 |
 | `plans/{id}/sbc/` | Attach SBC: a staged read of design values | D47 | 22 |
 | `plans/pair/` | Pair two halves into one printed column, or split them | J15, O.6 #4 | 33 |
 | `plans/priced/`, `plans/{id}/priced/` | Priced versions: a dry-run preview, then the commit. POST `deals/{id}/plans/priced/` `{plan_ids, kind: concession\|bundle\|holiday, all?: {op, value}, each?: {rate key: {op, value} \| "keep"}, parts?: [{line, op, value, plan_id? \| carrier?}], conditional?, credit?: {annual} \| {months}, note?, name?, dry_run?}` → 201 (200 for a dry run) `{dry_run, drafts: [{original_id, name, label, derived, starred, changes: {key: value}, premium, change, part_of, credit, enrollment_used, enrollment_source}], plans: [the versions written], warning, activity_id}`; one version per plan named, all on one line, one `created` row. POST `plans/{id}/priced/` (✎) takes the same body on a version and re-prices it from its original (one revertible `updated` row; the same body again writes nothing). `op`: `pct_off`, `pct_up`, `flat_off`, `flat_up`, `set` (a bundle has no `set`). Malformed → 400 with the sentence; refusals → 409 (a sold plan, a concession or bundle on the in-force plan, a bundle on an `included` quote, a rate below zero, a dollar credit across several plans, two lines, a version's kind, an original gone). Remove a version with `plans/delete/` (Undo restores it). The board's words are `/api/meta/` `board.priced` | F76–F84 | built; 35 |
@@ -4570,7 +4577,11 @@ The view and the line are kept per browser, and `?view=` and `?line=` win (F1, F
   carrier chips and Claude's rule chips (F18–F27, F139, F140); saved setups, Mine and Shared (F28; OQ7).
 - Columns, sort and layouts: presets, header sort, ⇄ Transpose up to 60 plans, sizes per user, rows windowed above 150
   plans (F31–F36, F40, F41); ▦ Pages "What the client will see", with PlanPicker (F37–F39, F45–F48); "As quoted" for one
-  scanned file (F42; need 3; slice 21).
+  scanned file (F42; need 3; slice 21). Built in slice 21 as a view pill, "As quoted", offered once a read has landed a
+  printed table (not a layout of the board): one chip per scanned file and line, then the quote on the station's Grid
+  (Documents' `AsQuotedBoard`, loaded lazily): the plans in the file's column order, one band "As printed on page N",
+  mapped rows live and editable (✎ Edit, picks, A/I/C/U, F opens the value on Documents), the rows that fill no field
+  greyed with their printed text.
 - Stars within the 16-column cap, current plans, links and "Replacing:" (F50–F55); ticks and batch actions; delete,
   clear and move to another line (F57–F61). A renewal needs its own star to print once its line has stars (OQ11).
   Stop-loss plans take arrows and slot picks like every line (OQ13, answered yes; this reverses the old app's rule,
@@ -5312,6 +5323,9 @@ finding, when allowed → landing (§10.5).
   activity_id, at}`) for the "✓ Used Claude's read — … ↶ Undo this run" strip. Documents gains ↻ Re-read… and the old
   Re-read panel (E75, every kind the quote reader reads, E76), the staged banner in Scanned data (E78) and ↗ on staged
   values (E78's pin). Applying on a lost deal is a person's internal edit and passes (O.3.7; the old app refused it).
+- **Built in slice 21:** the landing also keeps the file's printed tables (`QuoteLayout`, D66; §6.7), in the
+  `quote_read` row, and the PDFs' printed page numbers (E94, `Document.page_labels`); a read that changes only the
+  table records "Used Claude's read: the file's printed table" and does not move the stage. Undo puts the table back.
 - **Built in slice 18:** every read waits (`land: staged`); the staged card shows on Documents under the file it read
   (`deal/claude/ReadReviews` with `ReviewCard`, the quote body `deal/advisor/claude/QuoteReview`, `PlanDiff`,
   `ChangeList`): Discard works (D74); "Use this scan ▸" and "Apply N selected ▸" show, disabled, until slice 19's
@@ -5385,7 +5399,10 @@ Part E (E.6); the screens are §8.16.
   not print is "not in the file" (GD1's negotiated copy). "Check this file" sits in the file's controls row with the
   old strip's progress and Stop until slice 17's List takes it; the file bar says "Not in the file" or "Check by eye"
   for the value a ↗ opened.
-- **"As in the file"** shows a scanned quote's columns and printed rows from `QuoteLayout` (E42, F42; O.3.5).
+- **"As in the file"** shows a scanned quote's columns and printed rows from `QuoteLayout` (E42, F42; O.3.5). Built in
+  slice 21: "▤ As in the file" beside ☰ List and ▦ Grid (kept per browser) on a proposal file a landed read gave a
+  table; it sits beside the file as the List does, on the station's Grid with its Find, filters, Review and ✎ Edit, a
+  chip per line when the file prints several.
 - This replaces v1.1's "Values from this document" panel and its `confirmed_by/at`.
 - **Built in slice 17:** `documents/review_rules.py` (`apply_mark`, `is_approved`, `is_dealt`, `open_warning`,
   `potential_error`, `shows_approval`, `review_bucket`, `origin_bucket`, `quality_headline`, `warning_counts`; the
@@ -6380,7 +6397,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | **Slice 20: AI-3** | | | | |
 | OQ31 | Should the golden-deal trial set the default model, read effort and cost caps, with Opus 5.5 kept to admins and direct people? (v1.1 §16 #7) | Open. Default: yes. Built in slice 20 on the default: Opus 5.5 is offered and stepped up to only for admins and direct people (D91); until the trial, §3.5's settings stand (Sonnet 5.5, effort high for reads, $3 a run, $25 a deal) | Open (default built) | 20 |
 | **Slice 21: AI-4** | | | | |
-| OQ32 | Need 3: show "As quoted" in the Advisor, on Documents, or both? Should printed rows that match no field reach the client files? | Open. Default: both screens; client files keep the quote's plan order but the house rows | Open | 21 |
+| OQ32 | Need 3: show "As quoted" in the Advisor, on Documents, or both? Should printed rows that match no field reach the client files? | Open. Default: both screens; client files keep the quote's plan order but the house rows. Built in slice 21 on the default: the Advisor's "As quoted" view and Documents' "▤ As in the file"; printed rows that fill no field stay in `QuoteLayout` only and never reach values or client files | Open (default built) | 21 |
 | **Slice 22: AI-5** | | | | |
 | OQ33 | Should SBC reads wait for review even for direct people? | Open. Default: yes (D71) | Open | 22 |
 | **Slice 24: AI-6** | | | | |

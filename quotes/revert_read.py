@@ -11,6 +11,8 @@
     a plan sold since or removed since refuses the Undo with a sentence naming them (409), and "Undo anyway" (`force`)
     leaves those as they are and puts back the rest. The plans a new renewal passed go back to their places when no one
     has moved them since.
+  - The file's printed tables the landing wrote (`QuoteLayout`, slice 21) go back to the ones they replaced (from the
+    job's record), or away; a table a later read replaced since refuses the same way (`services.layouts`).
 - `undo(user, deal, job, force)` is the job's ↶ Undo this run: every row of the landing (the counts, the plans and
   values, the lines added), newest first, in one transaction, so all of it goes back or none of it does. With
   `force`, a row of another owner that refuses is left as it is and said.
@@ -30,7 +32,7 @@ from deals.values import source
 from . import columns, fields
 from .models import Package, Plan
 from .selectors.state import replaced_ids
-from .services import locks
+from .services import layouts, locks
 from .services.batch import Batch
 from .services.read_apply import AREA
 from .services.read_plans import ORDER, READ_REF, label_of
@@ -129,11 +131,13 @@ def revert(row, user):
     force = FORCE.get()
     record = _record_of(row)
     stored = record.get('sources') or {}
-    plan_ids = {_plan_id(entry['t']) for entry in row.changes} - {None}
+    tables = [entry for entry in row.changes if layouts.is_layout(entry['t'])]
+    plan_changes = [entry for entry in row.changes if not layouts.is_layout(entry['t'])]
+    plan_ids = {_plan_id(entry['t']) for entry in plan_changes} - {None}
     everything = _locked(row.deal_id, plan_ids)
-    made = {_plan_id(entry['t']) for entry in row.changes if _made(entry)}
+    made = {_plan_id(entry['t']) for entry in plan_changes if _made(entry)}
     written, changed, saving = [], [], []
-    for entry in row.changes:
+    for entry in plan_changes:
         plan = everything.get(_plan_id(entry['t']))
         if _plan_id(entry['t']) in made:
             continue
@@ -149,20 +153,22 @@ def revert(row, user):
         if diff:
             saving.append(plan)
             written.append(activity.change(entry['t'], diff))
-    if changed and not force:
+    replaced = layouts.replaced_since(tables) if not force else []
+    if (changed or replaced) and not force:
         many = len({plan.id for plan, _key in changed}) > 1
         labels = [
             fields.BY_KEY.get(key, {}).get('label', key) + (f' on {label_of(plan)}' if many else '')
             for plan, key in changed
         ]
-        raise activity.changed_since(labels, [key for _plan, key in changed])
+        raise activity.changed_since(labels + replaced, [key for _plan, key in changed] + [layouts.KEY] * len(replaced))
     for plan in saving:
         plan.save(update_fields=['values', 'sources', 'sort_order', 'updated_at'])
+    written += layouts.put_back(tables, record.get('layouts') or {})
     packaged = set(Package.plans.through.objects.filter(plan_id__in=made).values_list('plan_id', flat=True))
     touched = _touched_since(row, made, record.get('activity_ids') or [row.id])
     removing = [
         everything[plan_id]
-        for entry in row.changes
+        for entry in plan_changes
         if (plan_id := _plan_id(entry['t'])) in made
         and plan_id in everything
         and everything[plan_id].removed_at is None

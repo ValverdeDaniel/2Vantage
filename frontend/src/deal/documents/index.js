@@ -3,3 +3,6 @@
 // code, so a tab that shows a pin never loads the station or pdf.js.
 export { default } from './DocumentsTab';
 export { default as DocumentWindowPage } from './DocumentWindowPage';
+// The Advisor's "As quoted" (F42; slice 21): a scanned quote as printed, on the station's Grid. The Advisor loads it
+// lazily, so the board never loads the station.
+export { default as AsQuotedBoard } from './grid/AsQuotedBoard';

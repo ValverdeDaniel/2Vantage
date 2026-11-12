@@ -26,9 +26,18 @@ def norm(text):
     return re.sub(r'[^a-z0-9]+', ' ', str(text or '').lower()).strip()
 
 
-def _where(file, part):
+def _where(part, block):
+    """Where the table is printed: its sheet, or the first page its cells name (else the range's first page)."""
     if part.kind == 'sheet':
         return {'sheet': part.sheet}
+    pages = [
+        cell['page']
+        for row in block.get('rows') or []
+        for cell in row.get('cells') or []
+        if isinstance(cell.get('page'), int) and cell['page'] > 0
+    ]
+    if pages:
+        return {'page': min(pages)}
     return {'page': part.pages[0]} if part.pages else {}
 
 
@@ -131,7 +140,7 @@ class Merge:
             if renews not in (None, NO_RENEWAL) and renews in local and local[column.get('col')].side == 'renewal':
                 local[column.get('col')].renews = local[renews].key
         layout = self.layouts.setdefault(
-            (file.id, line), {'doc': file.id, 'line': line, 'where': _where(file, part), 'columns': [], 'rows': []}
+            (file.id, line), {'doc': file.id, 'line': line, 'where': _where(part, block), 'columns': [], 'rows': []}
         )
         for plan in local.values():
             if plan.key not in layout['columns']:

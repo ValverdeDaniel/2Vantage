@@ -67,6 +67,7 @@ def samples(world):
         'api/deals/<int:pk>/plans/marks/': deal,  # slice 17: approve, ignore, check, clear (E85)
         'api/deals/<int:pk>/plans/priced/': deal,  # slice 35: priced versions (F76)
         'api/plans/<int:plan_id>/priced/': {'plan_id': world['alternate'].id},  # slice 35: ✎ re-price (F82)
+        'api/deals/<int:pk>/plans/as-quoted/': deal,  # slice 21: the printed tables (F42, E42)
     }
 
 
@@ -131,6 +132,7 @@ def matrix(world):
         # slice 35: a priced version of a quote; ✎ on a plan that is not a version answers 409 past the permission check
         ('POST', 'api/deals/<int:pk>/plans/priced/', ok(201), {'plan_ids': [alternate.id], **FIVE_OFF}),
         ('POST', 'api/plans/<int:plan_id>/priced/', ok(409), {**FIVE_OFF, 'dry_run': True}),
+        ('GET', 'api/deals/<int:pk>/plans/as-quoted/', ok()),  # slice 21: the printed tables (F42, E42)
     ]
 
 

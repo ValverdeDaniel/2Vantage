@@ -3,7 +3,8 @@ import { useState } from 'react';
 /*
  * How the Scanned data panel shows a file's values, remembered in this browser only (plan.md §8.16; E35, E65, D121;
  * the old DocumentsTab's `vantage.documents.view` and `vantage.documents.review`): the List (worst first, beside the
- * file) or the Grid (side by side), and Review mode, where the file follows the value you are on. ✎ Edit is not
+ * file), the Grid (side by side) or ▤ As in the file (a quote's printed table, beside the file; slice 21), and Review
+ * mode, where the file follows the value you are on. ✎ Edit is not
  * remembered: it is a session, and Review and Edit are never on together (`editing` turns Review's keys off).
  */
 
@@ -27,7 +28,7 @@ function write(key, value) {
 }
 
 export default function useStationModes() {
-  const [view, setView] = useState(() => (read(VIEW_KEY) === 'grid' ? 'grid' : 'list'));
+  const [view, setView] = useState(() => (['grid', 'file'].includes(read(VIEW_KEY)) ? read(VIEW_KEY) : 'list'));
   const [review, setReview] = useState(() => read(REVIEW_KEY) === '1');
   const [editing, setEditing] = useState(false);
   return {

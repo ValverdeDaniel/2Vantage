@@ -47,3 +47,15 @@ def test_Q6_the_corpus_is_the_same_bytes_every_run():
     first, second = corpus.cases(), corpus.cases()
     assert [case.raw for case in first] == [case.raw for case in second]
     assert {case.set for case in first} == {corpus.TUNING, corpus.HELD_OUT}
+
+
+def test_Q6_D66_a_read_that_drops_a_row_that_fills_no_field_loses_the_printed_order(db, fake_claude):
+    renewal = corpus.renewal_two_current()
+    answer = {**renewal.answer, 'lines': [dict(block) for block in renewal.answer['lines']]}
+    block = answer['lines'][0]
+    block['rows'] = [row for row in block['rows'] if row['key']]  # the unmapped printed rows left out
+    _record(fake_claude, renewal, answer)
+    report = _run([renewal])
+    counts = report['cases'][0]['counts']
+    assert (counts['rows_exact'], counts['order_exact']) == (0, 0)
+    assert report['sets'][corpus.TUNING]['metrics']['order'] < 1.0

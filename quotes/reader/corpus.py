@@ -117,7 +117,7 @@ def key_of(tbl):
                 'counts': dict(tbl.get('counts', {}).get(index, {})),
             }
         )
-    return {'plans': plans}
+    return {'plans': plans, 'rows': [label for label, _key, _values in tbl['rows']]}  # printed order (need 3)
 
 
 def _pdf_case(name, set_name, tbl, *, kind='renewal', role='renewal'):

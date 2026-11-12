@@ -9,7 +9,9 @@ import ValueCell from './ValueCell';
  * heads frozen (`bnf-freeze`), plan columns one width and rows one height each, per user, with ↺ Reset sizes (the
  * Proposal's `proposal` sizes, one stored copy, D-166), a value cut at three lines shown whole on hover. Above 40 plans
  * only the plan columns in view are drawn, between pads that hold the rest's width (E39). A plan head picks its
- * column and a label its row (E51). `ui` carries the model, the hooks' props and the handlers.
+ * column and a label its row (E51). `ui` carries the model, the hooks' props and the handlers. "As in the file"
+ * (slice 21) draws through it too: one band of printed rows, greyed where a row fills no field, a field's name beside
+ * a printed label that fills two.
  */
 export default function GridTable({ view, ui }) {
   const { win, sizes, clipTip } = ui;
@@ -82,7 +84,10 @@ export default function GridTable({ view, ui }) {
                     {...ui.find.props(row.key, '@label')}
                     {...hover}
                   >
-                    <span className="bnf-clip">{row.label}</span>
+                    <span className={cx('bnf-clip', row.printed && 'bb-cell-na')}>
+                      {row.label}
+                      {row.sub && <span className="bb-cell-na"> · {row.sub}</span>}
+                    </span>
                     <span {...sizes.rowGrip(row.key)} />
                   </td>
                   {padded((plan) => <ValueCell key={plan.id} row={row} plan={plan} ui={ui} />, 'td')}

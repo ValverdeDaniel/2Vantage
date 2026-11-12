@@ -13,12 +13,15 @@ import useMarks from '../../valuereview/useMarks';
 import useReviewHotkeys from '../../valuereview/useReviewHotkeys';
 import FindBar from './FindBar';
 import OwnerFileView from './OwnerFileView';
+import AsQuotedHead from './grid/AsQuotedHead';
 import StationGrid from './grid/StationGrid';
+import useAsQuotedGrid from './grid/useAsQuotedGrid';
 import useStationGrid from './grid/useStationGrid';
 import ScanActions from './ScanActions';
 import ScanHead from './ScanHead';
 import ScanList from './ScanList';
 import StagedBanner from './StagedBanner';
+import useFileTables from './useFileTables';
 import useStationFind from './useStationFind';
 
 /*
@@ -34,6 +37,8 @@ import useStationFind from './useStationFind';
  * `onShow(docId, ref, opts)` opens a value in its file and keeps this panel's scope (D-164); `viewer` is what the
  * viewer shows ({docId, page, ref}); `modes` (useStationModes) is the tab's, which lays the List beside the file. Plan
  * values are listed here; a census, intake or questionnaire file shows its owner's view (OwnerFileView; slice 65).
+ * A quote file a landed read gave a printed table also shows ▤ As in the file (E42; slice 21): its plans in the file's
+ * column order and its rows as printed, on the same Grid (useAsQuotedGrid), beside the file as the List is.
  */
 const FOLLOW_MS = 200;
 
@@ -59,16 +64,16 @@ export default function ScannedData({ deal, meta, scope, expanded, modes, viewer
   const rows = useMemo(() => (pages ?? []).flatMap((page) => page.rows), [pages]);
   const listed = Boolean(proposal && (head?.all.open || head?.all.done));
   const words = scope.ids.length > 1 ? 'these files' : 'this file';
-  const gridOn = listed && (modes.view === 'grid' || modes.editing);
-  const grid = useStationGrid({
-    dealId: deal.id,
-    plansMeta: meta.plans,
-    scopeIds: scope.ids,
-    enabled: gridOn,
-    terms: find.terms,
-    only: find.only,
-    filters: { errorsOnly: planFilter === 'errors', rowsOnly },
-  });
+  const tables = useFileTables(deal.id, scope, proposal);
+  const fileOn = listed && tables.offered && modes.view === 'file'; // ▤ As in the file (E42; slice 21)
+  const stationOn = listed && !fileOn && (modes.view === 'grid' || modes.editing);
+  const gridOn = stationOn || fileOn;
+  const filters = { errorsOnly: planFilter === 'errors', rowsOnly };
+  const findOn = { terms: find.terms, only: find.only, filters };
+  const on = { dealId: deal.id, plansMeta: meta.plans, ...findOn };
+  const station = useStationGrid({ ...on, scopeIds: scope.ids, enabled: stationOn });
+  const asFile = useAsQuotedGrid({ ...on, documentId: tables.documentId, line: tables.line, enabled: fileOn });
+  const grid = fileOn ? asFile : station;
   const sizes = useGridSizes({ grid: 'proposal', scrollRef });
   const clipTip = useClipTip();
   const gridPlans = gridOn && !grid.data.pending && !grid.data.error && grid.model.plans.length > 0;
@@ -86,7 +91,7 @@ export default function ScannedData({ deal, meta, scope, expanded, modes, viewer
     [gridOn, rows, find.terms, fields, grid.data.index],
   );
   const hits = gridOn ? grid.found.hits : listFound;
-  const at = find.cursor(hits, [gridOn, planFilter, rowsOnly, bucket].join('~'));
+  const at = find.cursor(hits, [gridOn, fileOn, planFilter, rowsOnly, bucket].join('~'));
   const step = (dir) => {
     const hit = find.step(at, dir, hits);
     if (gridOn) gridRef.current?.selectHit(hit);
@@ -141,28 +146,33 @@ export default function ScannedData({ deal, meta, scope, expanded, modes, viewer
     );
   } else if (gridOn) {
     body = (
-      <StationGrid
-        ref={gridRef}
-        deal={deal}
-        grid={grid}
-        filter={{
-          mode: planFilter === 'errors' && grid.model.issues.size ? 'errors' : 'all',
-          plans: grid.model.plans.length,
-          errorPlans: grid.model.issues.size,
-          rowsOnly: rowsOnly && grid.model.issues.size > 0,
-          onMode: setPlanFilter,
-          onRowsOnly: setRowsOnly,
-        }}
-        modes={modes}
-        find={{ current: at.current, nonce: find.nonce }}
-        scrollRef={scrollRef}
-        sizes={sizes}
-        clipTip={clipTip}
-        onShow={onShow}
-        viewer={viewer}
-        ask={ask}
-        onEditDone={() => modes.setEditing(false)}
-      />
+      <>
+        {fileOn && (
+          <AsQuotedHead table={asFile.table} choices={tables.choices} current={tables.line} onPick={tables.pick} />
+        )}
+        <StationGrid
+          ref={gridRef}
+          deal={deal}
+          grid={grid}
+          filter={{
+            mode: planFilter === 'errors' && grid.model.issues.size ? 'errors' : 'all',
+            plans: grid.model.plans.length,
+            errorPlans: grid.model.issues.size,
+            rowsOnly: rowsOnly && grid.model.issues.size > 0,
+            onMode: setPlanFilter,
+            onRowsOnly: setRowsOnly,
+          }}
+          modes={modes}
+          find={{ current: at.current, nonce: find.nonce }}
+          scrollRef={scrollRef}
+          sizes={sizes}
+          clipTip={clipTip}
+          onShow={onShow}
+          viewer={viewer}
+          ask={ask}
+          onEditDone={() => modes.setEditing(false)}
+        />
+      </>
     );
   } else {
     body = (
@@ -200,7 +210,8 @@ export default function ScannedData({ deal, meta, scope, expanded, modes, viewer
       )}
       <ScanHead scope={scope} head={proposal ? head : null}>
         <ScanActions
-          view={gridOn ? 'grid' : 'list'}
+          view={fileOn ? 'file' : gridOn ? 'grid' : 'list'}
+          asFile={tables.offered}
           onView={listed && !modes.editing ? modes.pickView : null}
           resetSizes={gridPlans && sizes.custom ? sizes.reset : null}
           onHide={expanded && !hidden ? () => setHidden(true) : null}

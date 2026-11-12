@@ -7,8 +7,10 @@ import { cellAt } from './stationModel';
  * approved, ignored, or amber while Claude's doubt is open; rose when a required value is missing), a dotted underline
  * when it was read from a file — greyer when that is not the file in scope, so F will move the viewer — and none when
  * typed; the blue ring while it is the value the viewer shows; the pick, Find's marks and ✎ Edit's cursor. In ✎ Edit a
- * missing value reads "＋ Add", and a failed save shows the server's sentence under the value.
+ * missing value reads "＋ Add", and a failed save shows the server's sentence under the value. On "As in the file"
+ * (slice 21) a printed row that fills no field shows the file's text, greyed (`bb-cell-na`), and takes no edit.
  */
+const PRINTED_TITLE = 'As the file prints it: this row fills no field, so it is never a value';
 
 const MARK_CLASS = { check: 'bb-cell-check', ignored: 'bb-cell-ignored', approved: 'bb-cell-approved' };
 const MARK_TITLE = {
@@ -43,11 +45,13 @@ export default function ValueCell({ row, plan, ui }) {
         },
       }
     : {};
-  const text = displayValue(row.field, cell.raw);
+  const printed = Boolean(row.printed);
+  const text = printed ? cell.printed : displayValue(row.field, cell.raw);
   return (
     <td
       className={cx(
         'bnf-cell',
+        printed && 'bb-cell-na',
         plan.role === 'current' && 'bnf-plan-col-current',
         MARK_CLASS[cell.flags.m] || STATUS_CLASS[cell.flags.s],
         cell.doc != null ? 'bb-cell-provenance' : 'bb-cell-noprov',
@@ -59,7 +63,7 @@ export default function ValueCell({ row, plan, ui }) {
         ui.find.classes(r, c),
         error && 'bnf-cell-error',
       )}
-      title={title(cell)}
+      title={printed ? PRINTED_TITLE : title(cell)}
       {...keyProps}
       {...editClick}
       {...(ui.pick ? ui.pick.cellProps(r, c) : {})}

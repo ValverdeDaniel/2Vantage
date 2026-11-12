@@ -4,6 +4,7 @@
 // Needs 1–12 arrive with the slices that build them (Q.9); 0 is the example the lane started with.
 
 import { archive38 } from './archive38.mjs';
+import { asQuoted21 } from './asQuoted21.mjs';
 import { boardClaude24 } from './boardClaude24.mjs';
 import { builder25 } from './builder25.mjs';
 import { builder26 } from './builder26.mjs';
@@ -60,6 +61,7 @@ export const WALKS = {
   1: { ...scanQuotes19, run: (ctx) => scanQuotes19.run(ctx, { signIn, openDeal }) }, // scan quotes; slice 19 (one real read)
   '1q': { ...quoteDoor20, run: (ctx) => quoteDoor20.run(ctx, { signIn }) }, // need 1 by the quote-first door; slice 20 (one real read)
   '5c': { ...boardClaude24, run: (ctx) => boardClaude24.run(ctx, { signIn, openDeal }) }, // needs 4–5 asked of Claude; slice 24 (one real turn)
+  3: { ...asQuoted21, run: (ctx) => asQuoted21.run(ctx, { signIn, openDeal }) }, // "As quoted"; slice 21 (a real read only when none waits)
   4: {
     title: 'Search plans by name: "UHC" finds the UnitedHealthcare quotes on every line (F14–F17, OQ14)',
     deal: 'GD1',

@@ -3,7 +3,8 @@
  * and ▦ Pages, under the old key `vantage.bnf.advisor`. Not per deal, so an unavailable view or a line the deal does not have
  * falls back rather than drawing nothing. `?view=` and `?line=` win over the kept choice. Pure.
  *
- * Views (F1): Quote comparison and the Proposal builder (slice 25; J17) are built. The Stop-loss analysis pill (only
+ * Views (F1): Quote comparison, "As quoted" (one scanned quote as printed, F42; slice 21: offered only once a read
+ * has landed a printed table) and the Proposal builder (slice 25; J17) are built. The Stop-loss analysis pill (only
  * with a stop-loss line, F2) and the Export viewer join this list with their slices (36, 28); Unleashed waits (F4).
  */
 
@@ -11,6 +12,11 @@ export const PREFS_KEY = 'vantage.bnf.advisor';
 
 export const VIEWS = [
   { key: 'quotes', label: 'Quote comparison', hint: 'Filter, sort and shortlist the quoted plans' },
+  {
+    key: 'quoted',
+    label: 'As quoted',
+    hint: "One scanned quote as the carrier printed it: its plans in the file's column order, its rows as printed",
+  },
   {
     key: 'build',
     label: 'Proposal builder',
@@ -36,9 +42,12 @@ export function writePrefs(storage, patch) {
   }
 }
 
-/** The views this deal offers: every built view (a stop-loss one would need the deal's stop-loss line, F2). */
-export function offeredViews() {
-  return VIEWS;
+/**
+ * The views this deal offers: every built view, "As quoted" only when the deal has a printed table (`quoted`, the
+ * `plans/as-quoted/` files; F42), so a pill never opens nothing (a stop-loss one would need a stop-loss line, F2).
+ */
+export function offeredViews(lines, quoted) {
+  return VIEWS.filter((view) => view.key !== 'quoted' || (quoted?.length ?? 0) > 0);
 }
 
 /** The view to show: the URL's, else the kept one, when offered; else Quote comparison. */

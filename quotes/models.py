@@ -184,3 +184,29 @@ class SavedView(models.Model):
 
     def __str__(self):
         return f'{self.name} ({self.view})'
+
+
+class QuoteLayout(models.Model):
+    """One printed table of a scanned quote (plan.md §6.7, O.3.5; D66, E42, F42; slice 21): the file's plan columns
+    in printed order and its rows in printed order, so "As quoted" (the Advisor) and "As in the file" (Documents) can
+    draw the quote as the carrier printed it. `columns` `[{"col": 0, "plan": 41, "head": "Gold PPO 1500"}]` (`col` the
+    printed column, 0 first); `rows` `[{"label", "keys"}]`, where a row that fills no field keeps its printed cells,
+    one per column: `{"label": "Chiro visits", "keys": [], "printed": ["20/yr", …]}` (never for PHI kinds).
+    Written only by `services.layouts.write` while a read lands (`read_apply`), replaced by a later read of the same
+    file and line, and put back by Undo with the landing. It orders nothing: the board keeps its own order."""
+
+    deal = models.ForeignKey(Deal, on_delete=models.CASCADE, related_name='quote_layouts')
+    document = models.ForeignKey('documents.Document', on_delete=models.CASCADE, related_name='quote_layouts')
+    line = models.CharField(max_length=20)
+    where = models.JSONField(default=dict, blank=True)  # {"page": 3} or {"sheet": "Medical"}
+    columns = models.JSONField(default=list, blank=True)
+    rows = models.JSONField(default=list, blank=True)
+    job = models.ForeignKey('ai.Job', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    written_at = models.DateTimeField()
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['document', 'line'], name='one_quote_layout_per_file_and_line')]
+        ordering = ['document_id', 'line']
+
+    def __str__(self):
+        return f'{self.document_id} {self.line}'

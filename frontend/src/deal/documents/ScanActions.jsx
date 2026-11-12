@@ -4,9 +4,10 @@ import cx from '../../ui/cx';
  * The Scanned data panel's buttons, in the old order (plan.md §8.16; E32, E35, E65, E66; the old DocumentsTab's
  * `bnf-scan-actions`): ☰ List / ▦ Grid (remembered in this browser), ↺ Reset sizes while the Grid has sizes of the
  * person's own, Hide ▾ while expanded, ○ Review / ◉ Review and ✎ Edit. The old ⟲ History rail is gone with versions
- * (E72); the Change history card below the station stands in for it.
+ * (E72); the Change history card below the station stands in for it. A quote file a landed read gave a printed table
+ * adds ▤ As in the file (`asFile`; E42, slice 21).
  */
-export default function ScanActions({ view, onView, resetSizes, onHide, review, onReview, onEdit }) {
+export default function ScanActions({ view, onView, asFile, resetSizes, onHide, review, onReview, onEdit }) {
   return (
     <div className="bnf-scan-actions">
       {onView && (
@@ -29,6 +30,17 @@ export default function ScanActions({ view, onView, resetSizes, onHide, review, 
           >
             ▦ Grid
           </button>
+          {asFile && (
+            <button
+              type="button"
+              className={cx('bnf-docs-expand-btn', view === 'file' && 'is-on')}
+              aria-pressed={view === 'file'}
+              onClick={() => onView('file')}
+              title="This quote as the file prints it: its plans in the file's column order and its rows as printed, beside the file"
+            >
+              ▤ As in the file
+            </button>
+          )}
         </span>
       )}
       {resetSizes && (

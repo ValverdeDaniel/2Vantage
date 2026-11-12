@@ -57,11 +57,19 @@ function sectionsFor(meta, lines) {
     }));
 }
 
-/** One cell: {raw, flags, doc, docName, here, applies, potential, ref}. `r` a field key, `c` a plan id. */
+/**
+ * One cell: {raw, flags, doc, docName, here, applies, potential, ref}. `r` a field key, `c` a plan id. A printed row
+ * that fills no field ("As in the file", slice 21) has no value: its cell carries the file's `printed` text instead.
+ */
 export function cellAt(model, r, c) {
   const plan = model.byId.get(String(c));
   const row = model.rowByKey.get(String(r));
   if (!plan || !row) return null;
+  if (row.printed) {
+    const printed = row.printed[plan.id] ?? '';
+    const none = { flags: {}, doc: null, docName: '', here: false, applies: false, potential: false };
+    return { raw: '', printed, ...none, ref: `${row.key}:${plan.id}` };
+  }
   const flags = plan.cells?.[row.key] ?? {};
   const doc = flags.d != null ? (plan.files[flags.d] ?? null) : null;
   return {

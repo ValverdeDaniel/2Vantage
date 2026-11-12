@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { PREFS_KEY, chooseLayout, chooseLine, chooseOrientation, chooseView, readPrefs, writePrefs } from './advisorPrefs';
+import {
+  PREFS_KEY,
+  chooseLayout,
+  chooseLine,
+  chooseOrientation,
+  chooseView,
+  offeredViews,
+  readPrefs,
+  writePrefs,
+} from './advisorPrefs';
 
 function memory() {
   const items = new Map();
@@ -42,5 +51,16 @@ describe('F37 ▦ Pages is kept per browser, as the old app kept it', () => {
     expect(chooseLayout('pages')).toBe('pages');
     expect(chooseLayout('grid')).toBe('grid');
     expect(chooseLayout(undefined)).toBe('grid');
+  });
+});
+
+describe('F42 "As quoted" is offered once a read has landed a printed table', () => {
+  it('offers the pill only with a printed table, and falls back to Quote comparison without one', () => {
+    const keys = (quoted) => offeredViews(lines, quoted).map((view) => view.key);
+    expect(keys([])).not.toContain('quoted');
+    expect(keys(undefined)).not.toContain('quoted');
+    expect(keys([{ document: 7, line: 'medical' }])).toContain('quoted');
+    expect(chooseView('quoted', null, offeredViews(lines, []))).toBe('quotes');
+    expect(chooseView('quoted', null, offeredViews(lines, [{ document: 7, line: 'medical' }]))).toBe('quoted');
   });
 });

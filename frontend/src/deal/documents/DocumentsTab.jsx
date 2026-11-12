@@ -168,8 +168,10 @@ export default function DocumentsTab({ deal }) {
     }
   }
 
-  // Side by side with the file in List view only, as the old station: the Grid takes the full width below (D-122).
-  const listing = Boolean(shown && bucket === 'proposal' && modes.view === 'list' && !modes.editing);
+  // Side by side with the file in List view, as the old station, and ▤ As in the file (slice 21); the Grid takes the
+  // full width below (D-122).
+  const beside = modes.view === 'file' || (modes.view === 'list' && !modes.editing);
+  const listing = Boolean(shown && bucket === 'proposal' && beside);
   return (
     <div className="bb-tab-page">
       {station.back && (

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useQuotedFiles } from '../../api/asQuoted';
 import { useMeta } from '../../api/meta';
 import * as q from '../../api/quotes';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import RefreshChip from '../../ui/RefreshChip';
 import { PagesView, ProposalBuilder } from '../proposal';
+import AsQuotedView from './AsQuotedView';
 import BoardDialogs from './BoardDialogs';
 import EnrollmentPanel from './enrollment/EnrollmentPanel';
 import LineTabs from './LineTabs';
@@ -23,7 +25,8 @@ import { AddQuotesButton } from '../claude'; // Work with Claude's door on the b
  * setups (slice 10) are the board's filter card, above its header; the counts card and the enrollment notices
  * (slice 13) sit between the board's header and its table. ▦ Pages mounts the proposal folder's PagesView in the
  * table's place (slice 14; F37), kept per browser. The Proposal builder view mounts the proposal folder's builder
- * (slice 25; J17), on the line the Advisor shows.
+ * (slice 25; J17), on the line the Advisor shows. "As quoted" shows one scanned quote as printed (F42; slice 21),
+ * offered once a read has landed a printed table.
  */
 
 function EmptyPanel({ title, children, actions }) {
@@ -47,7 +50,8 @@ export default function AdvisorTab({ deal }) {
   const { data: meta } = useMeta();
   const navigate = useNavigate();
   const lines = q.useAdvisorLines(deal.id);
-  const prefs = useAdvisorPrefs(lines.data ?? []);
+  const quoted = useQuotedFiles(deal.id);
+  const prefs = useAdvisorPrefs(lines.data ?? [], quoted.data);
   const comparison = q.useComparison(deal.id, prefs.line);
   const [dialog, setDialog] = useState(null);
   const packages = {
@@ -98,6 +102,8 @@ export default function AdvisorTab({ deal }) {
         />
       </div>
     );
+  } else if (prefs.view === 'quoted') {
+    body = <AsQuotedView deal={deal} meta={meta} files={quoted.data ?? []} line={prefs.line} />;
   } else if (!lines.data.length) {
     body = (
       <EmptyPanel
