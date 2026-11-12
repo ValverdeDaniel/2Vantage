@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'intake',  # coverage, intent and the lines to quote (slice 11); the form from slice 39
     'census',  # import, matching, validation, rollups and CensusFacts (slice 12); the roster grid from slice 41
     'quotes',
+    'questionnaire',  # the carrier forms (slice 42): Florida Blue 51+, Warner 51+, the SIIA disclosure; PDFs slice 43
     'rfp',  # RfpRequest and asked_by_line (slice 26); the RFP tab from slices 44–46
     'proposals',
     'golden',  # seed only, last in the chain (§3.3)

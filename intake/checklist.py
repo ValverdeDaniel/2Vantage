@@ -53,7 +53,9 @@ LABELS = {
 }
 REQUIRED, WAIVED = 'required', 'waived'
 REQUIREMENTS = ('', REQUIRED, WAIVED)  # '' = the item's own rule; 'waived' reads "Not needed"
-FORM_NONE = 'none'  # "No fillable form — upload only" (B22, slice 42)
+FORM_NONE = 'none'  # the old app's "No fillable form — upload only" (B22); read as `upload`
+FORM_UPLOAD, FORM_AUTO = 'upload', 'auto'  # the stored form choices besides a form key (G4; questionnaire/forms)
+FORM_SOURCES = ('producer', 'band')  # who set a stored form choice: a person, or the band frozen by a first write
 NOTE_LIMIT = 300
 SALARY_LINES = {'basic_life_add', 'voluntary_life', 'std', 'ltd'}  # old LIFE_DISABILITY_LINES
 LEVEL_OR_SELF = {'level_funded', 'self_funded'}
@@ -124,12 +126,15 @@ def item_state(key, entry, by_name=''):
 
 def _form(key, entry, forms):
     """The in-app form a questionnaire row uses, as questionnaire's provider says (slice 42), else the pick stored on
-    the entry: {form_key, form_source, signed}."""
+    the entry: {form_key, form_source, signed, needed}. `needed`: the item asks for something — a form, or "upload
+    only" (G4: on the stop-loss row `upload` makes the disclosure required with no fillable form)."""
     found = (forms or {}).get(key) or {}
     picked = entry.get('form_key') or ''
-    form_key = found.get('form') or ('' if picked in ('', FORM_NONE) else picked)
+    stored_form = '' if picked in ('', FORM_NONE, FORM_UPLOAD, FORM_AUTO) else picked
+    form_key = found.get('form') or ('' if found else stored_form)
     source = found.get('source') or ('producer' if picked else '')
-    return {'form_key': form_key, 'form_source': source, 'signed': bool(found.get('signed'))}
+    needed = found['needed'] if 'needed' in found else bool(form_key or picked in (FORM_NONE, FORM_UPLOAD))
+    return {'form_key': form_key, 'form_source': source, 'signed': bool(found.get('signed')), 'needed': needed}
 
 
 def _definitions(f, tier_key):
@@ -175,7 +180,7 @@ def items(f):
         if not applies and not forced:
             continue
         form = _form(key, entry, f.forms)
-        optional = key == STOP_LOSS and not form['form_key'] and not forced
+        optional = key == STOP_LOSS and not form['needed'] and not forced
         kind = KINDS.get(key, '')
         has_document = bool(kind) and kind in f.kinds
         if key in LINE_ITEMS and needing:

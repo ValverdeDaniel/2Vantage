@@ -3527,7 +3527,11 @@ or removes it; a table a later read replaced refuses the Undo (409) and Undo any
 
 ### 6.8 questionnaire
 
-Not built (slices 42 and 43). G.6, with L.6's client entries (O.6 #14).
+Built in slice 42 (the model, `forms/`, `engine/`, values, cleaning, prefill, choice, the services and the tab); the
+PDFs, checks and the filed signed copy are slice 43's. G.6, with L.6's client entries (O.6 #14). The catalogue of forms
+and choices lives in `questionnaire/forms` (served as /api/meta/ `questionnaires`), not as a copy in intake: intake
+stores the choice (`intake.services.set_form_choice`) and reads the forms through
+`intake.providers.questionnaire_items`.
 
 **Questionnaire** — one row per (deal, form), created on the first write and never deleted
 
@@ -4100,7 +4104,8 @@ Full list: Part F, F.6, with D.6 for Attach SBC and O.3.5 for "As quoted".
 
 ### 7.9 Questionnaire — `questionnaire/`
 
-Not built (slices 42 and 43). The deal paths sit under `deals/{id}/questionnaires/`.
+Built in slice 42 (all but `check/`, `pdf/` and `blank/`, slice 43). The deal paths sit under
+`deals/{id}/questionnaires/`; marks name answers `questionnaire:<form>:<slot>` (E103).
 
 | Method | Path | What it does |
 |---|---|---|
@@ -6288,12 +6293,13 @@ An app imports only from apps to its left (lint-imports); a fact read by an app 
 reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
 AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client, never
 business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far: accounts, deals,
-documents, ai, intake, census, quotes, rfp, proposals, golden. The chain orders imports, not screens: the deal sidebar
-keeps old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review & requests, Intake, Census,
-Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close: Advisor, Proposal · Shared: Documents.
-Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry the Advisor and Proposal. Tab
-folders take the app's name except advisor/ (quotes) and proposal/ (proposals); from slice 4 a tab folder's index.js
-exports only what others mount. Other pages live in pages/ (home; Archived, slice 38; client page, 67).
+documents, ai, intake, census, quotes, questionnaire, rfp, proposals, golden. The chain orders imports, not screens: the
+deal sidebar keeps old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review & requests,
+Intake, Census, Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close: Advisor, Proposal · Shared:
+Documents. Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry the Advisor and
+Proposal. Tab folders take the app's name except advisor/ (quotes) and proposal/ (proposals); from slice 4 a tab
+folder's index.js exports only what others mount. Other pages live in pages/ (home; Archived, slice 38; client page,
+67).
 
 ## Rules
 1. Vocabularies are Python constants (deals/lines.py, deals/stages.py, documents/kinds.py, quotes/fields.py; from their

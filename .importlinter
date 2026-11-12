@@ -12,6 +12,7 @@ root_packages =
     intake
     census
     quotes
+    questionnaire
     rfp
     proposals
     golden
@@ -23,6 +24,7 @@ layers =
     golden
     proposals
     rfp
+    questionnaire
     quotes
     census
     intake

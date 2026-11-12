@@ -2278,6 +2278,83 @@
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
+    },
+    {
+      "screen": "gd6.questionnaire",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A6",
+      "why": "The top bar keeps Benefits, Commissions and Admin; Dashboard, P&C, Joint Ventures and the other old links are modules out of scope (A2, A22, A40), and the Calendar link waits with the Radar (I88).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.questionnaire",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "M112",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.questionnaire",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "A24",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61, the client block slice 67 (A20); Overview, Agenda, Review & requests, RFP and Commission join the sidebar with their slices.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.questionnaire",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A25",
+      "why": "The ✦ Work with Claude pill sits bottom-right, fixed to the window, so a full-page capture shows it over a different row wherever the page above is taller or shorter.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.questionnaire",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "G34",
+      "why": "The view pills Form · Board · Request · Review and the section review bar (\"0 to review · 0 waiting on the client · N missing\", G45) are Review & requests' views of the questionnaire, slice 53; until then the tab shows the Form only.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.questionnaire",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "G56",
+      "why": "The ⬇ Download ▾ menu (Download PDF, Blank carrier PDF) comes with the questionnaire PDFs, slice 43 (G56–G67); the Acrobat item waits for G58 (deferred).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.questionnaire",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "G28",
+      "why": "The prefill fixes (G28, G134): the SIC code and description fill from intake's leading four-digit code (\"4213 — …\", old: an exact match only), Q13 \"Yes\" and the current carrier come from the medical current plans (F144; old: the coverage line only), and the agent prints the deal's agent of record, else its owner (M27, OQ45). So \"N% complete\" reads higher.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
     }
   ]
 }

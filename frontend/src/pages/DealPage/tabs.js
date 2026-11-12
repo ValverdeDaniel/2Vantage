@@ -5,6 +5,7 @@ import { lazy } from 'react';
 export const TAB_COMPONENTS = {
   intake: lazy(() => import('../../deal/intake')),
   census: lazy(() => import('../../deal/census')),
+  questionnaire: lazy(() => import('../../deal/questionnaire')), // shown in the sidebar only while the deal has a form (G7)
   advisor: lazy(() => import('../../deal/advisor')),
   proposal: lazy(() => import('../../deal/proposal')),
   documents: lazy(() => import('../../deal/documents')),

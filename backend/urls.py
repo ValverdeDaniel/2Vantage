@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/', include('intake.urls')),
     path('api/', include('census.urls')),
     path('api/', include('quotes.urls')),
+    path('api/', include('questionnaire.urls')),
     path('api/', include('proposals.urls')),
 ]
 

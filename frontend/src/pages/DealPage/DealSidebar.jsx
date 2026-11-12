@@ -1,5 +1,6 @@
 import { Fragment } from 'react';
 import { Link } from 'react-router';
+import { useDealForms } from '../../api/questionnaire';
 import { navGroups } from './nav';
 import { BUILT_TABS } from './tabs';
 
@@ -9,6 +10,10 @@ import { BUILT_TABS } from './tabs';
  * the client block (slice 67), badges and the readiness meters (slice 61) are not built yet.
  */
 export default function DealSidebar({ deal, tab }) {
+  // The Questionnaire tab shows only while the deal has a form, armed or started (G7; slice 42), or while it is open.
+  const forms = useDealForms(deal.id);
+  const hasForm = Boolean(forms.data?.forms?.length) || tab === 'questionnaire';
+  const shown = BUILT_TABS.filter((key) => key !== 'questionnaire' || hasForm);
   return (
     <div className="bb-sidebar">
       <Link className="bb-back-link" to="/">
@@ -19,7 +24,7 @@ export default function DealSidebar({ deal, tab }) {
         {deal.effective_date && <div className="bb-sidebar-policy bb-mono">Renews {deal.effective_date}</div>}
       </div>
       <nav className="bb-nav" aria-label="Deal sections">
-        {navGroups(BUILT_TABS).map((group) => (
+        {navGroups(shown).map((group) => (
           <Fragment key={group.label || 'top'}>
             {group.label && <div className="bnf-nav-group-label">{group.label}</div>}
             {group.tabs.map((item) => (

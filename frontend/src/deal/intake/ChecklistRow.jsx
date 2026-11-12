@@ -5,10 +5,10 @@ import { controlsOf, statusOf } from './checklistModel';
  * One row of the Marketing readiness checklist (B26, B27), the old `bnf-marketing-row` (891f1b3
  * `MarketingChecklist.jsx`): its status, label and detail, "✓ Document on file", the note, what the client sees on a
  * re-asked item, the "Still needed" note editor, and the controls `controlsOf` allows — ⬆ Attach, On file /
- * Confirmed, and Not needed / Still needed ▸ / Undo. The medical questionnaire's and stop-loss disclosure's form
- * pickers come with the questionnaire (B22, slice 42); ＋ Ask with the request tray (slice 56).
+ * Confirmed, and Not needed / Still needed ▸ / Undo. `children` is the medical questionnaire's or stop-loss
+ * disclosure's form picker (FormPicker, B22; slice 42); ＋ Ask comes with the request tray (slice 56).
  */
-export default function ChecklistRow({ item, accept, busy, onTick, onRequirement, onAttach }) {
+export default function ChecklistRow({ item, accept, busy, onTick, onRequirement, onAttach, children = null }) {
   const fileRef = useRef(null);
   const [note, setNote] = useState(null); // the "Still needed" note while its editor is open
   const status = statusOf(item);
@@ -33,6 +33,7 @@ export default function ChecklistRow({ item, accept, busy, onTick, onRequirement
         {item.forced && item.client_note && (
           <div className="bnf-marketing-detail bnf-client-note">Client sees: “{item.client_note}”</div>
         )}
+        {children}
         {note !== null && (
           <div className="bnf-override-note">
             <input

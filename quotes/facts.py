@@ -15,6 +15,8 @@
   it reads the database (`selectors/intake_facts.py`), unlike the rest of this module.
 - `enrolled_headcount`, `headcount` and `enrollment_check` (§5.7; O.6 #24, #25): the one headcount and its
   cross-check, also database reads (`selectors/headcount.py`).
+- `group_facts` (§5.7, K101; slice 42): the group's facts the carrier forms print, read once per request; the
+  questionnaire prefills from them and rfp prints them. `split_address` is its address parser.
 """
 
 import re
@@ -133,3 +135,108 @@ def enrollment_check(deal):
     from .selectors.headcount import enrollment_check as read
 
     return read(deal)
+
+
+# ---- group facts (§5.7; K101, G28): what the carrier forms, cover pages and emails print about the group ------------
+
+_ADDRESS = re.compile(r'^(.*?),\s*([^,]+?),?\s+([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)\s*$')
+
+
+def split_address(text):
+    """'street, city, ST 12345' -> (street, city, state, zip, city_state_zip). An address it cannot read leaves the
+    parts blank rather than guessing (old Vantage's `_split_address`); the street then holds the whole text, and the
+    city-state-zip line is what follows the first comma."""
+    raw = ' '.join(str(text or '').split())
+    if not raw:
+        return '', '', '', '', ''
+    rest = raw.partition(',')[2].strip()
+    found = _ADDRESS.match(raw)
+    if not found:
+        return raw, '', '', '', rest
+    street, city, state, postcode = (part.strip() for part in found.groups())
+    return street, city, state.upper(), postcode, rest
+
+
+def _iso(day):
+    return day.isoformat() if day else ''
+
+
+def group_facts(deal):
+    """{fact: text} about one deal's group, read once per request (plan.md §5.7's table; G.4): rfp prints them on its
+    forms, cover and emails (slices 44–46) and the questionnaire prefills from them (slice 42). Keys:
+    group.legal_name, dba, address_street, address_city, address_state, zip, city_state_zip, situs_state, sic, fein,
+    total_employees, eligible, waiving, atne, enrolled (+ enrolled_estimate, enrolled_source), years_in_business,
+    waiting_period, locations, current_carrier, current_funding (the medical incumbent, F144), contact_name,
+    contact_first, contact_last, contact_email, contact_title, contact_phone (`deals.contacts.primary`, M30);
+    deal.effective_date, deal.anniversary_date (the medical renewal date in force, else the effective date),
+    deal.medical_effective_date; broker.agent (`deals.rules.agent_name`), agency, email, phone, address,
+    city_state_zip, is_bor (a BOR signed or filed, §5.2). Blank when unknown; never a guess."""
+    from deals import contacts as contact_rules
+    from deals import rules as deal_rules
+    from deals.models import AgencySettings, Contact
+    from documents.models import Document
+    from intake.models import CurrentCoverage, Intake
+
+    intake = Intake.objects.filter(deal_id=deal.id).first()
+    answers = (intake.answers if intake else None) or {}
+
+    def answer(key):
+        value = answers.get(key)
+        return ', '.join(value) if isinstance(value, list) else str(value or '').strip()
+
+    street, city, state, postcode, city_state_zip = split_address(
+        answer('address_physical') or answer('address_mailing')
+    )
+    medical = incumbent(deal, 'medical') or {}
+    coverage = (
+        CurrentCoverage.objects.filter(deal_id=deal.id, line='medical', in_force=True)
+        .order_by('sort_order', 'id')
+        .values('effective_date', 'renewal_date')
+        .first()
+    ) or {}
+    contact = contact_rules.primary(list(Contact.objects.filter(client_id=deal.client_id).order_by('sort_order', 'id')))
+    name = (contact.name if contact else '').strip()
+    first, _, last = name.partition(' ')
+    agency = AgencySettings.get()
+    headcount_found = enrolled_headcount(deal)
+    bor_filed = Document.objects.filter(deal_id=deal.id, kind='bor').exclude(review_state='wrong').exists()
+    return {
+        'group.legal_name': answer('legal_name') or deal.client.name,
+        'group.dba': answer('dba'),
+        'group.address_street': street,
+        'group.address_city': city,
+        'group.address_state': state,
+        'group.zip': postcode,
+        'group.city_state_zip': city_state_zip,
+        'group.situs_state': answer('situs_state').upper(),
+        'group.sic': answer('sic_code'),
+        'group.fein': answer('fein'),
+        'group.total_employees': answer('total_employees'),
+        'group.eligible': answer('employee_count'),
+        'group.waiving': answer('waiving_count'),
+        'group.atne': answer('atne'),
+        'group.enrolled': '' if headcount_found['count'] is None else str(headcount_found['count']),
+        'group.enrolled_estimate': bool(headcount_found['estimate']),
+        'group.enrolled_source': headcount_found['source'],
+        'group.years_in_business': answer('years_in_business'),
+        'group.waiting_period': answer('waiting_period'),
+        'group.locations': answer('location_count'),
+        'group.current_carrier': medical.get('carrier') or '',
+        'group.current_funding': medical.get('funding') or '',
+        'group.contact_name': name,
+        'group.contact_first': first,
+        'group.contact_last': last,
+        'group.contact_email': contact.email if contact else '',
+        'group.contact_title': contact.title if contact else '',
+        'group.contact_phone': contact.phone if contact else '',
+        'deal.effective_date': _iso(deal.effective_date),
+        'deal.anniversary_date': _iso(coverage.get('renewal_date') or deal.effective_date),
+        'deal.medical_effective_date': _iso(coverage.get('effective_date')),
+        'broker.agent': deal_rules.agent_name(deal, agency),
+        'broker.agency': agency.name,
+        'broker.email': agency.email,
+        'broker.phone': agency.phone,
+        'broker.address': agency.address,
+        'broker.city_state_zip': agency.city_state_zip,
+        'broker.is_bor': bool(intake and intake.bor_signed_at) or bor_filed,
+    }

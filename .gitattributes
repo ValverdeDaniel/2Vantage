@@ -1,2 +1,4 @@
 * text=auto
 *.sh text eol=lf
+# The bundled carrier templates are hashed byte for byte (questionnaire/checks.py): keep them LF on every checkout
+assets/questionnaires/*.xml text eol=lf

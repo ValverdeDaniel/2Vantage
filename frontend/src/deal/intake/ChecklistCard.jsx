@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { formatDate } from '../../lib/format';
 import ChecklistRow from './ChecklistRow';
+import FormPicker from './FormPicker';
 import { isCollapsed, meterOf, rememberCollapsed, subtitleOf } from './checklistModel';
 import useChecklistWrites from './useChecklistWrites';
+
+// The two rows that carry an in-app form's picker (B22; the questionnaire's, slice 42).
+const FORM_ITEMS = new Set(['medical_questionnaire', 'stop_loss_disclosure']);
 
 /*
  * The Marketing readiness checklist (plan.md §8.9; B25–B28), the old card (891f1b3 `MarketingChecklist.jsx`, same
@@ -85,7 +89,9 @@ export default function ChecklistCard({ deal, meta, checklist, sentAt, open: ope
               onTick={writes.tick}
               onRequirement={writes.requirement}
               onAttach={writes.attach}
-            />
+            >
+              {FORM_ITEMS.has(item.key) && <FormPicker deal={deal} meta={meta} item={item} />}
+            </ChecklistRow>
           ))}
         </div>
       )}
