@@ -63,7 +63,10 @@ def test_M77_deleting_a_pinned_note_can_be_undone(api, deal):
     assert api.get(f'/api/deals/{deal.id}/notes/').json() == []
     assert api.patch(f'/api/notes/{note["id"]}/', {'pinned': False}, format='json').status_code == 404
 
-    feed = api.get(f'/api/deals/{deal.id}/activity/').json()['results'][0]
+    # The delete's own row, by its id: the feed sorts by time, and the dev container's clock can step back between
+    # the add and the delete under load (reports/SWEEP.md), so "first in the feed" is not a stable way to find it.
+    rows = api.get(f'/api/deals/{deal.id}/activity/').json()['results']
+    feed = next(row for row in rows if row['id'] == deleted.json()['activity_id'])
     assert feed['summary'] == 'Deleted a pinned note' and feed['can_revert'] is True
     assert api.post(f'/api/activity/{deleted.json()["activity_id"]}/revert/').status_code == 200
     back = api.get(f'/api/deals/{deal.id}/notes/').json()
