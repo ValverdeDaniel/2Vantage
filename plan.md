@@ -3023,7 +3023,7 @@ M0–M6 baseline has built. Part O, O.2, and each part's X.6 design have the ful
 | App | Models | Built in 2Vantage today | Slices |
 |---|---|---|---|
 | accounts | `Profile` | none: Django's `User` only | 6 |
-| deals | `Client`, `Deal`, `Contact`, `Note`, `Activity`, `AgencySettings` | `Client`, `Deal`, `Activity` (a summary and a count), `AgencySettings` | 5, 6, 38 |
+| deals | `Client`, `Deal`, `Contact`, `Note`, `Activity`, `AgencySettings` | all six (slice 38 added `Contact`, `Note` and the archive and header fields) | 5, 6, 38 |
 | documents | `Document` | `Document`, hard-deleted | 15 |
 | ai | `Job`, `DealAi`, `Chat`, `ChatMessage`, `CarrierNote` | — | 16, 24 |
 | intake | `Intake`, `CurrentCoverage` | — | 11, 39, 40 |
@@ -3071,10 +3071,13 @@ There are two kinds of person: admin and producer (A2).
 
 ### 6.2 deals
 
-Built: `Client`, `Deal`, `Activity` and `AgencySettings`, with the services `create_client`, `update_client`,
-`delete_client`, `update_deal`, `advance`, `mark_lost` and `reopen`. `Contact` and `Note` arrive in slice 38. The
-design adds the services `set_lines` (called only by intake), `set_status` and `sale_changed` (§5.1),
-`archive_client`, `set_owner`, notes, contacts and revert (O.2). Other apps call these `deals` modules: `values`,
+Built: `Client`, `Deal`, `Contact`, `Note`, `Activity` and `AgencySettings`, with the services (`deals/services/`)
+`create_client`, `update_client`, `delete_client` (the seeders' and tests' only; HTTP answers 405), `update_deal`,
+`advance`, `mark_lost`, `reopen`, `set_lines` (called only by intake), `set_status` and `sale_changed` (§5.1), and from
+slice 38 `set_archived` (Archive and Restore), `set_owner` (a deal's or a client's), `set_facts` (Potential deal size,
+Agent of record), `add_note`, `update_note`, `delete_note`, `create_contact`, `update_contact` and `delete_contact`.
+Reverters: `client` (status), `deal_facts` (owner, deal size, agent of record), `archive` and `notes`; stage, date and
+lost rows stay in area `deal`, which has none. Other apps call these `deals` modules: `values`,
 `activity` (`log_access`, the reverter registry), `lines`, `selectors` (`person`, `deal_header`), `services` (`advance`,
 `sale_changed`), `carriers`, `comp`, `clock`, `stages`, `lifecycle`, `rules` (`refuses`, `deal_type`, `agent_name`,
 `is_past`, `client_asks_open`), `contacts.primary`, `downloads` and `pdfkit` (O.2); quotes fills `providers`.
@@ -3104,8 +3107,8 @@ design adds the services `set_lines` (called only by intake), `set_status` and `
   `new_client`, with `converted_by_sale` set and `client_since` = the first `sold_at`; any other `existing` →
   `existing_client`. 2Vantage holds no production data, so this only keeps dev and golden data consistent.
   `quotes/marks.py` lines 52–54, the flip to `existing`, go.
-- **No delete.** A client is archived, never deleted: `DELETE clients/{id}/` answers 405 (M104, OQ47; slice 38). Today
-  an admin's DELETE removes the client, its deals and their files (M.5 B36).
+- **No delete.** A client is archived, never deleted: `DELETE clients/{id}/` answers 405 (M104, OQ47; slice 38). The
+  `delete_client` service stays for `seed_golden`, GD-Big and tests only (M.5 B36).
 - **A client may have no deal.** Commission's Add to book creates an outside client without one, with Status Existing
   client by default (H58; slice 49).
 
@@ -3133,7 +3136,7 @@ client becomes a New client (§5.1). The one-to-one rows owned by later apps (`I
 `RfpRequest`, `DealAi`, `CensusSettings`) are created by **their own app** on its first write, never by a GET, and
 `deals` never imports them (§3.3). Intake does not prefill `legal_name` (M.5 B34).
 
-**Contact** — client-level (slice 38; not built)
+**Contact** — client-level (built in slice 38)
 
 | Field | Type | Notes |
 |---|---|---|
@@ -3149,9 +3152,11 @@ client becomes a New client (§5.1). The one-to-one rows owned by later apps (`I
 benefit_admin, else the first client-side role; never `prior_broker`. The first edit creates an hr_admin when no
 client-side contact exists (M30). RFP, the questionnaire's officer, review and the Overview read it (N.1). The roles
 are §4.6's seven; the old eighth, `partner_agent`, is not kept, because a split row marks the partner who works the
-account (H13, M81).
+account (H13, M81). Each write locks the Client row, then the contact; a bad email or role answers 400, and so does
+marking a prior broker primary (B32). A contact's details name a person, so its Activity rows (area `contacts`) keep
+the keys alone and Revert refuses them (§3.8).
 
-**Note** (slice 38; not built)
+**Note** (built in slice 38)
 
 | Field | Type | Notes |
 |---|---|---|
@@ -3161,9 +3166,10 @@ account (H13, M81).
 | `pinned` | Bool | |
 | `author` | FK User, null, SET_NULL | Only the author or an admin edits or deletes (M76, M77) |
 | `deleted_at` | DateTime, null | A soft delete, undone through Revert (M77); the default manager hides deleted notes |
-| `created_at`, `updated_at` | DateTime | Ordering: pinned first, newest first |
+| `created_at`, `updated_at` | DateTime | Ordering: pinned first, newest first (by id) |
 
-Earlier years' notes wait with renewals (A37, M78).
+Earlier years' notes wait with renewals (A37, M78). Activity (area `notes`) never holds a note's words: an edit of the
+body keeps the key alone; pins, kinds and deletes (action `removed`) keep before and after and revert.
 
 **Activity** — one row per write or burst (O.3.2; slice 5). Built today with a summary and a count only.
 
@@ -3174,7 +3180,7 @@ Earlier years' notes wait with renewals (A37, M78).
 | `actor` | FK User, null, SET_NULL | Null for the client portal and the system |
 | `actor_kind` | Char: `user`, `client`, `claude` or `system` | |
 | `actor_label` | Char(200), blank | e.g. "Client via link to J. Smith" |
-| `area` | Char(20) | The writing app: v1.1's `deal`, `intake`, `census`, `documents`, `quotes`, `commission`, `proposal`, `rfp`, `review`, plus `client` (the status, §5.1), `questionnaire` and each new app that writes. Revert calls the area's reverter |
+| `area` | Char(20) | The writing app: v1.1's `deal`, `intake`, `census`, `documents`, `quotes`, `commission`, `proposal`, `rfp`, `review`, plus `client` (the status, §5.1), deals' `deal_facts`, `archive`, `notes` and `contacts` (slice 38), `questionnaire` and each new app that writes. Revert calls the area's reverter |
 | `action` | Char(20) | v1.1's `created`, `updated`, `deleted`, `imported`, `approved`, `rejected`, `sent`, `sold`, `lost`, `reopened`, `issued`, `downloaded`; plus `viewed` (E99), `archived`, `restored`, `opened`, `returned`, `signed`, `read`, `staged`, `failed`, `logged`, `marketed` (M.6), the status moves `converted`, `prospect`, `status` (§5.1), and quotes' `removed`, `moved` and `merged` (F59, F60, F142; revertible, unlike `deleted`) |
 | `summary` | Char(300) | No PHI (§3.8) |
 | `changes` | JSON list | Before and after per key: `[{"t": "plan:41", "k": {"rate_ee": ["612.50", "640.00"]}}]`. Census rows, sensitive questionnaire slots and lasers keep keys only; commission values are hidden below the all tier. List reads defer it |
@@ -3776,21 +3782,21 @@ moves to the firm's Microsoft 365 accounts (§3.8; slice 47), so no more passwor
 |---|---|---|---|---|
 | GET | `clients/` | user | `?q=&relationship=<status>[,<status>]&stage=&owner=me\|<id>&ordering=-last_activity\|name&page=` | paginated client rows; archived clients are left out (`live()`) |
 | POST | `clients/` | user | `{name, relationship?, effective_date?, owner_id?}`; `relationship` is `prospect` (default) or `existing_client` | `201 {client, deal}` — creates the client and its first deal · `400 {"relationship": ["A prospect becomes a new client when a plan is sold, or with Convert to client."]}` for `new_client` |
-| GET | `clients/{id}/` | user | — | `{id, name, relationship, client_since, owner, notes, deals: [{id, effective_date, stage}], contacts: [...]}` |
+| GET | `clients/{id}/` | user | — | `{id, name, relationship, client_since, owner, notes, archived, deals: [{id, effective_date, stage}], contacts: [...], primary_id, moves}` |
 | PATCH | `clients/{id}/` | user | `{name, owner_id, notes}` | client · `400` if `relationship` is sent, naming `clients/{id}/status/` |
 | DELETE | `clients/{id}/` | user | — | `405 {"detail": "Clients are archived, never deleted."}` (M104; slice 38) |
 | POST | `clients/{id}/status/` | user | `{to}`: `new_client` (Convert to client), `prospect` (Back to prospect) or `existing_client` | client detail · `409 {"detail": "…"}` with §5.1's sentence, e.g. "A plan is marked sold — un-sell it first." (slice 6) |
-| POST | `clients/{id}/archive/` | user | `{archived: true\|false}` | the archive block (M6, M7, M103; slice 38) |
-| GET | `archived/` | user | — | archived clients, each with its deal's stage and its status (M105; slice 38) |
+| POST | `clients/{id}/archive/` | user | `{archived: true\|false}` | the archive block `{client_id, archived: {at, by} \| null}` (M6, M7, M103; slice 38) |
+| GET | `archived/` | user | — | `[{id, name, relationship, client_since, archived: {at, by}, deal: {id, stage, effective_date} \| null, deal_count}]`, latest archived first (M105; slice 38) |
 | GET | `clients/{id}/activity/` | user | `?page=` | the client's feed: its deals' rows plus the status rows (slice 67) |
-| GET / POST | `clients/{id}/contacts/` | user | `{role, name, title, email, phone, is_primary}` | list / `201 contact` (slice 38) |
+| GET / POST | `clients/{id}/contacts/` | user | `{role, name, title, email, phone, is_primary}` | `{contacts, primary_id}` / `201 contact`, an HR admin when no role is sent (slice 38) |
 | PATCH / DELETE | `contacts/{id}/` | user | same fields | contact / `204` (slice 38) |
 | GET | `deals/{id}/` | user | — | deal header |
 | PATCH | `deals/{id}/` | user | `{effective_date, stage, owner_id, deal_size, agent_of_record}` | deal header · `400 {"stage": ["Mark a plan sold or use Mark lost."]}` for `sold`/`lost` |
 | POST | `deals/{id}/lost/` | user | `{reason?}`, at most 300 characters | deal header · `409` if the deal is already lost or sold (M3, OQ48; slice 38) |
 | POST | `deals/{id}/reopen/` | user | — | deal header |
 | GET / POST | `deals/{id}/notes/` | user | `{body, kind, pinned}` | list (pinned first, newest first) / `201 note` (slice 38) |
-| PATCH / DELETE | `notes/{id}/` | author or admin | same fields | note / `204`, a soft delete that Revert undoes (M77; slice 38) |
+| PATCH / DELETE | `notes/{id}/` | author or admin | same fields | note / `{id, activity_id}`, a soft delete whose Revert (that row) is the Undo (M77; slice 38) |
 | GET | `deals/{id}/activity/` | user | `?page=` | paginated `[{id, at, actor, actor_kind, area, action, summary, count, document_id, can_revert, reverts_id, reverted: {at, by} \| null}]`, without `downloaded` and `viewed` rows; `can_revert` is the stored hint (values kept, not undone, an owner reverts), and the POST decides |
 | POST | `activity/{id}/revert/` | user | — | what changed · `409` naming the keys a later write changed · refused with a sentence for sold plans, signed forms, issued proposals, a client status a sale set, and key-only rows (O.3.2, §3.7; slice 5) |
 | GET | `users/` | user | — | `[{id, name}]` active users, for owner pickers |
@@ -3799,10 +3805,10 @@ moves to the firm's Microsoft 365 accounts (§3.8; slice 47), so no more passwor
 
 Since slice 11, `POST clients/` and `PATCH deals/{id}/` answer `400 {"requested_lines": ["Change the lines to quote
 through deals/{id}/intake/intent/."]}`: intake's `set_intent` is the only writer of the lines (B17), and the New client
-dialog sends its Lines to quote there after the create. Today 2Vantage differs in four more ways, each retired in the
-slice named: an admin's `DELETE clients/{id}/` removes everything (slice 38); `lost/` requires a reason and re-stamps a
-lost deal (M.5 B33; slice 38); `relationship` is `new` or `existing`, and `PATCH clients/{id}/` still takes it (slice
-6); and the payloads lack `client_since` (slice 6), `contacts` (slice 38), `deal_size` and `agent_of_record` (slice 38).
+dialog sends its Lines to quote there after the create. Slice 38 retired the last differences from this table: the
+405, the optional lost reason with its 409s (M.5 B33), and the payloads' `contacts`, `deal_size` and `agent_of_record`.
+Client rows carry `deal.deal_size` (decimal text) and `deal.deal_type`; archived clients are not listed. A note's DELETE
+answers `{id, activity_id}` rather than 204, so the Undo toast (slice 63) can revert that row.
 
 **Client row** (dashboard):
 
@@ -3827,8 +3833,10 @@ date
 from overview (§7.16), `clients/{id}/agenda/` from agenda (§7.15, slice 68) and `clients/{id}/commission/split/` from
 commission (§7.10).
 
-**Deal header:** `{id, client: {id, name, relationship, client_since}, effective_date, stage, lost_reason, lost_at,
-requested_lines, owner, created_at, updated_at}`. It carries deals facts only; the journey, next step, badges and
+**Deal header:** `{id, client: {id, name, relationship, client_since}, effective_date, stage, deal_type, lost_reason,
+lost_at, requested_lines, owner, deal_size, agent_of_record, agent_default, archived: {at, by} | null, created_at,
+updated_at}` (slice 38 added `deal_type`, which the builder's RENEWAL chip reads (J22), the two facts, the grey default
+a blank agent of record prints, and the archive block). It carries deals facts only; the journey, next step, badges and
 meters come from agenda's `journey/` (O.6 #3). `set_sold`'s answer includes it, so the Advisor can say "… is now a new
 client" (§5.1).
 
@@ -4348,8 +4356,11 @@ journey stepper, the Claude strip and the open tab.
   `deals.services.set_owner`, one Activity row).
 - **Lines**: removable chips and **+ Line**, written through Intake's intent service from slice 11 (B17, B32).
 - The Activity drawer, with Revert (A34; slice 5).
-- Mark lost, its dialog and the lost banner stay here until slice 62 moves them to the Overview (M1, M2, M4, M112). A
-  lost deal refuses what `deals.rules.refuses` lists; internal edits still work (O.3.7).
+- The Potential deal size and the Agent of record, typed inline; a blank agent shows its default (the owner, else the
+  agency producer) in grey (M27, M29, OQ49; slice 38).
+- Mark lost, its dialog and the lost banner stay here until slice 62 moves them to the Overview (M1, M2, M4, M112), and
+  so do Archive… ⓘ, its inline confirmation and the archived banner with Restore (M6, M7, M103; slice 38). A lost deal
+  refuses what `deals.rules.refuses` lists; internal edits still work (O.3.7).
 
 **Journey stepper** (A24, M39, I120): Get to Market and Quote to Close; dots ✓, current, to do and –; a click opens the
 step's tab; the current dot is the step that owns the next step; no step is ever "skipped" (M40). It reads agenda's

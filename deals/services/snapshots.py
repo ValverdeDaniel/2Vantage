@@ -1,7 +1,12 @@
-"""Before and after of a row's fields, for Activity's `changes` (plan.md §3.7). Owners are user ids, dates ISO text."""
+"""Before and after of a row's fields, for Activity's `changes` (plan.md §3.7). Owners are user ids, dates ISO text,
+amounts decimal text (JSON has no Decimal)."""
+
+from decimal import Decimal
 
 
 def _plain(value):
+    if isinstance(value, Decimal):
+        return str(value)
     return value.isoformat() if hasattr(value, 'isoformat') else value
 
 

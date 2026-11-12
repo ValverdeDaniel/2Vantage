@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 from . import activity, lifecycle, selectors, services
 from .downloads import file_response
 from .models import Activity, AgencySettings, Client, Deal
+from .services.facts import clean_agent, clean_deal_size
 from .services.lines import refuse_lines
 
 MAX_ID = 2**63 - 1  # a bigger id is not a row: 404, never a database error
@@ -29,6 +30,18 @@ def _date(value, field):
     if not parsed:
         raise ValidationError({field: ['Use the date format YYYY-MM-DD.']})
     return parsed
+
+
+def _flag(value, field):
+    """A JSON true or false; anything else is a 400."""
+    if not isinstance(value, bool):
+        raise ValidationError({field: ['Send true or false.']})
+    return value
+
+
+def header_deals():
+    """Deals with what the header reads, in one query."""
+    return Deal.objects.select_related('client', 'client__archived_by', 'owner')
 
 
 def _user(value, field):
@@ -87,10 +100,28 @@ class ClientDetailView(APIView):
         return Response(selectors.client_detail(client))
 
     def delete(self, request, pk):
-        if not request.user.is_staff:
-            return Response({'detail': 'Only an admin can delete a client.'}, status=status.HTTP_403_FORBIDDEN)
-        services.delete_client(request.user, pk)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        """Clients are archived, never deleted (M104, OQ47): POST clients/{id}/archive/."""
+        return Response({'detail': 'Clients are archived, never deleted.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class ClientArchiveView(APIView):
+    """POST clients/{id}/archive/ {archived: true|false}: Archive or Restore (M6, M7, M103). Answers the archive block,
+    {client_id, archived: {at, by} | null}."""
+
+    def post(self, request, pk):
+        if pk > MAX_ID:
+            raise Http404
+        get_object_or_404(Client, pk=pk)
+        archived = _flag(request.data.get('archived'), 'archived')
+        client, _changed = services.set_archived(request.user, pk, archived)
+        return Response({'client_id': client.id, 'archived': selectors.archived_block(client)})
+
+
+class ArchivedView(APIView):
+    """GET archived/: archived clients, each with its status and its deal's stage (M105)."""
+
+    def get(self, request):
+        return Response(selectors.archived_clients())
 
 
 class ClientStatusView(APIView):
@@ -110,7 +141,7 @@ class ClientStatusView(APIView):
 
 class DealView(APIView):
     def get(self, request, pk):
-        return Response(selectors.deal_header(get_object_or_404(Deal.objects.select_related('client'), pk=pk)))
+        return Response(selectors.deal_header(get_object_or_404(header_deals(), pk=pk)))
 
     def patch(self, request, pk):
         get_object_or_404(Deal, pk=pk)
@@ -124,25 +155,28 @@ class DealView(APIView):
             changes['owner'] = _user(data['owner_id'], 'owner_id')
         if 'stage' in data:
             changes['stage'] = data['stage']
-        deal = services.update_deal(request.user, pk, **changes)
-        return Response(selectors.deal_header(deal))
+        if 'deal_size' in data:
+            changes['deal_size'] = clean_deal_size(data['deal_size'])
+        if 'agent_of_record' in data:
+            changes['agent_of_record'] = clean_agent(data['agent_of_record'])
+        services.update_deal(request.user, pk, **changes)
+        return Response(selectors.deal_header(header_deals().get(pk=pk)))
 
 
 class DealLostView(APIView):
+    """POST deals/{id}/lost/ {reason?}: the reason is optional (OQ48); a sold or lost deal answers 409 (M3)."""
+
     def post(self, request, pk):
         get_object_or_404(Deal, pk=pk)
-        deal = services.mark_lost(request.user, pk, request.data.get('reason', ''))
-        if deal is None:
-            return Response(
-                {'detail': 'A sold deal cannot be marked lost. Un-sell it first.'}, status=status.HTTP_409_CONFLICT
-            )
-        return Response(selectors.deal_header(deal))
+        services.mark_lost(request.user, pk, request.data.get('reason', ''))
+        return Response(selectors.deal_header(header_deals().get(pk=pk)))
 
 
 class DealReopenView(APIView):
     def post(self, request, pk):
         get_object_or_404(Deal, pk=pk)
-        return Response(selectors.deal_header(services.reopen(request.user, pk)))
+        services.reopen(request.user, pk)
+        return Response(selectors.deal_header(header_deals().get(pk=pk)))
 
 
 class DealActivityView(APIView):

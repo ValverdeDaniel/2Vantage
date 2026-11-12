@@ -22,6 +22,9 @@ export const SOLD = 'sold';
 // The status with its own home view (Prospects); every other status lists under Clients (OQ101 c).
 export const PROSPECT = 'prospect';
 
+// The deal type with its own chip (RENEWAL, J22): a deal opened for an Existing client (`deal_types`, M14).
+export const RENEWAL = 'renewal';
+
 /** Label of `key` in a [{key, label}] vocabulary, or the key itself. */
 export function labelOf(list, key, field = 'label') {
   return list?.find((item) => item.key === key)?.[field] ?? key ?? '';

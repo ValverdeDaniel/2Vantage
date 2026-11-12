@@ -3,6 +3,7 @@
 // restyling slices. Each walk: { title, deal, run(ctx) }, where ctx = { page, step, base, user, spec }.
 // Needs 1–12 arrive with the slices that build them (Q.9); 0 is the example the lane started with.
 
+import { archive38 } from './archive38.mjs';
 import { builder25 } from './builder25.mjs';
 import { builder26 } from './builder26.mjs';
 import { census41 } from './census41.mjs';
@@ -220,4 +221,5 @@ export const WALKS = {
   s65: { ...documents65, run: (ctx) => documents65.run(ctx, { signIn, openDeal }) }, // slice 65's done-when
   s25: { ...builder25, run: (ctx) => builder25.run(ctx, { signIn, openDeal }) }, // slice 25's done-when
   s26: { ...builder26, run: (ctx) => builder26.run(ctx, { signIn, openDeal }) }, // slice 26's done-when
+  s38: { ...archive38, run: (ctx) => archive38.run(ctx, { signIn, openDeal }) }, // slice 38's done-when
 };

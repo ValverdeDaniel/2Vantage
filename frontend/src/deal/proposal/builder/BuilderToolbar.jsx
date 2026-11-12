@@ -1,3 +1,6 @@
+import { useParams } from 'react-router';
+import { useDeal } from '../../../api/deals';
+import { RENEWAL } from '../../../api/meta';
 import cx from '../../../ui/cx';
 
 const LEVELS = { stop: 'Stops', warn: 'Check', info: 'Note' };
@@ -7,12 +10,24 @@ const LEVELS = { stop: 'Stops', warn: 'Check', info: 'Note' };
  * toolbar at 891f1b3): "✓ n of N completed" with Expand/Collapse all, "⚠ n to check" opening the checks (Stops first,
  * each with Fix ▸), "Open proposal ▸", and the readiness banner — what Issue would say, before the click. The checks
  * and the sentence are the server's (proposals/checks.py, ready.py). The three file buttons arrive with the files
- * (J24; slices 27–31); "Open proposal ▸" opens the Export viewer once it exists (J27; slice 28).
+ * (J24; slices 27–31); "Open proposal ▸" opens the Export viewer once it exists (J27; slice 28). RENEWAL leads the
+ * toolbar on a deal opened for an Existing client (J22; slice 38): the header's `deal_type`, read from the deal page's
+ * cached header (the builder lives only there), never the client's status.
  */
 export default function BuilderToolbar({ progress, allOpen, onAllOpen, checks, showChecks, onShowChecks, ready, onFix }) {
+  const { dealId } = useParams();
+  const renewal = useDeal(dealId).data?.deal_type === RENEWAL;
   return (
     <>
       <div className="bnf-build-toolbar" data-guide="build-deliver">
+        {renewal && (
+          <span
+            className="bnf-plan-chip bnf-chip-renewal"
+            title="This deal renews an existing client — the current plans are last year's sold plans"
+          >
+            RENEWAL
+          </span>
+        )}
         <span
           className={cx('bnf-build-progress', progress.done === progress.total && 'bnf-build-progress-done')}
           title="The deal-wide cards plus this line's cards; other lines keep their own marks"

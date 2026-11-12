@@ -6,7 +6,8 @@ from rest_framework.views import APIView
 from ai import client as ai_client
 from ai import selectors as ai_selectors
 from census import fields as census_fields
-from deals import carriers, comp, lifecycle, lines, stages
+from deals import carriers, comp, contacts, lifecycle, lines, rules, stages
+from deals.models import Note
 from documents import kinds, review_rules
 from intake import coverage as intake_coverage
 from intake import form as intake_form
@@ -35,6 +36,9 @@ class MetaView(APIView):
                 'board': board_presets.meta(),  # the Advisor's columns, sorts, sliders and budget rungs (F31)
                 'enrollment': quote_enrollment.meta(),  # enrollment sources in words, keys by basis (F86, F92)
                 'commission_types': comp.meta(),  # pct, flat, pepm (§4.6)
+                'contact_roles': contacts.meta(),  # the seven roles, client side or not (§4.6, OQ106; slice 38)
+                'note_kinds': _pairs(Note.KINDS),  # note, call, email, meeting, internal (A37; slice 38)
+                'deal_types': _pairs(rules.DEAL_TYPES),  # New business, Renewal (M14)
                 # the intake questions (§4.5) and the coverage card's words (B16–B21)
                 'intake': {'form': intake_form.meta(), 'coverage': intake_coverage.meta()},
                 'census': census_fields.meta(),  # the 45 columns, groups, choices, rules (§4.4)

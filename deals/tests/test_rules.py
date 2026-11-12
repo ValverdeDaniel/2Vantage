@@ -23,8 +23,8 @@ EVERY_ACTION = [
 ]
 
 
-def deal(stage='quoting', opened_as='prospect', owner=None):
-    return SimpleNamespace(stage=stage, opened_as=opened_as, owner=owner)
+def deal(stage='quoting', opened_as='prospect', owner=None, agent_of_record=''):
+    return SimpleNamespace(stage=stage, opened_as=opened_as, owner=owner, agent_of_record=agent_of_record)
 
 
 @pytest.mark.parametrize('action, sentence', EVERY_ACTION)
@@ -75,6 +75,15 @@ def test_M14_deal_type_is_renewal_only_for_a_deal_opened_for_an_existing_client(
 def test_M27_agent_name_is_the_owner_else_the_agency_producer(owner, producer, name):
     agency = AgencySettings(producer_name=producer)
     assert rules.agent_name(deal(owner=owner), agency) == name
+
+
+@pytest.mark.parametrize('owner', [SimpleNamespace(get_full_name=lambda: 'Dana Lee', username='dana'), None])
+def test_M27_the_agent_of_record_comes_first_and_blank_falls_back_to_the_default(owner):
+    agency = AgencySettings(producer_name='Pat Agency')
+    assert rules.agent_name(deal(owner=owner, agent_of_record='  Outside Agent  '), agency) == 'Outside Agent'
+    assert rules.agent_name(deal(owner=owner, agent_of_record=' '), agency) == rules.agent_default(
+        deal(owner=owner), agency
+    )
 
 
 def test_M27_agent_name_reads_the_agency_settings_when_not_given(user):

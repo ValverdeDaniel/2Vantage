@@ -8,6 +8,7 @@ import Loading from './ui/Loading';
 // Every page is its own bundle (plan.md §3.9).
 const LoginPage = lazy(() => import('./auth/LoginPage'));
 const HomePage = lazy(() => import('./pages/HomePage/HomePage'));
+const ArchivedPage = lazy(() => import('./pages/ArchivedPage/ArchivedPage'));
 const DealRedirect = lazy(() => import('./pages/DealPage/DealRedirect'));
 const DealPage = lazy(() => import('./pages/DealPage/DealPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage/NotFoundPage'));
@@ -37,6 +38,7 @@ export default function App() {
             }
           >
             <Route index element={<HomePage />} />
+            <Route path="archived" element={<ArchivedPage />} />
             <Route path="deals/:dealId" element={<DealRedirect />} />
             <Route path="deals/:dealId/:tab" element={<DealPage />} />
             <Route path="*" element={<NotFoundPage />} />

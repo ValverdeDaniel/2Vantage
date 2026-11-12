@@ -43,7 +43,7 @@ export const SCREENS = [
   // Old-only states: captured now, matched by the slice named.
   { key: 'home.clients', title: 'Home: Clients view (CL12)', old: { path: '/benefits?view=book' }, new: { path: '/?view=book' }, styles: [...SHELL, '.bb-dash-header', '.bb-transfers-head', '.bb-transfer-row'] },
   { key: 'home.queue', title: 'Home: Work queue', old: { path: '/benefits?view=queue' }, new: { pending: 61, why: 'the Work queue' }, styles: SHELL },
-  { key: 'archived', title: 'Archived', old: { path: '/benefits/archived' }, new: { pending: 38, why: 'the Archived page' }, styles: SHELL },
+  { key: 'archived', title: 'Archived: archived clients with their status and stage, Restore (slice 38; A13, M105)', old: { path: '/benefits/archived' }, new: { path: '/archived' }, ready: '.bnf-archived-section', styles: [...SHELL, '.bb-eyebrow', '.bb-title', '.bb-subtitle', '.bnf-archived-title', '.bnf-archived-table th', '.bnf-archived-table td'] },
   { key: 'gd1.overview', title: 'GD1 Overview', deal: 'GD1', widths: 'workspace', old: { tab: 'overview' }, new: { pending: 62, why: 'the Overview' }, styles: WORKSPACE },
   { key: 'gd1.agenda', title: 'GD1 Agenda', deal: 'GD1', old: { tab: 'agenda' }, new: { pending: 60, why: 'the Agenda tab' }, styles: WORKSPACE },
   { key: 'gd1.review', title: 'GD1 Review & requests', deal: 'GD1', old: { tab: 'review' }, new: { pending: 53, why: 'Review & requests' }, styles: WORKSPACE },

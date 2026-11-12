@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router';
 import { relationshipLabel } from '../../api/meta';
 import { formatDate, personName } from '../../lib/format';
+import { ArchiveCell, ArchiveTh } from './ArchiveCells';
 import { AccountCell, ClientSortTh, DealCell, DealTh } from './HomeCells';
 
 // "New client · since 03/01/2026" or "Existing client" (plan.md §8.3).
@@ -25,7 +26,7 @@ export default function ClientsTable({ rows, meta, ordering, onSort, children })
         <div className="bnf-th-owner">Owner</div>
         <div className="bnf-th-action">Next action</div>
         <div className="bnf-th-cases">Deals</div>
-        <div className="bnf-th-archive" />
+        <ArchiveTh />
       </div>
       {children}
       {rows.map((row) => {
@@ -33,11 +34,11 @@ export default function ClientsTable({ rows, meta, ordering, onSort, children })
         return (
           <div key={row.id} className="bb-transfer-row bnf-clients-row" onClick={() => navigate(href)}>
             <AccountCell name={row.name} sub={statusLine(row, meta)} to={href} />
-            <DealCell />
+            <DealCell value={row.deal.deal_size} />
             <div className="bnf-th-owner bb-account-sub">{personName(row.owner, '—')}</div>
             <div className="bnf-th-action" />
             <div className="bnf-th-cases bb-mono">{row.deal ? 1 : 0}</div>
-            <div className="bnf-th-archive" />
+            <ArchiveCell row={row} />
           </div>
         );
       })}

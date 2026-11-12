@@ -1,4 +1,5 @@
-"""Creating and editing clients (plan.md §5.1, §7.3). The status is not edited here: see `status.py`."""
+"""Creating and editing clients (plan.md §5.1, §7.3). The status is not edited here (`status.py`), nor the owner
+(`facts.set_owner`), nor the archive stamps (`archive.py`). Clients are never deleted over HTTP (405, OQ47)."""
 
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
@@ -6,9 +7,10 @@ from rest_framework.exceptions import ValidationError
 from .. import activity, lifecycle
 from ..models import Client, Deal
 from ..values import locked
+from .facts import set_owner
 from .snapshots import diff, snapshot
 
-CLIENT_FIELDS = ('name', 'owner_id', 'notes')
+CLIENT_FIELDS = ('name', 'notes')
 
 
 @transaction.atomic
@@ -37,7 +39,7 @@ def create_client(user, *, name, relationship=lifecycle.PROSPECT, effective_date
 
 @transaction.atomic
 def update_client(user, client_id, **changes):
-    """Name, owner and notes. The status changes only through `set_status` (§7.3)."""
+    """Name and notes, and the owner through `set_owner`. The status changes only through `set_status` (§7.3)."""
     if 'relationship' in changes:
         raise ValidationError({'relationship': [f'Change the status through clients/{client_id}/status/.']})
     client = locked(Client, client_id)
@@ -47,21 +49,24 @@ def update_client(user, client_id, **changes):
         if not name:
             raise ValidationError({'name': ['Client name is required.']})
         client.name = name[:200]
-    for field in ('owner', 'notes'):
-        if field in changes:
-            setattr(client, field, changes[field])
+    if 'notes' in changes:
+        client.notes = changes['notes']
     changed = diff(before, snapshot(client, CLIENT_FIELDS))
     if changed:  # an unchanged write saves nothing and records nothing (§3.7)
-        client.save()
+        client.save(update_fields=[*CLIENT_FIELDS, 'updated_at'])
         for deal in client.deals.all():
             entries = [activity.change(f'client:{client.id}', changed)]
             activity.record(deal, user, 'deal', 'updated', 'Edited client details', changes=entries)
+    if 'owner' in changes and set_owner(user, changes['owner'], client_id=client.id):
+        client.refresh_from_db()
     return client
 
 
 @transaction.atomic
 def delete_client(user, client_id):
-    """Deletes the client, its deals and their documents; stored files go with their rows (§7.3; 405 from slice 38)."""
+    """Deletes the client, its deals and their documents; stored files go with their rows. For the seeders and tests
+    only (`seed_golden`, GD-Big): over HTTP a client is archived, never deleted (`DELETE clients/{id}` answers 405;
+    M104, OQ47)."""
     client = locked(Client, client_id)
     for deal in client.deals.all():
         for document in deal.documents.all():

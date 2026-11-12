@@ -1,9 +1,10 @@
 import { Link } from 'react-router';
 import { initialsOf } from '../../lib/dealLook';
+import { formatMoney } from '../../lib/format';
 import { BY_NAME } from './homeParams';
 
 // Cells both home tables share (HomeCells.jsx at 891f1b3): the avatar with the name and its sub-line, the
-// Potential deal size (blank until Deal.deal_size, slice 38) and the Client column's sort header.
+// Potential deal size, the Client column's sort header; the Archive cells are in ArchiveCells.jsx.
 
 /** The client's avatar, the name as the link that opens the deal (the old name button's look), and a sub-line (I76). */
 export function AccountCell({ name, sub, to }) {
@@ -36,9 +37,9 @@ export function DealTh() {
   );
 }
 
-/** Potential deal size: "—" until slice 38 adds Deal.deal_size (I124). */
-export function DealCell() {
-  return <div className="bnf-th-deal bb-mono">—</div>;
+/** Potential deal size, typed in the deal's header (I124, M29; OQ49): "$250,000", or "—". */
+export function DealCell({ value }) {
+  return <div className="bnf-th-deal bb-mono">{formatMoney(value, { empty: '—' })}</div>;
 }
 
 /** The Client header (the old SortTh, a header cell that sorts): A→Z, and back to last updated (the server's two

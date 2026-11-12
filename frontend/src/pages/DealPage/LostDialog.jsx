@@ -8,20 +8,16 @@ import TextInput from '../../ui/TextInput';
 
 const MAX_REASON = 300;
 
-/** Mark as lost (plan.md §5.1): a reason of 1–300 characters. The deal stays editable and can be reopened. */
+/** Mark as lost (plan.md §5.1): an optional reason of up to 300 characters, as on the old screen ("Why did we lose
+ *  it? (optional)"; OQ48). The deal stays editable and can be reopened; a refusal (a sold deal) shows its sentence. */
 export default function LostDialog({ deal, onClose }) {
   const markLost = useMarkLost(deal.id);
   const [reason, setReason] = useState('');
-  const [missing, setMissing] = useState(false);
   const errors = fieldErrors(markLost.error);
   const formError = formErrorText(markLost.error, ['reason']);
 
   function onSubmit(event) {
     event.preventDefault();
-    if (!reason.trim()) {
-      setMissing(true);
-      return;
-    }
     markLost.mutate(reason.trim(), { onSuccess: onClose });
   }
 
@@ -45,10 +41,9 @@ export default function LostDialog({ deal, onClose }) {
       }
     >
       <Field
-        label="Why did we lose it?"
-        required
+        label="Why did we lose it? (optional)"
         help={`${reason.length} / ${MAX_REASON} characters`}
-        error={missing && !reason.trim() ? 'Give a reason.' : errors.reason}
+        error={errors.reason}
       >
         <TextInput multiline maxLength={MAX_REASON} value={reason} onChange={(event) => setReason(event.target.value)} />
       </Field>

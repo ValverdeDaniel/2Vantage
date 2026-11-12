@@ -129,7 +129,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A10",
-      "why": "Only the Prospects count card has a real number today; Potential deal size is pending slice 38 (Deal.deal_size, I124) and Client responses pending slice 61 (I85).",
+      "why": "Only the Prospects count card has a real number today; the Potential deal size card (a total of Deal.deal_size, which the rows show since slice 38) and Client responses are pending slice 61's stats (I124, I85).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -140,7 +140,7 @@
       "check": "classes",
       "selector": null,
       "item": "I78",
-      "why": "The filter card holds the search only: Client responses, Due chips and the owner and stage selects are pending slice 61 (the work feed); the Archived link is pending slice 38 (I87).",
+      "why": "The filter card holds the search only: Client responses, Due chips and the owner and stage selects are pending slice 61 (the work feed).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -151,7 +151,7 @@
       "check": "pixels",
       "selector": null,
       "item": "I76",
-      "why": "Row cells pending: Next action chip, Client response and the readiness bar (slice 61), Potential deal size (slice 38) and the row Archive button (slice 38, I126); rows sort by last update until slice 61 (I81).",
+      "why": "Row cells pending: Next action chip, Client response and the readiness bar (slice 61); the Archive button archives the client with its deal, on every row (OQ46, I126); rows sort by last update until slice 61 (I81).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -162,7 +162,7 @@
       "check": "style",
       "selector": ".bb-transfers-head",
       "item": "I86",
-      "why": "The table moves up with the shorter filter card; the Client header is the only sortable one, so the size header keeps its own line height (deal_size, slice 38).",
+      "why": "The table moves up with the shorter filter card; the Client header is the only sortable one (the server sorts by last update or name), so the size header keeps its own line height.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -206,7 +206,7 @@
       "check": "classes",
       "selector": null,
       "item": "CL12",
-      "why": "No Archived link (slice 38), no \"With overdue items\" card or Reminders column (the Radar, I88); the chips use the old filter-card classes.",
+      "why": "No \"With overdue items\" card or Reminders column (the Radar, I88); the chips use the old filter-card classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -217,7 +217,7 @@
       "check": "style",
       "selector": ".bb-transfers-head",
       "item": "CL12",
-      "why": "The table sits under the new chips card; its size header is not sortable until deal_size (slice 38).",
+      "why": "The table sits under the new chips card; its size header is not sortable (the server sorts by last update or name).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -239,7 +239,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -294,7 +294,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -349,7 +349,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -404,7 +404,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -459,7 +459,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -789,7 +789,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -877,7 +877,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1009,7 +1009,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1196,7 +1196,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1339,7 +1339,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1438,7 +1438,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1636,7 +1636,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1845,7 +1845,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1944,7 +1944,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M112",
-      "why": "The header strip on every tab (client name and status, stage pill, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "why": "The header strip on every tab (client name and status, stage pill, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1988,7 +1988,7 @@
       "check": "style",
       "selector": ".bb-nav",
       "item": "M112",
-      "why": "Buttons, nav, the tab title and the first panel sit elsewhere: the header strip replaces the journey stepper, the deal cards above the line tabs are not built yet (J32–J46), so the line tabs, the Plans card and the rows card sit thousands of pixels higher.",
+      "why": "Buttons, nav, the tab title and the first panel sit elsewhere: the header strip replaces the journey stepper, and the Cover and Pictures cards above How the documents look are not built yet (J32–J35, slice 34), so the line tabs, the Plans card and the rows card sit about a thousand pixels higher.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2176,6 +2176,50 @@
       "selector": null,
       "item": "J64",
       "why": "The summary preview reads 2V's picks: two plans are recommended for Current 1 (§5.4, several picks per line), so Medical's \"Our recommendation\" and \"Annual impact\" and the deal totals say why they cannot add one figure, where the old read \"No plan is recommended\"; Vision's recommended renewal prints its figures (as J28).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "archived",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "M105",
+      "why": "Archived lists clients only, each with its Status and its deal's Stage (§8.3), and has no Deals table: a client and its one deal are archived together (OQ46, M105), so the subtitle says \"Clients someone archived\".",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "archived",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A18",
+      "why": "The dev database holds the slice 38 walk's synthetic client, \"Walk 38 Renewal Co. (synthetic)\", which the walk leaves archived; the parity load archives nothing, so the old page reads \"No archived clients.\"",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "archived",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "M105",
+      "why": "The row's classes (bnf-archived-table, the status badge bb-badge, the stage pill bb-stage-pill, bnf-archived-act) show because 2Vantage has an archived client and the old page has none.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "archived",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-title",
+      "item": "M105",
+      "why": "The page is shorter without the Deals section, and the title block narrower with the shorter subtitle.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

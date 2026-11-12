@@ -1,9 +1,21 @@
 from django.conf import settings
 from django.db import models
 
-from . import clock, lifecycle
+from . import clock, contacts, lifecycle
 
 USER = settings.AUTH_USER_MODEL
+
+
+class ClientQuerySet(models.QuerySet):
+    def live(self):
+        """Without archived clients: what every list shows (A18, M9). Pages, commission and lineage never filter."""
+        return self.filter(archived_at__isnull=True)
+
+
+class DealQuerySet(models.QuerySet):
+    def live(self):
+        """Without the deals of archived clients (a deal is hidden with its client; no `Deal.archived_at`, O.6 #17)."""
+        return self.filter(client__archived_at__isnull=True)
 
 
 class Client(models.Model):
@@ -18,9 +30,15 @@ class Client(models.Model):
     converted_by_sale = models.BooleanField(default=False)
     owner = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
     notes = models.TextField(blank=True)
+    # Archive hides the client and its deal from every list; nothing is deleted and the status does not change (A18,
+    # M9, OQ46). Written only by `deals.services.set_archived`.
+    archived_at = models.DateTimeField(null=True, blank=True)
+    archived_by = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
     created_by = models.ForeignKey(USER, on_delete=models.PROTECT, related_name='+')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = ClientQuerySet.as_manager()  # no default filter: an archived client's pages still open (M9)
 
     def __str__(self):
         return self.name
@@ -34,19 +52,82 @@ class Deal(models.Model):
     lost_at = models.DateTimeField(null=True, blank=True)
     lost_from_stage = models.CharField(max_length=10, blank=True)
     requested_lines = models.JSONField(default=list, blank=True)
+    # "Potential deal size", typed in the header ($ and commas stripped, blank clears; M29, OQ49).
+    deal_size = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    # The printed agent (M27, OQ45): blank shows `rules.agent_name`'s default, the owner, else the agency producer.
+    agent_of_record = models.CharField(max_length=200, blank=True)
     # The client's status when the deal opened. It follows status changes while no plan on the deal is sold, then
     # freezes; `rules.deal_type` reads it (Renewal only for existing_client; M14, CL8).
     opened_as = models.CharField(max_length=20, choices=lifecycle.STATUSES, default=lifecycle.PROSPECT)
+    # Changed through `deals.services.set_owner`, one Activity row; a split's primary sets it (H22, OQ45).
     owner = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
     created_by = models.ForeignKey(USER, on_delete=models.PROTECT, related_name='+')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = DealQuerySet.as_manager()
 
     class Meta:
         indexes = [models.Index(fields=['client', 'effective_date'])]
 
     def __str__(self):
         return f'{self.client.name} ({self.effective_date or "no date"})'
+
+
+class Contact(models.Model):
+    """A person at the client (client-level, so it outlives a deal; B13, M30). The roles are §4.6's seven
+    (`deals/contacts.py`); `contacts.primary` is the one primary-contact rule. Written only by `deals.services`."""
+
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='contacts')
+    role = models.CharField(max_length=20, choices=contacts.ROLES, default=contacts.HR_ADMIN)
+    name = models.CharField(max_length=200, blank=True)
+    title = models.CharField(max_length=200, blank=True)
+    email = models.CharField(max_length=254, blank=True)
+    phone = models.CharField(max_length=50, blank=True)
+    is_primary = models.BooleanField(default=False)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['client'], condition=models.Q(is_primary=True), name='deals_contact_one_primary'
+            )
+        ]
+
+    def __str__(self):
+        return self.name or self.email or contacts.label(self.role)
+
+
+class NoteManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(deleted_at__isnull=True)
+
+
+class Note(models.Model):
+    """The deal's notepad (A37, M73–M77): internal, never client-facing. A delete is soft and Revert undoes it."""
+
+    KINDS = [('note', 'Note'), ('call', 'Call'), ('email', 'Email'), ('meeting', 'Meeting'), ('internal', 'Internal')]
+    MAX_BODY = 8000
+
+    deal = models.ForeignKey(Deal, on_delete=models.CASCADE, related_name='notes')
+    body = models.TextField()
+    kind = models.CharField(max_length=10, choices=KINDS, default='note')
+    pinned = models.BooleanField(default=False)
+    author = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(default=clock.now)
+    updated_at = models.DateTimeField(default=clock.now)
+
+    objects = NoteManager()  # hides deleted notes (§6, soft removal)
+    all_objects = models.Manager()  # noqa: DJ012 (ruff reads a second manager as a field); Revert and history
+
+    class Meta:
+        ordering = ['-pinned', '-id']  # pinned first, newest first (by id: a clock can step back)
+        base_manager_name = 'all_objects'
+
+    def __str__(self):
+        return f'Note {self.pk}'
 
 
 class Activity(models.Model):

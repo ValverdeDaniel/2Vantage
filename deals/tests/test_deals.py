@@ -55,7 +55,7 @@ def test_manual_stage_changes_and_refusals(api, deal):
 
 
 def test_lost_and_reopen_and_a_lost_deal_stays_editable(api, deal):
-    assert api.post(f'/api/deals/{deal.id}/lost/', {'reason': ''}, format='json').status_code == 400
+    assert api.post(f'/api/deals/{deal.id}/lost/', {'reason': 'x' * 301}, format='json').status_code == 400
     lost = api.post(f'/api/deals/{deal.id}/lost/', {'reason': 'Went with another broker'}, format='json').json()
     assert lost['stage'] == 'lost'
     edited = api.patch(f'/api/deals/{deal.id}/', {'effective_date': '2027-02-01'}, format='json')
@@ -66,7 +66,25 @@ def test_lost_and_reopen_and_a_lost_deal_stays_editable(api, deal):
 
 def test_a_sold_deal_cannot_be_marked_lost(api, deal):
     Deal.objects.filter(pk=deal.pk).update(stage='sold')
-    assert api.post(f'/api/deals/{deal.id}/lost/', {'reason': 'x'}, format='json').status_code == 409
+    answer = api.post(f'/api/deals/{deal.id}/lost/', {'reason': 'x'}, format='json')
+    assert answer.status_code == 409 and answer.json() == {
+        'detail': 'A sold deal cannot be marked lost. Un-sell it first.'
+    }
+
+
+def test_OQ48_the_lost_reason_is_optional(api, deal):
+    lost = api.post(f'/api/deals/{deal.id}/lost/', {}, format='json')
+    assert lost.status_code == 200 and lost.json()['stage'] == 'lost' and lost.json()['lost_reason'] == ''
+
+
+def test_M3_a_lost_deal_is_not_marked_lost_again(api, deal):
+    first = api.post(f'/api/deals/{deal.id}/lost/', {'reason': 'Went elsewhere'}, format='json').json()
+    rows = Activity.objects.filter(deal=deal, action='lost').count()
+    again = api.post(f'/api/deals/{deal.id}/lost/', {'reason': 'Another reason'}, format='json')
+    assert again.status_code == 409 and again.json() == {'detail': 'This deal is already marked lost.'}
+    header = api.get(f'/api/deals/{deal.id}/').json()
+    assert header['lost_reason'] == 'Went elsewhere' and header['lost_at'] == first['lost_at']
+    assert Activity.objects.filter(deal=deal, action='lost').count() == rows
 
 
 def test_automatic_moves_only_go_forward():
@@ -92,7 +110,7 @@ def test_activity_list_is_paginated(api, deal):
     assert body['results'][-1]['summary'] == 'Created Example Co.' and 'next' in body
 
 
-def test_only_an_admin_deletes_a_client(api, admin_api, deal):
-    assert api.delete(f'/api/clients/{deal.client_id}/').status_code == 403
-    assert admin_api.delete(f'/api/clients/{deal.client_id}/').status_code == 204
-    assert not Deal.objects.filter(pk=deal.pk).exists()
+def test_M104_no_one_deletes_a_client_over_http(api, admin_api, deal):
+    assert api.delete(f'/api/clients/{deal.client_id}/').status_code == 405
+    assert admin_api.delete(f'/api/clients/{deal.client_id}/').status_code == 405
+    assert Deal.objects.filter(pk=deal.pk).exists()

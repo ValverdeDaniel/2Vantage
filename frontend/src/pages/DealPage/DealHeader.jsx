@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useUpdateDeal } from '../../api/deals';
 import { LOST, manualStages, relationshipLabel, stageLabel } from '../../api/meta';
 import { initialsOf, stagePillClass, statusBadgeClass } from '../../lib/dealLook';
-import { formatDate } from '../../lib/format';
+import { formatDate, formatMoney } from '../../lib/format';
 import Menu from '../../ui/Menu';
 import SaveStatus from '../../ui/SaveStatus';
 import ActivityDrawer from './ActivityDrawer';
+import { ArchiveButton, ArchiveConfirm, ArchivedBanner } from './ArchiveControls';
 import ClientDialog from './ClientDialog';
 import EffectiveDate from './EffectiveDate';
+import HeaderFact from './HeaderFact';
 import LinesPicker from './LinesPicker';
 import LostBanner from './LostBanner';
 import LostDialog from './LostDialog';
@@ -34,14 +36,20 @@ function StageMenu({ deal, meta, update }) {
   );
 }
 
+// A typed deal size edits as plain dollars: '250000.00' → '250000'.
+function sizeDraft(value) {
+  return value ? value.replace(/\.00$/, '') : '';
+}
+
 /**
  * The header strip on every tab (plan.md §8.4; new against the old app, M112), built from the old Overview header's
  * classes (bnf-ov-*): the client's name (opens the client dialog until slice 67) and status, the stage pill with
- * Stage ▾, the effective date and the owner, Lines, Activity with Revert, Mark as lost… and the lost banner. Every
+ * Stage ▾, the effective date, the owner, the Potential deal size and the Agent of record (M27, M29), Lines, Activity
+ * with Revert, Mark as lost… and Archive… with their banners (until slice 62 moves them to the Overview). Every
  * change goes through PATCH and refreshes the rest of the deal's queries.
  */
 export default function DealHeader({ deal, meta }) {
-  const [open, setOpen] = useState(null); // 'client' | 'lost' | 'activity'
+  const [open, setOpen] = useState(null); // 'client' | 'lost' | 'activity' | 'archive'
   const stageUpdate = useUpdateDeal(deal.id);
   const lost = deal.stage === LOST;
   const close = () => setOpen(null);
@@ -73,6 +81,24 @@ export default function DealHeader({ deal, meta }) {
             <SaveStatus mutation={stageUpdate} />
             <EffectiveDate deal={deal} />
             <OwnerPicker deal={deal} />
+            <HeaderFact
+              deal={deal}
+              field="deal_size"
+              label="Potential deal size"
+              shown={formatMoney(deal.deal_size)}
+              initial={sizeDraft(deal.deal_size)}
+              placeholder="$ amount"
+            />
+            <HeaderFact
+              deal={deal}
+              field="agent_of_record"
+              label="Agent of record"
+              shown={deal.agent_of_record}
+              fallback={deal.agent_default ? `${deal.agent_default} (default)` : ''}
+              initial={deal.agent_of_record}
+              placeholder={deal.agent_default || 'Agent name'}
+              hint="Who the carrier forms print as the agent. Blank prints the owner, else the agency's producer."
+            />
           </div>
         </div>
         <div className="bnf-ov-titlebtns">
@@ -85,11 +111,14 @@ export default function DealHeader({ deal, meta }) {
               Mark as lost…
             </button>
           )}
+          {!deal.archived && open !== 'archive' && <ArchiveButton onClick={() => setOpen('archive')} />}
         </div>
       </div>
       <div className="bnf-ov-facts">
         <LinesPicker deal={deal} meta={meta} />
       </div>
+      {open === 'archive' && !deal.archived && <ArchiveConfirm deal={deal} onDone={close} />}
+      {deal.archived && <ArchivedBanner deal={deal} />}
       {lost && <LostBanner deal={deal} />}
 
       {open === 'client' && <ClientDialog deal={deal} meta={meta} onClose={close} />}

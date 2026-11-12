@@ -1,4 +1,6 @@
-"""Editing a deal and moving its stage: by hand, automatically (`advance`), lost and reopened (plan.md §5.1, §7.3)."""
+"""Editing a deal and moving its stage: by hand, automatically (`advance`), lost and reopened (plan.md §5.1, §7.3).
+The owner and the header facts have their own doors in `facts.py` (`set_owner`, `set_facts`), which `update_deal`
+calls inside its transaction."""
 
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
@@ -6,10 +8,14 @@ from rest_framework.exceptions import ValidationError
 from .. import activity, clock, stages
 from ..models import Deal
 from ..values import locked
+from .facts import FACTS, set_facts, set_owner
 from .snapshots import diff, snapshot
 
-DEAL_FIELDS = ('stage', 'effective_date', 'owner_id')  # the lines to quote have their own door: lines.set_lines
+DEAL_FIELDS = ('stage', 'effective_date')  # the lines to quote have their own door: lines.set_lines
 LOST_FIELDS = ('stage', 'lost_reason', 'lost_at', 'lost_from_stage')
+REASON_LIMIT = 300
+ALREADY_LOST = 'This deal is already marked lost.'
+SOLD_NOT_LOST = 'A sold deal cannot be marked lost. Un-sell it first.'
 
 
 def _deal_change(deal, changed, key):
@@ -18,6 +24,8 @@ def _deal_change(deal, changed, key):
 
 @transaction.atomic
 def update_deal(user, deal_id, **changes):
+    """Stage (by hand), effective date, owner, Potential deal size and Agent of record (any subset, already cleaned).
+    Each changed part records its own Activity row; returns the deal as it now is."""
     deal = locked(Deal, deal_id)
     before = snapshot(deal, DEAL_FIELDS)
     notes = []
@@ -35,14 +43,18 @@ def update_deal(user, deal_id, **changes):
     if 'effective_date' in changes and changes['effective_date'] != deal.effective_date:
         deal.effective_date = changes['effective_date']
         notes.append(('effective_date', 'Changed the effective date'))
-    if 'owner' in changes and changes['owner'] != deal.owner:
-        deal.owner = changes['owner']
-        notes.append(('owner', 'Changed the owner'))
     if notes:
-        deal.save()
+        deal.save(update_fields=[*DEAL_FIELDS, 'updated_at'])
         changed = diff(before, snapshot(deal, DEAL_FIELDS))
         for key, note in notes:
             activity.record(deal, user, 'deal', 'updated', note, changes=[_deal_change(deal, changed, key)])
+    if 'owner' in changes:
+        set_owner(user, changes['owner'], deal_id=deal.id)
+    facts = {key: changes[key] for key in FACTS if key in changes}
+    if facts:
+        set_facts(user, deal.id, **facts)
+    if 'owner' in changes or facts:
+        deal.refresh_from_db()
     return deal
 
 
@@ -82,18 +94,19 @@ def advance(deal, user, stage, reason):
 
 
 @transaction.atomic
-def mark_lost(user, deal_id, reason):
+def mark_lost(user, deal_id, reason=''):
+    """Mark lost, with an optional reason of at most 300 characters (OQ48, the old screen's "(optional)"). Refuses a
+    sold deal and a deal already lost with a 409 sentence (M3, M.5 B33). Deletes nothing (B14)."""
     deal = locked(Deal, deal_id)
-    reason = (reason or '').strip()
-    if not reason:
-        raise ValidationError({'reason': ['Give a reason.']})
-    if len(reason) > 300:
-        raise ValidationError({'reason': ['Keep the reason under 300 characters.']})
+    reason = str(reason or '').strip()
+    if len(reason) > REASON_LIMIT:
+        raise ValidationError({'reason': [f'Keep the reason under {REASON_LIMIT} characters.']})
     if deal.stage == 'sold':
-        return None  # the view answers 409
+        raise activity.Refused(SOLD_NOT_LOST)
+    if deal.stage == 'lost':
+        raise activity.Refused(ALREADY_LOST)
     before = snapshot(deal, LOST_FIELDS)
-    if deal.stage != 'lost':
-        deal.lost_from_stage = deal.stage
+    deal.lost_from_stage = deal.stage
     deal.stage = 'lost'
     deal.lost_reason = reason
     deal.lost_at = clock.now()
