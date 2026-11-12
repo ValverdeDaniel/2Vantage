@@ -33,6 +33,11 @@ services:
       FRONTEND_URL: http://localhost:4001
       MEDIA_ROOT: /data/media
       AGENCY_TIME_ZONE: ${AGENCY_TIME_ZONE:-America/New_York}
+      # Claude (slice 18 on). The key comes from the git-ignored .env; empty means no Claude. Local testing uses
+      # Sonnet and a $20 cap on all real Claude spend in this database (Daniel, 2026-11-12; plan.md §3.5).
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-claude-sonnet-5-5}
+      AI_TOTAL_BUDGET_USD: ${AI_TOTAL_BUDGET_USD:-20}
     depends_on:
       db: {condition: service_healthy}
     restart: unless-stopped
