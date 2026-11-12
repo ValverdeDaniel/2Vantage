@@ -92,7 +92,8 @@ export const builder25 = {
       await page.getByText('What the client will see').waitFor();
     });
     await step('"✓ Mark completed" on What this section shows collapses it and counts it; Undo takes it off', async () => {
-      await page.getByRole('button', { name: '✓ Mark completed' }).last().click(); // the rows card is the last
+      const rows = page.getByRole('button', { name: 'Collapse What this section shows' }).locator('..');
+      await rows.getByRole('button', { name: '✓ Mark completed' }).click(); // the rows card's own mark
       await page.getByText(/✓ 1 of \d+ completed/).waitFor();
       await page.getByRole('button', { name: 'Expand What this section shows' }).waitFor(); // collapsed
       await page.getByRole('button', { name: 'Undo' }).click();

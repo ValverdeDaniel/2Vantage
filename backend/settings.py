@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'intake',  # coverage, intent and the lines to quote (slice 11); the form from slice 39
     'census',  # import, matching, validation, rollups and CensusFacts (slice 12); the roster grid from slice 41
     'quotes',
+    'rfp',  # RfpRequest and asked_by_line (slice 26); the RFP tab from slices 44–46
     'proposals',
     'golden',  # seed only, last in the chain (§3.3)
 ]
@@ -184,7 +185,7 @@ LOGGING = {
         **{name: {'level': 'WARNING'} for name in ('anthropic', 'httpx', 'httpcore', 'httpx2', 'httpcore2')},
         **{
             name: {'level': 'INFO'}
-            for name in ('accounts', 'deals', 'documents', 'ai', 'intake', 'census', 'quotes', 'proposals')
+            for name in ('accounts', 'deals', 'documents', 'ai', 'intake', 'census', 'quotes', 'rfp', 'proposals')
         },
     },
 }

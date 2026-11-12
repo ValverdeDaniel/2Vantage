@@ -5,6 +5,7 @@ import pytest
 
 from deals import activity
 from deals.models import Activity
+from proposals import marks
 from proposals.models import ProposalConfig
 from quotes import services as plans
 
@@ -28,7 +29,7 @@ def test_J18_a_mark_is_stamped_counted_and_logged_and_undo_takes_it_off(api, use
     response = _mark(api, deal, card='quotes', line='medical', done=True)
     assert response.status_code == 200 and response.json()['stamp']['at']
     body = api.get(f'/api/deals/{deal.id}/proposal/').json()
-    assert body['marks']['done'] == 1 and body['marks']['total'] == 2
+    assert body['marks']['done'] == 1 and body['marks']['total'] == len(marks.counted(['medical']))
     assert body['marks']['stored']['lines']['medical']['quotes']['by']
     row = Activity.objects.get(pk=response.json()['activity_id'])
     assert row.action == 'marked' and row.summary == 'Marked Plans on the proposal (Medical) completed'

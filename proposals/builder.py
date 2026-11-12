@@ -1,24 +1,37 @@
-"""`GET deals/{id}/proposal/`: the proposal builder (plan.md §7.12, §8.14; J17, J18, J23, J28–J31, J47–J62; J.6.5).
+"""`GET deals/{id}/proposal/`: the proposal builder (plan.md §7.12, §8.14; J17, J18, J23, J28–J31, J38–J46,
+J47–J67; J.6.5).
 
 {config, marks: {done, total, stored}, lines: [line block], ready: {ok, missing, sentence, draft}, checks: [item],
- issues: []}
+ output: {layout, package_summary, compare_tabs, disclaimers, compare_slots, pages: {page: bool}}, experience:
+ {summary, rows}, next_steps, summary: {on, picked, standard, blocks, medicare}, markets: {has_asks, auto, override,
+ on, lines}, ledger: [page], best_only: sentence | null, issues: []}
 
 The builder's lines are the lines holding plans plus the lines the intent keeps as-is (their incumbent stands as the
 recommendation, J47), in the producer's order (`config.order`, J31), each laid out as the files print it
 (`line_layout`, so its option numbers are the ones Pages shows and Issue stamps). A line the intent keeps off stays in
-the list with its notice (J30) and prints nowhere. Reads only, in a fixed number of queries whatever the plan count
-(Q.3 #2, #4): `deal_state`, the intent, the config row, the option-number tops, and the intent's rows once a line is
-kept. The issues list arrives with Issue (slice 32); the ledger, summary preview and file stamps with slices 26–28.
+the list with its notice (J30) and prints nowhere. The deal cards (`deal_cards`) read the lines on the proposal.
+Reads only, in a fixed number of queries whatever the plan count (Q.3 #2, #4): `deal_state`, the intent, the config
+row, the option-number tops, the census's ages and who the RFP asked. The issues list arrives with Issue (slice 32).
 """
 
+from deals import rules
 from intake import coverage as intent
 from intake.selectors import intent_rows_for, line_facts
 from quotes import presented
 from quotes import selectors as quotes
 from quotes.selectors.state import empty
+from rfp.selectors import asked_by_line
 
-from . import checks, config, line_block, line_layout, marks, ready
+from . import checks, config, deal_cards, line_block, line_layout, marks, ready
+from . import summary_read as read
 from .models import ProposalConfig
+
+
+def best_only(sheets):
+    """Why "The recommendation only" layout waits (J38: it waits for every pick), or None; the old words."""
+    missing = ready.missing_by_line(sheets)
+    waiting = [sheet['label'] for sheet in sheets if sheet['line'] in missing]
+    return f'Pick a recommendation on {", ".join(waiting)} first' if waiting else None
 
 
 def _stored(deal):
@@ -41,29 +54,58 @@ def payload(deal):
     keys = config.ordered(stored, keys)
     tops = line_layout.tops(deal, keys)
     layout = line_layout.layout_of(stored)
-    kept_rows = {}
-    if any(line_states.get(line) == intent.PRESENTED for line in keys):
-        kept_rows = {row['line']: row for row in intent_rows_for(deal.id)}
-    blocks, sheets = [], []
+    intent_rows = {row['line']: row for row in intent_rows_for(deal.id)}
+    blocks, sheets, entries = [], [], []
     for line in keys:
         state = states.get(line) or empty(line)
         laid = line_layout.lay_out(state, off.get(line), layout, tops.get(line, 0))
+        kept = line_states.get(line) == intent.PRESENTED
         ctx = {
             'config': stored,
             'marks': stored_marks,
             'state': line_states.get(line, ''),
             'off': off.get(line),
             'spec': config.line_spec(stored, line),
-            'incumbent': line_block.incumbent(kept_rows.get(line)),
+            'incumbent': line_block.incumbent(intent_rows.get(line) if kept else None),
         }
         blocks.append(line_block.block(line, state, laid, ctx))
         sheets.append(line_block.facts(line, state, laid, ctx))
-    on = [line for line in keys if line not in off]
+        if line not in off:
+            entries.append((line, state, laid, line_states.get(line, ''), intent_rows.get(line)))
+    on = [entry[0] for entry in entries]
+    gate = ready.ready(sheets)
+    cards = deal_cards.cards(
+        stored,
+        entries,
+        asked=asked_by_line(deal),
+        ages=read.ages(deal) if 'medical' in on else None,
+        renewal_offer=read.renewal_offer(deal),
+        new_business=rules.deal_type(deal) == rules.NEW_BUSINESS,
+        ready_ok=gate['ok'],
+    )
+    deal_items = checks.deal_checks(
+        next_steps=config.get(stored, 'next_steps'),
+        summary=cards['summary'],
+        markets_on=cards['markets']['on'],
+        summary_lines=cards['facts']['lines'],
+    )
     return {
         'config': stored,
         'marks': {**marks.done(stored_marks, on), 'stored': stored_marks},
         'lines': blocks,
-        'ready': ready.ready(sheets),
-        'checks': checks.checks(sheets, cap=presented.MAX_COLUMNS, deal_words=config.get(stored, 'recommendation')),
+        'ready': gate,
+        'checks': checks.checks(
+            sheets,
+            cap=presented.MAX_COLUMNS,
+            deal_words=config.get(stored, 'recommendation'),
+            deal_items=deal_items,
+        ),
+        'output': config.output(stored),
+        'experience': config.experience(stored),
+        'next_steps': config.get(stored, 'next_steps'),
+        'summary': cards['summary'],
+        'markets': cards['markets'],
+        'ledger': cards['ledger'],
+        'best_only': best_only(sheets),
         'issues': [],
     }

@@ -26,12 +26,16 @@ import useCoverageWrites from './useCoverageWrites';
  * tri-state select-all headers; the line, its state and note; Current plan; the documents each line needs; Confirm,
  * Confirm again and Reopen with ✓ Confirmed / ⚠ Changed since confirmed / Not confirmed yet. The body unmounts when
  * the card is put away, remembered per deal in this browser. The medical row's form pickers (B22) wait for slice 40.
+ * The proposal builder mounts it as its third door (J46): it then owns the open state (`open`, `onToggleOpen`) and
+ * hands in its completed mark (`mark`), as the old card's builder mount did.
  */
-export default function CoverageIntentCard({ deal, meta, intent }) {
+export default function CoverageIntentCard({ deal, meta, intent, open: openHere, onToggleOpen, mark = null }) {
   const navigate = useNavigate();
   const writes = useCoverageWrites(deal.id);
   const documents = useDocuments(deal.id).data || [];
-  const [open, setOpen] = useState(() => !isCollapsed(window.localStorage, deal.id));
+  const [openState, setOpen] = useState(() => !isCollapsed(window.localStorage, deal.id));
+  const controlled = openHere !== undefined; // the proposal builder owns its open state and its mark (J46)
+  const open = controlled ? openHere : openState;
   const [notes, setNotes] = useState({});
   const [guarantees, setGuarantees] = useState({});
   const [picking, setPicking] = useState(null); // {line, kind, el}
@@ -68,8 +72,12 @@ export default function CoverageIntentCard({ deal, meta, intent }) {
 
   function toggleOpen() {
     const next = !open;
-    setOpen(next);
-    rememberCollapsed(window.localStorage, deal.id, !next);
+    if (controlled) {
+      onToggleOpen(next);
+    } else {
+      setOpen(next);
+      rememberCollapsed(window.localStorage, deal.id, !next);
+    }
     if (!next) pick(null);
   }
 
@@ -155,6 +163,7 @@ export default function CoverageIntentCard({ deal, meta, intent }) {
         <div className="bnf-cvg-badges">
           {gaps.length > 0 && <span className="bnf-cvg-gapbadge">⚠ {gaps.join(' · ')}</span>}
           <span className="bnf-cvg-badge">{state.badge}</span>
+          {mark}
         </div>
       </div>
 

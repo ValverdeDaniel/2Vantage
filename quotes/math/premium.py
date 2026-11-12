@@ -78,6 +78,15 @@ def monthly_change(monthly, base_monthlies):
     return change(monthly, sum(bases, Decimal(0)))
 
 
+def add(amounts):
+    """Money figures summed in Decimal (the proposal summary's totals across lines, J64), or None when any is missing:
+    a total with a hole in it is not a total."""
+    found = [decimal(amount) for amount in amounts]
+    if not found or any(amount is None for amount in found):
+        return None
+    return plain(sum(found, Decimal(0)))
+
+
 def employee_cost(plan):
     """What an employee pays a month per tier: max(0, rate − contribution) to the cent; None when either is blank."""
     cost = {}

@@ -37,6 +37,24 @@ def test_J20_an_unchanged_write_changes_nothing_and_a_default_unsets_the_path():
             [{'date': '2027-01-01', 'text': ' Sign '}, {'text': ''}],
             [{'date': '2027-01-01', 'text': 'Sign'}],
         ),
+        ('output.package_summary', False, False),
+        ('output.compare_slots', 10, 10),
+        ('output.pages.team', False, False),
+        ('experience.summary', '  Claims ran at 78% of premium. ', 'Claims ran at 78% of premium.'),
+        (
+            'experience.rows',
+            [{'period': 'Jan–Dec 2025', 'premium': '$1,234,000', 'claims': '901,500.50'}, {'period': ' '}],
+            [{'period': 'Jan–Dec 2025', 'premium': 1234000, 'claims': 901500.5}],
+        ),
+        ('summary.on', False, False),
+        (
+            'summary.blocks',
+            [{'key': 'recommended', 'line': 'dental'}, {'key': 'nope'}, {'key': 'medicare_eligible', 'line': 'dental'}],
+            [{'key': 'recommended', 'line': 'dental'}, {'key': 'medicare_eligible'}],
+        ),
+        ('markets.on', None, None),
+        ('markets.lines.medical.notes.cigna', '  Competitive ', 'Competitive'),
+        ('markets.lines.medical.hidden', ['n:eyemed', 'cigna', 'cigna'], ['cigna', 'n:eyemed']),
     ],
 )
 def test_J59_J62_each_path_is_cleaned_on_its_own(path, value, stored):
@@ -55,6 +73,14 @@ def test_J59_J62_each_path_is_cleaned_on_its_own(path, value, stored):
         ('order', ['nope']),
         ('output.layout', 'sideways'),
         ('next_steps', [{'date': 'tomorrow', 'text': 'Sign'}]),
+        ('output.compare_slots', 7),
+        ('output.pages.history', False),
+        ('output.style', 'classic'),
+        ('experience.rows', [{'period': '2025', 'premium': 'lots'}]),
+        ('summary.blocks', 'recommended'),
+        ('markets.on', 'yes'),
+        ('markets.lines.medical.notes.Not A Carrier', 'x'),
+        ('markets.lines.medical.hidden', 'cigna'),
     ],
 )
 def test_J20_a_bad_path_or_value_is_refused_with_a_sentence(path, value):
@@ -70,10 +96,30 @@ def test_J19_each_path_belongs_to_one_card():
     assert config.card_of('order') is None
 
 
+def test_J38_J42_J63_J64_the_deal_cards_own_their_paths():
+    assert config.card_of('output.layout') == ('output', None)
+    assert config.card_of('output.pages.team') == ('pages', None)
+    assert config.card_of('experience.rows') == ('pages', None)
+    assert config.card_of('summary.blocks') == ('summary', None)
+    assert config.card_of('next_steps') == ('next_steps', None)
+    assert config.card_of('markets.lines.dental.hidden') == ('markets', 'dental')
+    assert config.card_of('markets.on') == ('markets', config.EVERY_LINE)  # a deal-wide switch on a line card
+
+
+def test_J63_markets_show_it_takes_the_card_mark_off_every_line():
+    stamp = {'by': 'Pat', 'at': '2026-11-12T10:00:00'}
+    stored = {'lines': {'medical': {'markets': stamp}, 'dental': {'markets': stamp, 'rows': stamp}}}
+    owners = {config.card_of('markets.on')}
+    assert marks.cleared_by(stored, owners) == ['marks.lines.dental.markets', 'marks.lines.medical.markets']
+
+
 def test_J18_J19_marks_count_the_cards_on_screen_and_an_edit_clears_only_its_own():
     stamp = {'by': 'Pat', 'at': '2026-11-12T10:00:00'}
-    stored = {'cover': stamp, 'lines': {'medical': {'quotes': stamp, 'rows': stamp}, 'dental': {'quotes': stamp}}}
-    assert marks.done(stored, ['medical', 'dental']) == {'done': 3, 'total': 4}  # the cover card is not on screen yet
+    medical = {'quotes': stamp, 'rows': stamp, 'markets': stamp}
+    stored = {'cover': stamp, 'pages': stamp, 'lines': {'medical': medical, 'dental': {'quotes': stamp}}}
+    counted = marks.counted(['medical', 'dental'])
+    assert ('cover', None) not in counted and ('pages', None) not in counted  # not on screen yet / optional
+    assert marks.done(stored, ['medical', 'dental']) == {'done': 4, 'total': len(counted)}
     assert marks.line_done(stored, 'medical') and not marks.line_done(stored, 'dental')
     owners = {('rows', 'medical'), ('rows', 'dental')}
     assert marks.cleared_by(stored, owners) == ['marks.lines.medical.rows']  # dental's rows card was never marked

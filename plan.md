@@ -3554,8 +3554,9 @@ reads `Deal.opened_as`: a deal opened for a prospect or a new client books as fi
 
 ### 6.10 rfp
 
-Not built (slices 26 and 44–46). K.6. Slice 26 creates the app holding only `RfpRequest` and `asked_by_line()`, so the
-proposal's Markets checked can read who was asked.
+Built in slice 26: the app with only `RfpRequest` (every field below; no service writes it yet) and
+`selectors.asked_by_line(deal)` → `{line: [{id, name, on}]}` from `sends` ({} until a draft is marked sent), so the
+proposal's Markets checked can read who was asked (J63, K117). Slices 44–46 bring the rest of K.6.
 
 **RfpRequest** — one per deal, created on the first write (it replaces v1.1's `RfpConfig`): `route` (blank follows the
 band until the first send pins it, `warner` or `direct`), `carriers` (JSON list of carrier keys, in registry order),
@@ -3568,11 +3569,15 @@ list: the lines are the requested lines (K16). One key space serves include, pil
 
 ### 6.11 proposals
 
-Built (slice 25): `ProposalConfig(deal, config, marks, updated_by, updated_at)`, created on the first write. `config`
-holds the keys below by path (`proposals/config.py`; the paths built so far are `title`, `intro`, `recommendation`,
-`reasons.<line>`, `order`, `next_steps`, `output.layout` and `lines.<line>.{parts.<part>, rows, card_stats,
-table_note}`; the summary, markets, experience, team, the rest of `output` and `merged` join with their slices); `marks`
-is its own column so that what prints and the bookkeeping never mix. There is no `ProposalIssue` yet; slices 29, 32 and
+Built (slices 25, 26): `ProposalConfig(deal, config, marks, updated_by, updated_at)`, created on the first write.
+`config` holds the keys below by path (`proposals/config.py`, values cleaned by `cleaners.py`; the paths built so far
+are `title`, `intro`, `recommendation`, `reasons.<line>`, `order`, `next_steps`, `experience.{summary, rows}`,
+`summary.{on, blocks}`, `markets.on`, `markets.lines.<line>.{notes.<carrier id>, hidden}`, `output.{layout,
+package_summary, compare_tabs, disclaimers, compare_slots, pages.<page>}` and `lines.<line>.{parts.<part>, rows,
+card_stats, table_note}`; the cover, pictures and team (slice 34) and `merged` (slice 33) join with their slices);
+`marks` is its own column so that what prints and the bookkeeping never mix. `markets.on` is deal-wide on a line card:
+writing it takes the Markets checked mark off every line. Presentation pages (`output.pages`, `experience`) is an
+optional card like Pictures: it takes a mark that never counts toward "n of N completed". There is no `ProposalIssue` yet; slices 29, 32 and
 34 add the rest (J.6.2).
 
 **ProposalConfig** — one per deal, created on the first write; a GET reads the defaults. `notes` becomes `intro`.
@@ -4078,7 +4083,7 @@ except H68). v1.1's `PUT deals/{id}/commission/` with a split list totalling 100
 
 ### 7.11 RFP — `rfp/`
 
-Not built (slices 26 and 44–46).
+Not built (slices 44–46); slice 26 adds no endpoint (proposals reads `asked_by_line` directly).
 
 | Method | Path | What it does |
 |---|---|---|
@@ -4099,6 +4104,11 @@ chunks; census and PHI files write `downloaded` rows. No query parameter is name
 Built: `GET`, `PATCH deals/{id}/proposal/` and `POST …/proposal/marks/` (slice 25: the builder payload; `{path:
 value}` → `{changed, cleared, activity_id}`; `{card, line?, done}` → `{card, line, stamp, activity_id}`); `GET
 proposal/pages/` (slice 14; `?preset=key` gives the builder's Key rows). v1.1's PUT, selection and preview are gone.
+Slice 26 adds to the builder payload `output` (with defaults), `experience`, `next_steps`, `summary` {on, picked,
+standard, blocks: the live preview, each block {key, label, scope, line, available, reason, value_label, sub,
+delta_label, delta_dir}, medicare}, `markets` {has_asks, auto, override, on, lines}, `ledger` (the Presentation pages,
+J42) and `best_only` (why "The recommendation only" waits); an intent or coverage edit takes the Coverage & marketing
+intent card's mark off (intake's `coverage_changed`, J46).
 
 | Method | Path | What it does |
 |---|---|---|
@@ -6077,16 +6087,16 @@ for Recalc (pytest -m recalc, slice 27) and Fidelity (python tools/parity/files.
 ## Map (Part O; OQ9 a; one Django app per tab; frontend folder per tab in frontend/src/deal/<tab>/)
 accounts → deals → documents → ai → intake → census → quotes → questionnaire
          → commission → rfp → proposals → review → agenda → overview → golden
-An app imports only from apps to its left (lint-imports); a fact read by an app lives in that app or one to its left.
-To reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
-AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client,
-never business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far: accounts,
-deals, documents, ai, intake, census, quotes, proposals, golden. The chain orders imports, not screens: the deal sidebar
+An app imports only from apps to its left (lint-imports); a fact read by an app lives in that app or one to its left. To
+reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
+AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client, never
+business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far: accounts, deals,
+documents, ai, intake, census, quotes, rfp, proposals, golden. The chain orders imports, not screens: the deal sidebar
 keeps old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review & requests, Intake, Census,
 Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close: Advisor, Proposal · Shared: Documents.
-Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry the Advisor and Proposal.
-Tab folders take the app's name except advisor/ (quotes) and proposal/ (proposals); from slice 4 a tab folder's
-index.js exports only what others mount. Other pages live in pages/ (home; Archived, slice 38; client page, 67).
+Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry the Advisor and Proposal. Tab
+folders take the app's name except advisor/ (quotes) and proposal/ (proposals); from slice 4 a tab folder's index.js
+exports only what others mount. Other pages live in pages/ (home; Archived, slice 38; client page, 67).
 
 ## Rules
 1. Vocabularies are Python constants (deals/lines.py, deals/stages.py, documents/kinds.py, quotes/fields.py; from their
@@ -6292,7 +6302,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | OQ37 | Recommending a current plan: keep Daniel's 2026-11-10 rule, or allow it as the old app did? | "allow it as the old app did." Applied: a current plan may be recommended; it means "Keep this plan", covers itself, uses no extra column in `room()`, shows no change and prints "Keep this plan"; a plan turned current keeps its recommendation (§5.4, as old 891f1b3). Kept lines still need no pick | Answered, changes default | 7; 25 |
 | OQ102 | v1.1's "+ Plan" prompt (is a second alternate for the same current plan an option, or bought together?) and its member-built "+ Package" dialog have no porting row; F134 leaves them to the Proposal section | Open. Default: keep both as 2V built them; slice 25 places them (F134) | Open | 25 |
 | **Slice 26: PRO-2** | | | | |
-| OQ38 | Show the carrier's renewal offer ($/yr, % change) in the renewal blocks (J65) and on the Overview chip (M20)? | Open. Default: yes | Open | 26; 62 |
+| OQ38 | Show the carrier's renewal offer ($/yr, % change) in the renewal blocks (J65) and on the Overview chip (M20)? | Open. Default: yes. Slice 26 built the blocks with the default; they refuse ("No renewal letter's figures on this deal") until the letter's four facts are stored on intake's CurrentCoverage, which no slice has added yet | Open | 26; 62 |
 | **Slice 27: PRO-3** | | | | |
 | OQ39 | Does a carrier hidden on Markets checked also leave Compare and All Plans, labelled on screen? | Open. Default: yes | Open | 27 |
 | OQ40 | Stephanie's Excel review: her marked-up rows and colours, the disclaimer wording, and whether plan notes, telehealth and Rx mail order print (v1.1 §16 #3–#5) | Open. Default: the old formats | Open (Stephanie) | 27 |

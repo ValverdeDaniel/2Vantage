@@ -47,7 +47,13 @@ def line_done(marks, line):
     return all(stamp_of(marks, card, line) for card in catalog.LINE_CARDS if card in catalog.ON_SCREEN)
 
 
-def cleared_by(marks, owners):
+def cleared_by(marks, owners, every_line='*'):
     """The mark paths an edit to `owners` ((card, line) pairs, from `config.card_of`) takes off: only marks that
-    exist."""
-    return sorted({path(card, line) for card, line in owners if stamp_of(marks, card, line)})
+    exist. A line card owned on `every_line` (a deal-wide switch on a line card) comes off every line."""
+    pairs = set()
+    for card, line in owners:
+        if line == every_line:
+            pairs |= {(card, key) for key in (marks.get('lines') or {})}
+        else:
+            pairs.add((card, line))
+    return sorted({path(card, line) for card, line in pairs if stamp_of(marks, card, line)})

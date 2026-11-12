@@ -7,10 +7,11 @@ recommendation, which Issue refuses on (`ready`). Each item is {code, level, lin
 the builder card that fixes it ({card}) or a deal tab ({tab}). Most serious first.
 
 The checks read one fact sheet per line, which `builder` builds from quotes' `deal_state` and intake's intent (no
-query here). Built in slice 25: nothing_presented, line_off, oversize, unstarred, no_enrollment, no_prices,
-current_unrated, not_linked, link_needs_enrollment, no_recommendation, no_reasons, missing_values. With their cards:
-no_next_steps, summary_counts_hidden_carriers, medicare_not_shown (slice 26), split_plan (slice 33); history_unfigured
-waits for past plan years (J44, deferred); demo_firm_pages is dropped (J23).
+query here), and the deal cards' facts (`deal_checks`). Built in slice 25: nothing_presented, line_off, oversize,
+unstarred, no_enrollment, no_prices, current_unrated, not_linked, link_needs_enrollment, no_recommendation,
+no_reasons, missing_values; slice 26: no_next_steps, summary_counts_hidden_carriers, medicare_not_shown. split_plan
+waits for the pair fold (slice 33); history_unfigured for past plan years (J44, deferred); demo_firm_pages is dropped
+(J23).
 """
 
 from . import ready as gate
@@ -159,7 +160,7 @@ def _line_checks(line, cap, any_reasons, deal_words):
                 f'{label} has quotes but is off the proposal ({line["off_words"].lower()}): no client document will '
                 'show it.',
                 line,
-                tab='intake',  # the intent card, until the builder mounts it (J46, slice 26)
+                card='coverage',  # the intent card on the builder (J46)
             )
         ]
     out = []
@@ -181,8 +182,68 @@ def _line_checks(line, cap, any_reasons, deal_words):
     return out
 
 
-def checks(lines, *, cap, deal_words=''):
-    """The list for the builder's lines (fact sheets, in the builder's order), most serious first."""
+def _hidden_carriers(summary, markets_on, summary_lines):
+    """ "Who we went to" counts every quote that came back, starred or not; a carrier it counts and no page names is a
+    question the client will ask (the `wwc4` review), unless Markets checked names them all."""
+    if not summary['on'] or markets_on:
+        return []
+    by_key = {line['key']: line for line in summary_lines}
+    out = []
+    for block in summary['blocks']:
+        line = by_key.get(block['line'])
+        if block['key'] != 'carriers_quoted' or not block['available'] or not line:
+            continue
+        shown = sorted({plan['carrier'] for plan in line['options'] if plan['carrier']})
+        counted = block['value'] or 0
+        if counted > len(shown):
+            named = f' ({", ".join(shown)})' if shown else ''
+            out.append(
+                _item(
+                    'summary_counts_hidden_carriers',
+                    'warn',
+                    f'The summary says {counted} {_plural(counted, "carrier", "carriers")} on {line["label"]}; the '
+                    f'client sees {len(shown)}{named}. Turn on Markets checked, which names them all, or untick "Who '
+                    'we went to".',
+                    {'line': line['key'], 'label': line['label']},
+                    card='summary',
+                )
+            )
+    return out
+
+
+def deal_checks(*, next_steps, summary, markets_on, summary_lines):
+    """The checks about the deal cards (J64, J66, J67): no next steps, a summary counting carriers no page names, and
+    members 65 or older that the summary does not mention."""
+    items = []
+    if not next_steps:
+        items.append(
+            _item(
+                'no_next_steps',
+                'info',
+                'No next steps yet, so the documents have no Next steps page. Add the dates on the Next steps card.',
+                card='next_steps',
+            )
+        )
+    items += _hidden_carriers(summary, markets_on, summary_lines)
+    over = summary['medicare']
+    shown = any(block['key'] == 'medicare_eligible' and block['available'] for block in summary['blocks'])
+    if over and not (summary['on'] and shown):
+        items.append(
+            _item(
+                'medicare_not_shown',
+                'info',
+                f'{over} {_plural(over, "member", "members")} on the census {_plural(over, "is", "are")} 65 or older, '
+                'and the executive summary does not say so. Tick "Medicare-eligible (65+)".',
+                {'line': 'medical', 'label': 'Medical'},
+                card='summary',
+            )
+        )
+    return items
+
+
+def checks(lines, *, cap, deal_words='', deal_items=()):
+    """The list for the builder's lines (fact sheets, in the builder's order) and the deal cards' items
+    (`deal_checks`), most serious first."""
     items = []
     if not any(not line['off'] for line in lines):
         items.append(
@@ -190,10 +251,11 @@ def checks(lines, *, cap, deal_words=''):
                 'nothing_presented',
                 'stop',
                 'No line of coverage is on the proposal. Check the Coverage & marketing intent.',
-                tab='intake',
+                card='coverage',
             )
         )
     any_reasons = any(line['reasons'] for line in lines)
     for line in lines:
         items.extend(_line_checks(line, cap, any_reasons, (deal_words or '').strip()))
+    items.extend(deal_items)
     return sorted(items, key=lambda item: LEVELS[item['level']])

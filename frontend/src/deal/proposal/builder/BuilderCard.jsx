@@ -7,11 +7,14 @@ import CompletedMark from './CompletedMark';
  * collapsed for everyone on the deal. The builder owns the open state and the marks; this only draws them. The toggle
  * is a real button, so a blur on a half-typed note in the body commits before the body unmounts.
  */
-export default function BuilderCard({ title, chips = null, summary = '', card, guide, children }) {
+export default function BuilderCard({ title, chips = null, summary = '', card, guide, className = '', children }) {
   const { done, open, busy, onToggleOpen, onToggleDone } = card;
   const name = typeof title === 'string' ? title : 'this card';
   return (
-    <div className={cx('bb-panel bnf-build-panel bnf-bcard', done && 'bnf-bcard-done', !open && 'bnf-bcard-shut')} data-guide={guide}>
+    <div
+      className={cx('bb-panel bnf-build-panel bnf-bcard', className, done && 'bnf-bcard-done', !open && 'bnf-bcard-shut')}
+      data-guide={guide}
+    >
       <div className="bnf-bcard-head">
         <button
           type="button"

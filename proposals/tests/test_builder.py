@@ -4,7 +4,7 @@ built once for the module; the tests that write go through the services and roll
 import pytest
 
 from intake import services as intake
-from proposals import line_layout
+from proposals import line_layout, marks
 from quotes import services as plans
 
 pytestmark = pytest.mark.django_db
@@ -105,7 +105,8 @@ def test_J31_J59_J61_GD1_lines_follow_the_producers_order_and_carry_their_sectio
     }
     assert {row['key'] for row in medical['rows']} >= {'deductible_single', 'pcp_copay'}
     assert 'sl_lasers' not in {row['key'] for line in body['lines'] for row in line['rows']}
-    assert medical['pages'] == 3 and medical['quotes'] > 0 and body['marks']['total'] == 6
+    assert medical['pages'] == 3 and medical['quotes'] > 0
+    assert body['marks']['total'] == len(marks.counted([line['line'] for line in body['lines']]))
 
 
 def test_Q3_5_J48_GD3_the_enrollment_strip_reads_typed_counts_then_the_census(api, quote_first):

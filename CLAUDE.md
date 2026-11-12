@@ -24,16 +24,16 @@ for Recalc (pytest -m recalc, slice 27) and Fidelity (python tools/parity/files.
 ## Map (Part O; OQ9 a; one Django app per tab; frontend folder per tab in frontend/src/deal/<tab>/)
 accounts → deals → documents → ai → intake → census → quotes → questionnaire
          → commission → rfp → proposals → review → agenda → overview → golden
-An app imports only from apps to its left (lint-imports); a fact read by an app lives in that app or one to its left.
-To reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
-AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client,
-never business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far: accounts,
-deals, documents, ai, intake, census, quotes, proposals, golden. The chain orders imports, not screens: the deal sidebar
+An app imports only from apps to its left (lint-imports); a fact read by an app lives in that app or one to its left. To
+reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
+AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client, never
+business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far: accounts, deals,
+documents, ai, intake, census, quotes, rfp, proposals, golden. The chain orders imports, not screens: the deal sidebar
 keeps old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review & requests, Intake, Census,
 Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close: Advisor, Proposal · Shared: Documents.
-Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry the Advisor and Proposal.
-Tab folders take the app's name except advisor/ (quotes) and proposal/ (proposals); from slice 4 a tab folder's
-index.js exports only what others mount. Other pages live in pages/ (home; Archived, slice 38; client page, 67).
+Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry the Advisor and Proposal. Tab
+folders take the app's name except advisor/ (quotes) and proposal/ (proposals); from slice 4 a tab folder's index.js
+exports only what others mount. Other pages live in pages/ (home; Archived, slice 38; client page, 67).
 
 ## Rules
 1. Vocabularies are Python constants (deals/lines.py, deals/stages.py, documents/kinds.py, quotes/fields.py; from their

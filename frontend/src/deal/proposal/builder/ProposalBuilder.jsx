@@ -3,50 +3,55 @@ import { useProposal } from '../../../api/proposals';
 import InlineError from '../../../ui/InlineError';
 import Loading from '../../../ui/Loading';
 import BuilderToolbar from './BuilderToolbar';
+import CoverageCard from './CoverageCard';
 import EnrollmentStrip from './EnrollmentStrip';
 import IncumbentCard from './IncumbentCard';
 import LineTabs from './LineTabs';
+import MarketsCard from './MarketsCard';
+import NextStepsCard from './NextStepsCard';
 import OffNotice from './OffNotice';
+import OutputCard from './OutputCard';
+import PagesCard from './PagesCard';
 import PlansCard from './PlansCard';
 import RowsCard from './RowsCard';
-import {
-  cardId,
-  chooseLine,
-  isOpen,
-  lineOrder,
-  readRowsPref,
-  shownCards,
-  stampOf,
-  writeRowsPref,
-} from './builderModel';
+import SummaryCard from './SummaryCard';
+import { chooseLine, lineOrder, readRowsPref, writeRowsPref } from './builderModel';
+import useBuilderCards from './useBuilderCards';
 import useBuilderWrites from './useBuilderWrites';
 
 const storage = () => (typeof window === 'undefined' ? null : window.localStorage);
 
 /*
- * The proposal builder, the Advisor's "Proposal builder" view (plan.md §8.14; J17–J20, J23, J27–J31, J47–J62; the old
- * ProposalBuilder.jsx at 891f1b3, split by responsibility). Which plans each line presents and which we recommend, what
- * its section shows, and whether the proposal is ready: the toolbar (marks, checks, the readiness banner), the line
- * tabs, and per line the Plans card (or a kept line's incumbent card) with the EnrollmentStrip, and the rows card. The
- * deal cards (cover, output, pages, coverage, summary, next steps, markets) join with slices 26 and 34.
+ * The proposal builder, the Advisor's "Proposal builder" view (plan.md §8.14; J17–J20, J23, J27–J31, J38–J67; the old
+ * ProposalBuilder.jsx at 891f1b3, split by responsibility), in the old card order: the toolbar (marks, checks, the
+ * readiness banner); the deal cards How the documents look, Presentation pages (with plan experience) and Coverage &
+ * marketing intent; the line tabs, and per line the Plans card (or a kept line's incumbent card) with the
+ * EnrollmentStrip and the rows card; then the Executive summary, Next steps and the line's Markets checked. The cover,
+ * pictures, team and templates join with slice 34.
  *
- * Every card collapses and can be marked completed; a completed card starts collapsed. The payload is the server's
- * (GET deals/{id}/proposal/): this holds only which card is open, which line is shown, Key rows / All rows and whether
- * the checks are open. An edit clears its card's mark on the server (J19); there is no save queue (J20).
+ * The payload is the server's (GET deals/{id}/proposal/): this holds only which card is open, which line is shown, Key
+ * rows / All rows and whether the checks are open. An edit clears its card's mark on the server (J19); there is no save
+ * queue (J20).
  */
 export default function ProposalBuilder({ dealId, meta, line: wantedLine, onLine, onQuotes, onGoTab }) {
   const proposal = useProposal(dealId);
   const writes = useBuilderWrites(dealId);
-  const [openCards, setOpenCards] = useState({});
   const [showChecks, setShowChecks] = useState(false);
   const [rowsMode, setRowsMode] = useState(() => readRowsPref(storage()));
   const [picked, setPicked] = useState(null); // a kept line with no plans is the builder's alone, so it keeps its own
+  const data = proposal.data;
+  const key = chooseLine(data?.lines ?? [], picked ?? wantedLine);
+  const pickLine = (next) => {
+    setPicked(next);
+    onLine(next);
+  };
+  const proposalMeta = meta.proposal;
+  const cards = useBuilderCards({ proposalMeta, stored: data?.marks.stored, line: key, writes, onLine: pickLine, onGoTab });
 
   if (proposal.isPending) return <Loading label="Loading the proposal…" />;
-  if (proposal.isError && !proposal.data) {
+  if (proposal.isError && !data) {
     return <InlineError title="Proposal builder" error={proposal.error} onRetry={() => proposal.refetch()} />;
   }
-  const data = proposal.data;
   if (!data.lines.length) {
     return (
       <div className="bb-panel">
@@ -59,51 +64,10 @@ export default function ProposalBuilder({ dealId, meta, line: wantedLine, onLine
     );
   }
 
-  const key = chooseLine(data.lines, picked ?? wantedLine);
-  const pickLine = (next) => {
-    setPicked(next);
-    onLine(next);
-  };
   const line = data.lines.find((entry) => entry.line === key);
-  const stored = data.marks.stored;
-  const proposalMeta = meta.proposal;
-  const cards = shownCards(proposalMeta, key);
-  const setOpen = (card, open) => setOpenCards((now) => ({ ...now, [cardId(card)]: open }));
-  const cardProps = (cardKey) => {
-    const perLine = proposalMeta.cards.find((entry) => entry.key === cardKey)?.line;
-    const card = perLine ? { key: cardKey, line: key } : { key: cardKey };
-    const open = isOpen(openCards, stored, card);
-    return {
-      done: stampOf(stored, card),
-      open,
-      busy: writes.busy,
-      onToggleOpen: () => setOpen(card, !open),
-      onToggleDone: (done) => {
-        if (done) setOpen(card, false);
-        writes.mark(card, done);
-      },
-    };
-  };
-  const done = cards.filter((card) => stampOf(stored, card)).length;
-  const allOpen = cards.every((card) => isOpen(openCards, stored, card));
-  const pickRows = (mode) => {
-    setRowsMode(mode);
-    writeRowsPref(storage(), mode);
-  };
-  const fix = (item) => {
-    if (item.fix?.tab) {
-      onGoTab(item.fix.tab);
-      return;
-    }
-    if (item.line) pickLine(item.line);
-    const perLine = proposalMeta.cards.find((entry) => entry.key === item.fix.card)?.line;
-    setOpen(perLine ? { key: item.fix.card, line: item.line || key } : { key: item.fix.card }, true);
-    requestAnimationFrame(() => {
-      document
-        .querySelector(`[data-guide="build-${item.fix.card}"]`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  };
+  const set = writes.setPath;
+  const lineLabel = (lineKey) => meta.lines?.find((entry) => entry.key === lineKey)?.label ?? lineKey;
+  const marketChoices = data.config.markets?.lines?.[key] ?? {};
   const strip = (
     <EnrollmentStrip
       key={key}
@@ -118,21 +82,44 @@ export default function ProposalBuilder({ dealId, meta, line: wantedLine, onLine
     resetOrder: () => writes.resetOrder(key),
     toQuotes: onQuotes,
     recommendAll: writes.recommendAll,
-    reasons: (text) => writes.setPath(`reasons.${key}`, text),
+    reasons: (text) => set(`reasons.${key}`, text),
+  };
+  const pickRows = (mode) => {
+    setRowsMode(mode);
+    writeRowsPref(storage(), mode);
   };
 
   return (
     <div className="bnf-build" data-guide="proposal-builder">
       <BuilderToolbar
-        progress={{ done, total: cards.length }}
-        allOpen={allOpen}
-        onAllOpen={(open) => setOpenCards((now) => ({ ...now, ...Object.fromEntries(cards.map((c) => [cardId(c), open])) }))}
+        progress={cards.progress}
+        allOpen={cards.allOpen}
+        onAllOpen={cards.setAllOpen}
         checks={data.checks}
         showChecks={showChecks}
         onShowChecks={setShowChecks}
         ready={data.ready}
-        onFix={fix}
+        onFix={cards.fix}
       />
+      <OutputCard
+        output={data.output}
+        meta={proposalMeta}
+        bestOnly={data.best_only}
+        card={cards.props('output')}
+        busy={writes.busy}
+        onSet={set}
+      />
+      <PagesCard
+        ledger={data.ledger}
+        output={data.output}
+        experience={data.experience}
+        meta={proposalMeta}
+        card={cards.props('pages')}
+        busy={writes.busy}
+        onSet={set}
+        onFix={cards.fix}
+      />
+      <CoverageCard dealId={dealId} meta={meta} card={cards.props('coverage')} />
       <LineTabs
         lines={data.lines}
         line={key}
@@ -140,23 +127,28 @@ export default function ProposalBuilder({ dealId, meta, line: wantedLine, onLine
         onPick={pickLine}
         onMove={(lineKey, dir) => {
           const order = lineOrder(data.lines, lineKey, dir);
-          if (order) writes.setPath('order', order);
+          if (order) set('order', order);
         }}
       />
       {line.state === 'presented' ? (
-        <IncumbentCard line={line} card={cardProps('quotes')} strip={strip} onEditIntent={() => onGoTab('intake')} />
+        <IncumbentCard
+          line={line}
+          card={cards.props('quotes')}
+          strip={strip}
+          onEditIntent={() => cards.fix({ fix: { card: 'coverage' } })}
+        />
       ) : (
         <PlansCard
           dealId={dealId}
           line={line}
-          card={cardProps('quotes')}
+          card={cards.props('quotes')}
           rowsMode={rowsMode}
           onRowsMode={pickRows}
           notice={
             <OffNotice
               line={line}
               busy={writes.busy}
-              onOpenIntent={() => onGoTab('intake')}
+              onOpenIntent={() => cards.fix({ fix: { card: 'coverage' } })}
               onPutOn={(hasToday) => writes.putOn(key, hasToday)}
             />
           }
@@ -165,7 +157,34 @@ export default function ProposalBuilder({ dealId, meta, line: wantedLine, onLine
           actions={actions}
         />
       )}
-      <RowsCard line={line} card={cardProps('rows')} meta={proposalMeta} busy={writes.busy} onSet={writes.setPath} />
+      <RowsCard line={line} card={cards.props('rows')} meta={proposalMeta} busy={writes.busy} onSet={set} />
+      <SummaryCard
+        summary={data.summary}
+        lines={data.lines}
+        lineLabel={lineLabel}
+        newGroup={!data.lines.some((entry) => entry.currents.length)}
+        meta={proposalMeta}
+        card={cards.props('summary')}
+        busy={writes.busy}
+        onSet={set}
+      />
+      <NextStepsCard
+        key={JSON.stringify(data.next_steps)}
+        steps={data.next_steps}
+        meta={proposalMeta}
+        card={cards.props('next_steps')}
+        busy={writes.busy}
+        onSet={set}
+      />
+      <MarketsCard
+        markets={data.markets}
+        line={line}
+        settings={{ notes: marketChoices.notes ?? {}, hidden: marketChoices.hidden ?? [] }}
+        meta={proposalMeta}
+        card={cards.props('markets')}
+        busy={writes.busy}
+        onSet={set}
+      />
     </div>
   );
 }

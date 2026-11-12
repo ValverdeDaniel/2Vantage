@@ -1,4 +1,4 @@
-"""The proposal builder's catalogue (plan.md §8.14; J.6.3; J16, J18, J59–J62). Data module.
+"""The proposal builder's catalogue (plan.md §8.14; J.6.3; J16, J18, J38–J42, J59–J62). Data module.
 
 Served as `/api/meta/` `proposal`, so the browser holds no copy (rule 1). Ported from old Vantage 891f1b3:
 `pipeline/proposal_review.py` (the cards), `pipeline/composition.py` (parts, card stats, the stop-loss row set, the
@@ -11,17 +11,21 @@ from deals import lines
 from quotes import fields
 
 from . import pages
+from .summary_blocks import catalog as summary_catalog
 
 # The builder's cards (D-113), in screen order. A deal card is marked once for the deal, a line card once per line.
-# `pictures` takes a mark but never counts toward "the proposal is built" (old OPTIONAL_CARDS).
+# The optional cards take a mark but never count toward "the proposal is built": `pictures` (the old OPTIONAL_CARDS)
+# and `pages`, the Presentation pages card, which the old app left unmarked so that adding it reopened no finished
+# proposal (every page on it is optional, and a page with nothing to say does not print).
 DEAL_CARDS = ('cover', 'output', 'coverage', 'summary', 'next_steps')
-OPTIONAL_CARDS = ('pictures',)
+OPTIONAL_CARDS = ('pictures', 'pages')
 LINE_CARDS = ('quotes', 'rows', 'markets')
 CARDS = DEAL_CARDS + OPTIONAL_CARDS + LINE_CARDS
 CARD_TITLES = {
     'cover': 'Cover',
     'pictures': 'Pictures',
     'output': 'How the documents look',
+    'pages': 'Presentation pages',
     'coverage': 'Coverage & marketing intent',
     'summary': 'Executive summary',
     'next_steps': 'Next steps',
@@ -29,9 +33,32 @@ CARD_TITLES = {
     'rows': 'What this section shows',
     'markets': 'Markets checked',
 }
-# The cards the builder draws so far; a card joins with its slice (cover, output, coverage, summary, next steps and
-# markets: slices 26 and 34). "n of N completed" counts only these.
-ON_SCREEN = ('quotes', 'rows')
+# The cards the builder draws so far; the cover and pictures join with slice 34. "n of N completed" counts these,
+# the optional ones apart.
+ON_SCREEN = ('output', 'pages', 'coverage', 'quotes', 'rows', 'summary', 'next_steps', 'markets')
+
+# How the documents look (J38, J39, J41): the layout's words, the spreadsheet's Dynamic Compare columns, and the
+# switches that default on. The Format (Presentation / Classic, J36, J37) and the share link's period (J40) wait (OQ8).
+LAYOUT_LABELS = {
+    'by_carrier': 'A page per carrier',
+    'side_by_side': 'Every option side by side',
+    'best_only': 'The recommendation only',
+}
+COMPARE_SLOTS = (5, 10, 16)
+DEFAULT_COMPARE_SLOTS = 16
+OUTPUT_SWITCHES = ('package_summary', 'compare_tabs', 'disclaimers')
+
+# The Presentation format's switchable pages (J42), in the story's order. Renewal history waits with past plan years
+# (J44, deferred).
+PAGES = (
+    ('agenda', 'Agenda and section pages'),
+    ('about', 'About the firm'),
+    ('team', 'Your team'),
+    ('experience', 'Plan experience'),
+    ('calendar', 'Meeting calendar'),
+    ('bios', 'Team bios'),
+)
+PAGE_KEYS = tuple(key for key, _label in PAGES)
 
 # A line section's parts, in print order (not configurable: a cost table before the plans it prices helps nobody).
 PARTS = (('comparison', 'Plan comparison'), ('cost', 'Cost summary'), ('recommendation', 'Recommendation'))
@@ -140,6 +167,10 @@ TABLE_NOTE_MAX = 600
 TABLE_NOTE_LINES = 4
 MAX_NEXT_STEPS = 8
 MAX_STEP_TEXT = 300
+MAX_EXPERIENCE_ROWS = 6
+MAX_PERIOD = 80
+MAX_MARKET_NOTE = 120
+MAX_HIDDEN = 40
 
 
 def field_set(line):
@@ -182,16 +213,27 @@ def row_preset(line):
 def meta():
     """/api/meta/ `proposal`."""
     return {
-        'cards': [{'key': key, 'title': CARD_TITLES[key], 'line': key in LINE_CARDS} for key in CARDS],
+        'cards': [
+            {'key': key, 'title': CARD_TITLES[key], 'line': key in LINE_CARDS, 'optional': key in OPTIONAL_CARDS}
+            for key in CARDS
+        ],
         'on_screen': list(ON_SCREEN),
         'parts': [{'key': key, 'label': label} for key, label in PARTS],
-        'layouts': list(pages.LAYOUTS),
+        'layouts': [{'key': key, 'label': LAYOUT_LABELS[key]} for key in pages.LAYOUTS],
+        'compare_slots': list(COMPARE_SLOTS),
+        'pages': [{'key': key, 'label': label} for key, label in PAGES],
+        'summary': summary_catalog.meta(),
         'limits': {
             'title': MAX_TITLE,
             'text': MAX_TEXT,
             'card_stats': MAX_CARD_STATS,
             'table_note': TABLE_NOTE_MAX,
             'table_note_lines': TABLE_NOTE_LINES,
+            'next_steps': MAX_NEXT_STEPS,
+            'step_text': MAX_STEP_TEXT,
+            'experience_rows': MAX_EXPERIENCE_ROWS,
+            'period': MAX_PERIOD,
+            'market_note': MAX_MARKET_NOTE,
         },
         'key_preset': KEY_PRESET,
     }

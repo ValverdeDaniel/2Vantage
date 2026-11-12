@@ -18,7 +18,17 @@ WORDS = {
     'order': 'The line order',
     'next_steps': 'The next steps',
     'output.layout': 'The layout',
+    'output.package_summary': 'The package summary switch',
+    'output.compare_tabs': "The spreadsheet's “Every quoted plan” switch",
+    'output.disclaimers': "The spreadsheet's Disclaimers switch",
+    'output.compare_slots': 'The Compare columns',
+    'experience.summary': 'The plan experience summary',
+    'experience.rows': 'The plan experience periods',
+    'summary.on': "The executive summary's Show it",
+    'summary.blocks': "The executive summary's figures",
+    'markets.on': "Markets checked's Show it",
 }
+PAGE_LABELS = dict(catalog.PAGES)
 
 
 def label(path):
@@ -33,6 +43,11 @@ def label(path):
         return f'The completed mark on {catalog.CARD_TITLES.get(card, card)}'
     if parts[0] == 'lines':
         return f'{lines.label(parts[1])}: {parts[2].replace("_", " ")}'
+    if parts[:2] == ['output', 'pages']:
+        return f'The switch for the {PAGE_LABELS.get(parts[2], parts[2])} page'
+    if parts[:2] == ['markets', 'lines']:
+        what = 'the hidden carriers' if parts[3] == 'hidden' else "a carrier's note"
+        return f'Markets checked on {lines.label(parts[2])}: {what}'
     return path
 
 

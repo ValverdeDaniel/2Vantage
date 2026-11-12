@@ -1999,7 +1999,7 @@
       "check": "pixels",
       "selector": null,
       "item": "J32",
-      "why": "The deal cards — Cover, Pictures, How the documents look, Presentation pages, Coverage & marketing intent, Executive summary, Next steps and Markets checked — arrive with slices 26 and 34 (J32–J46, J63–J67); \"n of N completed\" counts only the cards on screen (Plans and rows per line).",
+      "why": "The Cover and Pictures cards (J32–J35), the team picks (J43) and the TEMPLATE bars arrive with slice 34; \"n of N completed\" counts the cards on screen, Presentation pages apart (it takes a mark but is optional, as Pictures).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2010,7 +2010,7 @@
       "check": "classes",
       "selector": null,
       "item": "J32",
-      "why": "bnf-cover-strip, bnf-cover-head and the other deal cards' classes arrive with slices 26 and 34; bnf-build-ready shows only when the proposal is not ready (GD1 is, J28); bnf-advisor-tab-split wraps the builder as in the old app; bnf-advisor-pages wraps the pages the builder shares with ▦ Pages; bnf-build-enroll-note words the strip's source (J48); bnf-chip-renewal, bnf-link-picker-text and bnf-delta-pos come with C2 on page 3 (OQ11).",
+      "why": "bnf-cover-strip, bnf-cover-head and bnf-cover-tiles arrive with the Cover card (slice 34); bnf-build-ready shows only when the proposal is not ready (GD1 is, J28); bnf-advisor-tab-split wraps the builder as in the old app; bnf-advisor-pages wraps the pages the builder shares with ▦ Pages; bnf-build-enroll-note words the strip's source (J48); bnf-chip-renewal, bnf-link-picker-text and bnf-delta-pos come with C2 on page 3 (OQ11).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2043,7 +2043,7 @@
       "check": "pixels",
       "selector": null,
       "item": "J23",
-      "why": "\"⚠ 1 to check\" counts the checks built in slice 25 (J23: 12 of 17; no_next_steps, summary_counts_hidden_carriers and medicare_not_shown come with their cards in slice 26, split_plan in 33).",
+      "why": "The Before-you-export list counts the checks built so far on 2V's GD1 data (J23: all but split_plan, slice 33, and history_unfigured, which waits for past plan years, J44).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2120,7 +2120,7 @@
       "check": "pixels",
       "selector": null,
       "item": "J68",
-      "why": "The rows card's TEMPLATE bar (row-set templates, J68) arrives with slice 34.",
+      "why": "The TEMPLATE bars of How the documents look, the rows card and the Executive summary (J68) arrive with slice 34.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2143,6 +2143,39 @@
       "selector": null,
       "item": "J16",
       "why": "Key rows label the rows with the plan fields' own labels (\"Coinsurance (member share)\", \"Rx tiers\"), the client files' words (§4.3).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "J42",
+      "why": "Presentation pages: no Renewal history row or block (past plan years wait, J44); the firm's pages (About, team, calendar, bios) read \"not written yet\" with no Fix ▸ until FirmPages and the Firm pages drawer exist (slices 29 and 34; J155), where the old rows pointed to the Data Hub; the card takes a completed mark that never counts (the old card had none; slice 26's done-when).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "J38",
+      "why": "\"The recommendation only\" is enabled: every GD1 line has its recommendation in 2V (§5.4, as J28), where the old builder waited for Current 3's pick (\"Pick a recommendation on Medical first\").",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "J64",
+      "why": "The summary preview reads 2V's picks: two plans are recommended for Current 1 (§5.4, several picks per line), so Medical's \"Our recommendation\" and \"Annual impact\" and the deal totals say why they cannot add one figure, where the old read \"No plan is recommended\"; Vision's recommended renewal prints its figures (as J28).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

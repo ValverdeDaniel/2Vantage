@@ -1,155 +1,126 @@
 """The proposal configuration by path (plan.md §6.11, §7.12; J.6.2, J.6.3, J19, J20). Pure.
 
-A write is `{path: value}`: "title", "reasons.medical", "lines.dental.rows", "lines.medical.parts.cost",
-"output.layout". Each path is cleaned on its own (`clean`), merged into the stored config (`merge`) so two people
-writing different paths never undo each other, and owned by one builder card (`card_of`), whose completed mark the
-write clears (J19). Ported from old Vantage 891f1b3 `pipeline/composition.py` (`clean_composition`,
-`clean_table_note`, `merge_config`): the old one-key-at-a-time merge becomes a merge by path.
+A write is `{path: value}`: "title", "reasons.medical", "lines.dental.rows", "output.pages.team", "summary.blocks",
+"markets.lines.medical.notes.cigna". Each path is cleaned on its own (`clean`, with `cleaners`), merged into the
+stored config (`merge`) so two people writing different paths never undo each other, and owned by one builder card
+(`card_of`), whose completed mark the write clears (J19). Ported from old Vantage 891f1b3 `pipeline/composition.py`
+(`clean_composition`, `merge_config`): the old one-key-at-a-time merge becomes a merge by path.
 
-A path not listed here is not a setting yet: it answers 400 until the slice that owns its card adds it (the summary,
-markets, experience, team and the rest of `output`, slices 26 and 34; `lines.<line>.merged`, slice 33).
-Values left at their default are removed from the stored config, so "unset" and "default" never differ.
+A path not listed here is not a setting yet: it answers 400 until the slice that owns its card adds it (the cover,
+pictures and team, slice 34; `lines.<line>.merged`, slice 33). Values left at their default are removed from the
+stored config, so "unset" and "default" never differ.
 """
 
 import copy
-import re
 
 from deals import lines
 
 from . import catalog, pages
+from . import cleaners as c
+from .cleaners import Invalid
 
 TEXT_LIMITS = {'title': catalog.MAX_TITLE, 'intro': catalog.MAX_TEXT, 'recommendation': catalog.MAX_TEXT}
-LINE_KEYS = ('parts', 'rows', 'card_stats', 'table_note')
 UNKNOWN = '"{path}" is not a proposal setting.'
+EVERY_LINE = '*'  # card_of's line for a deal-wide switch on a line card (Markets checked's Show it)
 
 
-class Invalid(ValueError):
-    """A value or path refused; the message is shown as is (400)."""
-
-    def __init__(self, path, message):
-        self.path, self.message = path, message
-        super().__init__(message)
+def _unknown(path):
+    return Invalid(path, UNKNOWN.format(path=path))
 
 
-def _line(path, key):
-    if key not in lines.BY_KEY:
-        raise Invalid(path, f'"{key}" is not a line of coverage.')
-    return key
-
-
-def _text(path, value, limit):
-    if value is None:
-        return ''
-    if not isinstance(value, str):
-        raise Invalid(path, 'Send text.')
-    return value.strip()[:limit]
-
-
-def table_note(value):
-    """Spaces collapsed within each line, blank lines dropped, ≤4 lines and ≤600 characters ('' is no note)."""
-    rows = [' '.join(part.split()) for part in value.replace('\r\n', '\n').split('\n')]
-    rows = [row for row in rows if row][: catalog.TABLE_NOTE_LINES]
-    return '\n'.join(rows)[: catalog.TABLE_NOTE_MAX].strip()
-
-
-def _keys(path, value, line, limit, allowed):
-    """A de-duplicated list of the line's field keys (an unknown one is dropped, as the old cleaner did), or None."""
-    if value is None:
-        return None
-    if not isinstance(value, list):
-        raise Invalid(path, 'Send a list of field keys, or null.')
-    out = []
-    for item in value:
-        key = str(item or '').strip()
-        if key in allowed and key not in out:
-            out.append(key)
-    return out[:limit]
-
-
-def _order(path, value):
-    if value is None:
-        return []
-    if not isinstance(value, list):
-        raise Invalid(path, 'Send the lines in order.')
-    out = []
-    for key in value:
-        if _line(path, str(key)) not in out:
-            out.append(str(key))
-    return out
-
-
-def _next_steps(path, value):
-    if value is None:
-        return []
-    if not isinstance(value, list):
-        raise Invalid(path, 'Send the next steps as a list of {date, text}.')
-    steps = []
-    for item in value[: catalog.MAX_NEXT_STEPS]:
-        if not isinstance(item, dict):
-            raise Invalid(path, 'Each next step is {date, text}.')
-        text = str(item.get('text') or '').strip()[: catalog.MAX_STEP_TEXT]
-        when = str(item.get('date') or '').strip()
-        if when and not re.fullmatch(r'\d{4}-\d{2}-\d{2}', when):
-            raise Invalid(path, f'"{when}" is not a date (YYYY-MM-DD).')
-        if text:
-            steps.append({'date': when, 'text': text})
-    return steps
-
-
-def clean(path, value):
-    """(the stored path, the cleaned value) for one write; `Invalid` with a sentence otherwise. A cleaned value equal
-    to the default (DEFAULTS) removes the path."""
-    parts = path.split('.')
-    head = parts[0]
-    if head in TEXT_LIMITS and len(parts) == 1:
-        return path, _text(path, value, TEXT_LIMITS[head])
-    if head == 'reasons' and len(parts) == 2:
-        _line(path, parts[1])
-        return path, _text(path, value, catalog.MAX_TEXT)
-    if path == 'order':
-        return path, _order(path, value)
-    if path == 'next_steps':
-        return path, _next_steps(path, value)
-    if path == 'output.layout':
+def _output(path, rest, value):
+    if rest == ['layout']:
         if value not in pages.LAYOUTS:
             raise Invalid(path, f'The layout is one of: {", ".join(pages.LAYOUTS)}.')
-        return path, value
-    if head == 'lines' and len(parts) >= 3:
-        return path, _line_setting(path, _line(path, parts[1]), parts[2:], value)
-    raise Invalid(path, UNKNOWN.format(path=path))
+        return value
+    if len(rest) == 1 and rest[0] in catalog.OUTPUT_SWITCHES:
+        return c.switch(path, value)
+    if rest == ['compare_slots']:
+        return c.compare_slots(path, value)
+    if len(rest) == 2 and rest[0] == 'pages' and rest[1] in catalog.PAGE_KEYS:
+        return c.switch(path, value)
+    raise _unknown(path)
+
+
+def _markets(path, rest, value):
+    if rest == ['on']:
+        return c.market_switch(path, value)
+    if len(rest) >= 3 and rest[0] == 'lines':
+        c.line(path, rest[1])
+        if rest[2:] == ['hidden']:
+            return c.hidden_carriers(path, value)
+        if len(rest) == 4 and rest[2] == 'notes':
+            c.carrier_id(path, rest[3])
+            return c.text(path, value, catalog.MAX_MARKET_NOTE)
+    raise _unknown(path)
 
 
 def _line_setting(path, line, rest, value):
     name = rest[0]
     if name == 'parts' and len(rest) == 2 and rest[1] in catalog.PART_KEYS:
-        if not isinstance(value, bool):
-            raise Invalid(path, 'Send true or false.')
-        return value
+        return c.switch(path, value)
     if len(rest) != 1:
-        raise Invalid(path, UNKNOWN.format(path=path))
+        raise _unknown(path)
     if name == 'rows':
-        allowed = set(catalog.client_keys(line))
-        return _keys(path, value, line, catalog.MAX_ROWS, allowed)
+        return c.field_keys(path, value, catalog.MAX_ROWS, set(catalog.client_keys(line)))
     if name == 'card_stats':
-        allowed = set(catalog.client_keys(line))
-        stats = _keys(path, value, line, catalog.MAX_CARD_STATS, allowed)
+        stats = c.field_keys(path, value, catalog.MAX_CARD_STATS, set(catalog.client_keys(line)))
         return stats or None  # an empty pick is the standard set again
     if name == 'table_note':
-        return table_note(_text(path, value, catalog.TABLE_NOTE_MAX * 2))
-    raise Invalid(path, UNKNOWN.format(path=path))
+        return c.table_note(c.text(path, value, catalog.TABLE_NOTE_MAX * 2))
+    raise _unknown(path)
+
+
+def clean(path, value):
+    """(the stored path, the cleaned value) for one write; `Invalid` with a sentence otherwise. A cleaned value equal
+    to the default removes the path."""
+    parts = path.split('.')
+    head, rest = parts[0], parts[1:]
+    if head in TEXT_LIMITS and not rest:
+        return path, c.text(path, value, TEXT_LIMITS[head])
+    if head == 'reasons' and len(rest) == 1:
+        c.line(path, rest[0])
+        return path, c.text(path, value, catalog.MAX_TEXT)
+    if path == 'order':
+        return path, c.order(path, value)
+    if path == 'next_steps':
+        return path, c.next_steps(path, value)
+    if path == 'experience.summary':
+        return path, c.text(path, value, catalog.MAX_TEXT)
+    if path == 'experience.rows':
+        return path, c.experience_rows(path, value)
+    if path == 'summary.on':
+        return path, c.switch(path, value)
+    if path == 'summary.blocks':
+        return path, c.summary_blocks(path, value)
+    if head == 'output' and rest:
+        return path, _output(path, rest, value)
+    if head == 'markets' and rest:
+        return path, _markets(path, rest, value)
+    if head == 'lines' and len(rest) >= 2:
+        return path, _line_setting(path, c.line(path, rest[0]), rest[1:], value)
+    raise _unknown(path)
 
 
 def default(path):
     """What an unset path reads as."""
     parts = path.split('.')
-    if path in ('order', 'next_steps'):
+    if path in ('order', 'next_steps', 'experience.rows', 'summary.blocks'):
         return []
+    if path == 'summary.on' or (parts[0] == 'output' and (parts[-1] in catalog.OUTPUT_SWITCHES or len(parts) == 3)):
+        return True
     if parts[0] == 'lines' and len(parts) == 4 and parts[2] == 'parts':
         return True
     if parts[0] == 'lines' and parts[-1] in ('rows', 'card_stats'):
         return None
     if path == 'output.layout':
         return pages.DEFAULT_LAYOUT
+    if path == 'output.compare_slots':
+        return catalog.DEFAULT_COMPARE_SLOTS
+    if path == 'markets.on':
+        return None
+    if parts[0] == 'markets' and parts[-1] == 'hidden':
+        return []
     return ''
 
 
@@ -224,22 +195,31 @@ def merge(stored, changes):
     return merged, diff
 
 
+CARD_BY_HEAD = {
+    'title': 'cover',
+    'intro': 'cover',
+    'recommendation': 'summary',  # the deal-wide words print in the glance notes (J57)
+    'next_steps': 'next_steps',
+    'summary': 'summary',
+    'experience': 'pages',
+}
+
+
 def card_of(path):
-    """(card, line or None) owning a path, or None when no card does (the line order)."""
+    """(card, line or None) owning a path, or None when no card does (the line order). Markets checked's Show it is
+    deal-wide on a line card: it answers EVERY_LINE, and the write takes the card's mark off every line."""
     parts = path.split('.')
     head = parts[0]
-    if head in ('title', 'intro'):
-        return 'cover', None
-    if head == 'recommendation':
-        return 'summary', None  # the deal-wide words print in the glance notes (J57)
+    if head in CARD_BY_HEAD:
+        return CARD_BY_HEAD[head], None
     if head == 'reasons':
         return 'quotes', parts[1]
     if head == 'lines':
         return 'rows', parts[1]
-    if head == 'next_steps':
-        return 'next_steps', None
     if head == 'output':
-        return 'output', None
+        return ('pages' if parts[1:2] == ['pages'] else 'output'), None
+    if head == 'markets':
+        return 'markets', parts[2] if parts[1:2] == ['lines'] else EVERY_LINE
     return None
 
 
@@ -259,3 +239,17 @@ def ordered(stored, keys):
     order = get(stored, 'order')
     index = {key: i for i, key in enumerate(order)}
     return sorted(keys, key=lambda key: (index.get(key, len(order)), lines.LINE_KEYS.index(key)))
+
+
+def output(stored):
+    """The output settings with their defaults filled in: what How the documents look and the page switches show."""
+    return {
+        'layout': get(stored, 'output.layout'),
+        **{key: get(stored, f'output.{key}') for key in catalog.OUTPUT_SWITCHES},
+        'compare_slots': get(stored, 'output.compare_slots'),
+        'pages': {key: get(stored, f'output.pages.{key}') for key in catalog.PAGE_KEYS},
+    }
+
+
+def experience(stored):
+    return {'summary': get(stored, 'experience.summary'), 'rows': get(stored, 'experience.rows')}

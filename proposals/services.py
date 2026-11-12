@@ -7,6 +7,8 @@
 - `set_mark(user, deal, card, line, done)`: a card marked completed or not (J18); its own Activity row, never merged.
 - `clear_marks(deal_id, lines, cards)`: quotes' `plans_changed` receiver — a star, slot, order or Claude write takes
   the line's Plans card mark off (J19). One JSONB key removal, no read; no Activity of its own (the quotes write is).
+- `clear_deal_marks(deal_id, cards)`: intake's `coverage_changed` receiver — an intent or coverage edit takes the
+  Coverage & marketing intent card's mark off (J46), the same way.
 Lock order (rule 3): the Deal first (it serializes the row's creation), then the config row.
 """
 
@@ -119,6 +121,21 @@ def clear_marks(deal_id, line_keys, cards=('quotes',)):
     return ProposalConfig.objects.filter(deal_id=deal_id).update(marks=RawSQL(sql, paths))
 
 
+def clear_deal_marks(deal_id, cards):
+    """Take deal cards' marks off in one UPDATE (`-` per key); no Activity."""
+    if not cards:
+        return 0
+    sql = '"marks"' + ' - %s::text' * len(cards)
+    return ProposalConfig.objects.filter(deal_id=deal_id).update(marks=RawSQL(sql, list(cards)))
+
+
 def on_plans_changed(sender, **kwargs):
     """quotes' `plans_changed` receiver (O.1): the lines' Plans card marks come off."""
     clear_marks(kwargs['deal_id'], kwargs['lines'])
+
+
+def on_coverage_changed(sender, **kwargs):
+    """intake's `coverage_changed` receiver (O.1; J46): an edit on the Coverage & marketing intent card — the intent
+    or a coverage row — takes the card's mark off, as the old builder's `afterIntentEdit` did. Inside intake's
+    transaction, after its locks (the Deal, intake's rows, then this row)."""
+    clear_deal_marks(kwargs['deal_id'], ('coverage',))
