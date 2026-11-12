@@ -1,29 +1,19 @@
-"""Advisor API (plan.md §7.7). Thin: parse → service or selector → respond."""
+"""Advisor API: plans, line counts, the comparison, enrollment and packages (plan.md §7.8). Thin: parse → service or
+selector → respond. Marks are in `mark_views.py`, roles, links, order and slots in `arrange_views.py`."""
 
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from deals import lines
 from deals.models import Deal
-from deals.selectors import deal_header
 
-from . import marks, selectors, services
+from . import parse, selectors, services
 from .models import Package, Plan
 
 
-def _line(request, required=True):
-    line = request.query_params.get('line') or request.data.get('line')
-    if required and line not in lines.BY_KEY:
-        raise ValidationError({'line': ['Give a line of coverage.']})
-    return line
-
-
-def _plan_response(plan, code=status.HTTP_200_OK):
-    plan = Plan.objects.prefetch_related('replaces').get(pk=plan.pk)
-    return Response(selectors.plan_payload(plan), status=code)
+def _package(package):
+    return {'id': package.id, 'name': package.name, 'plan_ids': sorted(p.id for p in package.plans.all())}
 
 
 class LinesView(APIView):
@@ -33,7 +23,7 @@ class LinesView(APIView):
 
 class PlansView(APIView):
     def get(self, request, pk):
-        return Response(selectors.comparison(get_object_or_404(Deal, pk=pk), _line(request)))
+        return Response(selectors.comparison(get_object_or_404(Deal, pk=pk), parse.line(request)))
 
     def post(self, request, pk):
         deal = get_object_or_404(Deal, pk=pk)
@@ -46,19 +36,20 @@ class PlansView(APIView):
             carrier=data.get('carrier'),
             name=data.get('name'),
             plan_number=data.get('plan_number', ''),
-            renews_id=data.get('renews_id'),
-            replaces_ids=data.get('replaces_ids') or [],
+            renews_id=parse.optional_id(data.get('renews_id'), 'renews_id'),
+            replaces_ids=parse.plan_ids(data.get('replaces_ids') or [], 'replaces_ids'),
             values=data.get('values') or {},
         )
-        return _plan_response(plan, status.HTTP_201_CREATED)
+        return Response(selectors.plan_payload(plan), status=status.HTTP_201_CREATED)
 
 
 class PlanView(APIView):
     def patch(self, request, plan_id):
+        """Only carrier, name, plan_number, client_name, notes and values, with `expect` (F71)."""
         get_object_or_404(Plan, pk=plan_id)
-        allowed = {'carrier', 'name', 'plan_number', 'role', 'renews_id', 'replaces_ids', 'starred', 'notes', 'values'}
-        plan, _ = services.update_plan(request.user, plan_id, {k: v for k, v in request.data.items() if k in allowed})
-        return _plan_response(plan)
+        changes = {key: value for key, value in request.data.items() if key in services.plans.PATCHABLE}
+        plan, _ = services.update_plan(request.user, plan_id, changes)
+        return Response({**selectors.plan_payload(plan), 'activity_id': plan.activity_id})
 
     def delete(self, request, plan_id):
         get_object_or_404(Plan, pk=plan_id)
@@ -69,72 +60,46 @@ class PlanView(APIView):
 class RenewalView(APIView):
     def post(self, request, plan_id):
         get_object_or_404(Plan, pk=plan_id)
-        return _plan_response(services.create_renewal(request.user, plan_id), status.HTTP_201_CREATED)
+        plan = services.create_renewal(request.user, plan_id)
+        return Response(selectors.plan_payload(plan), status=status.HTTP_201_CREATED)
 
 
 class CopyView(APIView):
     def post(self, request, plan_id):
         get_object_or_404(Plan, pk=plan_id)
-        return _plan_response(services.copy_as_alternate(request.user, plan_id), status.HTTP_201_CREATED)
-
-
-class SoldView(APIView):
-    def post(self, request, plan_id):
-        get_object_or_404(Plan, pk=plan_id)
-        plan, deal = marks.set_sold(request.user, plan_id, bool(request.data.get('sold')))
-        return Response({'plan': selectors.plan_payload(plan), 'deal': deal_header(deal)})
-
-
-class RecommendView(APIView):
-    def post(self, request, plan_id):
-        get_object_or_404(Plan, pk=plan_id)
-        return _plan_response(marks.set_recommended(request.user, plan_id, bool(request.data.get('recommended'))))
-
-
-class StarView(APIView):
-    def post(self, request, pk):
-        deal = get_object_or_404(Deal, pk=pk)
-        ids = [int(i) for i in request.data.get('plan_ids', [])]
-        return Response({'updated': marks.star(request.user, deal, ids, bool(request.data.get('starred')))})
+        plan = services.copy_as_alternate(request.user, plan_id)
+        return Response(selectors.plan_payload(plan), status=status.HTTP_201_CREATED)
 
 
 class EnrollmentView(APIView):
     def post(self, request, pk):
         deal = get_object_or_404(Deal, pk=pk)
-        plans = marks.set_enrollment(request.user, deal, request.data.get('plans', []))
-        return Response({'plans': [selectors.plan_payload(p) for p in plans]})
-
-
-class OrderView(APIView):
-    def post(self, request, pk):
-        deal = get_object_or_404(Deal, pk=pk)
-        services.order(request.user, deal, _line(request), request.data.get('role'), request.data.get('plan_ids', []))
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        plans = services.set_enrollment(request.user, deal, request.data.get('plans', []))
+        activity_id = plans[0].activity_id if plans else None
+        return Response({'plans': selectors.payloads(plans), 'activity_id': activity_id})
 
 
 class PackagesView(APIView):
     def get(self, request, pk):
         deal = get_object_or_404(Deal, pk=pk)
-        line = _line(request)
-        return Response([{'id': i, 'name': n, 'plan_ids': ids} for i, n, ids in selectors.member_packages(deal, line)])
+        packages = Package.objects.filter(deal=deal, line=parse.line(request)).prefetch_related('plans')
+        return Response([_package(package) for package in packages])
 
     def post(self, request, pk):
         deal = get_object_or_404(Deal, pk=pk)
         data = request.data
-        package = marks.create_package(request.user, deal, _line(request), data.get('name'), data.get('plan_ids', []))
-        return Response(
-            {'id': package.id, 'name': package.name, 'plan_ids': [p.id for p in package.plans.all()]},
-            status=status.HTTP_201_CREATED,
+        package = services.create_package(
+            request.user, deal, parse.line(request), data.get('name'), data.get('plan_ids')
         )
+        return Response(_package(package), status=status.HTTP_201_CREATED)
 
 
 class PackageView(APIView):
     def patch(self, request, package_id):
         get_object_or_404(Package, pk=package_id)
-        package = marks.update_package(request.user, package_id, request.data)
-        return Response({'id': package.id, 'name': package.name, 'plan_ids': [p.id for p in package.plans.all()]})
+        return Response(_package(services.update_package(request.user, package_id, request.data)))
 
     def delete(self, request, package_id):
         get_object_or_404(Package, pk=package_id)
-        marks.delete_package(request.user, package_id)
+        services.delete_package(request.user, package_id)
         return Response(status=status.HTTP_204_NO_CONTENT)

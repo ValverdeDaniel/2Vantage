@@ -1,0 +1,233 @@
+/* ===== BENEFITS · CASE OVERVIEW (the CRM client record) =====================
+   Everything the Overview tab adds on top of the shared bb-/bnf- vocabulary.
+   Prefix: bnf-ov-. Loaded after benefits.css so it can lean on those tokens.
+   Never reference var(--ink-soft) or var(--accent) — neither is defined in
+   :root, they only survive elsewhere by falling back to inherited values.
+   ========================================================================== */
+
+/* --- client identity header ---------------------------------------------- */
+
+.bnf-ov-header {
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+}
+
+.bnf-ov-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.bnf-ov-avatar {
+  width: 46px;
+  height: 46px;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.bnf-ov-identity-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.bnf-ov-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.bnf-ov-legal {
+  font-size: 12.5px;
+  color: var(--ink3);
+  margin-top: 1px;
+}
+
+.bnf-ov-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.bnf-ov-stage {
+  background: var(--border-softer);
+  color: var(--ink2);
+}
+
+/* the linked Client Radar record, or the prompt to create one */
+.bnf-ov-clientbox {
+  flex-shrink: 0;
+  min-width: 190px;
+  max-width: 260px;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.bnf-ov-clientlink {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.bnf-ov-clientlink:hover {
+  text-decoration: underline;
+}
+
+.bnf-ov-clientmeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+}
+
+.bnf-ov-clientnext {
+  font-size: 12px;
+  color: var(--ink2);
+  line-height: 1.35;
+}
+
+.bnf-ov-nolink {
+  font-style: italic;
+}
+
+.bnf-ov-facts {
+  padding-top: 6px;
+}
+
+.bnf-ov-row .bb-account-label {
+  width: 148px;
+}
+
+.bnf-ov-row-hint {
+  display: block;
+  font-size: 11px;
+  color: var(--ink3);
+  font-weight: 400;
+}
+
+.bnf-ov-readonly {
+  cursor: default;
+}
+
+.bnf-ov-readonly:hover {
+  background: transparent;
+}
+
+/* --- waiting-on banner ---------------------------------------------------- */
+
+.bnf-ov-waiting {
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.bnf-ov-waiting-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.bnf-ov-waiting .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.bnf-ov-waiting-detail {
+  font-size: 12.5px;
+  color: var(--ink2);
+  margin-top: 3px;
+}
+
+.bnf-ov-waiting-next {
+  font-size: 12px;
+  color: var(--ink2);
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+
+/* whose court the ball is in — the one thing to read at a glance */
+.bnf-ov-side {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  vertical-align: 1px;
+}
+
+.bnf-ov-side-us {
+  background: var(--navy);
+  color: #fff;
+}
+
+.bnf-ov-side-them {
+  background: var(--violet-bg);
+  color: var(--violet);
+}
+
+/* the journey's completed state has no banner tone of its own */
+.bnf-next-banner.bnf-next-done {
+  background: var(--green-bg);
+  border-color: var(--green);
+}
+
+.bb-stat-value.bb-empty {
+  color: var(--ink3);
+}
+
+/* --- documents received vs still owed (inside phase card 1) --------------- */
+
+.bnf-ov-docsplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.bnf-ov-docsplit-head {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.bnf-ov-docline {
+  font-size: 12.5px;
+  color: var(--ink);
+  padding: 2px 0;
+  line-height: 1.4;
+}
+
+.bnf-ov-docline-owed {
+  color: var(--ink2);
+}
+
+.bnf-ov-dash {
+  color: var(--rose);
+  font-weight: 700;
+  margin-right: 2px;
+}
+
+/* --- two-column body ------------------------------------------------------ */
+
+.bnf-ov-cols {
+  margin-top: 20px;
+}
+
+.bnf-ov-cols .bb-panel-wide > .bb-panel,
+.bnf-ov-cols .bb-overview-side > .bb-panel {
+  margin-bottom: 18px;
+}

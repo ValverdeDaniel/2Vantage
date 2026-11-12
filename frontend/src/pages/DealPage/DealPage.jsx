@@ -1,38 +1,37 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Link, Navigate, useParams } from 'react-router';
 import { useDeal } from '../../api/deals';
 import { useMeta } from '../../api/meta';
 import { errorStatus } from '../../lib/errors';
-import Button from '../../ui/Button';
-import EmptyState from '../../ui/EmptyState';
 import ErrorBoundary from '../../ui/ErrorBoundary';
 import InlineError from '../../ui/InlineError';
-import Skeleton from '../../ui/Skeleton';
-import Tabs from '../../ui/Tabs';
+import Loading from '../../ui/Loading';
 import DealHeader from './DealHeader';
-import styles from './DealPage.module.css';
+import DealSidebar from './DealSidebar';
+import { tabFor, tabLabel } from './nav';
+import { BUILT_TABS, TAB_COMPONENTS } from './tabs';
 
-// Release 1 tabs (plan.md §8.4). Each is its own bundle and receives the deal header as `deal`.
-const TABS = [
-  { key: 'advisor', label: 'Advisor', Component: lazy(() => import('../../deal/advisor/AdvisorTab')) },
-  { key: 'proposal', label: 'Proposal', Component: lazy(() => import('../../deal/proposal/ProposalTab')) },
-  { key: 'documents', label: 'Documents', Component: lazy(() => import('../../deal/documents/DocumentsTab')) },
-];
-const FIRST_TAB = TABS[0].key;
-
-function DealSkeleton() {
+function MissingDeal() {
   return (
-    <div className={styles.page}>
-      <Skeleton lines={3} height="22px" width="40%" label="Loading the deal…" />
-      <div className={styles.body}>
-        <Skeleton lines={3} height="28px" width="100%" label="" />
-        <Skeleton lines={6} height="18px" label="" />
+    <div className="bb-dash">
+      <div className="bb-dash-header">
+        <div>
+          <div className="bb-title">This deal does not exist.</div>
+          <div className="bb-subtitle">It may have been deleted, or the link may be wrong.</div>
+        </div>
+        <Link to="/" className="btn btn-primary bb-new-btn">
+          Back to Benefits
+        </Link>
       </div>
     </div>
   );
 }
 
-/** One deal: the header stays mounted while tabs switch (the header query never reloads on a tab change). */
+/**
+ * DealShell (A20, A21, A26; plan.md §8.4): the old deal workspace (`bb-workspace`) with its sidebar, then the header
+ * strip and the open tab. The tab is in the path; only its code and data load, switching tabs never reloads the
+ * header, and each tab has its own error boundary, so a failing tab leaves the sidebar and the other tabs working.
+ */
 export default function DealPage() {
   const { dealId, tab } = useParams();
   const validId = /^\d+$/.test(dealId || '');
@@ -44,23 +43,9 @@ export default function DealPage() {
     if (clientName) document.title = `${clientName} — 2Vantage`;
   }, [clientName]);
 
-  const current = TABS.find((item) => item.key === tab);
-  if (validId && !current) return <Navigate to={`/deals/${dealId}/${FIRST_TAB}`} replace />;
-
-  if (!validId || (header.isError && errorStatus(header.error) === 404)) {
-    return (
-      <EmptyState
-        title="This deal does not exist."
-        action={
-          <Button as={Link} to="/" variant="primary">
-            Back to clients
-          </Button>
-        }
-      >
-        It may have been deleted, or the link may be wrong.
-      </EmptyState>
-    );
-  }
+  const shown = tabFor(tab, BUILT_TABS);
+  if (validId && shown !== tab) return <Navigate to={`/deals/${dealId}/${shown}`} replace />;
+  if (!validId || (header.isError && errorStatus(header.error) === 404)) return <MissingDeal />;
   if (header.isError || meta.isError) {
     const failed = header.isError ? header : meta;
     return (
@@ -72,23 +57,19 @@ export default function DealPage() {
       />
     );
   }
-  if (header.isPending || meta.isPending) return <DealSkeleton />;
+  if (header.isPending || meta.isPending) return <Loading label="Loading the deal…" />;
 
   const deal = header.data;
-  const Tab = current.Component;
+  const Tab = TAB_COMPONENTS[shown];
+  const label = tabLabel(shown);
   return (
-    <div className={styles.page}>
-      <DealHeader key={deal.id} deal={deal} meta={meta.data} />
-      <div className={styles.body}>
-        <Tabs
-          label="Deal sections"
-          orientation="vertical"
-          className={styles.tabs}
-          items={TABS.map((item) => ({ to: `/deals/${deal.id}/${item.key}`, label: item.label }))}
-        />
-        <section className={styles.panel} aria-label={current.label}>
-          <ErrorBoundary resetKey={current.key}>
-            <Suspense fallback={<Skeleton lines={6} height="18px" label={`Loading ${current.label}…`} />}>
+    <div className="bb-workspace">
+      <DealSidebar deal={deal} tab={shown} />
+      <div className="bb-content">
+        <DealHeader key={deal.id} deal={deal} meta={meta.data} />
+        <section aria-label={label}>
+          <ErrorBoundary resetKey={shown}>
+            <Suspense fallback={<Loading label={`Loading the ${label}…`} />}>
               <Tab deal={deal} />
             </Suspense>
           </ErrorBoundary>

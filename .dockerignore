@@ -16,6 +16,10 @@ staticfiles/
 # The frontend is its own image locally (Dockerfile.dev); the production build stage copies it (§11).
 frontend/
 
+# The parity and browser harnesses run beside the app, never in its image (§3.4)
+browser/
+tools/
+
 # Docs and specs (README.md ships)
 *.md
 !README.md

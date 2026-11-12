@@ -1,0 +1,92 @@
+/* Plan grid sizes and the edit prompt (D-160,
+   PlanningDocs/Benefits/grid-sizes-and-edit-prompt.md). `.bnf-sized` is on
+   the Proposal grid's table, the Advisor's transposed table and the
+   Documents quotes grid (D-166, live and stored versions) only, never the
+   other grids sharing `.bnf-compare-table` (staged review, questionnaire,
+   stop-loss).
+
+   Fixed layout: the label column is LEAD_COL_PX and every plan column one
+   width (useGridSizes, `--bnf-plan-w` on the table). A value wraps up to
+   three lines and is cut there, plainly (never "…"); a row the user sized
+   cuts at its own height (`--bnf-clip-h` on the row). The header row never
+   cuts: plan names wrap and the frozen header grows.
+
+   Its own sheet, loaded after benefits-freeze.css: the grips are absolute,
+   and the windowing block of benefits-grid.css must set no `position`
+   (WindowingSourceTests), while every freeze selector must carry .bnf-freeze
+   (FrozenGridSourceTests). Every selector here carries .bnf-sized,
+   .bnf-edit-prompt or .bnf-tip-full (GridSizesSourceTests). */
+
+.bnf-sized { table-layout: fixed; }
+/* The cells' own min-widths (150 px plan cells, 130 px transposed headers)
+   would overrule a narrower plan width. */
+.bnf-sized thead th,
+.bnf-sized tbody td { min-width: 0; }
+.bnf-sized thead th { overflow-wrap: anywhere; }
+.bnf-sized td.bnf-transposed-label { white-space: normal; }
+
+.bnf-sized .bnf-clip {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  line-height: 1.35;
+  max-height: var(--bnf-clip-h, 4.05em);   /* three lines of 1.35 */
+  overflow: hidden;
+}
+
+/* The grips: a strip inside the plan header's right edge (every plan column
+   at once) and inside the label cell's bottom edge (that row). Inside, not
+   astride, the edge: the next sticky header paints over anything that pokes
+   into it. Both cells are positioned (sticky, or relative). */
+.bnf-sized .bnf-col-grip,
+.bnf-sized .bnf-row-grip {
+  position: absolute;
+  z-index: 5;
+  touch-action: none;
+}
+.bnf-sized .bnf-col-grip {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  cursor: col-resize;
+}
+.bnf-sized .bnf-row-grip {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 7px;
+  cursor: row-resize;
+}
+.bnf-sized .bnf-col-grip::after,
+.bnf-sized .bnf-row-grip::after {
+  content: '';
+  position: absolute;
+  border-radius: 1px;
+}
+.bnf-sized .bnf-col-grip::after { top: 4px; bottom: 4px; right: 2px; width: 2px; }
+.bnf-sized .bnf-row-grip::after { left: 6px; right: 6px; bottom: 1px; height: 2px; }
+.bnf-sized .bnf-col-grip:hover::after,
+.bnf-sized .bnf-row-grip:hover::after { background: var(--blue); }
+/* While a grip is dragged nothing selects, and the cursor holds. */
+.bnf-sized.bnf-sizing,
+.bnf-sized.bnf-sizing * { user-select: none; }
+
+/* The whole of a cut value, first in the hover tip. */
+.bb-tooltip .bnf-tip-full {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.bb-tooltip .bnf-tip-full:not(:only-child) {
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* "Would you like to enter edit mode?" (EditModePrompt.jsx). */
+.bnf-edit-prompt { width: 440px; }
+.bnf-edit-prompt .bb-modal-actions {
+  margin-top: 0;
+  padding: 16px 24px 20px;
+}

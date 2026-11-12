@@ -1,0 +1,238 @@
+/* ===== COMMISSIONS =====================================================
+   The commissions module: the /commissions dashboard (Book · Producers &
+   partners · Settings), the Producers & splits capture panel on the case
+   Overview / Intake, the CompInput (% / $ / PEPM) control, and the
+   commissions-access badge on Manage Users. Reuses bb-panel / bb-stat-card /
+   bb-badge-* / kpi-* / bnf-intake-input; new pieces are prefixed bnf-com-.
+   Never reference var(--ink-soft) or var(--accent) — not defined in :root.
+   ====================================================================== */
+
+/* --- Manage Users: access tier badge ---------------------------------- */
+.role-access-none { background: var(--border-soft); color: var(--ink2); }
+.role-access-own { background: var(--blue-bg); color: var(--blue); }
+.role-access-all { background: var(--green-bg); color: var(--green); }
+
+/* --- CompInput: type toggle + value ----------------------------------- */
+.bnf-com-comp {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--card);
+}
+.bnf-com-comp-type {
+  display: flex;
+}
+.bnf-com-comp-type button {
+  border: none;
+  border-right: 1px solid var(--border);
+  background: var(--page);
+  color: var(--ink2);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 0 8px;
+  cursor: pointer;
+  min-width: 34px;
+}
+.bnf-com-comp-type button.active {
+  background: var(--navy);
+  color: #fff;
+}
+.bnf-com-comp-type button:last-child { border-right: 1px solid var(--border); }
+.bnf-com-comp input {
+  border: none;
+  outline: none;
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 9px;
+  width: 92px;
+  background: transparent;
+  color: var(--ink);
+}
+.bnf-com-comp.bnf-com-comp-sm input { width: 72px; padding: 4px 7px; font-size: 12.5px; }
+.bnf-com-comp.bnf-com-comp-sm .bnf-com-comp-type button { font-size: 10.5px; padding: 0 6px; min-width: 30px; }
+.bnf-com-comp-unit {
+  align-self: center;
+  padding-right: 8px;
+  font-size: 11.5px;
+  color: var(--ink3);
+  white-space: nowrap;
+}
+
+/* --- Producers & splits panel (Overview side column + Intake) --------- */
+.bnf-com-splits .bnf-com-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.bnf-com-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border-softer);
+}
+.bnf-com-row:last-of-type { border-bottom: none; }
+.bnf-com-row-label {
+  flex: 0 0 118px;
+  font-size: 12.5px;
+  color: var(--ink2);
+}
+.bnf-com-row select.bnf-intake-input { flex: 1; min-width: 0; }
+.bnf-com-row .bnf-com-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: var(--ink2);
+  white-space: nowrap;
+}
+.bnf-com-row-err {
+  padding: 2px 0 6px 126px;
+  font-size: 11.5px;
+  color: var(--rose);
+}
+.bnf-com-preview {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px solid var(--border);
+  font-size: 12.5px;
+  color: var(--ink2);
+}
+.bnf-com-preview strong { color: var(--ink); font-size: 13px; }
+.bnf-com-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.bnf-com-actions .btn { flex: 0 0 auto; }
+.bnf-com-nudge {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  font-size: 12px;
+}
+.bnf-com-booked {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+.bnf-com-booked-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  padding: 3px 0;
+}
+.bnf-com-booked-line span:last-child { font-family: var(--font-mono); }
+.bnf-com-splitlist { margin-top: 6px; }
+.bnf-com-splitlist .bnf-com-booked-line { color: var(--ink2); }
+.bnf-com-inforce {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bnf-com-inforce .bnf-com-comp { flex: 0 0 auto; }
+
+/* --- /commissions dashboard ------------------------------------------- */
+.bnf-com-tiles {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.bnf-com-tiles .bb-stat-card { min-width: 150px; }
+.bnf-com-tiles .bb-stat-value.bnf-com-muted { color: var(--ink3); font-size: 18px; }
+.bnf-com-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 18px;
+}
+.bnf-com-tab {
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink2);
+  padding: 9px 14px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.bnf-com-tab.active { color: var(--navy); border-bottom-color: var(--navy); font-weight: 600; }
+.bnf-com-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.bnf-com-filters select,
+.bnf-com-filters input {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--ink);
+}
+.bnf-com-filters input { min-width: 200px; }
+.bnf-com-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.bnf-com-table th {
+  text-align: left;
+  font-size: 11.5px;
+  color: var(--ink3);
+  font-weight: 600;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.bnf-com-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border-softer);
+  vertical-align: middle;
+}
+.bnf-com-table tr.bnf-com-clickable { cursor: pointer; }
+.bnf-com-table tr.bnf-com-clickable:hover td { background: #f8fafc; }
+.bnf-com-table tr.active td { background: var(--blue-bg); }
+.bnf-com-table td.bnf-com-num,
+.bnf-com-table th.bnf-com-num { text-align: right; font-family: var(--font-mono); }
+.bnf-com-table td.bnf-com-hole { color: var(--ink3); font-style: italic; }
+.bnf-com-empty {
+  padding: 30px;
+  text-align: center;
+  color: var(--ink3);
+  font-size: 13px;
+}
+.bnf-com-kind {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--border-soft);
+  color: var(--ink2);
+  white-space: nowrap;
+}
+.bnf-com-kind-producer { background: var(--blue-bg); color: var(--blue); }
+.bnf-com-kind-house { background: var(--violet-bg); color: var(--violet); }
+.bnf-com-kind-external_broker,
+.bnf-com-kind-coi_org,
+.bnf-com-kind-coi_rep { background: var(--green-bg); color: var(--green); }

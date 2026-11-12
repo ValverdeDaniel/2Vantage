@@ -1,9 +1,32 @@
-// The Advisor (plan.md §7.7). Query keys: ['deal', id, 'advisor', 'lines'] · ['deal', id, 'advisor', line].
+// The Advisor (plan.md §7.8). Query keys: ['deal', id, 'advisor', 'lines'] · ['deal', id, 'advisor', line].
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from './client';
 import { dealKey, invalidateDeal } from './deals';
 
 export const advisorKey = (dealId, ...rest) => dealKey(dealId, 'advisor', ...rest);
+
+/**
+ * The comparison is compact (F.6): each cell carries only its flags, `{s: status, o: origin, d: document index,
+ * m: mark}`, and the documents are listed once. The screens read `plan.status` and `plan.sources`, so they are
+ * rebuilt here from the cells (display only; nothing is computed).
+ */
+export function expandComparison(data) {
+  const documents = data.documents ?? [];
+  return {
+    ...data,
+    plans: data.plans.map((plan) => {
+      const status = {};
+      const sources = {};
+      Object.entries(plan.cells ?? {}).forEach(([key, cell]) => {
+        if (cell.s) status[key] = cell.s;
+        if (key in (plan.values ?? {})) {
+          sources[key] = { origin: cell.o ?? 'typed', doc: documents[cell.d]?.id, mark: cell.m };
+        }
+      });
+      return { ...plan, status, sources };
+    }),
+  };
+}
 
 export function useAdvisorLines(dealId) {
   return useQuery({
@@ -16,7 +39,7 @@ export function useAdvisorLines(dealId) {
 export function useComparison(dealId, line) {
   return useQuery({
     queryKey: advisorKey(dealId, line),
-    queryFn: async () => (await api.get(`deals/${dealId}/plans/`, { params: { line } })).data,
+    queryFn: async () => expandComparison((await api.get(`deals/${dealId}/plans/`, { params: { line } })).data),
     enabled: Boolean(line),
     staleTime: 0,
     placeholderData: (previous) => (previous?.line === line ? previous : undefined),
@@ -30,7 +53,7 @@ export function useComparison(dealId, line) {
 function useAdvisorMutation(dealId, mutationFn, { header = false } = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn,
+    mutationFn: (variables) => mutationFn(variables, queryClient),
     onSuccess: () => invalidateDeal(queryClient, dealId, { header }),
   });
 }
@@ -39,12 +62,52 @@ export function useCreatePlan(dealId) {
   return useAdvisorMutation(dealId, async (body) => (await api.post(`deals/${dealId}/plans/`, body)).data);
 }
 
-/** ({planId, changes}) — changes: any of carrier, name, plan_number, role, renews_id, replaces_ids, starred, notes, values */
+const LINK_KEYS = ['role', 'renews_id', 'replaces_ids'];
+
+/**
+ * ({planId, changes}). PATCH takes only carrier, name, plan_number, client_name, notes, values and `expect` (F71);
+ * a role and its links go through their own doors (F52, F53): `plans/role/` when the role changes (a plan already in
+ * that role is left as it is), then `plans/links/` (which changes nothing when the role door already set them).
+ */
 export function useUpdatePlan(dealId) {
+  return useAdvisorMutation(dealId, async ({ planId, changes }) => {
+    const rest = Object.fromEntries(Object.entries(changes).filter(([key]) => !LINK_KEYS.includes(key)));
+    let answer;
+    if (changes.role) {
+      const { role, renews_id: renewsId, replaces_ids: replacesIds } = changes;
+      const links = role === 'renewal' ? { renews_id: renewsId } : { replaces_ids: replacesIds ?? [] };
+      answer = (await api.post(`deals/${dealId}/plans/role/`, { plan_ids: [planId], role, ...links })).data;
+      if (role !== 'current') {
+        answer = (await api.post(`deals/${dealId}/plans/links/`, { plan_id: planId, ...links })).data;
+      }
+    }
+    if (Object.keys(rest).length) answer = (await api.patch(`plans/${planId}/`, rest)).data;
+    return answer;
+  });
+}
+
+/** ({planIds, role, renewsId?, replacesIds?}) → {plans, activity_id}: Mark current, Remove current (F53). */
+export function useSetRole(dealId) {
   return useAdvisorMutation(
     dealId,
-    async ({ planId, changes }) => (await api.patch(`plans/${planId}/`, changes)).data,
+    async ({ planIds, role, renewsId, replacesIds }) =>
+      (
+        await api.post(`deals/${dealId}/plans/role/`, {
+          plan_ids: planIds,
+          role,
+          renews_id: renewsId,
+          replaces_ids: replacesIds,
+        })
+      ).data,
   );
+}
+
+/** ({planId, replacesIds} | {planId, renewsId}) → {plans, activity_id}: "Replacing:" and "Several…" (F52). */
+export function useSetLinks(dealId) {
+  return useAdvisorMutation(dealId, async ({ planId, replacesIds, renewsId }) => {
+    const body = renewsId !== undefined ? { renews_id: renewsId } : { replaces_ids: replacesIds ?? [] };
+    return (await api.post(`deals/${dealId}/plans/links/`, { plan_id: planId, ...body })).data;
+  });
 }
 
 export function useDeletePlan(dealId) {
@@ -74,10 +137,19 @@ export function useSetRecommended(dealId) {
   );
 }
 
+/** ({planIds, starred}) → {plans, activity_id}; past 16 columns a line answers 409 with the sentence (F50). */
 export function useStar(dealId) {
   return useAdvisorMutation(
     dealId,
     async ({ planIds, starred }) => (await api.post(`deals/${dealId}/plans/star/`, { plan_ids: planIds, starred })).data,
+  );
+}
+
+/** (line) → {plans, activity_id}: every star on that line comes off (F55). */
+export function useClearShortlist(dealId) {
+  return useAdvisorMutation(
+    dealId,
+    async (line) => (await api.post(`deals/${dealId}/plans/shortlist/clear/`, { line })).data,
   );
 }
 
@@ -89,8 +161,30 @@ export function useSaveEnrollment(dealId) {
   );
 }
 
+/**
+ * The order door (F43–F48): {line, move: {plan_id, step, among?}} | {line, swap: [a, b]} | {line, reset: true}
+ * → {line, order, activity_id}. The earlier shape {line, role, plan_ids} (one role's ids with two neighbours swapped)
+ * is read as the left one of the pair stepping right; a step out of its group answers 409 with the reason.
+ */
 export function useOrderPlans(dealId) {
-  return useAdvisorMutation(dealId, async (body) => api.post(`deals/${dealId}/plans/order/`, body));
+  return useAdvisorMutation(dealId, async (body, queryClient) => {
+    if (body.move || body.swap || body.reset) return (await api.post(`deals/${dealId}/plans/order/`, body)).data;
+    const shown = queryClient.getQueryData(advisorKey(dealId, body.line))?.plans ?? [];
+    const before = shown.filter((plan) => plan.role === body.role).map((plan) => plan.id);
+    const at = before.findIndex((id, index) => id !== body.plan_ids[index]);
+    if (at < 0) return null;
+    const move = { plan_id: before[at], step: 1 };
+    return (await api.post(`deals/${dealId}/plans/order/`, { line: body.line, move })).data;
+  });
+}
+
+/** ({line, planId, at} | {line, planId, beside?}) → {line, plans, order, activity_id}: a pick on Pages (F45, F46). */
+export function usePutInSlot(dealId) {
+  return useAdvisorMutation(
+    dealId,
+    async ({ line, planId, at, beside }) =>
+      (await api.post(`deals/${dealId}/plans/slot/`, { line, plan_id: planId, at, beside })).data,
+  );
 }
 
 export function useCreatePackage(dealId) {

@@ -1,0 +1,156 @@
+# The Look lane's hide list (plan.md §12.7, Q.5): one entry per Drop or Defer row with visible UI, seeded from the
+# X.3 tables of docs/porting/A–M, each selector found in the old JSX at 891f1b3. look/hide.mjs turns it into a
+# harness-only stylesheet (and a text rule for elements only their words identify), injected into OLD pages only.
+# A data module.
+#
+#   id        the X.3 row            verdict  Drop | Defer          what  the row's words
+#   selector  CSS that hides exactly the element on the old screens (display: none)
+#   text      words that identify an element no selector can; hidden where `within` matches and contains them
+#   within    the selector searched for `text`
+#   screen    where the old app shows it               source  the old JSX (or server text) at 891f1b3
+#   skip      true: a whole old screen the port defers; Look has no key for it
+#   keep      true: listed, NOT hidden, because another row keeps it (see note)
+#   note      anything a reviewer needs
+#
+# Selectors may use :has(); Chrome supports it. Rows with no visible UI on an old screen are not listed (141 of the
+# 252 Drop/Defer rows, e.g. A16, D63, F12, J69, K11, L75, M94).
+
+shared:
+  # Every walkthrough starter ("Show me how ▸", "Practice on a fake client ▸", "Watch a deal close ▸") shares this
+  # class; the kept "⬇ Template" (close/PlanTemplateImport.jsx:81) is the only other user of it.
+  walkthroughs: &walkthroughs '.bnf-marketing-guide-link:not([title^="A blank workbook"])'
+
+dropped:
+  # ---- A · foundation ----
+  - {id: A2, verdict: Drop, what: "Role matrix on Dev ▸ Roles", selector: '.admin-tabs > .admin-tab:nth-child(8)', screen: "/dev", source: "components/dev/DevDashboard.jsx:26,166", note: "Look never opens /dev."}
+  - {id: A8, verdict: Drop, what: "Practice/story demo buttons, guide launchers, Reset demo", selector: '[data-guide="practice-reset"], [data-guide="story-reset"], .bb-dash-header .bb-subtitle > .bnf-marketing-guide-link', screen: "Benefits home", source: "components/benefits/shared/CasesDashboard.jsx:365-404", note: "Same elements as I90."}
+  - {id: A15, verdict: Defer, what: "Renewal start banner, warnings, carry checkboxes, referral prefill", selector: '.bnf-renewal-block', screen: "New deal with ?client= or ?referral=", source: "components/benefits/shared/NewCase.jsx:187-242"}
+  - {id: A22, verdict: Drop, what: "Close-out, Benefit guide, Implementation and Data Hub tabs", selector: '.bb-nav > [data-guide="nav-closeout"], .bb-nav > [data-guide="nav-guide"], .bb-nav > [data-guide="nav-implementation"], .bb-nav > [data-guide="nav-hub"], .bb-nav > .bnf-nav-group-label:has(+ [data-guide="nav-guide"])', screen: "Deal sidebar", source: "components/benefits/shared/CaseWorkspace.jsx:697-703", note: "The last part hides the '3 · Implementation' label."}
+  - {id: A28, verdict: Defer, what: "Past year opens read-first (past-year band)", selector: '.bnf-case-pastyear', screen: "Deal sidebar, past year", source: "components/benefits/shared/CaseWorkspace.jsx:772"}
+  - {id: A40, verdict: Drop, what: "Walkthrough launchers", selector: *walkthroughs, screen: "Many tabs", source: "components/** (23 uses)", note: "Covers F135, J82, K5, E49, M12, G128, H43, L132 and the concessions and review-bar guides."}
+  - {id: A40, verdict: Drop, what: "Walkthroughs and Dev links in the top bar", selector: '.navbar-user > a[href="/walkthroughs"], .navbar-user > a[href="/dev"]', screen: "Top bar", source: "components/Navbar.jsx:182,185"}
+  - {id: A40, verdict: Drop, what: "Ask Claude bubble", selector: '.hlp-launcher, #hlp-panel, .hlp-nav-slot', screen: "Every page", source: "components/assistant/AskClaude.jsx:153; Navbar.jsx:199"}
+  - {id: A40, verdict: Drop, what: "DevRunner banner", selector: '.dev-runner-banner', screen: "Global, during a dev run", source: "components/dev/DevRunnerBanner.jsx:16"}
+
+  # ---- B · intake ----
+  - {id: B30, verdict: Defer, what: "BOR on file from an earlier year", text: "On file from", within: '[data-guide="intake-bor"] .bnf-esign-done', screen: "Intake ▸ Compliance (renewals)", source: "components/benefits/market/IntakeTab.jsx:1556-1566"}
+  - {id: B44, verdict: Defer, what: "Renewal carry of intake ('Carried' badge)", selector: '.bb-badge[title="Carried from last year; nobody has approved it this year"]', screen: "Intake field badges", source: "components/benefits/market/IntakeTab.jsx:156-158", note: "Hiding still leaves a difference: the port shows another state there."}
+
+  # ---- C · census ----
+  - {id: C26, verdict: Defer, what: "Census renewal carry notice", selector: '[data-guide="carry-census"], .bnf-carry-notice', screen: "Census tab", source: "components/benefits/market/CarryNotice.jsx:31; CensusRequestPanel.jsx:245"}
+
+  # ---- D · AI readers and Work with Claude ----
+  - {id: D2, verdict: Defer, what: "Gold 'Claude Unleashed' pill", selector: '[data-guide="advisor-view-unleashed"]', screen: "Advisor view pills", source: "components/benefits/close/AdvisorTab.jsx:2842", note: "Same element as F4."}
+  - {id: D10, verdict: Defer, what: "'Read with' saved-reader picker", selector: '.agt-picker', screen: "Work with Claude drawer", source: "components/lessons/AgentPicker.jsx:90"}
+  - {id: D11, verdict: Defer, what: "Earlier years' chats", selector: '.bnf-scanchat-prior, .bnf-scanchat-prior-banner', screen: "Work with Claude drawer", source: "components/benefits/shared/ScanChat.jsx:1802,1842"}
+  - {id: D26, verdict: Drop, what: "No-key 'Scan a document' panel", text: "Scan a document", within: '.bnf-scanchat > .bb-panel-title', screen: "Work with Claude drawer, keyless", source: "components/benefits/shared/ScanChat.jsx:1703-1711", note: "The parity app runs with a dummy key, so this never shows there."}
+  - {id: D30, verdict: Defer, what: "'Rule saved… suggested fix' line", selector: '.bnf-scanchat-quiet', screen: "Work with Claude drawer", source: "components/benefits/shared/ScanChat.jsx:1959"}
+  - {id: D33, verdict: Defer, what: "Teach the reader; Teach a lesson", selector: '.lsn-flag-btn, [data-guide="claude-teach"]', screen: "Work with Claude drawer", source: "components/lessons/TeachLessonButton.jsx:100; shared/ProposedChangesCard.jsx:280"}
+  - {id: D41, verdict: Defer, what: "'Scan the census with Claude ▸' on an empty roster", selector: '.bnf-census-empty-actions > .btn-primary', screen: "Census tab, empty roster", source: "components/benefits/market/CensusTab.jsx:567"}
+  - {id: D101, verdict: Defer, what: "Claude Unleashed sandbox", selector: '.bnf-ux, .bnf-ux-drawer, .bnf-wwc-fab.bnf-wwc-unleashed', screen: "Advisor ▸ Unleashed", source: "components/benefits/close/UnleashedView.jsx:126,241; UnleashedDrawer.jsx:433"}
+  - {id: D102, verdict: Defer, what: "Lessons (AI Agents)", selector: '.navbar-user > a[href="/agents"]', screen: "Top bar", source: "components/Navbar.jsx:150"}
+  - {id: D103, verdict: Defer, what: "Saved readers (picker and 'Read by…' stamp)", selector: '.agt-picker, .agt-stamp', screen: "Staged reviews", source: "components/lessons/ReadByStamp.jsx:43; AgentPicker.jsx:90"}
+  - {id: D132, verdict: Drop, what: "History rail (Documents)", selector: '[data-guide="doc-history-toggle"], .bnf-ver-rail, .bnf-vdiff', screen: "Documents tab", source: "components/benefits/shared/DocumentsTab.jsx:2770", note: "Its walkthrough button is E49."}
+
+  # ---- E · documents ----
+  - {id: E49, verdict: Drop, what: "'Show me how' on Documents", selector: '.bb-tab-title > .bnf-marketing-guide-link[title="Take a guided walkthrough"], .bnf-review-bar .bnf-marketing-guide-link', screen: "Documents tab title", source: "components/benefits/shared/DocumentsTab.jsx:2348"}
+  - {id: E72, verdict: Drop, what: "Version rail, diff, restore, Save a version, drift and lock notes", selector: '[data-guide="doc-history-toggle"], .bnf-ver-rail, .bnf-vdiff', screen: "Documents toolbar", source: "components/benefits/shared/DocumentsTab.jsx:2766-2775; VersionRail.jsx:144; VersionDiff.jsx:59"}
+  - {id: E102, verdict: Defer, what: "Carried-forward files", text: "Carried forward", within: '.hst-verb', screen: "Documents ▸ Change history", source: "components/benefits/shared/ChangeHistoryCard.jsx:75"}
+
+  # ---- F · Advisor ----
+  - {id: F4, verdict: Defer, what: "Gold Unleashed pill", selector: '[data-guide="advisor-view-unleashed"]', screen: "Advisor view pills", source: "components/benefits/close/AdvisorTab.jsx:2842"}
+  - {id: F79, verdict: Defer, what: "Bundle templates", selector: '.bnf-conc-tplrow', screen: "Advisor ▸ Edit ▸ bundling composer", source: "components/benefits/close/PricedVersionComposer.jsx:919,1462-1468", note: "Its save button has no class; it sits inside the composer."}
+  - {id: F135, verdict: Drop, what: "'Show me how ▸' beside the title", selector: '.bnf-marketing-guide-link[title^="A guided walkthrough: reading the quotes"]', screen: "Advisor title", source: "components/benefits/close/AdvisorTab.jsx:2813"}
+  - {id: F137, verdict: Defer, what: "'+ name (one column)' on a pair", selector: '.bnf-pg-merged', keep: true, screen: "Advisor ▸ Pages", source: "components/benefits/close/ProposalPages.jsx:288,301", note: "Not hidden: J15 keeps 'One column with…' (a conflict between the tables, for Daniel)."}
+
+  # ---- G · questionnaire ----
+  - {id: G58, verdict: Defer, what: "Carrier XFA (Acrobat original) questionnaire", selector: '[data-guide="rfp-row-questionnaire_carrier_pdf"]', screen: "RFP packet", source: "components/benefits/market/CarriersTab.jsx:833", note: "Same row as K44."}
+  - {id: G121, verdict: Defer, what: "Questionnaire carry notice", selector: '[data-guide="carry-questionnaire"]', screen: "Questionnaire tab", source: "components/benefits/market/CarryNotice.jsx:31-38"}
+  - {id: G128, verdict: Drop, what: "Questionnaire and disclosure walkthroughs", selector: '.bnf-marketing-guide-link[title="See what the client fills out"], .bnf-marketing-guide-link[title="Add, send and export a stop-loss disclosure"]', screen: "Marketing readiness checklist", source: "components/benefits/market/MarketingChecklist.jsx:330,365"}
+
+  # ---- H · commissions ----
+  - {id: H14, verdict: Defer, what: "'no W9' payee flag", selector: '.bnf-com-payee-flag', screen: "Commission tab ▸ splits", source: "components/benefits/shared/overview/SplitsPanel.jsx:353"}
+  - {id: H16, verdict: Defer, what: "'changes by year…' ladder", selector: '.bnf-com-ladder', screen: "Commission tab ▸ terms", source: "components/benefits/shared/overview/SplitsPanel.jsx:404", note: "Its <option> in the select cannot be hidden by CSS."}
+  - {id: H21, verdict: Defer, what: "'Carried forward from <year>' banner", selector: '[data-guide="splits-carry"]', screen: "Commission tab", source: "components/benefits/shared/overview/SplitsPanel.jsx:298"}
+  - {id: H43, verdict: Drop, what: "'Show me how ▸' on Commissions", selector: '.bnf-marketing-guide-link[title="Take a guided walkthrough of the commissions module"]', screen: "/commissions; client page", source: "components/commissions/CommissionsDashboard.jsx:84"}
+  - {id: H46, verdict: Drop, what: "'Owed to producers' placeholder tile", selector: '.bnf-com-tiles > .bb-stat-card[title="Phase 3 — payouts"]', screen: "/commissions tiles", source: "components/commissions/CommissionsDashboard.jsx:112"}
+  - {id: H69, verdict: Defer, what: "Book split worksheet", selector: '.bnf-com-tab[title^="Headcount × revenue × renewal dates"]', screen: "/commissions tabs", source: "components/commissions/CommissionsDashboard.jsx:127"}
+  - {id: H91, verdict: Drop, what: "Statement chat rail", selector: '[data-guide="statement-chat-toggle"], .bnf-com-chatcol', screen: "/commissions ▸ Documents", source: "components/commissions/StatementDocumentsTab.jsx:587,771"}
+  - {id: H94, verdict: Drop, what: "Saved readers and lessons on statements", selector: '.agt-stamp', screen: "/commissions ▸ Documents", source: "components/commissions/StatementDocumentsTab.jsx:733"}
+  - {id: H99, verdict: Defer, what: "Profile drawer and payee readiness", selector: '.bnf-com-profile-link, .bnf-com-profile-meta, [data-guide="parties-profile"]', screen: "/commissions ▸ Producers & partners", source: "components/commissions/PartiesTab.jsx:212,264,313"}
+  - {id: H104, verdict: Defer, what: "Start renewal", selector: '[data-guide="client-start-renewal"], .bnf-cw-titlebtns > .btn-primary', screen: "Client page", source: "components/benefits/radar/client/ClientCasesTab.jsx:53; ClientHeaderCard.jsx:134"}
+  - {id: H107, verdict: Defer, what: "Comp agreements card", selector: '[data-guide="client-agreements"]', screen: "Client page ▸ Commissions", source: "components/commissions/SplitAgreementCard.jsx:109"}
+
+  # ---- I · agenda and home ----
+  - {id: I9, verdict: Defer, what: "'Year agenda' label", selector: '[data-guide="client-year-nav-agenda"]', screen: "Client page year nav", source: "components/benefits/radar/ClientWorkspace.jsx:32,127-134"}
+  - {id: I43, verdict: Defer, what: "revalidate_census step", text: "send it for the client to confirm", within: '.bnf-ag-item', screen: "Agenda rows (renewals)", source: "benefits/tasks/steps.py:269"}
+  - {id: I59, verdict: Drop, what: "confirm_selection step", text: "confirm the sale", within: '.bnf-ag-item', screen: "Agenda rows (after a share-link pick)", source: "benefits/tasks/steps.py:383"}
+  - {id: I61, verdict: Defer, what: "start_implementation and board steps", text: "Start implementation", within: '.bnf-ag-item', screen: "Agenda rows (sold deals)", source: "benefits/tasks/steps.py:568-600"}
+  - {id: I62, verdict: Defer, what: "build_guide step", text: "Build the benefit guide", within: '.bnf-ag-item', screen: "Agenda rows (sold deals)", source: "benefits/tasks/steps.py:614,622"}
+  - {id: I72, verdict: Defer, what: "Reminder and client-task rows", selector: '.bnf-wq-row[data-guide-rem]', screen: "Work queue", source: "components/benefits/shared/home/WorkQueueTable.jsx:128", note: "Also I104 and I105."}
+  - {id: I88, verdict: Defer, what: "Calendar button and navbar link", selector: '.navbar-user > a[href="/benefits/calendar"], [data-guide="home-calendar"], .bnf-cal-link-card', screen: "Top bar; home header; Clients view", source: "components/Navbar.jsx:140; shared/CasesDashboard.jsx:409"}
+  - {id: I90, verdict: Drop, what: "Practice and demo buttons", selector: '[data-guide="practice-reset"], [data-guide="story-reset"], .bb-dash-header .bb-subtitle > .bnf-marketing-guide-link', screen: "Benefits home", source: "components/benefits/shared/CasesDashboard.jsx:365-404"}
+  - {id: I91, verdict: Defer, what: "Plan my day: pick column, select-all, hint, tray (A12's tray)", selector: '.bnf-wq-pick, .bnf-wq-modehint, .bnf-plan-tray', screen: "Work queue", source: "components/benefits/shared/home/WorkQueueTable.jsx:25,93,131; home/PlanTray.jsx:23", note: "hide.mjs also narrows the grid so the columns do not shift (benefits-workqueue.css:144)."}
+  - {id: I97, verdict: Defer, what: "Task bar under the top bar (also I98, I99, I101, I102)", selector: '.bnf-taskbar', screen: "Global, during a task session", source: "components/benefits/taskmode/TaskBar.jsx:158"}
+  - {id: I103, verdict: Defer, what: "Client Agenda tab", selector: '.bnf-cw-navbtn[data-guide="nav-agenda"]', screen: "Client page", source: "components/benefits/radar/ClientWorkspace.jsx:385"}
+  - {id: I106, verdict: Defer, what: "Reminder settings", skip: true, screen: "/benefits/settings", source: "components/benefits/radar/ReminderSettings.jsx"}
+  - {id: I107, verdict: Defer, what: "Book calendar", skip: true, screen: "/benefits/calendar", source: "components/benefits/radar/ClientCalendar.jsx"}
+  - {id: I109, verdict: Defer, what: "Client nav badge, Notifications", selector: '.bnf-cw-navbtn .bb-nav-badge, .bnf-cw-navbtn[data-guide="nav-notifications"]', screen: "Client page", source: "components/benefits/radar/ClientWorkspace.jsx:305-316,387"}
+
+  # ---- J · proposal and export viewer ----
+  - {id: J21, verdict: Drop, what: "Edit lock '<name> has this proposal open', Take over", selector: '.bnf-build-lock', screen: "Proposal builder", source: "components/benefits/close/ProposalBuilder.jsx:1219"}
+  - {id: J25, verdict: Defer, what: "Orientation chip", selector: '.bnf-build-orient', screen: "Proposal builder toolbar", source: "components/benefits/close/ProposalBuilder.jsx:1295"}
+  - {id: J26, verdict: Defer, what: "Share with client", selector: '.bnf-build-toolbar > button:nth-last-child(2), [data-guide="share-client-btn"]', screen: "Proposal builder toolbar; Proposal tab packet card", source: "components/benefits/close/ProposalBuilder.jsx:1332; ProposalPacketCard.jsx:253", note: "The toolbar button has no class; it is second-last, before 'Open proposal ▸'."}
+  - {id: J36, verdict: Defer, what: "Format: Presentation / Classic", selector: '[data-guide="build-output"] .bnf-output-body > .bnf-output-row:first-child', screen: "Proposal builder ▸ How the documents look", source: "components/benefits/close/OutputPanel.jsx:111-118"}
+  - {id: J37, verdict: Defer, what: "Classic orientation and density", selector: '[data-guide="build-output"] .bnf-output-row:has(> .bnf-output-seg + .bnf-output-seg)', screen: "Proposal builder ▸ How the documents look", source: "components/benefits/close/OutputPanel.jsx:120-125"}
+  - {id: J40, verdict: Defer, what: "Share-link period", selector: '[data-guide="build-output"] .bnf-output-body > .bnf-output-row:nth-last-child(4)', screen: "Proposal builder ▸ How the documents look", source: "components/benefits/close/OutputPanel.jsx:141-145"}
+  - {id: J44, verdict: Defer, what: "Past plan years, '＋ Add a past year'", selector: '.bnf-present-block:has(.bnf-present-cols > .bnf-present-year-label)', screen: "Proposal builder ▸ presentation pages", source: "components/benefits/close/PresentationPagesCard.jsx:180-232", note: "Also J129."}
+  - {id: J82, verdict: Drop, what: "Stop-loss 'Show me how ▸'", selector: '.bnf-lineswitch > .bnf-marketing-guide-link', screen: "Proposal tab, stop-loss line", source: "components/benefits/close/ComparisonGrid.jsx:962"}
+  - {id: J95, verdict: Defer, what: "'Client selected' banner, Confirm & mark sold", selector: '.bnf-share-selection-banner', screen: "Proposal tab", source: "components/benefits/close/ComparisonGrid.jsx:899"}
+  - {id: J99, verdict: Defer, what: "Benefit guide row", selector: '.bnf-packet-row:has([data-guide="benefit-guide-btn"])', screen: "Proposal tab ▸ packet card (sold deals)", source: "components/benefits/close/ProposalPacketCard.jsx:331-338"}
+  - {id: J106, verdict: Drop, what: "'Web form' chip", selector: '.bnf-xv-formats > .bnf-xv-soon', screen: "Export viewer", source: "components/benefits/close/ExportViewer.jsx:69,135"}
+  - {id: J113, verdict: Defer, what: "Classic notice on PowerPoint", text: "This deal uses the Classic format", within: '.bnf-xv-notice', screen: "Export viewer ▸ PowerPoint", source: "components/benefits/close/ExportViewer.jsx:694"}
+  - {id: J156, verdict: Defer, what: "Share link modal and /p/ page", skip: true, screen: "Opened by J26; /p/:token", source: "components/benefits/close/ProposalShareModal.jsx:53"}
+  - {id: J168, verdict: Defer, what: "Contribution model", selector: '[data-guide="rfp-row-contribution_workbook"]', screen: "RFP packet (sold deals)", source: "components/benefits/market/CarriersTab.jsx:67,833"}
+
+  # ---- K · RFP ----
+  - {id: K5, verdict: Drop, what: "'Show me how ▸'", selector: '.bnf-marketing-guide-link[title^="A guided walkthrough: what we''re asking"]', screen: "RFP title", source: "components/benefits/market/CarriersTab.jsx:886"}
+  - {id: K38, verdict: Drop, what: "'Usually a 2–50 format' note", text: "Usually a ", within: '.bnf-rfp-rownote', screen: "RFP packet census rows", source: "benefits/serializers/pipeline.py:1404"}
+  - {id: K44, verdict: Defer, what: "Acrobat original questionnaire", selector: '[data-guide="rfp-row-questionnaire_carrier_pdf"]', screen: "RFP packet", source: "components/benefits/market/CarriersTab.jsx:833"}
+  - {id: K48, verdict: Drop, what: "Comparison workbook, benefit guide, contribution model and stop-loss workbook rows", selector: '[data-guide="rfp-row-comparison_xlsx"], [data-guide="rfp-row-benefit_guide_pdf"], [data-guide="rfp-row-contribution_workbook"], [data-guide="rfp-row-stop_loss_workbook"]', screen: "RFP packet", source: "benefits/serializers/pipeline.py:1554-1590", note: "The client proposal row stays visible: J169 keeps it (a conflict between the tables, for Daniel)."}
+  - {id: K77, verdict: Drop, what: "Cigna/Gravie census-needs warning", text: "No census column of ours carries it", within: '.bb-modal li, .bb-modal p', screen: "Export-check modal", source: "benefits/pipeline/export_check.py:318-331"}
+  - {id: K86, verdict: Drop, what: "'Make these required on this deal'", selector: '[data-guide="census-lens-require"]', screen: "Census format lens", source: "components/benefits/market/censusreview/CensusFormatLens.jsx:514"}
+  - {id: K109, verdict: Drop, what: "Census-mapping report", selector: '.rpt-card[data-guide-report="census-mapping"], .navbar-menu-panel a[href="/reports"]', screen: "/reports; Admin menu", source: "components/reports/ReportsDashboard.jsx:96-100; Navbar.jsx:175"}
+  - {id: K116, verdict: Drop, what: "Data Hub footer", selector: '.bnf-export-handoff', screen: "RFP foot", source: "components/benefits/market/CarriersTab.jsx:1345"}
+
+  # ---- L · review and requests ----
+  - {id: L65, verdict: Defer, what: "Verified recipient (emailed code)", selector: '[data-guide="request-access"] > label.rr-edit-level:nth-of-type(3)', screen: "Review & requests ▸ new link", source: "components/benefits/shared/LinkSettingsCard.jsx:74-91"}
+  - {id: L128, verdict: Defer, what: "Renewal revalidation banner and notices", selector: '.bnf-carry-notice, [data-guide="overview-carry"]', screen: "Census; Overview", source: "CarryNotice.jsx:31; RenewalCarryBanner.jsx:44"}
+
+  # ---- M · overview ----
+  - {id: M5, verdict: Drop, what: "Archive… disabled on a sold deal", selector: '.bnf-archive-ctl:has([title="This deal is sold; archive its client instead."])', screen: "Overview (sold deals)", source: "components/benefits/shared/CaseOverviewTab.jsx:116-133", note: "Hiding still leaves a difference: the port shows an enabled Archive… there."}
+  - {id: M8, verdict: Drop, what: "'Hidden with its client…' banner", selector: '.bnf-archive-banner:has(a[href^="/benefits/clients/"])', screen: "Overview", source: "components/benefits/shared/CaseOverviewTab.jsx:180-195"}
+  - {id: M12, verdict: Drop, what: "'Show me how ▸' on Overview", selector: '[data-guide="phase-card-1"] .bnf-marketing-guide-link', screen: "Overview card 1", source: "components/benefits/shared/overview/GetToMarketCard.jsx:776"}
+  - {id: M19, verdict: Defer, what: "P&C client badge", selector: '.bnf-ov-chips [title^="This client also has P&C"]', screen: "Overview header", source: "components/benefits/shared/overview/ClientHeader.jsx:107"}
+  - {id: M20, verdict: Defer, what: "Renewal offer chip", selector: '.bnf-ov-chips [title^="The carrier''s as-offered renewal"]', screen: "Overview header", source: "components/benefits/shared/overview/ClientHeader.jsx:110"}
+  - {id: M22, verdict: Defer, what: "'N earlier deals', reminder badges", selector: '.bnf-ov-header .bnf-ov-clientmeta, .bnf-ov-header .bnf-ov-clientnext', screen: "Overview header", source: "components/benefits/shared/overview/ClientHeader.jsx:126-145"}
+  - {id: M23, verdict: Drop, what: "'Not on the client book yet', Link to client", selector: '.bnf-ov-header .bnf-ov-nolink, .bnf-ov-header .bnf-ov-nolink + .btn', screen: "Overview header", source: "components/benefits/shared/overview/ClientHeader.jsx:149-152"}
+  - {id: M31, verdict: Defer, what: "Carry banner", selector: '[data-guide="overview-carry"]', screen: "Overview", source: "components/benefits/shared/overview/RenewalCarryBanner.jsx:44"}
+  - {id: M32, verdict: Defer, what: "'What's unconfirmed'", selector: '.bnf-carry-actions > button[title^="Scanned, typed and confirmed values"]', screen: "Overview carry banner", source: "components/benefits/shared/overview/RenewalCarryBanner.jsx:84-89"}
+  - {id: M41, verdict: Defer, what: "Module 3 and Card 3", selector: '[data-guide="phase-card-3"], [data-guide="journey-m3"]', screen: "Overview card 3; journey stepper", source: "components/benefits/shared/overview/PhaseCards.jsx:100; shared/JourneyStepper.jsx:26"}
+  - {id: M47, verdict: Defer, what: "'BOR on file from <year>'", text: "Broker of Record on file from", within: '[data-guide="phase-card-1"] .bnf-req-line', screen: "Overview card 1 (renewals)", source: "components/benefits/shared/overview/GetToMarketCard.jsx:330-335"}
+  - {id: M63, verdict: Defer, what: "'Client selected' step", selector: '[data-guide="journey-m2"] .bnf-journey-step[title="Client selected"], [data-guide="phase-card-2"] > .bnf-phase-step-row:nth-child(6)', screen: "Journey stepper; Overview card 2", source: "components/benefits/shared/overview/PhaseCards.jsx:75; JourneyStepper.jsx:37"}
+  - {id: M64, verdict: Defer, what: "Hand-off row", selector: '[data-guide="journey-m2"] .bnf-journey-step[title="Hand-off"], [data-guide="phase-card-2"] > .bnf-phase-step-row:nth-child(8)', screen: "Journey stepper; Overview card 2", source: "components/benefits/shared/overview/PhaseCards.jsx:80-85"}
+  - {id: M66, verdict: Drop, what: "Open hub ▸", selector: '[data-guide="phase-card-2"] .bnf-phase-card-foot > .btn-secondary', screen: "Overview card 2", source: "components/benefits/shared/overview/PhaseCards.jsx:90"}
+  - {id: M72, verdict: Drop, what: "'Output generated — <hub>'", text: "Output generated —", within: '.bnf-ov-timeline .bnf-ov-event', screen: "Overview activity", source: "components/benefits/shared/overview/ActivityFeed.jsx:174"}
+  - {id: M78, verdict: Defer, what: "Notes from earlier deals", selector: '.bnf-ov-history:has(> .bnf-override-link)', screen: "Overview notes", source: "components/benefits/shared/overview/CaseNotes.jsx:217-238"}
+  - {id: M79, verdict: Drop, what: "'N unlinked deals share this name…'", selector: '.bnf-ov-history:not(:has(> .bnf-override-link))', screen: "Overview notes", source: "components/benefits/shared/overview/CaseNotes.jsx:206-215"}
+  - {id: M84, verdict: Defer, what: "'N carried from last year' (and M85's 'N demo data')", selector: '.bnf-ov-conf-more', screen: "Overview Data confidence", source: "components/benefits/shared/overview/DataConfidence.jsx:155"}
+  - {id: M95, verdict: Defer, what: "Export status report button and modal (also M96, M98)", selector: '.bnf-ov-exportbtn, .progress-overlay:has(> .bnf-rep-modal)', screen: "Overview title buttons", source: "components/benefits/shared/CaseOverviewTab.jsx:136; overview/ExportReportModal.jsx:177"}
+  - {id: M101, verdict: Defer, what: "Client page overview", skip: true, screen: "/benefits/clients/:id", source: "components/benefits/radar/ClientWorkspace.jsx"}
+  - {id: M102, verdict: Defer, what: "Deal overview inside the client page, past-year band", selector: '.bnf-cw-yearhead, [data-guide="client-year-band"]', screen: "Client page year mode", source: "components/benefits/radar/ClientWorkspace.jsx:48,113-119"}
+
+# Extra harness rules that keep the old layout steady once something above is hidden.
+layout:
+  - {for: I91, css: '.bnf-wq-head, .bnf-wq-row { grid-template-columns: 1.6fr 0.95fr 0.8fr 1.8fr 1.5fr 1.15fr 0.8fr 0.8fr 4.2rem !important; }'}
+  - {for: I97, css: ':root.has-taskbar { --taskbar-h: 0px !important; }'}

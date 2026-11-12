@@ -1,0 +1,250 @@
+/* ---- Drag-and-drop uploads (DROP-1, 2026-10-14) ----
+   Three targets: the scan-chat panel (every mount), the whole Documents tab
+   and the Add quotes page. The coverage chips' drop look (benefits-coverage.css
+   .bnf-cvg-chipwrap.is-dropping): a dashed blue edge on a blue wash. The
+   overlay names what the drop does; it never takes the pointer, so the drop
+   lands on the panel underneath. */
+.bnf-scanchat { position: relative; }
+.bnf-scanchat.is-dropping,
+.bnf-docs-cols.is-dropping,
+.bb-upload-page.is-dropping {
+  outline: 2px dashed var(--blue);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+.bnf-scanchat.is-dropping { background: var(--blue-bg); }
+.bnf-drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(232, 240, 251, 0.92);
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+  pointer-events: none;
+}
+.bnf-scan-drawer .bnf-scanchat-scroll { max-height: none; }
+
+/* ---- Advisor tab (quote analytics: triggers + sortable table + stars) ---- */
+.bnf-advisor-tab-split {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.bnf-advisor-tab-split > div:first-child { flex: 1 1 auto; min-width: 0; }
+.bnf-advisor-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.bnf-filter-num,
+.bnf-filter-text {
+  padding: 6px 9px;
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  background: var(--card);
+}
+.bnf-filter-num { width: 130px; }
+.bnf-filter-text { width: 180px; }
+.bnf-filter-num-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: inherit;
+  white-space: nowrap;
+}
+.bnf-filter-num-wrap .bnf-filter-num { width: 90px; }
+.bnf-filter-note {
+  font-size: 12px;
+  color: var(--amber);
+  background: var(--amber-bg);
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+.bnf-filter-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 150px;
+}
+.bnf-filter-slider-label {
+  font-size: 11px;
+  color: var(--ink2);
+  white-space: nowrap;
+}
+.bnf-filter-slider-label b { color: var(--ink); font-weight: 600; }
+.bnf-filter-slider input[type='range'] {
+  width: 100%;
+  accent-color: var(--navy);
+  cursor: pointer;
+}
+.bnf-filter-slider input[type='range']:disabled { cursor: not-allowed; opacity: 0.5; }
+.bnf-filter-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.bnf-preset-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.bnf-preset-tab {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 999px;
+  padding: 4px 13px;
+  font-size: 13px;
+  color: var(--ink2);
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+.bnf-preset-tab.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+.bnf-carrier-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.bnf-carrier-chip {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 12px;
+  color: var(--ink2);
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+.bnf-carrier-chip.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+/* D-095: what Work with Claude asked the board for — a column rule, or its
+   pick — each a chip that removes itself. A rule or pick for another line
+   rests, greyed, until that line is on screen. */
+.bnf-rule-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.bnf-rule-chip,
+.bnf-pick-chip {
+  border: 1px solid var(--navy);
+  background: var(--blue-bg);
+  color: var(--navy);
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+.bnf-pick-chip { background: var(--navy); color: #fff; }
+.bnf-rule-chip:hover,
+.bnf-pick-chip:hover { text-decoration: line-through; }
+.bnf-rule-chip.is-off,
+.bnf-pick-chip.is-off {
+  border-color: var(--border); background: var(--card); color: var(--ink3);
+}
+.bnf-filter-count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink3);
+  margin-bottom: 8px;
+}
+.bnf-count-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+.bnf-advisor-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.bnf-advisor-table th {
+  position: sticky;
+  top: 0;
+  background: var(--page);
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink2);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  z-index: 1;
+}
+.bnf-advisor-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: top;
+}
+.bnf-advisor-table tbody tr:hover { background: var(--page); }
+.bnf-sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+.bnf-sorted { color: var(--blue); }
+.bnf-sort-arrow { font-size: 9px; margin-left: 4px; }
+.bnf-star-btn {
+  border: none;
+  background: none;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--ink3);
+  cursor: pointer;
+  padding: 2px;
+}
+.bnf-star-btn.active { color: var(--amber); }
+.bnf-shortlist-reason {
+  font-size: 11px;
+  color: var(--violet);
+  margin-top: 2px;
+  max-width: 260px;
+}
+.bnf-delta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.bnf-delta-pos { background: var(--rose-bg); color: var(--rose); }
+.bnf-delta-neg { background: var(--green-bg); color: var(--green); }
+.bnf-delta-base { font-size: 12px; color: var(--ink3); font-style: italic; }
+.bnf-flag-chip {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  white-space: nowrap;
+}
+.bnf-nofilter-row { text-align: center; padding: 18px 10px; }
+@media (max-width: 1100px) {
+  .bnf-advisor-tab-split { flex-direction: column; }
+  .bnf-advisor-tab-split > .bnf-advisor-panel {
+    width: 100%;
+    flex-basis: auto;
+    position: static;
+  }
+}

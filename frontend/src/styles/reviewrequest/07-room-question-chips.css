@@ -1,0 +1,268 @@
+/* With the room to, a question's chips stand beside its words. */
+.rr-build-wide .rr-rail-q { flex-direction: row; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 10px; }
+.rr-build-wide .rr-rail-qhead { flex: 1 1 220px; }
+.rr-build-wide .rr-rail-chips { padding-left: 0; justify-content: flex-end; }
+.rr-rail-folded { padding: 0; }
+.rr-rail-unfold {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; width: 46px; padding: 10px 0;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--ink2);
+  cursor: pointer; font-size: 16px;
+}
+.rr-rail-folded-word { writing-mode: vertical-rl; font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.rr-rail-person { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 12.5px; color: var(--ink2); }
+.rr-rail-person select { flex: 1 1 auto; min-width: 0; padding: 3px 6px; font-size: 13px; }
+.rr-rail-required { border-left: 3px solid var(--violet); }
+.rr-rail-toggle-still { cursor: default; }
+.rr-rail-chip-off { background: var(--card); color: var(--ink3); text-decoration: line-through; }
+.rr-reqpage-rail .rr-rail-chip { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }
+.rr-askfoot {
+  position: sticky; bottom: 0; margin-top: 10px; padding: 10px 0 2px; background: var(--card);
+  border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; z-index: 1;
+}
+.rr-askfoot-sum { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; font-size: 12.5px; }
+.rr-askfoot-message { margin-top: 0; }
+.rr-askfoot-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.rr-askfoot-actions .btn { flex: 1 1 auto; }
+
+.rr-panes { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; border-bottom: 1px solid var(--border); }
+.rr-pane {
+  padding: 7px 12px; border: 0; border-bottom: 2px solid transparent; background: none;
+  color: var(--ink2); font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.rr-pane-on { color: var(--violet); border-bottom-color: var(--violet); }
+.rr-panes-gap { flex: 1 1 auto; }
+.rr-pane-tool {
+  padding: 4px 10px; margin-bottom: 4px; border: 1px solid var(--border); border-radius: 7px;
+  background: var(--card); color: var(--ink2); font-size: 12.5px; cursor: pointer; white-space: nowrap;
+}
+.rr-pane-tool-on { border-color: var(--violet); background: var(--violet-bg); color: var(--violet); }
+.rr-pane-tabs { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; min-width: 0; }
+.rr-pane-wrap { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.rr-pane-wrap .rr-part { flex-wrap: nowrap; gap: 3px; font-size: 12px; }
+.rr-pane-wrap .rr-part input { width: auto; margin: 0; }
+.rr-pane-wrap > .rr-part-n { margin-left: 0; }
+.rr-pane-wrap .rr-pane { padding-left: 2px; padding-right: 2px; }
+.rr-rail-asking { flex-wrap: wrap; }
+.rr-rail-asking b { color: var(--ink); overflow-wrap: anywhere; }
+.rr-rail-asking .rr-edit-note { flex: 1 1 100%; }
+.rr-rail-sectick { width: auto; flex: 0 0 auto; margin: 0; }
+.rr-pane-toggle { display: inline-flex; gap: 0; margin-left: 4px; }
+.rr-pane-toggle .rr-pane-tool:first-child { border-radius: 7px 0 0 7px; }
+.rr-pane-toggle .rr-pane-tool:last-child { border-radius: 0 7px 7px 0; margin-left: -1px; }
+/* What a person made final, under their form: ours, never on their page. */
+.rr-answered { margin-top: 10px; padding: 8px 12px; border: 1px dashed var(--border); border-radius: 10px; font-size: 12.5px; color: var(--ink2); }
+.rr-answered summary { cursor: pointer; font-weight: 600; }
+.rr-answered-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; padding: 4px 0; border-top: 1px solid var(--page); }
+.rr-answered-row b { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+.rr-viewing { font-size: 12.5px; color: var(--ink2); }
+.rr-viewing-off { color: var(--ink); }
+.rr-ready { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.rr-ready .btn { flex: 0 0 auto; }
+.rr-ready-idle { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink2); }
+.rr-picking .rr-fr { cursor: copy; }
+
+.rr-form-frame { container-type: inline-size; }
+.rr-form { display: flex; flex-direction: column; gap: 14px; }
+.rr-form-sec { border: 1px solid var(--border); border-radius: 10px; background: var(--card); overflow: hidden; }
+.rr-form-sechead { padding: 8px 12px; font-size: 13px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--border); }
+.rr-form-group { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.rr-form-group span { color: var(--ink2); }
+.rr-form-group .btn { flex: 0 0 auto; margin-left: auto; }
+.rr-fr {
+  position: relative; display: grid; grid-template-columns: minmax(120px, 190px) minmax(0, 1fr) auto;
+  gap: 2px 12px; align-items: baseline; padding: 8px 12px; border-bottom: 1px solid var(--border);
+  font-size: 13px; cursor: pointer;
+}
+.rr-fr:last-child { border-bottom: 0; }
+.rr-fr:hover { background: var(--violet-bg); }
+.rr-fr-faint { opacity: 0.55; }
+.rr-fr-label { color: var(--ink2); min-width: 0; overflow-wrap: anywhere; }
+.rr-fr-value { color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
+.rr-fr-blank { color: var(--ink3); }
+.rr-fr-status { min-width: 0; text-align: right; }
+.rr-fr-chip { display: inline-block; padding: 1px 7px; border-radius: 999px; background: var(--border); color: var(--ink2); font-size: 11.5px; }
+.rr-fr-chip-q, .rr-fr-chip-review { background: var(--violet-bg); color: var(--violet); }
+.rr-fr-chip-cart { background: var(--violet); color: var(--card); }
+.rr-fr-chip-missing { background: none; border: 1px solid var(--border); }
+.rr-fr-tools {
+  grid-column: 1 / -1; display: none; gap: 12px; justify-content: flex-end; font-size: 12px;
+}
+.rr-fr:hover > .rr-fr-tools, .rr-fr:focus-within > .rr-fr-tools { display: flex; }
+.rr-fr > .cm-below { grid-column: 1 / -1; cursor: default; }
+.rr-fr-files { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
+.rr-fr-file { display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: 12.5px; }
+.rr-fr-file-name { overflow-wrap: anywhere; }
+.rr-fr-file-meta { color: var(--ink3); font-size: 12px; }
+.rr-fr-file-wrong .rr-fr-file-name { text-decoration: line-through; color: var(--ink3); }
+.rr-fr-upload { margin-top: 2px; font-size: 12px; }
+@container (max-width: 520px) {
+  .rr-fr { grid-template-columns: minmax(96px, 38%) minmax(0, 1fr); }
+  .rr-fr-status { grid-column: 2; text-align: left; }
+}
+/* Edit mode (`useRequestEntry`): the form as a form. */
+.rr-reqdoc > .bnf-edit-bar { top: var(--chrome-top); margin-bottom: 0; }
+.rr-reqdoc > .bnf-edit-bar .bnf-edit-bar-main { flex-basis: 100%; }
+.rr-reqdoc > .bnf-edit-bar .btn { margin-left: auto; }
+.rr-entry-keys { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 12px; color: var(--ink2); }
+.rr-entry-keys .rr-kbd:not(:first-child) { margin-left: 8px; }
+.rr-form-editing .rr-fr { align-items: center; cursor: default; }
+.rr-form-editing .rr-fr:hover { background: none; }
+.rr-form-editing .rr-fr-typing { cursor: text; }
+.rr-form-editing .rr-fr-typing:focus-within { background: var(--violet-bg); }
+.rr-entry { min-width: 0; scroll-margin: calc(var(--chrome-top) + 64px) 0 24px; }
+.rr-entry .bnf-intake-input { width: 100%; min-width: 0; box-sizing: border-box; }
+.rr-entry .bnf-intake-numwrap { display: flex; align-items: center; gap: 4px; }
+.rr-fr-chip-saved { background: var(--green-bg); color: var(--green); }
+.rr-fr-entry-error { grid-column: 1 / -1; font-size: 12px; color: var(--rose); overflow-wrap: anywhere; }
+.rr-census-sum { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 13px; color: var(--ink2); }
+.rr-census-sum b { color: var(--ink); }
+.rr-census-sum .bnf-override-link { margin-left: auto; }
+.rr-form-census { display: flex; flex-direction: column; gap: 14px; }
+.rr-census-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.rr-census-table th { text-align: left; padding: 6px 12px; font-weight: 600; color: var(--ink2); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.rr-census-table td { padding: 5px 12px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.rr-census-table tr:last-child td { border-bottom: 0; }
+.rr-census-open { cursor: pointer; }
+.rr-census-open:hover { background: var(--violet-bg); }
+.rr-census-type { text-transform: capitalize; color: var(--ink2); }
+
+.rr-rcard-decide { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 6px; }
+.rr-rcard-decide .btn { flex: 0 0 auto; }
+.rr-rcard-notebox { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.rr-rcard-notebox textarea { width: 100%; min-height: 56px; font-size: 13px; }
+.rr-rcard-notebox .btn { flex: 0 0 auto; }
+.rr-rcard-files { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.rr-rcard-file { border-top: 1px solid var(--border); padding-top: 6px; }
+.rr-rcard-file:first-child { border-top: 0; padding-top: 0; }
+.rr-rcard-file-h { display: flex; flex-direction: column; gap: 1px; font-size: 12.5px; overflow-wrap: anywhere; }
+.rr-rcard-file-h span { color: var(--ink3); font-size: 12px; }
+.rr-rcard-file-state { display: flex; gap: 8px; margin-top: 4px; font-size: 12px; color: var(--ink2); }
+.rr-rcard-quick { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.rr-rcard-quickbtn {
+  padding: 2px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--card);
+  color: var(--ink2); font-size: 12px; cursor: pointer;
+}
+.rr-rcard-quickbtn:hover { border-color: var(--violet); color: var(--violet); }
+
+.rr-people-scrim {
+  position: fixed; inset: var(--chrome-top, 56px) 0 0 0; z-index: 90; background: rgba(15, 23, 42, 0.18);
+}
+.rr-people {
+  position: absolute; top: 0; right: 0; bottom: 0; width: min(480px, 100vw); padding: 16px;
+  overflow-y: auto; background: var(--card); box-shadow: -4px 0 18px rgba(15, 23, 42, 0.18);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.rr-people-head { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.rr-people-head b { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.rr-people-head .btn { flex: 0 0 auto; }
+.rr-people-close { font-size: 18px; line-height: 1; }
+.rr-people-sub { font-size: 12.5px; color: var(--ink3); }
+.rr-people-ended { margin-top: 6px; }
+.rr-person { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; }
+.rr-person-ended { background: var(--border); opacity: 0.8; }
+.rr-person-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 13.5px; }
+.rr-person-status { color: var(--ink2); font-size: 12px; }
+.rr-person-access { margin-left: auto; font-size: 11.5px; color: var(--ink2); }
+.rr-person-line { font-size: 12.5px; color: var(--ink2); overflow-wrap: anywhere; }
+.rr-person-h { font-size: 11.5px; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.03em; }
+.rr-person-carries { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-top: 2px; }
+.rr-person-carry { padding: 1px 7px; border-radius: 999px; background: var(--border); font-size: 11.5px; color: var(--ink2); }
+.rr-person-switch { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 12.5px; color: var(--ink); }
+.rr-person-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.rr-person-actions .btn { flex: 0 0 auto; }
+.rr-person-confirm { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; padding: 8px; border: 1px solid var(--violet); border-radius: 8px; font-size: 12.5px; }
+
+/* One link's Edit panel (D-184). */
+.rr-edit-switch { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+.rr-edit-switch input {
+  appearance: none; position: relative; flex: 0 0 auto; width: 34px; height: 20px; margin: 0;
+  border-radius: 999px; background: var(--ink3); cursor: pointer; transition: background 0.12s;
+}
+.rr-edit-switch input::before {
+  content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+  border-radius: 50%; background: var(--card); transition: left 0.12s;
+}
+.rr-edit-switch input:checked { background: var(--violet); }
+.rr-edit-switch input:checked::before { left: 16px; }
+.rr-edit-switch input:disabled { opacity: 0.5; cursor: default; }
+.rr-edit-switch input:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+.rr-edit-note { font-size: 12.5px; color: var(--ink2); }
+.rr-edit-note b { color: var(--ink); }
+.rr-edit-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13px; overflow-wrap: anywhere; }
+.rr-edit-row input[type='date'] { padding: 3px 6px; font-size: 13px; }
+.rr-edit-row .btn { flex: 0 0 auto; }
+.rr-edit-warn { padding: 6px 8px; border: 1px solid #c0392b; border-radius: 7px; color: #c0392b; font-size: 12.5px; }
+.rr-edit-address { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; width: 100%; margin-top: 2px; }
+.rr-edit-address input { flex: 1 1 200px; min-width: 0; padding: 3px 6px; font-size: 13px; }
+.rr-edit-address .btn { flex: 0 0 auto; }
+.rr-edit-give { align-self: flex-start; }
+.rr-edit-give-box { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; }
+.rr-edit-activity { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; font-size: 12.5px; }
+.rr-edit-activity dt { color: var(--ink3); }
+.rr-edit-activity dd { margin: 0; color: var(--ink); }
+
+/* How a link is protected, in Edit and on the New link card (D-186). */
+.rr-edit-level { display: flex; align-items: baseline; gap: 6px; font-size: 12.5px; color: var(--ink2); cursor: pointer; }
+.rr-edit-level input { width: auto; flex: 0 0 auto; margin: 0; }
+.rr-edit-level b { color: var(--ink); }
+.rr-edit-level-off { cursor: not-allowed; opacity: .7; }
+.rr-pin-once { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 6px; padding: 6px 8px; border: 1px solid #d8dde6; border-radius: 6px; background: #f7f5ff; }
+.rr-pin-digits { font-size: 17px; font-weight: 700; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+
+/* The New link card and the Ask list while building (D-186). */
+.rr-newlink { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; padding: 12px 14px; border: 1px solid var(--violet, #6b4fbb); border-radius: 10px; background: #fbfaff; min-width: 0; }
+.rr-newlink-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.rr-settings-who { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.rr-settings-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-left: auto; }
+.rr-settings-actions .btn { flex: 0 0 auto; }
+/* A Create or Update that waits reads as waiting (D-191); the Ask card's head carries
+   Update link's twin, beside the name it asks. */
+.rr-settings-actions .btn:disabled, .rr-askfoot-actions .btn:disabled,
+.rr-rail-asking .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.rr-rail-asking .btn { flex: 0 0 auto; margin-left: auto; }
+.rr-settings-body { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 14px 18px; align-items: start; min-width: 0; }
+.rr-settings-cell { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.rr-settings-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding-left: 14px; border-left: 1px solid var(--border); }
+@media (max-width: 1100px) {
+  .rr-settings-body { grid-template-columns: minmax(0, 1fr); }
+  .rr-settings-side { padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--border); }
+}
+.rr-newlink-line { padding: 6px 8px; border-radius: 6px; background: #f1edff; font-size: 12.5px; }
+.rr-newlink-grid { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px 14px; align-items: start; min-width: 0; }
+.rr-newlink-h { font-size: 12.5px; font-weight: 600; padding-top: 2px; }
+.rr-newlink-levels { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.rr-newlink textarea { width: 100%; min-width: 0; box-sizing: border-box; }
+.rr-newlink input[type="date"] { width: auto; }
+.rr-newlink .rr-recipient { display: flex; flex-direction: row; align-items: center; }
+.rr-newlink .rr-recipient input[type="checkbox"] { width: auto; flex: 0 0 auto; margin: 0; }
+@media (max-width: 760px) { .rr-newlink-grid { grid-template-columns: minmax(0, 1fr); } }
+.rr-parts { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); min-width: 0; }
+.rr-parts-h { font-size: 11.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--ink2); }
+.rr-part { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; font-size: 13px; min-width: 0; }
+.rr-part-tick { display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; font-size: 13px; }
+.rr-part-tick input { width: auto; flex: 0 0 auto; margin: 0; }
+.rr-part-n { margin-left: auto; font-size: 11.5px; color: var(--ink2); white-space: nowrap; }
+.rr-part-whole { font-size: 11px; }
+.rr-part-whole-on { font-weight: 700; color: var(--violet, #6b4fbb); }
+.rr-parts-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px; }
+/* What the Ask card's three buttons act on (D-192): the parts ticked on their tabs. */
+.rr-parts-scope { margin-top: 4px; font-size: 12px; color: var(--ink2); }
+.rr-parts-scope b { color: var(--ink); }
+.rr-newlink-form .rr-newlink-ways { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 12px; }
+.rr-newlink-ways label { display: inline-flex; align-items: center; gap: 4px; margin: 0; cursor: pointer; }
+.rr-newlink-ways input { width: auto; margin: 0; }
+.rr-lock { display: inline-flex; align-items: center; flex: 0 0 auto; border-bottom: none; color: var(--violet, #6b4fbb); }
+.rr-lock:focus { outline: 2px solid var(--violet, #6b4fbb); outline-offset: 2px; border-radius: 2px; }
+.rr-lock .rr-rail-why-tip { font-weight: 400; }
+.rr-lock:hover .rr-rail-why-tip, .rr-lock:focus .rr-rail-why-tip { display: block; }
+.rr-linkready { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
+.rr-linkready-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.rr-linkready-who { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; flex: 1 1 200px; min-width: 0; }
+.rr-linkready-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.rr-linkready-actions .btn, .rr-linkready-foot .btn { flex: 0 0 auto; }
+.rr-linkready-foot { display: flex; justify-content: flex-end; }
+.rr-newlink input[type="email"], .rr-newlink input[type="text"], .rr-newlink input[type="date"], .rr-newlink textarea {
+  padding: 7px 10px; border: 1px solid var(--input-border); border-radius: 8px; background: #fff;
+  color: var(--ink); font-size: 13.5px; font-family: inherit; outline: none;
+}
+.rr-newlink input:focus, .rr-newlink textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(46, 111, 199, 0.12); }

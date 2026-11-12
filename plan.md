@@ -829,6 +829,7 @@ docker compose exec frontend npm run lint
 docker compose exec frontend npm run build
 docker compose exec frontend npm test                           # Vitest (slice 6)
 docker compose exec frontend npx stylelint "src/**/*.css"       # (slice 2)
+node frontend/scripts/port-proof.mjs                            # CSS port proof, on the host; reads ../Vantage (slice 2)
 docker compose logs -f backend
 docker compose logs -f worker                                   # (slice 16)
 docker compose restart worker                                   # after changing code the worker runs
@@ -1035,14 +1036,16 @@ Rules:
   each by id; a single-row edit locks only its row. Review's `mark_document`, the portal save and every Revert follow
   it (O.3.7, N.3 #3).
 
-**Activity log.** Every service write is recorded in `Activity` (O.3.2; slice 5, the baseline keeps only a summary and
-a count):
+**Activity log.** Every service write is recorded in `Activity` (O.3.2; built in slice 5):
 - One row holds `deal` (null for a firm row, which names its `subject`), `area`, `action`, `actor`, `actor_kind`
   (user, client, claude or system), a one-line `summary`, `changes`, `document_id`, `coalesce_key`, `count`, `reverts`
-  and `reverted_at`/`by`. It is indexed on (deal, created_at) and (area, created_at); list selectors defer `changes`.
-- `changes` holds the value before and after for each changed key:
+  and `reverted_at`/`by`, plus `revertible`, the stored hint lists read without loading `changes` (values kept, no
+  key-only entry, an action Revert can undo). It is indexed on (deal, created_at) and (area, created_at); list
+  selectors defer `changes`.
+- `changes` holds the value before and after for each changed key (null: no value):
   `[{"t": "plan:41", "k": {"rate_ee": ["612.50", "640.00"]}}]`. Census rows, sensitive questionnaire slots and lasers
-  record keys only; commission values are hidden from viewers below the all tier (H.6).
+  record keys only (`{"t": "member:7", "k": ["dob"]}`); commission values are hidden from viewers below the all tier
+  (H.6).
 - A summary reads like "Edited 3 intake answers", "Imported census: 152 people (38 dependents)" or "Marked Aetna HMO
   1500 sold". It MUST NOT contain census values, person names or file names; a row about a file carries its
   `document_id` (§3.8).
@@ -1181,8 +1184,10 @@ a count):
   rfp); `src/grid/` (selection, keys, sizes, freeze panes, windowed rows, the write queue and a 50-step per-cell undo
   that writes with `expect`), which serves the Advisor, Proposal, Documents and Census grids (O.3.5); `src/viewer/`;
   `src/valuereview/`.
-- **Files stay under 300 lines**, CSS included. Split a component before it grows past that. **Data modules are
-  exempt**: a module that is only a vocabulary or table (`intake/form.py`, `quotes/fields.py`,
+- **Files stay under 300 lines**, CSS included. Split a component before it grows past that, by responsibility, never
+  by line count: each new file holds one idea (the grid's keys, the batch bar, edit mode), and a file that is only
+  "part 2" of another is a bug (agreed by Daniel 2026-11-11). Ported stylesheets are cut at their own section comments
+  (O.5). **Data modules are exempt**: a module that is only a vocabulary or table (`intake/form.py`, `quotes/fields.py`,
   `rfp/formats/definitions.py`, the header synonym table, `proposals/catalog.py`) stays whole however long it is;
   splitting data by line count is churn.
 - **Tests:** Vitest covers pure modules only (for example `gridKeys`, `finder`, `findText`, `pageRows`); screens are
@@ -3652,18 +3657,17 @@ moves to the firm's Microsoft 365 accounts (§3.8; slice 47), so no more passwor
 | POST | `deals/{id}/reopen/` | user | — | deal header |
 | GET / POST | `deals/{id}/notes/` | user | `{body, kind, pinned}` | list (pinned first, newest first) / `201 note` (slice 38) |
 | PATCH / DELETE | `notes/{id}/` | author or admin | same fields | note / `204`, a soft delete that Revert undoes (M77; slice 38) |
-| GET | `deals/{id}/activity/` | user | `?page=` | paginated `[{id, at, actor, area, action, summary, count}]` |
+| GET | `deals/{id}/activity/` | user | `?page=` | paginated `[{id, at, actor, actor_kind, area, action, summary, count, document_id, can_revert, reverts_id, reverted: {at, by} \| null}]`, without `downloaded` and `viewed` rows; `can_revert` is the stored hint (values kept, not undone, an owner reverts), and the POST decides |
 | POST | `activity/{id}/revert/` | user | — | what changed · `409` naming the keys a later write changed · refused with a sentence for sold plans, signed forms, issued proposals, a client status a sale set, and key-only rows (O.3.2, §3.7; slice 5) |
 | GET | `users/` | user | — | `[{id, name}]` active users, for owner pickers |
 | GET | `agency/` | user | — | settings + `has_logo` (edited in Django admin) |
 | GET | `agency/logo/` | user | — | PNG |
 
-Today 2Vantage differs in six ways, each retired in the slice named: `POST clients/` and `PATCH deals/{id}/` also
+Today 2Vantage differs in five ways, each retired in the slice named: `POST clients/` and `PATCH deals/{id}/` also
 take `requested_lines`, until intake's `set_intent` becomes its only writer (B17; slice 11); an admin's
 `DELETE clients/{id}/` removes everything (slice 38); `lost/` requires a reason and re-stamps a lost deal (M.5 B33;
-slice 38); `relationship` is `new` or `existing`, and `PATCH clients/{id}/` still takes it (slice 6);
-`last_activity_at` still counts `downloaded` rows (slice 5, `log_access`; E.5 #36); and the payloads lack
-`client_since` (slice 6), `contacts` (slice 38), `deal_size` and `agent_of_record` (slice 38).
+slice 38); `relationship` is `new` or `existing`, and `PATCH clients/{id}/` still takes it (slice 6); and the payloads
+lack `client_since` (slice 6), `contacts` (slice 38), `deal_size` and `agent_of_record` (slice 38).
 
 **Client row** (dashboard):
 
@@ -5164,7 +5168,7 @@ gives the slice each lane arrives in.
 |---|---|---|---|---|---|
 | Fast | rules, services, endpoints, the Q.3 contracts, golden keys, recorded AI reads, canaries, query scaling | `docker compose exec backend pytest` (one app: `pytest quotes`) | every change | ≤60 s in all; ≤10 s per app | built |
 | Front | Vitest on pure modules, ESLint, build | `npm test`, `npm run lint`, `npm run build` | frontend changes | Vitest ≤10 s | built; Vitest in 6 |
-| Lint | ruff, `makemigrations --check`, the import-linter chain, stylelint, the CSS port proof | `ruff check .`, `lint-imports`, `npx stylelint` | every change | ≤30 s | built; stylelint and the port proof in 2, `lint-imports` in 6 |
+| Lint | ruff, `makemigrations --check`, the import-linter chain, stylelint, the CSS port proof | `ruff check .`, `lint-imports`, `npx stylelint`, `node frontend/scripts/port-proof.mjs` (host) | every change | ≤30 s | built; stylelint and the port proof in 2, `lint-imports` in 6 |
 | Recalc | a LibreOffice recalculation equals the keys | `pytest -m recalc` (LibreOffice from the tools image) | workbook slices; each release | ≤3 min | 27 |
 | Fidelity | old and new files compared (Q.5) | `python tools/parity/files.py --deals all`, in the tools image | painter slices; each release | ≤10 min | 28 (the workbook from 27) |
 | Look | old and new screens compared, by pixels and computed style (Q.5) | `npm --prefix browser run look -- --screens <key>` | UI slices; each release | ≤15 min | 3 |
@@ -5762,7 +5766,7 @@ docker compose exec backend ruff check .        # then, from slice 6: docker com
 docker compose exec backend python manage.py makemigrations --check --dry-run
 docker compose exec frontend npm run lint && docker compose exec frontend npm run build
 docker compose exec frontend npm test           # Vitest, pure modules only (slice 6)
-docker compose exec frontend npx stylelint "src/**/*.css"   # undefined custom properties refused (slice 2)
+docker compose exec frontend npx stylelint "src/**/*.css"; node frontend/scripts/port-proof.mjs   # CSS (slice 2)
 docker compose exec backend pytest -m perf   # Perf (slice 7); Eval, opt-in: manage.py reader_eval --set all (slice 18)
 Look and Walk (slice 3): npm --prefix browser run look -- --screens <key>; npm --prefix browser run walk -- --need <n>
 Parity (slice 3): tools/parity/ runs old Vantage (../Vantage, read-only) as its own Compose project, with a tools image
@@ -5775,7 +5779,7 @@ An app imports only from apps to its left (lint-imports); a fact read by an app 
 To reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
 AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client,
 never business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far:
-accounts, deals, documents, quotes, proposals. The chain orders imports, not screens: the deal sidebar keeps old
+accounts, deals, documents, quotes, proposals, golden. The chain orders imports, not screens: the deal sidebar keeps old
 Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review & requests, Intake, Census,
 Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close: Advisor, Proposal · Shared: Documents.
 Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry the Advisor and Proposal.
@@ -5801,7 +5805,7 @@ index.js exports only what others mount. Other pages live in pages/ (home; Archi
 7. The old look (slice 2 on): old Vantage's stylesheets, cut into ≤300-line files under src/styles/<old sheet>/ and
    imported once, in the old order, by one manifest in main.jsx (the port proof checks them). Every component, new ones
    too, uses the old class names (bb-*, bnf-*, gk-*, rr-*). No CSS modules (2V's go in slice 4), no per-route sheets.
-8. No file over 300 lines, except data modules (vocabularies, tables). Split code before it grows past that.
+8. No file over 300 lines, except data modules (vocabularies, tables). Split by responsibility, never by line count.
 9. Sign-in is Django's session; every write sends X-CSRFToken. Every user sees every deal (OQ3). Users, their Profile
    flags (claude_direct, commissions_access; slice 6) and agency settings live in Django admin.
 10. PHI (census people, medical answers, lasers, files carrying them): never in logs, Activity, Job steps, error text,

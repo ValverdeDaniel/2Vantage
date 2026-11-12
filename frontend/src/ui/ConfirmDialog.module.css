@@ -1,8 +1,0 @@
-.message {
-  color: var(--grey-700);
-}
-
-.error {
-  color: var(--color-red);
-  font-size: var(--text-sm);
-}

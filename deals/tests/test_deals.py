@@ -29,11 +29,11 @@ def test_unknown_line_is_refused(api):
 def test_search_type_filter_and_pagination(api, user):
     for i in range(27):
         make_client(user, name=f'Acme {i:02d}')
-    make_client(user, name='Other Ltd', relationship='existing')
+    make_client(user, name='Other Ltd', relationship='existing_client')
     page1 = api.get('/api/clients/?q=acme').json()
     assert page1['count'] == 27 and len(page1['results']) == 25 and page1['next']
     assert api.get('/api/clients/?q=acme&page=2').json()['results']
-    existing = api.get('/api/clients/?relationship=existing').json()
+    existing = api.get('/api/clients/?relationship=existing_client').json()
     assert [row['name'] for row in existing['results']] == ['Other Ltd']
 
 

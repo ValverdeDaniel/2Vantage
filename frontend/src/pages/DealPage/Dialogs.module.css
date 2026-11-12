@@ -1,8 +1,0 @@
-.note {
-  color: var(--color-text-muted);
-}
-
-.error {
-  color: var(--color-red);
-  font-size: var(--text-sm);
-}

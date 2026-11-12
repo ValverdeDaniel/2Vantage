@@ -36,12 +36,26 @@ def test_gzip_applies_to_json_only(api):
 
 
 def test_meta_returns_every_vocabulary(api):
+    """Membership, never counts (Q.3 #10): each section is there and carries the keys the screens use."""
     body = api.get('/api/meta/').json()
-    assert {'lines', 'tiers', 'stages', 'funding', 'document_kinds', 'document_roles', 'plans'} <= set(body)
-    assert len(body['lines']) == 27
-    assert len(body['plans']['fields']) == 96
+    sections = {'lines', 'tiers', 'stages', 'relationships', 'funding', 'document_kinds', 'document_roles', 'plans'}
+    assert sections | {'carriers'} <= set(body)
+    assert {'medical', 'dental', 'vision'} <= {line['key'] for line in body['lines']}
+    assert {'rate_ee', 'deductible_single', 'funding'} <= {field['key'] for field in body['plans']['fields']}
     medical_fields = [k for g in body['plans']['line_groups']['medical'] for k in g['fields']]
     assert 'funding' in medical_fields and 'unit_rate' not in medical_fields
+
+
+def test_CL9_meta_serves_the_three_statuses_and_the_carriers_with_aliases(api):
+    body = api.get('/api/meta/').json()
+    assert body['relationships'] == [
+        {'key': 'prospect', 'label': 'Prospect', 'create': True},
+        {'key': 'new_client', 'label': 'New client', 'create': False},  # only a sale or Convert to client (CL6)
+        {'key': 'existing_client', 'label': 'Existing client', 'create': True},
+    ]
+    uhc = next(carrier for carrier in body['carriers'] if carrier['key'] == 'unitedhealthcare')
+    assert uhc == {'key': 'unitedhealthcare', 'name': 'UnitedHealthcare', 'group': 'medical', 'aliases': uhc['aliases']}
+    assert 'UHC' in uhc['aliases']
 
 
 @override_settings(AGENCY_TIME_ZONE='America/New_York')

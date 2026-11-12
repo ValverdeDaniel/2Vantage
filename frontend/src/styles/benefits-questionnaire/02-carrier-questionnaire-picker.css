@@ -1,0 +1,113 @@
+/* Carrier-questionnaire picker on the marketing-checklist row. */
+.bnf-q-formpick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.bnf-q-formpick label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ink2);
+}
+
+.bnf-q-formselect {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink);
+  padding: 3px 6px;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  background: #fff;
+  max-width: 260px;
+}
+
+.bnf-q-formselect:disabled {
+  background: var(--page);
+  color: var(--ink3);
+}
+
+/* Portal questionnaire extras: blank carrier PDF viewer + filled-copy upload */
+.bnf-q-blankbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0 4px;
+}
+
+.bnf-q-blank {
+  margin: 10px 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 640px;
+  overflow-y: auto;
+  background: var(--page);
+}
+
+.bnf-q-upload {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--page);
+}
+
+.bnf-q-upload-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+
+.bnf-q-staged-note {
+  font-size: 11px;
+  color: var(--ink2);
+}
+
+.bnf-q-scan {
+  margin-top: 10px;
+}
+
+.bnf-q-scan-done {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--green-bg);
+  color: var(--green);
+  font-size: 12px;
+}
+
+.bnf-q-scan-failed {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  font-size: 12px;
+}
+
+/* Questionnaire ▸ Review & requests ▸ Missing (U3c,
+   review-requests-one-way.md §2 B): how many required answers are blank,
+   the first few by name, and the one ask -- the whole form, to fill out
+   online -- or where it already is ("✓ In tray", "Asked · Dana · Oct 20").
+   The lanes and the lane head are the census's (benefits-census-review.css). */
+.bnf-q-missing {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 10px 16px; min-width: 0;
+  padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--card, #fff);
+}
+.bnf-q-missing-text { min-width: 0; flex: 1 1 260px; }
+.bnf-q-missing-count { font-size: 14px; font-weight: 600; color: var(--rose); }
+.bnf-q-missing-text .bnf-review-note { margin-top: 4px; overflow-wrap: anywhere; }
+.bnf-q-missing-actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+}
+.bnf-q-missing-actions .btn { flex: 0 0 auto; }
+.bnf-q-asked { font-size: 12px; color: var(--ink2); white-space: nowrap; }

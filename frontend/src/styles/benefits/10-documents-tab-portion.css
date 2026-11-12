@@ -1,0 +1,155 @@
+/* ---- Documents tab: portion assignment, upload, scanned-data view ---- */
+/* The Documents tab's action row (its only consumer): a bare right-aligned
+   strip so the Claude-chat toggle sits directly above the column it opens. */
+.bnf-doc-adder {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.bnf-doc-adder-file { font-size: 12px; flex: 1 1 220px; min-width: 0; }
+.bnf-select {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 9px;
+  font-size: 12.5px;
+  font-family: inherit;
+  background: #fff;
+  color: var(--ink);
+}
+
+.bnf-doc-bucket {
+  margin-left: 7px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink3);
+  background: var(--border-soft);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.bb-doc-tab.active .bnf-doc-bucket { color: var(--navy); background: #fff; }
+
+.bnf-doc-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+/* Edit (rename + retype) — replaced the three-way reassign button group,
+   which could only express three of the five document types. */
+.bnf-doc-edit {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 11px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.bnf-doc-edit:hover:not(:disabled) { border-color: var(--blue); color: var(--ink); }
+.bnf-doc-edit:disabled { opacity: 0.55; cursor: default; }
+
+/* The editor sits in the same slot .bnf-rescan-hint uses, so opening it
+   shifts the canvas exactly the way that hint already does. */
+.bnf-doc-edit-panel {
+  margin-bottom: 10px;
+  padding: 9px 10px;
+  background: var(--blue-bg);
+  border-radius: 7px;
+}
+.bnf-doc-editrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bnf-doc-nameinput {
+  flex: 1 1 200px;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border: 1px solid var(--blue);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+}
+.bnf-doc-typeselect {
+  flex: 0 0 auto;
+  max-width: 190px;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+}
+.bnf-doc-typeselect:disabled { opacity: 0.7; cursor: default; }
+.bnf-doc-edit-panel .bnf-doc-editsave { flex: 0 0 auto; }
+.bnf-doc-editcancel {
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--ink3);
+  cursor: pointer;
+}
+.bnf-doc-editcancel:hover { color: var(--ink); text-decoration: underline; }
+.bnf-doc-editmeta { margin-top: 6px; font-size: 11px; color: var(--ink3); }
+
+/* A renamed file can be 120 chars and .bb-doc-tabs wraps, so an uncapped tab
+   gives every document its own full-width row and pushes the PDF off-screen.
+   Scoped to this tab — .bb-doc-tab is shared with BeniBridge's PolicyTab. */
+.bnf-docs-cols .bb-doc-tab { display: inline-flex; align-items: center; gap: 7px; max-width: 240px; }
+.bnf-docs-cols .bb-doc-tab-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bnf-docs-cols .bb-doc-tab .bnf-doc-bucket { flex: 0 0 auto; margin-left: 0; }
+
+.bnf-doc-remove {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--rose);
+  cursor: pointer;
+}
+.bnf-doc-remove:hover:not(:disabled) { text-decoration: underline; }
+.bnf-doc-remove:disabled { opacity: 0.55; cursor: default; }
+
+.bnf-rescan-hint {
+  margin-bottom: 10px;
+  padding: 7px 10px;
+  background: var(--blue-bg);
+  border-radius: 7px;
+  font-size: 12px;
+  color: var(--ink2);
+}
+.bnf-rescan-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blue);
+  cursor: pointer;
+}
+.bnf-rescan-link:hover { text-decoration: underline; }
+
+/* The scanned-data panel shares the row and lets its grid scroll internally
+   (min-width:0 so a wide census/proposal grid can't blow out the flex row). */
+.bnf-scan-panel { flex: 1.15; min-width: 0; }
+.bnf-scan-panel .bb-grid-card { margin-bottom: 0; }

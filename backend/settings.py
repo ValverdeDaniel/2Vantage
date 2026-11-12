@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'documents',
     'quotes',
     'proposals',
+    'golden',  # seed only, last in the chain (§3.3)
 ]
 
 MIDDLEWARE = [

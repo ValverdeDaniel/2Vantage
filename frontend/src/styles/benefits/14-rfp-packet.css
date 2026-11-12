@@ -1,0 +1,272 @@
+/* ===== RFP packet (2026-09-17) ===== */
+/* The bar that says what the zip would carry, above the cards that fill it. */
+.bnf-rfp-packet {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--navy);
+}
+
+.bnf-rfp-packet .bb-panel-sub { margin-top: 2px; }
+
+/* One card's tick. Reads as a label, not a form field — it sits in the
+   card's action row beside Preview and Download. */
+.bnf-rfp-include {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5b6673;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.bnf-rfp-include input { cursor: pointer; margin: 0; }
+
+/* What a format asks for that our census has no field for. */
+.bnf-rfp-gaps {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #5b6673;
+}
+
+.bnf-rfp-gaps summary { cursor: pointer; }
+.bnf-rfp-gaps ul { margin: 6px 0 0 18px; padding: 0; }
+.bnf-rfp-gaps li { margin-bottom: 2px; }
+
+.bnf-rfp-include-off { opacity: 0.55; cursor: default; }
+.bnf-rfp-include-off input { cursor: default; }
+
+/* "What we're requesting" — lines, funding, carriers, then the free text. */
+.bnf-rfp-request { padding: 16px; }
+
+.bnf-rfp-group { margin-top: 14px; }
+
+.bnf-rfp-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5b6673;
+  margin-bottom: 6px;
+}
+
+.bnf-rfp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.bnf-rfp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.bnf-rfp-chip:hover { border-color: currentColor; }
+
+.bnf-rfp-chip-on {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
+/* Dimmed, never disabled: Warner's own documents disagree about which
+   carrier writes what at which size, so this advises. */
+.bnf-rfp-chip-off { opacity: 0.5; border-style: dashed; }
+.bnf-rfp-chip-off.bnf-rfp-chip-on { opacity: 0.8; }
+
+.bnf-rfp-chip-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.75;
+}
+
+.bnf-rfp-note {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--amber);
+}
+
+.bnf-rfp-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.bnf-rfp-fields label,
+.bnf-rfp-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 220px;
+  font-size: 12px;
+  color: #5b6673;
+}
+
+.bnf-rfp-notes { margin-top: 14px; }
+
+.bnf-rfp-fields input,
+.bnf-rfp-notes textarea {
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: #fff;
+}
+
+.bnf-rfp-notes textarea { resize: vertical; }
+
+.bnf-rfp-variants { margin: 10px 0 2px; }
+
+.bnf-field-help { display: inline; margin-left: 6px; }
+.bnf-field-help-toggle {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--blue);
+  font-size: 11.5px;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.bnf-field-help-body {
+  margin-top: 5px;
+  padding: 8px 10px;
+  background: #f6f8fb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink2);
+  font-weight: 400;
+}
+/* The producer's own note for a column (D-059): an instruction, so it is
+   shown open and marked as theirs rather than tucked behind the toggle. */
+.bnf-field-broker-note {
+  margin-top: 5px;
+  padding: 7px 10px;
+  background: var(--blue-bg, #eef4fc);
+  border-left: 3px solid var(--blue);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink);
+  font-weight: 400;
+}
+.bnf-help-link {
+  color: var(--blue);
+  text-decoration: none;
+  font-weight: 600;
+}
+.bnf-help-link:hover { text-decoration: underline; }
+
+/* ===== Marketing readiness checklist ===== */
+.bnf-marketing-panel { margin-bottom: 16px; }
+.bnf-marketing-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+/* The board does not stop being a board once the group has gone out — it just
+ * stops being a forecast. Muted on purpose: it reports, it never warns. */
+.bnf-marketing-sent { display: inline-block; margin-top: 6px; }
+.bnf-marketing-meter { min-width: 160px; flex: 0 0 auto; }
+.bnf-marketing-items { margin-top: 12px; display: flex; flex-direction: column; }
+.bnf-marketing-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.bnf-marketing-row:first-child { border-top: none; }
+.bnf-marketing-status { flex: 0 0 auto; width: 62px; padding-top: 1px; }
+.bnf-marketing-body { flex: 1 1 auto; min-width: 0; }
+.bnf-marketing-label { font-size: 14px; font-weight: 600; color: var(--ink); }
+.bnf-marketing-row.is-done .bnf-marketing-label { color: inherit; }
+.bnf-marketing-detail { font-size: 12px; color: inherit; margin-top: 2px; }
+.bnf-marketing-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.bnf-attest-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bnf-doc-request-group {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bnf-portal-doc-row { margin-top: 10px; }
+
+/* Contextual "Show me how" trigger in the checklist panel title. */
+.bnf-marketing-guide-link {
+  margin-left: 10px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.bnf-marketing-guide-link:hover { text-decoration: underline; }
+
+/* The put-it-away chevron in a card title (2026-09-29). Shared by the Coverage
+   & marketing intent card and the Marketing readiness checklist, which is why
+   it lives here and not in benefits-coverage.css — that file's own header says
+   its names are deliberately disjoint from this block and scoped to the one
+   card.
+
+   INSIDE `.bb-panel-title`, never beside it: `.bnf-cvg-head` and
+   `.bnf-marketing-head` are both `justify-content: space-between` with exactly
+   two children, and a third strands the badge mid-row on the wrapping one and
+   squeezes the badges on the other. `.bb-panel-title` has no display rule, so
+   the button flows inline the way `.bnf-marketing-guide-link` already does.
+
+   The glyph itself reuses `.bnf-req-chevron` / `.bnf-req-chevron.expanded`
+   (benefits-journey.css) — bare class selectors, already global. */
+.bnf-card-toggle {
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0 6px 0 0;
+  color: inherit;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+}
+/* Disabled while a walkthrough runs, because the guide is holding the card
+   open. An enabled button whose click visibly does nothing is worse. */
+.bnf-card-toggle:disabled { cursor: default; opacity: 0.55; }

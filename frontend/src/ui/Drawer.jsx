@@ -1,49 +1,36 @@
 import { useId, useRef } from 'react';
-import styles from './Drawer.module.css';
-import IconButton from './IconButton';
-import { useModalDialog } from './useModalDialog';
+import { createPortal } from 'react-dom';
+import { useModalLayer } from './useModalLayer';
 
 /**
- * A side panel sliding in from the right, on the native <dialog> (focus trapped, Escape closes).
- *   open, onClose, title, children, footer, width (CSS length, default 420px)
- * Focus starts on the first focusable element in the body, else the ✕ button.
+ * The old right-hand drawer (the Work with Claude drawer's .bnf-scan-drawer): fixed under the top bar, with the page
+ * beside it still usable. Escape or ✕ closes it and focus returns to what opened it.
+ *   open, onClose, title, sub (a grey line at the top of the body), children
  */
 export default function Drawer({ open, ...props }) {
   return open ? <DrawerPanel {...props} /> : null;
 }
 
-function DrawerPanel({ onClose, title, children, footer, width = '420px' }) {
+function DrawerPanel({ onClose, title, sub, children }) {
   const ref = useRef(null);
   const titleId = useId();
-  useModalDialog(ref, { focusField: false });
+  useModalLayer(ref, { focusField: false, onEscape: onClose, modal: false });
 
-  return (
-    <dialog
-      ref={ref}
-      className={styles.drawer}
-      style={{ '--drawer-width': width }}
-      aria-labelledby={titleId}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose?.();
-      }}
-      onMouseDown={(event) => {
-        // A press on the backdrop (outside the panel) closes it.
-        if (event.target === event.currentTarget) onClose?.();
-      }}
-    >
-      <div className={styles.header}>
-        <h2 id={titleId} className={styles.title}>
+  return createPortal(
+    <aside ref={ref} className="bnf-scan-drawer" role="dialog" aria-labelledby={titleId}>
+      <div className="bnf-scan-drawer-head">
+        <span id={titleId} className="bnf-scan-drawer-title">
           {title}
-        </h2>
-        <IconButton label="Close" onClick={onClose}>
+        </span>
+        <button type="button" className="bnf-scan-drawer-close" aria-label={`Close ${title}`} onClick={onClose}>
           ✕
-        </IconButton>
+        </button>
       </div>
-      <div className={styles.body} data-dialog-body>
+      <div className="bnf-scan-drawer-body" data-dialog-body>
+        {sub && <div className="bnf-scan-drawer-sub">{sub}</div>}
         {children}
       </div>
-      {footer && <div className={styles.footer}>{footer}</div>}
-    </dialog>
+    </aside>,
+    document.body,
   );
 }

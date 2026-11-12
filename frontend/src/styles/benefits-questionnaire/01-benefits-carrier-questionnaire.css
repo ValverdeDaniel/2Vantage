@@ -1,0 +1,285 @@
+/* Benefits — the carrier questionnaire tab + portal section. */
+
+/* ===== BENEFITS · CARRIER QUESTIONNAIRE ===== */
+
+.bnf-q-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.bnf-q-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.bnf-q-subtitle {
+  font-size: 12px;
+  color: var(--ink2);
+  margin: 2px 0 0;
+}
+
+.bnf-q-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.bnf-q-actions .btn { flex: 0 0 auto; }
+
+/* The one ⬇ Download menu (U4, review-requests-one-way.md §6a): each item
+   says what the file is. Absolute inside the toolbar, under every fixed
+   layer. */
+.bnf-q-dlmenu { position: relative; }
+.bnf-q-dlmenu-list {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 40;
+  display: flex; flex-direction: column; width: min(320px, 86vw);
+  padding: 4px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--card); box-shadow: 0 8px 24px rgba(16, 28, 46, 0.18);
+}
+.bnf-q-dlmenu-item {
+  display: flex; flex-direction: column; gap: 2px; text-align: left;
+  padding: 8px 10px; border: none; border-radius: 8px; background: none; cursor: pointer;
+}
+.bnf-q-dlmenu-item:hover, .bnf-q-dlmenu-item:focus-visible { background: var(--page); }
+.bnf-q-dlmenu-item b { font-size: 13px; color: var(--ink); }
+.bnf-q-dlmenu-item span { font-size: 12px; color: var(--ink2); }
+
+.bnf-q-saving {
+  font-size: 11px;
+  color: var(--ink2);
+  font-style: italic;
+}
+
+/* Paper-like sheet, the AcordTab form-view idiom. */
+.bnf-q-paper {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 22px 26px;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
+}
+
+.bnf-q-paper-plain {
+  padding: 0;
+  overflow-x: auto;
+}
+
+.bnf-q-section + .bnf-q-section {
+  margin-top: 26px;
+}
+
+.bnf-q-secthead {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--navy);
+  border-radius: 4px;
+  padding: 6px 10px;
+  margin: 0 0 12px;
+}
+
+.bnf-q-intro {
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--ink2);
+  margin: 0 0 12px;
+}
+
+/* Three-column grid; a field's width weight spans 1-3 columns, reproducing
+   the source form's line grouping. */
+.bnf-q-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 16px;
+  align-items: end;
+}
+
+.bnf-q-w1 { grid-column: span 1; }
+.bnf-q-w2 { grid-column: span 2; }
+.bnf-q-w3 { grid-column: span 3; }
+
+.bnf-q-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.bnf-q-label {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ink2);
+  font-weight: 500;
+}
+
+.bnf-q-req {
+  color: var(--rose);
+  margin-left: 3px;
+}
+
+.bnf-q-hint {
+  font-size: 10.5px;
+  color: var(--ink2);
+  font-style: italic;
+}
+
+/* Repeating blocks (current plans, medical conditions). */
+.bnf-q-block {
+  margin-top: 14px;
+}
+
+.bnf-q-row {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 14px 14px;
+  margin-bottom: 10px;
+  background: var(--page);
+}
+
+.bnf-q-rowhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.bnf-q-rowchip {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--navy);
+  border-radius: 3px;
+  padding: 2px 8px;
+}
+
+.bnf-q-remove {
+  background: none;
+  border: none;
+  color: var(--rose);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.bnf-q-remove:hover { text-decoration: underline; }
+
+.bnf-q-empty {
+  font-size: 12px;
+  color: var(--ink2);
+  font-style: italic;
+  margin: 0 0 10px;
+}
+
+/* The static category legend printed above Section IV. */
+.bnf-q-legend {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 14px;
+  table-layout: fixed;
+}
+
+.bnf-q-legend td {
+  border: 1px solid var(--blue);
+  padding: 5px 6px;
+  font-size: 10.5px;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+/* Table view. */
+.bnf-q-table { width: 100%; }
+.bnf-q-tsection { color: var(--ink2); font-size: 11px; white-space: nowrap; }
+.bnf-q-tblank { color: var(--ink2); font-style: italic; }
+/* An answer is the Form's own input; `.bnf-intake-input` only grows in a flex
+   parent, and a table cell is not one. */
+.bnf-q-tanswer { width: 40%; min-width: 280px; }
+.bnf-q-tanswer .bnf-intake-input { width: 100%; box-sizing: border-box; }
+.bnf-q-tremove { display: block; margin-top: 4px; }
+.bnf-q-taddrow { background: var(--page); }
+
+/* Signature card + locked banner. */
+.bnf-q-locked {
+  background: var(--green-bg);
+  border: 1px solid var(--green);
+  color: var(--green);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+
+.bnf-q-sign { margin-top: 16px; }
+.bnf-q-sign h3 { font-size: 13px; margin: 0 0 12px; }
+
+.bnf-q-signrow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.bnf-q-signval {
+  font-size: 13px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 5px;
+  margin-top: 4px;
+}
+
+.bnf-q-signform {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.bnf-q-signform .bnf-intake-input { max-width: 280px; }
+.bnf-q-signform .btn { flex: 0 0 auto; }
+/* The attestation and what held a signature (D-124 slices 2-3) take a line
+   of their own in the wrapping row. */
+.bnf-q-signform .bnf-q-attestation,
+.bnf-q-signform .bnf-q-signhold { flex: 0 0 100%; margin: 0; }
+.bnf-q-signhold {
+  font-size: 12px;
+  color: var(--amber);
+  background: var(--amber-bg);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.bnf-q-signanyway { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+
+.bnf-q-note {
+  font-size: 11px;
+  color: var(--ink2);
+  margin: 10px 0 0;
+}
+
+.bnf-q-none { padding: 20px; font-size: 13px; color: var(--ink2); }
+
+@media (max-width: 720px) {
+  .bnf-q-grid { grid-template-columns: 1fr; }
+  .bnf-q-w1, .bnf-q-w2, .bnf-q-w3 { grid-column: span 1; }
+  .bnf-q-paper { padding: 16px; }
+}
+
+/* Request-modal questionnaire ask-mode picker. */
+.bnf-q-askmode {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin: 4px 0;
+  background: var(--page);
+}
+
+.bnf-q-askmode .bb-checkbox-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+}

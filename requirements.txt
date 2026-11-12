@@ -12,6 +12,8 @@ pillow==13.0.0
 pytest==8.4.2
 pytest-django==4.14.0
 ruff==0.17.4
+# The app-chain contract (plan.md §3.3; slice 6): lint-imports reads .importlinter
+import-linter==2.16
 
 # Pulled in by the packages above, pinned at what was resolved on 2026-11-10
 asgiref==3.13.0
@@ -21,3 +23,9 @@ packaging==26.3
 pluggy==1.7.0
 Pygments==2.21.0
 sqlparse==0.6.1
+# Pulled in by import-linter, pinned at what was resolved on 2026-11-11
+click==8.5.1
+grimp==3.19
+markdown-it-py==4.3.0
+mdurl==0.1.2
+rich==15.0.0

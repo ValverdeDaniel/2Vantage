@@ -1,0 +1,264 @@
+/* ===== CLOSE-OUT PACKET (the wrap-up tab; cards reuse bnf-export-*) ===== */
+.bnf-closeout-delivered {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  background: var(--green-bg);
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 600;
+}
+.bnf-closeout-include {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink2);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.bnf-closeout-uploads {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.bnf-closeout-uploads .bb-panel-sub { flex-basis: 100%; }
+.bnf-closeout-email-text {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--page);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  max-height: 320px;
+  overflow-y: auto;
+  user-select: all;
+}
+.bnf-closeout-markrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bnf-closeout-markrow .btn { flex: 0 0 auto; white-space: nowrap; }
+.bnf-closeout-note {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+}
+.bnf-closeout-history-row {
+  display: flex;
+  gap: 14px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12.5px;
+}
+.bnf-closeout-history-row:last-child { border-bottom: none; }
+
+/* Line-of-business switcher on the comparison grid / advisor (2026-08-29).
+   Plans are only comparable within a line, so each block gets its own tab. */
+.bnf-lineswitch {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 10px 0 4px;
+}
+.bnf-linetab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--card, #fff);
+  border: 1px solid var(--border, #e6e8ec);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink3);
+  cursor: pointer;
+}
+.bnf-linetab:hover { border-color: var(--blue, #2e6fc7); color: var(--ink); }
+.bnf-linetab-on {
+  background: var(--navy, #173a63);
+  border-color: var(--navy, #173a63);
+  color: #fff;
+}
+.bnf-linetab-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+/* Per-line proposal cart (D-010, 2026-08-29): one card group per line of
+   business, a running summary of what the client has chosen. */
+.bnf-share-lineblock { margin-bottom: 26px; }
+.bnf-share-linedone {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green, #1f8a5b);
+}
+.bnf-share-cartsummary {
+  background: var(--card, #fff);
+  border: 1px solid var(--border, #e6e8ec);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin: 8px 0 26px;
+}
+.bnf-share-cartsummary-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.bnf-share-cartrow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border, #e6e8ec);
+  font-size: 14px;
+}
+.bnf-share-cartrow:last-of-type { border-bottom: none; }
+.bnf-share-cartrow-open { color: var(--ink3); font-style: italic; }
+.bnf-share-cartsummary-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ink3);
+}
+
+/* ===== VERSION HISTORY =====================================================
+   The rail lives INSIDE the Documents tab's Scanned-data panel: it versions
+   what is in that panel, and putting it beside rather than around keeps the
+   three-column row from being crushed into four. */
+
+/* A button that reads as a link. Several of these existed inline already
+   (.bnf-reformat-link and friends); new code uses this one. */
+.bnf-linklike {
+  background: none; border: none; padding: 0; font: inherit;
+  color: inherit; cursor: pointer; text-decoration: underline;
+}
+.bnf-linklike:hover { color: var(--navy); }
+.bnf-linklike:disabled { color: var(--ink3); cursor: default; text-decoration: none; }
+
+/* The panel becomes a column so its head stays full width above the split. */
+.bnf-scan-panel { display: flex; flex-direction: column; }
+.bnf-scan-split { display: flex; flex: 1 1 auto; min-height: 0; gap: 12px; }
+.bnf-scan-body { flex: 1 1 auto; min-width: 0; }
+
+/* Edit sessions. The dim is the affordance: a locked grid should look
+   settled, not broken. */
+.bnf-locked .bb-cell, .bnf-locked .bnf-cell { cursor: default; }
+.bnf-locked .bb-cell:hover, .bnf-locked .bnf-cell:hover { background: inherit; }
+
+/* Edit mode on the Documents tab's Scanned-data card. Deliberately NOT
+   `.bnf-locked` in reverse: that card is never locked, because a click always
+   jumps the viewer to the page a value came from whether you are editing or
+   not. So the state is shown by lighting the panel up rather than by dimming
+   the grid the rest of the time. */
+.bnf-scan-panel.bnf-scan-editing {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-bg);
+}
+/* The intake rows are a 3-column grid, so the editor has to sit in the value
+   column rather than fill the row the way a table cell's does. */
+.bnf-scan-field-input { width: 100%; font-weight: 600; }
+
+/* The Proposal tab when its comparison could not be loaded. The alternative
+   was an eternal "Loading..." spinner, which reads as the same blank screen a
+   crash gives you. */
+.bnf-load-error { max-width: 560px; }
+.bnf-load-error p { color: var(--ink2); margin: 8px 0 14px; }
+
+/* The first load of a deal's comparison (ComparisonStatus.jsx): how many plans
+   are coming, instead of a bare "Loading...". Rides the global .loading box. */
+.bnf-load-panel { flex-direction: column; gap: 6px; text-align: center; }
+.bnf-load-panel-title { font-weight: 600; color: var(--ink); }
+.bnf-load-panel-note { font-size: 13px; color: var(--ink2); max-width: 420px; }
+
+/* A copy of the comparison is on screen and a newer one is on its way, or the
+   newer one failed. Sits inside the tab title, so it is small and quiet. */
+.bnf-refresh-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-left: 10px; padding: 2px 9px; border-radius: 999px;
+  font-size: 12px; font-weight: 500; line-height: 1.5; vertical-align: middle;
+  letter-spacing: normal; color: var(--ink2); background: var(--border-soft);
+}
+.bnf-refresh-chip-failed { color: var(--amber); background: var(--amber-bg); }
+.bnf-refresh-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--blue);
+  animation: bnf-refresh-pulse 1s ease-in-out infinite alternate;
+}
+@keyframes bnf-refresh-pulse { from { opacity: 0.25; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .bnf-refresh-dot { animation: none; }
+}
+.bnf-refresh-retry {
+  border: 0; background: none; padding: 0; font: inherit; color: inherit;
+  text-decoration: underline; cursor: pointer;
+}
+
+/* ---- Staged review on the Documents tab (full-width, over the data) ---- */
+/* The banner sits above the scan split so a waiting review cannot be missed
+   even with the rail open or the panel scrolled. */
+.bnf-staged-banner {
+  background: var(--violet-bg); border: 1px solid var(--violet);
+  border-radius: 8px; padding: 8px 10px; font-size: 12.5px;
+  margin-bottom: 10px; line-height: 1.45;
+}
+/* The chat's pointer when its staged review is handed to the data panel. */
+.bnf-scanchat-staged-note {
+  background: var(--violet-bg); border: 1px solid var(--violet);
+  border-radius: 8px; padding: 7px 9px; font-size: 12px;
+  color: var(--ink); line-height: 1.45; margin-top: 8px;
+}
+
+/* ===== Coverage & marketing intent — stop 1 (2026-09-03) ================= */
+.bnf-cvg { border-left: 3px solid var(--border); }
+.bnf-cvg-done { border-left-color: var(--green); }
+.bnf-cvg-stale { border-left-color: var(--amber); }
+.bnf-cvg-open { border-left-color: var(--navy); }
+.bnf-cvg-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px;
+}
+.bnf-cvg-badge {
+  flex: 0 0 auto; font-size: 11px; font-weight: 700; letter-spacing: 0.03em;
+  border-radius: 999px; padding: 3px 10px; white-space: nowrap;
+  background: var(--page); color: var(--ink2);
+}
+.bnf-cvg-done .bnf-cvg-badge { background: var(--green-bg); color: var(--green); }
+.bnf-cvg-stale .bnf-cvg-badge { background: var(--amber-bg); color: var(--amber); }
+.bnf-cvg-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.bnf-cvg-table th {
+  text-align: left; font-size: 11px; font-weight: 700; color: var(--ink2);
+  letter-spacing: 0.03em; text-transform: uppercase;
+  padding: 6px 10px; border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.bnf-cvg-table td {
+  padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top;
+}
+.bnf-cvg-table tr:last-child td { border-bottom: none; }
+.bnf-cvg-table th:not(:first-child), .bnf-cvg-table td:not(:first-child) {
+  text-align: center; width: 1%;
+}
+.bnf-cvg-line { font-weight: 600; font-size: 13px; }
+.bnf-cvg-selectall { margin-left: 6px; font-weight: 400; text-transform: none; }
+.bnf-cvg-selectall button {
+  background: none; border: none; padding: 0 3px; cursor: pointer;
+  color: var(--blue); font-size: 11px; text-decoration: underline;
+}
+.bnf-cvg-selectall button:disabled { opacity: 0.5; cursor: default; }
+.bnf-cvg-foot {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border);
+}
+.bnf-cvg-count { margin-right: auto; }
+.bnf-cvg-foot > .btn { flex: 0 0 auto; }

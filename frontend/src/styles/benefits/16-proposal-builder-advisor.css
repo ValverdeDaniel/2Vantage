@@ -1,0 +1,291 @@
+/* ===== Proposal builder — the Advisor's third view (2026-09-03) ========== */
+.bnf-build { display: flex; flex-direction: column; gap: 14px; }
+.bnf-build-panel { display: flex; flex-direction: column; gap: 8px; }
+/* Builder cards (BuilderCard, D-113): every card collapses and can be marked
+   completed. A green edge says completed, as on the coverage intent card. */
+/* The Proposal packet (ProposalPacketCard): a BuilderCard over the Proposal
+   tab's toolbar, with its head's buttons in the mark's corner. */
+.bnf-packet-card { margin-bottom: 12px; }
+.bnf-packet-note { color: var(--ink2); font-size: 12.5px; }
+.bnf-packet-group {
+  margin-top: 6px; color: var(--ink2); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.bnf-packet-row {
+  display: flex; align-items: center; gap: 12px; padding: 5px 0;
+  border-top: 1px solid var(--border-softer); font-size: 13px;
+}
+.bnf-packet-row .btn { flex: 0 0 auto; }
+.bnf-packet-row .btn[aria-busy="true"] { opacity: 0.5; cursor: progress; }
+.bnf-packet-tick {
+  display: inline-flex; align-items: center; gap: 8px; flex: 0 0 180px; margin: 0;
+}
+.bnf-packet-tick input { width: auto; margin: 0; }
+.bnf-packet-label { font-weight: 500; }
+.bnf-packet-hint { flex: 1 1 auto; min-width: 0; color: var(--ink2); font-size: 12.5px; }
+.bnf-packet-hint-warn { color: var(--amber); }
+.bnf-bcard { border-left: 3px solid var(--border); }
+.bnf-bcard-done { border-left-color: var(--green); }
+.bnf-bcard-shut { padding-top: 12px; padding-bottom: 12px; }
+.bnf-bcard-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.bnf-bcard-toggle { display: inline-flex; align-items: center; gap: 2px; text-align: left; }
+.bnf-bcard-toggle .bb-panel-title { margin-bottom: 0; }
+.bnf-bcard-summary { color: var(--ink2); font-size: 12px; }
+.bnf-bcard-mark { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
+.bnf-bcard-mark .btn { flex: 0 0 auto; }
+.bnf-bcard-badge {
+  font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 10px;
+  white-space: nowrap; background: var(--green-bg); color: var(--green);
+}
+.bnf-build-progress { font-size: 12px; color: var(--ink2); white-space: nowrap; }
+.bnf-build-progress-done { color: var(--green); font-weight: 600; }
+.bnf-linetab-done { color: var(--green); font-weight: 700; }
+.bnf-build-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+}
+/* The head's own toggle ("Show it") keeps to one line beside a long sub. */
+.bnf-build-head > .bnf-filter-check { flex: none; white-space: nowrap; }
+.bnf-build-current {
+  display: flex; align-items: center; gap: 8px; font-size: 12.5px;
+  padding: 7px 10px; border-radius: 6px; background: var(--blue-bg);
+}
+.bnf-build-current b { margin-left: auto; font-family: var(--font-mono); }
+/* ▲▼ beside a plan or a current plan on the Plans on the proposal card. */
+.bnf-build-carrier-order { display: inline-flex; gap: 3px; align-self: center; }
+
+/* "What the client will see" (ProposalPages.jsx, D-221): a line's comparison slides,
+   one table per slide, plans as columns, on the builder's Plans card and the
+   Advisor's Pages layout. Names wrap; nothing is cut with an ellipsis. */
+.bnf-pg-bar { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px 16px; }
+.bnf-pg-intro { flex: 1 1 360px; min-width: 0; }
+.bnf-pg-heading { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+.bnf-pg-tally {
+  align-self: center; font-size: 12.5px; color: var(--ink2); white-space: nowrap;
+  background: var(--blue-bg); border-radius: 8px; padding: 6px 12px;
+}
+.bnf-pg-rowswitch {
+  display: inline-flex; align-self: center; border: 1px solid var(--input-border);
+  border-radius: 8px; overflow: hidden;
+}
+.bnf-pg-rowswitch button {
+  border: none; background: #fff; color: var(--ink); font-size: 12.5px; font-weight: 600;
+  padding: 7px 14px; cursor: pointer; font-family: var(--font-sans);
+}
+.bnf-pg-rowswitch button + button { border-left: 1px solid var(--input-border); }
+.bnf-pg-rowswitch button.is-on { background: var(--navy-dark); color: #fff; }
+.bnf-pg-displaynote {
+  margin: 8px 0 0; padding: 6px 10px; border-radius: 6px; font-size: 12px;
+  color: var(--ink2); background: var(--page); border: 1px dashed var(--border);
+}
+.bnf-pg { display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
+.bnf-pg-loading { margin-top: 12px; font-size: 12.5px; color: var(--ink2); }
+.bnf-pg-page { border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+.bnf-pg-pagehead {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: 6px 12px; padding: 9px 14px; border-bottom: 1px solid var(--border);
+  background: var(--page); border-radius: 8px 8px 0 0; font-size: 13px; color: var(--ink2);
+}
+.bnf-pg-pagehead b { color: var(--ink); font-size: 14px; margin-right: 6px; }
+.bnf-pg-count { font-size: 12.5px; white-space: nowrap; }
+.bnf-pg-count.is-full { color: var(--amber); font-weight: 600; }
+.bnf-pg-scroll { overflow-x: auto; }
+.bnf-pg-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
+.bnf-pg-table th, .bnf-pg-table td {
+  border-right: 1px solid var(--border-soft); border-bottom: 1px solid var(--border-soft);
+  padding: 8px 10px; text-align: left; vertical-align: top; overflow-wrap: anywhere;
+}
+.bnf-pg-table th:last-child, .bnf-pg-table td:last-child { border-right: none; }
+.bnf-pg-table tbody tr:last-child th, .bnf-pg-table tbody tr:last-child td { border-bottom: none; }
+.bnf-pg-table tbody th { width: 170px; font-weight: 500; color: var(--ink2); background: #fff; }
+.bnf-pg-corner { width: 170px; vertical-align: bottom !important; font-weight: 500; color: var(--ink2); }
+.bnf-pg-table { min-width: calc(170px + var(--pg-cols, 1) * 150px); }
+.bnf-pg-col.is-option, .bnf-pg-table td:not(.is-current) { background: #f3faf6; }
+.bnf-pg-col.is-current, .bnf-pg-table td.is-current { background: #fff; }
+.bnf-pg-colhead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.bnf-pg-place { font-size: 12px; color: var(--ink3); }
+.bnf-pg-repeat { font-size: 11px; color: var(--ink2); font-style: italic; }
+.bnf-pg-tools { margin-left: auto; display: inline-flex; gap: 4px; }
+.bnf-pg-arrows { display: inline-flex; gap: 4px; }
+.bnf-pg-arrow, .bnf-pg-remove {
+  width: 26px; height: 26px; border: 1px solid var(--border); border-radius: 6px; background: #fff;
+  color: var(--ink); font-size: 14px; line-height: 1; cursor: pointer; padding: 0;
+}
+.bnf-pg-arrow:disabled, .bnf-pg-remove:disabled { opacity: 0.4; cursor: default; }
+.bnf-pg-remove:hover:not(:disabled) { color: var(--rose); background: var(--rose-bg); }
+.bnf-pg-title { margin: 8px 0 6px; font-size: 16px; font-weight: 700; color: var(--ink); }
+.bnf-pg-name {
+  display: flex; flex-direction: column; gap: 1px; width: 100%; text-align: left;
+  font-family: var(--font-sans); font-size: 13.5px; font-weight: 600; color: var(--ink);
+}
+button.bnf-pg-name {
+  position: relative; padding: 8px 24px 8px 10px; border: 1px solid var(--input-border);
+  border-radius: 8px; background: #fff; cursor: pointer; color: var(--blue);
+}
+button.bnf-pg-name:hover:not(:disabled), button.bnf-pg-name.is-open {
+  border-color: var(--blue); box-shadow: 0 0 0 3px rgba(46, 111, 199, 0.12);
+}
+.bnf-pg-name.is-plain { padding: 2px 0; }
+.bnf-pg-carrier { font-size: 11.5px; font-weight: 400; color: var(--ink2); }
+.bnf-pg-caret { position: absolute; top: 8px; right: 9px; font-size: 10px; color: var(--blue); }
+.bnf-pg-merged { font-size: 11.5px; font-weight: 400; color: var(--ink2); }
+.bnf-pg-replacing { margin-top: 8px; font-size: 12.5px; color: var(--ink2); }
+.bnf-pg-replacing .bnf-link-picker { display: flex; width: 100%; }
+.bnf-pg-replacing .bnf-link-picker select { flex: 1 1 auto; min-width: 0; max-width: none; }
+.bnf-pg-today { font-size: 12.5px; color: var(--ink2); }
+.bnf-pg-money td { font-family: var(--font-mono); }
+.bnf-pg-section th {
+  background: var(--page) !important; color: var(--ink2); font-size: 11.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.03em; padding: 5px 10px;
+}
+.bnf-pg-recbtn {
+  width: 100%; padding: 7px 8px; border-radius: 8px; border: 1px solid var(--input-border);
+  background: #fff; color: var(--ink); font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: var(--font-sans);
+}
+.bnf-pg-recbtn.is-picked { background: var(--green); border-color: var(--green); color: #fff; }
+.bnf-pg-recbtn:disabled { opacity: 0.55; cursor: default; }
+.bnf-pg-menu { margin-top: 6px; font-size: 12px; }
+.bnf-pg-menu summary { cursor: pointer; color: var(--ink2); list-style: none; width: max-content; }
+.bnf-pg-menu summary::-webkit-details-marker { display: none; }
+.bnf-pg-menu-body {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 6px;
+}
+.bnf-pg-addrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.bnf-pg-add {
+  padding: 9px 16px; border: 1px dashed var(--ink3); border-radius: 8px; background: #fff;
+  color: var(--blue); font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: var(--font-sans);
+}
+.bnf-pg-add:disabled { opacity: 0.5; cursor: default; }
+.bnf-pg-addnote { font-size: 12.5px; color: var(--amber); }
+.bnf-pg-slides { margin-left: auto; }
+.bnf-pg-moved, .bnf-pg-folded {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 7px 12px;
+  border-radius: 6px; font-size: 12.5px; background: var(--amber-bg); color: #6b4a06;
+}
+.bnf-pg-showall { align-self: flex-start; }
+/* The plan picker (PlanPicker.jsx): a layer on the page body under the clicked name. */
+.bnf-pk {
+  position: fixed; z-index: 300; max-height: 440px; display: flex; flex-direction: column;
+  background: #fff; border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: var(--shadow-modal); padding: 8px; box-sizing: border-box;
+}
+.bnf-pk-input {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--input-border); border-radius: 8px;
+  font-size: 13px; font-family: var(--font-sans); color: var(--ink); box-sizing: border-box;
+}
+.bnf-pk-input:focus {
+  outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(46, 111, 199, 0.12);
+}
+.bnf-pk-replacing {
+  display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12.5px; color: var(--ink2);
+}
+.bnf-pk-replacing select { flex: 1 1 auto; min-width: 0; }
+.bnf-pk-note { font-size: 11.5px; color: var(--ink2); padding: 6px 4px 4px; }
+.bnf-pk-list { overflow-y: auto; min-height: 0; }
+.bnf-pk-section {
+  padding: 6px 6px 2px; font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.03em; color: var(--ink3);
+}
+.bnf-pk-row {
+  display: flex; align-items: flex-start; gap: 8px; padding: 6px; border-radius: 6px;
+  font-size: 12.5px; cursor: pointer;
+}
+.bnf-pk-row.is-active { background: var(--blue-bg); }
+.bnf-pk-row.is-blocked { cursor: not-allowed; color: var(--ink3); }
+.bnf-pk-marks { display: inline-flex; flex-wrap: wrap; gap: 4px; flex: 0 0 auto; max-width: 120px; }
+.bnf-pk-star { color: var(--amber); }
+.bnf-pk-name { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.bnf-pk-carrier { font-size: 11px; color: var(--ink2); }
+.bnf-pk-why { font-size: 11px; color: var(--amber); }
+.bnf-pk-figures { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.bnf-pk-page {
+  font-size: 11px; color: var(--ink2); background: var(--page); border-radius: 4px; padding: 1px 5px;
+}
+.bnf-pk-more, .bnf-pk-empty { padding: 8px; font-size: 12px; color: var(--ink3); }
+.bnf-pp-rec-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 13px; }
+.bnf-pp-rec-status.is-open { color: #9a6700; }
+.bnf-pp-rec-status .bnf-pp-renew-all { width: auto; }
+
+/* The recommendation and the words in the builder (D-175). */
+.bnf-build-ready {
+  margin: 6px 0;
+  padding: 6px 10px;
+  border-left: 3px solid #c1352e;
+  background: #fdf3f2;
+  font-size: 13px;
+}
+.bnf-build-rec, .bnf-build-words { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.bnf-build-rec-row, .bnf-build-rec-why, .bnf-build-words label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+}
+.bnf-build-words input { max-width: 520px; }
+.bnf-build-rec-row select, .bnf-build-rec-why textarea, .bnf-build-words textarea { max-width: 720px; }
+/* The builder's typed boxes, in the look of the RFP page's. Sizes stay with each
+   box's own rule. */
+.bnf-build-rec-why textarea,
+.bnf-build-words input,
+.bnf-build-words textarea,
+.bnf-build-step input,
+.bnf-build-option-client,
+.bnf-present-year input,
+.bnf-present-summary,
+.bnf-firm-person-fields input[type="text"],
+.bnf-firm-person-fields textarea {
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: #fff;
+}
+.bnf-build-rec-why textarea,
+.bnf-build-words textarea,
+.bnf-present-summary,
+.bnf-firm-person-fields textarea { resize: vertical; }
+/* The Presentation format's pages (D-178): the builder's card and the Data Hub's panel. */
+.bnf-present-checks { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 8px 0; }
+/* The page ledger: a switch (or a fixed page's name), what the page will do, Fix ▸. */
+.bnf-present-ledger { margin: 8px 0; }
+.bnf-present-row { display: flex; align-items: center; gap: 12px; margin: 3px 0; }
+.bnf-present-row > .bnf-output-check { min-width: 230px; margin: 0; }
+.bnf-present-fixed { padding-left: 22px; }
+.bnf-present-status { font-size: 12px; color: var(--ink2); }
+.bnf-present-row-missing .bnf-present-status { color: #9a6700; }
+.bnf-present-block { margin-top: 16px; }
+.bnf-present-head { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.bnf-present-year { display: flex; align-items: center; gap: 8px; margin: 6px 0; flex-wrap: wrap; }
+.bnf-present-year input[type="text"] { width: 110px; }
+.bnf-present-year input.bnf-present-wide { flex: 1 1 260px; width: auto; }
+.bnf-present-year input.bnf-present-name { width: 220px; }
+.bnf-present-year-label { width: 44px; font-size: 13px; font-weight: 600; }
+.bnf-present-cols { margin-bottom: -2px; font-size: 11px; color: var(--ink2); }
+.bnf-present-col { width: 110px; }
+.bnf-present-summary { width: 100%; max-width: 760px; display: block; margin: 6px 0; }
+.bnf-firm-person {
+  display: flex; gap: 16px; padding: 12px 0; border-top: 1px solid var(--border-soft);
+}
+.bnf-firm-photo { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 104px; }
+.bnf-firm-photo img, .bnf-firm-photo-none {
+  width: 88px; height: 88px; border-radius: 10px; object-fit: cover;
+}
+.bnf-firm-photo-none {
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+  background: var(--page); color: var(--ink3);
+}
+.bnf-firm-person-fields {
+  flex: 1 1 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px 12px; align-items: start;
+}
+.bnf-firm-person-fields label:not(.bnf-output-check) { display: flex; flex-direction: column; gap: 2px; }
+.bnf-firm-person-fields label > span { font-size: 11px; color: var(--ink2); }
+.bnf-firm-person-bio { grid-column: 1 / -1; }
+.bnf-build-step { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.bnf-build-step input[type="text"] { flex: 1 1 auto; max-width: 560px; }
+.bnf-build-option-number { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.bnf-build-option-client { padding: 4px 8px; font-size: 12.5px; max-width: 220px; }
+.bnf-proposal-step { margin: 4px 0; }

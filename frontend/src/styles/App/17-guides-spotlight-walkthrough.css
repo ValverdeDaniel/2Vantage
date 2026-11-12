@@ -1,0 +1,199 @@
+/* ===== Guides — spotlight walkthrough overlay ===== */
+.guide-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 400;             /* above navbar(100)/modals(200)/tooltips(300) */
+  background: transparent;  /* the highlight's box-shadow does the dimming */
+}
+.guide-scrim-dim { background: rgba(15, 29, 45, 0.55); }  /* centered steps */
+/* Check steps (the hands-on practice guides): the page underneath is LIVE.
+   The scrim was never what dimmed the page, so this changes no visuals —
+   it only stops the invisible layer from swallowing the reader's clicks.
+   When such a step falls back to a centered card, the dim backs off too:
+   the reader still has to work the page beneath it. */
+.guide-scrim-live { pointer-events: none; }
+.guide-scrim-dim.guide-scrim-live { background: rgba(15, 29, 45, 0.18); }
+
+.guide-highlight {
+  position: fixed;
+  z-index: 401;
+  border-radius: 10px;
+  border: 2px solid var(--blue);
+  box-shadow: 0 0 0 9999px rgba(15, 29, 45, 0.55);
+  pointer-events: none;
+  transition: top 0.18s ease, left 0.18s ease, width 0.18s ease, height 0.18s ease;
+}
+/* On check steps the reader must read + fill the form AROUND the ring too,
+   so the dim backs off while they type. */
+.guide-highlight-live { box-shadow: 0 0 0 9999px rgba(15, 29, 45, 0.25); }
+
+.guide-card {
+  position: fixed;
+  z-index: 402;
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px);   /* never taller than the viewport … */
+  overflow-y: auto;                 /* … scroll inside instead of clipping */
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: var(--shadow-modal, 0 12px 40px rgba(16, 24, 40, 0.22));
+  padding: 16px 18px 14px;
+}
+.guide-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.guide-card-count {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink3);
+}
+.guide-card-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--ink3);
+  cursor: pointer;
+  padding: 0 2px;
+}
+.guide-card-close:hover { color: var(--ink); }
+.guide-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.guide-card-body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink2);
+}
+.guide-card-note {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--amber);
+}
+/* Check-step furniture: the dummy value to type, and the live wait/got-it line. */
+.guide-card-hint {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink2);
+}
+.guide-card-hint code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--blue-bg, #eaf1fb);
+  border: 1px solid var(--border, #e6e8ec);
+  border-radius: 6px;
+  padding: 2px 8px;
+  user-select: all;          /* one click selects the whole value to copy */
+}
+/* A step that DOES something (the demo-story guide) while its act() is in
+   flight, and when one could not run. Same row geometry as the check line —
+   only one of the two ever shows on a given step. */
+.guide-card-act {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.guide-card-act-working { color: #2e6fc7; }
+.guide-card-act-error { color: var(--rose, #c1352e); }
+.guide-card-check {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.guide-card-check-waiting { color: var(--ink3); }
+.guide-card-check-done { color: var(--green); }
+.guide-card-skip {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--ink3);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.guide-card-skip:hover { color: var(--ink); }
+.guide-card-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* The pick-up-where-you-left-off offer. Positioned inline by the overlay; this
+   only widens it a little so the two choices sit comfortably side by side. */
+.guide-resume-card { width: 360px; }
+.guide-resume-card .guide-card-foot { gap: 8px; }
+
+/* ===== BENIBRIDGE — document-scan chat (reuses bnf-scanchat-* / bnf-staged-*) ===== */
+.bb-tab-scan { padding: 4px 2px; }
+.bb-tab-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+.bb-pad { padding: 12px 14px; }
+.bb-chip {
+  border: 1px solid var(--border); background: #fff; color: #55606e;
+  border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer;
+  font-family: var(--font-sans); transition: all .12s ease;
+}
+.bb-chip:hover { border-color: #2e6fc7; }
+.bb-chip.active { background: var(--navy, #173a63); border-color: var(--navy, #173a63); color: #fff; }
+.bnf-scanchat-focus { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+.bnf-staged-loc-head { font-weight: 600; font-size: 14px; padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+
+/* --- census auto-reformat banner + paged grid --- */
+.bnf-reformat-banner { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+.bnf-reformat-done { background: var(--green-bg); border-color: var(--green); }
+.bnf-reformat-attention { background: var(--amber-bg); border-color: var(--amber); }
+.bnf-reformat-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.bnf-reformat-done .bnf-reformat-title { color: var(--green); }
+.bnf-reformat-attention .bnf-reformat-title { color: var(--amber); }
+.bnf-reformat-body { font-size: 13px; color: var(--ink2); margin-bottom: 8px; line-height: 1.5; }
+.bnf-reformat-link { background: none; border: none; padding: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; }
+.bnf-reformat-list { margin: 6px 0 0; padding-left: 18px; font-size: 13px; color: var(--ink2); }
+.bnf-reformat-list li { margin-bottom: 3px; }
+.bnf-line-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; }
+.bnf-line-chips-label { font-size: 12px; color: var(--ink2); margin-right: 2px; }
+.bnf-chip-locked { opacity: 0.65; cursor: default; }
+.bnf-census-pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 10px 0; }
+.bnf-census-pager-label { font-size: 13px; color: var(--ink2); }
+.bnf-census-pager-note { color: var(--ink3, var(--ink2)); }
+
+/* ===== BENIBRIDGE — the P&C deal spine (2026-09-18) =====
+   Module-neutral pieces the deal workspace, the client workspace and the P&C
+   home share: the sidebar's phase-group labels, the stacked readiness
+   meters, the stage/READY chip row and the locked-grid rule. The pnc-*
+   twins of the benefits screens live in styles/pnc.css. */
+.bb-nav-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink3);
+  margin: 14px 0 4px 10px;
+}
+.bb-nav-badge-amber { background: var(--amber); }
+.bb-nav-badge-green { background: var(--green); }
+.bb-nav-badge-rose { background: var(--rose); }
+.bb-readiness-meters { display: flex; flex-direction: column; gap: 10px; }
+.bb-meter-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 3px;
+}
+.bb-meter-label { font-size: 11.5px; color: var(--ink2); }
+.bb-meter-pct { font-size: 12px; font-weight: 600; }
+.bb-sidebar-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 8px; }
+.bb-sidebar-stage { font-size: 11px; padding: 2px 8px; }
+.bb-badge-muted { background: var(--border-softer); color: var(--ink2); }
+/* A grid rendered read-only (a historical version): no edits, no hover. */
+.bb-locked .bb-cell { cursor: default; pointer-events: none; }
+.bb-locked .bb-cell:hover { background: inherit; }

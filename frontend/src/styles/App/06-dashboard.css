@@ -1,0 +1,231 @@
+/* ===== DASHBOARD ===== */
+
+.dashboard-container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-header h1 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
+
+/* KPI Strip */
+.kpi-strip {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.kpi-card {
+  flex: 1;
+  min-width: 140px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  text-align: center;
+}
+
+.kpi-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8b95a3;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+
+.kpi-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.kpi-won { color: var(--green); }
+.kpi-revenue { color: var(--blue); }
+.kpi-payout { color: var(--amber); }
+
+/* Dashboard Controls */
+.dashboard-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Tab Bar */
+.tab-bar {
+  display: flex;
+  gap: 0;
+}
+
+.tab-btn {
+  background: #ffffff;
+  border: 1px solid var(--input-border);
+  color: var(--ink2);
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.tab-btn:first-child { border-radius: 8px 0 0 8px; }
+.tab-btn:last-child { border-radius: 0 8px 8px 0; }
+.tab-btn:not(:first-child) { border-left: none; }
+
+.tab-btn:hover { color: var(--ink); background: #f8fafc; }
+
+.tab-btn.active {
+  color: var(--navy);
+  font-weight: 600;
+  border-color: var(--navy);
+  background: #eef3fa;
+}
+
+.tab-btn.active + .tab-btn {
+  border-left: none;
+}
+
+.alert-count {
+  background: var(--rose);
+  color: #ffffff;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 20px;
+  margin-left: 0.4rem;
+  font-weight: 700;
+}
+
+/* Filter Bar */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.filter-select {
+  background: #ffffff;
+  border: 1px solid var(--input-border);
+  color: var(--ink);
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.filter-dates {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.filter-dates label {
+  font-size: 0.75rem;
+  color: var(--ink2);
+}
+
+.filter-dates input {
+  background: #ffffff;
+  border: 1px solid var(--input-border);
+  color: var(--ink);
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-family: inherit;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+/* Pipeline Table */
+.pipeline-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+}
+
+.pipeline-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.pipeline-table th {
+  background: #f7f9fb;
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink3);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.pipeline-table td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--border-softer);
+  white-space: nowrap;
+}
+
+.pipeline-row { cursor: pointer; transition: background 0.12s; }
+.pipeline-row:hover { background: #f8fafc; }
+.pipeline-row.expanded { background: #eef3fa; }
+
+.client-name { font-weight: 600; }
+
+.coi-name {
+  color: var(--blue);
+  font-weight: 500;
+  display: block;
+}
+
+.rep-name {
+  color: var(--ink3);
+  font-size: 0.75rem;
+  display: block;
+}
+
+.revenue-value { color: var(--blue); }
+.payout-value { color: var(--amber); }
+
+.expiry-urgent { color: var(--rose); font-weight: 600; }
+
+.stale-flag {
+  color: var(--amber);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.status-pending { background: var(--border-soft); color: var(--ink2); }
+.status-quoted { background: var(--blue-bg); color: var(--blue); }
+.status-won { background: var(--green-bg); color: var(--green); }
+.status-lost { background: var(--rose-bg); color: var(--rose); }

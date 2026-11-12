@@ -1,0 +1,274 @@
+/* ---- Who we asked: a request's returns and add-someone (D-062) ----------- */
+.bnf-req-add { margin-top: 10px; padding: 10px; border: 1px dashed var(--border); border-radius: 8px; }
+.bnf-req-add .btn { margin-top: 8px; }
+.bnf-req-returns { margin-top: 10px; }
+.bnf-req-returned { margin-top: 6px; }
+.bnf-req-return {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 4px 0;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+}
+.bnf-req-return-value { font-family: var(--font-mono); }
+
+/* ---- The census format lens (D-063) --------------------------------------
+   One carrier format, checked where the data lives: its columns, fill, gaps,
+   warnings and first rows. The chips reuse the ACORD picker (`bb-acord-*`). */
+.bnf-lens-chips { align-items: center; }
+.bnf-lens-chip { padding: 8px 12px; }
+.bnf-lens-chip-dim { opacity: 0.6; }
+.bnf-lens-chip-fmts { font-weight: 400; font-size: 11px; color: var(--ink2); }
+.bnf-lens-sep {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5b6673;
+  margin-left: 6px;
+}
+.bnf-lens { display: flex; flex-direction: column; gap: 14px; }
+.bnf-lens-head { padding: 16px; }
+.bnf-lens-head-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.bnf-lens-actions,
+.bnf-lens-downloads { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+.bnf-lens-actions .btn,
+.bnf-lens-ask .btn { flex: 0 0 auto; white-space: nowrap; }
+.bnf-lens-stats { margin-top: 12px; }
+.bnf-lens-of { font-size: 13px; font-weight: 400; color: var(--ink2); }
+.bnf-lens-ask {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-softer);
+}
+.bnf-lens-ask-text { flex: 1 1 320px; font-size: 13px; color: var(--ink); }
+.bnf-lens-section { padding: 14px 16px; }
+.bnf-lens-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5b6673;
+  margin-bottom: 8px;
+}
+.bnf-lens-scroll { overflow-x: auto; }
+.bnf-lens-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.bnf-lens-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: #5b6673;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.bnf-lens-table td {
+  padding: 6px 8px;
+  border-top: 1px solid var(--border-softer);
+  vertical-align: top;
+}
+.bnf-lens-row-gap td { color: var(--ink2); background: var(--page); }
+.bnf-lens-kind {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+  background: var(--page);
+  border: 1px solid var(--border);
+}
+.bnf-lens-kind-census { color: var(--navy); }
+.bnf-lens-kind-derived { color: var(--violet); }
+.bnf-lens-kind-gap { color: var(--rose); }
+.bnf-lens-fills { color: var(--ink2); }
+.bnf-lens-rules { font-size: 12px; color: var(--ink2); max-width: 340px; }
+.bnf-lens-fill { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.bnf-lens-fillbar {
+  width: 64px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border-softer);
+  overflow: hidden;
+}
+.bnf-lens-fillbar-in { display: block; height: 100%; background: var(--green); }
+.bnf-lens-fillbar-short { background: var(--rose); }
+.bnf-lens-gaps { margin: 0 0 6px 18px; padding: 0; }
+.bnf-lens-gaps li { margin-bottom: 6px; }
+.bnf-lens-home { color: var(--ink2); font-size: 12px; }
+.bnf-lens-unwritten { margin-top: 8px; font-size: 12.5px; }
+.bnf-lens-unwritten summary { cursor: pointer; color: var(--ink2); }
+.bnf-lens-unwritten ul { margin: 6px 0 0 18px; padding: 0; }
+/* "Check the real file": a DEFINITE height and min-height/min-width 0 down
+   the chain, or the pane blows the modal open (the rpt-compare lesson). */
+.bnf-lens-check {
+  width: calc(100vw - 3rem);
+  max-width: 1500px;
+  height: min(92vh, 1000px);
+  display: flex;
+  flex-direction: column;
+}
+.bnf-lens-check .bb-modal-header { align-items: flex-start; }
+.bnf-lens-check-warnings { padding: 8px 16px; font-size: 12.5px; }
+.bnf-lens-check-body {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  padding: 0 16px 16px;
+}
+.bnf-lens-check-body .rpt-pane { flex: 1; }
+/* No global disabled look exists for .btn, so a disabled Ask would read as
+   live. Scoped, like every other disabled rule in these sheets. */
+.bnf-lens .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---- The intake Review & request board (D-064) ---------------------------
+   The census board's twin, over questions instead of columns. */
+.bnf-ireview-blocks { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+.bnf-ireview-block {
+  font-size: 11.5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--green);
+  background: var(--green-bg);
+}
+.bnf-ireview-block-open { color: var(--amber); background: var(--amber-bg); }
+.bnf-ireview-scroll { overflow-x: auto; }
+.bnf-ireview-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.bnf-ireview-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: #5b6673;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.bnf-ireview-table td {
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-softer);
+  vertical-align: top;
+}
+.bnf-ireview-gap td:nth-child(2) { box-shadow: inset 3px 0 0 var(--rose); }
+.bnf-ireview-hidden td { color: var(--ink3); background: var(--page); }
+.bnf-ireview-label { font-weight: 600; color: var(--ink); }
+.bnf-ireview-value { color: var(--ink); margin-bottom: 4px; word-break: break-word; }
+.bnf-ireview-req { display: inline-flex; min-width: 200px; margin-bottom: 3px; }
+.bnf-ireview-note {
+  width: 100%;
+  min-width: 180px;
+  font-size: 12px;
+  padding: 4px 7px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.bnf-ireview-asked {
+  display: inline-block;
+  font-size: 11px;
+  margin: 0 4px 4px 0;
+  padding: 1px 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+/* Intake ▸ Review & requests ▸ Missing (U3b): the board's header actions and
+   filter rows wrap at a phone's width (it is a lane people land on now), and
+   the checklist documents not on file sit under the questions.
+   `.bb-grid-card` has no padding. */
+.bnf-ireview-head > div { min-width: 0; }
+.bnf-ireview-head .bnf-review-actions { flex-wrap: wrap; min-width: 0; }
+.bnf-ireview-filters .bnf-advisor-labelrow { flex-wrap: wrap; gap: 6px 10px; }
+.bnf-ireview-docs { margin-top: 12px; }
+.bnf-ireview-docs-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px;
+  padding: 10px 12px; min-width: 0;
+}
+.bnf-ireview-doc {
+  display: flex; align-items: flex-start; gap: 8px; min-width: 0;
+  padding: 8px 12px; border-top: 1px solid var(--border-softer); cursor: pointer;
+}
+.bnf-ireview-doc .bnf-in-tray { margin-left: 0; }
+.bnf-ireview-doc-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+/* Census ▸ Client responses (D-140, review-hub.md R2). */
+.bnf-client-review { display: flex; flex-direction: column; gap: 12px; }
+.bnf-client-review-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.bnf-client-review-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--amber);
+  border-radius: 8px;
+  background: var(--amber-bg);
+  font-size: 12.5px;
+  color: var(--ink);
+}
+/* The groups column that sat left of a To review queue moved into the
+   queue's header as `ReviewGroupChips` (U3d, reviewrequest.css `.rr-groups`). */
+
+/* The census return banner's two actions (Review ▸ and Approve all). */
+.bb-client-banner-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.bb-btn-violet.bb-btn-violet-quiet {
+  background: transparent;
+  color: var(--violet);
+  border: 1px solid var(--violet);
+}
+
+/* Census ▸ AI read: the newest file's doubtful columns (D-140 R3). */
+.bnf-ai-mapping {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--blue);
+  border-radius: 8px;
+  background: var(--blue-bg);
+  font-size: 12.5px;
+}
+.bnf-ai-mapping ul { margin: 0; padding-left: 18px; }
+.bnf-ai-mapping .btn { align-self: flex-start; }
+
+/* The census grid's team note (U2, §6a): a small lock, the note its tooltip. */
+.bnf-cell-note { font-size: 10px; margin-left: 3px; opacity: 0.75; cursor: help; }
+
+/* Census ▸ Review & requests (U3a, review-requests-one-way.md §2 B): the
+   title with the lane's one action ("＋ New link ▸" on Waiting, "Only these
+   people…" on Missing), and Waiting's still-typing / going-back block under
+   the links. Intake's Review & requests (U3b) uses the same three ("All
+   questions" is its Missing action). The lanes and chips themselves are the
+   kit's (reviewrequest.css). */
+.bnf-census-lanehead {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 8px 12px; margin-bottom: 10px; min-width: 0;
+}
+.bnf-census-lanehead .btn { flex: 0 0 auto; }
+/* Missing's two actions (U4): their census file into the tray, and the gap
+   panel person by person. */
+.bnf-census-laneactions { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bnf-census-laneactions .btn { flex: 0 0 auto; }
+.bnf-census-waiting {
+  display: flex; flex-direction: column; gap: 10px; min-width: 0;
+  margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--border);
+}
+.bnf-census-waiting-tray {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+  padding: 8px 12px; border-radius: 8px;
+  background: var(--page); font-size: 12.5px; color: var(--ink2);
+}

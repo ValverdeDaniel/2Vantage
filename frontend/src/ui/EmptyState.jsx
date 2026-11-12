@@ -1,16 +1,16 @@
 import cx from './cx';
-import styles from './EmptyState.module.css';
 
 /**
- * What an empty list or page shows: a title, an optional message (children) and the next action.
- *   title, children, action (a button or link), compact (less padding, for panels)
+ * What an empty list or page shows, in the old `empty-state` box: the words, an optional line under them and the
+ * next action (plan.md §8.22).
+ *   title, children, action (a button or link), className
  */
-export default function EmptyState({ title, children, action, compact = false, className }) {
+export default function EmptyState({ title, children, action, className }) {
   return (
-    <div className={cx(styles.empty, compact && styles.compact, className)}>
-      <p className={styles.title}>{title}</p>
-      {children && <div className={styles.message}>{children}</div>}
-      {action && <div className={styles.action}>{action}</div>}
+    <div className={cx('empty-state', className)}>
+      <div>{title}</div>
+      {children && <div className="bb-mt">{children}</div>}
+      {action && <div className="bb-mt">{action}</div>}
     </div>
   );
 }

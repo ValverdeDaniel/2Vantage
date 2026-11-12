@@ -1,0 +1,179 @@
+/* ===== USER MANAGEMENT ===== */
+
+.user-summary {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.user-summary .summary-item {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+.user-summary .summary-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.user-summary .summary-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8b95a3;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.user-table th {
+  background: #f7f9fb;
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink3);
+  border-bottom: 1px solid var(--border);
+}
+
+.user-table td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--border-softer);
+}
+
+.user-row {
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.user-row:hover {
+  background: #f8fafc;
+}
+
+.user-row.active {
+  background: #eef3fa;
+}
+
+.user-row.inactive {
+  opacity: 0.5;
+}
+
+/* Role Badges */
+.role-badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.role-admin {
+  background: var(--violet-bg);
+  color: var(--violet);
+}
+
+.role-producer {
+  background: var(--blue-bg);
+  color: var(--blue);
+}
+
+.role-coi {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+/* Developer-harness access. Orthogonal to role, so it rides beside the role
+   badge rather than replacing it. */
+.role-dev {
+  background: var(--amber-bg);
+  color: var(--amber);
+  margin-left: 0.35rem;
+}
+
+/* Inline checkbox + label, for boolean profile flags */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.checkbox-label input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Status Indicator */
+.status-indicator {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-indicator.active {
+  color: var(--green);
+}
+
+.status-indicator.inactive {
+  color: var(--rose);
+}
+
+/* Edit Panel */
+.edit-row td {
+  padding: 0 !important;
+}
+
+.edit-panel {
+  background: #f6f8fb;
+  padding: 1.25rem;
+  border-top: 2px solid var(--navy);
+}
+
+.edit-fields {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.edit-fields .form-group {
+  flex: 1;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.edit-info {
+  color: var(--ink2);
+  font-size: 0.85rem;
+  padding: 0.5rem 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .detail-grid { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-controls { flex-direction: column; align-items: flex-start; }
+  .filter-bar { flex-wrap: wrap; }
+  .form-row { flex-direction: column; gap: 0; }
+  .edit-fields { flex-direction: column; }
+  .user-summary { flex-wrap: wrap; }
+}

@@ -1,0 +1,251 @@
+/* ===== CENSUS · REVIEW & REQUEST =========================================
+   The board behind ?tab=census&view=review, transcribed from pnc-review.css
+   (itself a transcription of the Advisor's board in benefits.css).
+
+   Prefix `bnf-review-*` for the board and `bnf-send-*` for the request panel.
+   NOT `bnf-census-*`: that belongs to the D-047 gap panel (`bnf-census-req-*`,
+   23 names) and its pager, and reusing it for a different board is the
+   collision pnc-review.css documents avoiding.
+
+   Registered in main.jsx AFTER benefits.css (which owns `.bnf-advisor-*` and
+   `.bnf-viewtab`) and benefits-workqueue.css (`.bnf-wq-chip`), because the
+   board reuses both and anything overridden here must win.
+
+   Deliberately NOT redefined here, reused instead: `.bnf-advisor-views`,
+   `.bnf-viewtab(-on)` (the view pills — AdvisorTab already uses them for this
+   exact control), `.bnf-advisor-filtercard`, `.bnf-wq-chip(-on)`,
+   `.bb-grid-card`, `.bb-link-row`, `.bnf-census-pager*`, `.bb-modal*`.
+
+   No `bnf-*` class here is a guide target; every anchor is a `data-guide`
+   attribute. */
+
+/* ONE grid template, header and rows, so the two cannot drift. Min width is
+   1054px + 24px padding = 1078, just under the 1100px breakpoint below --
+   the same relationship the P&C board keeps. */
+.bnf-review-head,
+.bnf-review-row {
+  display: grid;
+  grid-template-columns:
+    34px minmax(190px, 1.6fr) 132px 118px minmax(170px, 1.2fr) 150px 200px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* A 45-row board scrolls under its own header. The scroller is what makes
+   `position: sticky` mean anything at all -- the P&C head is declared sticky
+   with no scroll container, so it sticks to the page rather than the card. */
+.bnf-review-scroll {
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.bnf-review-head {
+  background: var(--page);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7683;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.bnf-review-row:hover { background: #fbfcfd; }
+.bnf-review-row-complete { opacity: 0.72; }
+.bnf-review-row-out { opacity: 0.55; }
+.bnf-review-row-waived { opacity: 0.55; }
+.bnf-review-row-waived .bnf-review-fieldlabel { text-decoration: line-through; }
+/* Declared LAST so it wins the inset shadow over the two above. */
+.bnf-review-row-required { box-shadow: inset 3px 0 0 var(--rose); }
+
+.bnf-review-checkcell { display: flex; justify-content: center; }
+
+.bnf-review-fieldcell { min-width: 0; }
+.bnf-review-fieldlabel {
+  font-weight: 600;
+  font-size: 13px;
+  /* Census labels are full phrases ("Basic Life Effective Date"), so they
+     wrap rather than truncate. */
+  white-space: normal;
+}
+.bnf-review-fieldsub {
+  font-size: 11px;
+  color: #6b7683;
+  margin-top: 2px;
+  white-space: normal;
+}
+
+.bnf-review-chip-req,
+.bnf-review-chip-waived,
+.bnf-review-chip-line,
+.bnf-review-chip-exempt {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.bnf-review-chip-req { background: var(--rose-bg); color: var(--rose); }
+.bnf-review-chip-waived { background: var(--page); color: #6b7683; }
+.bnf-review-chip-line { background: var(--violet-bg); color: var(--violet); }
+.bnf-review-chip-exempt { background: var(--page); color: #6b7683; }
+
+.bnf-review-bandcell {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bnf-review-tone-person { background: var(--violet-bg); color: var(--violet); }
+.bnf-review-tone-work { background: var(--amber-bg); color: var(--amber); }
+.bnf-review-tone-med { background: var(--green-bg); color: var(--green); }
+.bnf-review-tone-anc { background: var(--page); color: #4a5563; }
+
+.bnf-review-fill { font-size: 13px; white-space: nowrap; }
+.bnf-review-fill-sep { color: #6b7683; margin: 0 2px; }
+.bnf-review-fill-unit { font-size: 11px; color: #6b7683; }
+.bnf-review-fill-waived { color: #6b7683; }
+
+/* The person axis: a stacked bar plus a number line, never one square per
+   person. Forty locations is 560px of squares on the P&C board; a thousand
+   employees would be 15,000px per row, 45,000 DOM nodes on the board, and a
+   selection model of 45,000 ids. */
+.bnf-review-spread { min-width: 0; }
+/* Not .bnf-review-bar: that is D-116's bulk review strip (benefits.css), and
+   sharing the name crushed the strip to this bar's 8px (2026-10-20). */
+.bnf-review-stack {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--page);
+  border: 1px solid var(--border);
+  min-width: 60px;
+}
+/* flex, never width:% -- flex distributes the remainder exactly, so rounding
+   can never leave the bar short of 100% or erase a 1-in-1000 segment. */
+.bnf-review-seg { display: block; min-width: 2px; }
+.bnf-review-seg-missing { background: var(--rose-bg); }
+.bnf-review-seg-na { background: var(--page); }
+.bnf-review-seg-low { background: var(--amber-bg); }
+.bnf-review-seg-client { background: var(--violet-bg); }
+.bnf-review-seg-high { background: var(--green-bg); }
+
+.bnf-review-counts {
+  font-size: 11px;
+  color: #6b7683;
+  margin-top: 3px;
+  white-space: normal;
+}
+.bnf-review-counts b { color: var(--rose); }
+.bnf-review-drill {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+}
+.bnf-review-drill:hover { text-decoration: underline; }
+
+/* A plain block SIBLING of the row, not a child of the strip cell: each row
+   is its own seven-track grid, so a nested container would either break out
+   of the 170px track or need overflow, while a sibling spans the card for
+   free and leaves every other row's tracks untouched. */
+.bnf-review-drillrow {
+  padding: 10px 12px 12px 46px;
+  background: #fbfcfd;
+  border-bottom: 1px solid var(--border);
+}
+.bnf-review-people { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.bnf-review-person {
+  font-size: 12px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+}
+.bnf-review-person-dep { color: #6b7683; }
+.bnf-review-drillerror { font-size: 12px; color: var(--rose); }
+
+/* D-060: a FILLED value, where it came from and what we can do about it.
+   Each person is its own four-track grid (the board's own rhythm), so a
+   narrow screen can fold a row without dragging every other row with it. */
+.bnf-review-origins {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0 2px;
+}
+.bnf-review-values { margin: 6px 0; font-size: 12px; }
+.bnf-review-valuerow {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(100px, 1fr) minmax(200px, 2.2fr) auto;
+  gap: 4px 12px;
+  align-items: baseline;
+  padding: 5px 0;
+  border-top: 1px solid var(--border);
+}
+.bnf-review-values-head {
+  border-top: none;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7683;
+}
+.bnf-review-value { font-family: var(--font-mono); overflow-wrap: anywhere; }
+.bnf-review-layers { font-size: 11px; color: #6b7683; margin-top: 2px; }
+.bnf-review-value-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+.bnf-review-value-actions .btn { flex: 0 0 auto; white-space: nowrap; }
+@media (max-width: 720px) {
+  .bnf-review-valuerow { grid-template-columns: 1fr 1fr; }
+  .bnf-review-values-head { display: none; }
+  .bnf-review-value-actions { justify-content: flex-start; }
+}
+
+.bnf-review-assignee { min-width: 0; }
+/* The per-row picker fills its table cell. */
+/* The drill row reuses the table bar without its own frame. */
+.bnf-review-tablebar-bare { padding: 0; border: none; }
+
+.bnf-review-assignpick {
+  width: 100%;
+  font-size: 12px;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #fff;
+}
+/* These two stand in the board header between btn-sm buttons, so they
+   wear the button box instead of the cell's. Both call sites used to
+   cancel the inherited width:100% with an inline style. */
+.bnf-review-assignbulk,
+.bnf-review-assignfilter {
+  width: auto;
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  /* The btn-sm box, stated rather than stretched: a native select carries
+     internal chrome a button does not, so matching padding alone leaves it a
+     few pixels taller. This is .btn-sm's own arithmetic -- line box + its
+     0.35rem vertical padding + the 1px border. */
+  height: calc(0.8rem * 1.25 + 0.7rem + 2px);
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}

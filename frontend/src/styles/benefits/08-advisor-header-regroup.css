@@ -1,0 +1,296 @@
+/* ---- Advisor header regroup (2026-09-17) ---------------------------------
+   Daniel: "It's looking a little crammed … not much separation to help you
+   know where to look for what." Three groups above the table, not nine rows:
+   the FILTERS CARD (saved setup · triggers · carriers — the Work Queue's
+   .bnf-wq-filters posture), the BOARD HEADER (this line's tabs + count on the
+   left, its actions on the right) and the COLUMNS toolbar on the table card
+   itself. Everything is scoped under the new parents: .bnf-lineswitch is
+   shared with the comparison grid and the builder, .bnf-advisor-filters with
+   the stop-loss board's own controls row. */
+.bnf-advisor-filtercard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.bnf-advisor-filtercard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.bnf-advisor-filtercard .bnf-advisor-saved { margin: 0; flex: 1 1 auto; min-width: 0; }
+.bnf-advisor-filterstate {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink3);
+  white-space: nowrap;
+}
+.bnf-advisor-filterstate b { color: var(--navy); font-family: var(--font-mono); }
+.bnf-advisor-clear {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+}
+.bnf-advisor-clear:hover { text-decoration: underline; }
+/* Label + content. The label column is fixed so the triggers, when they
+   wrap to a second line, line up under each other and not under the word. */
+.bnf-advisor-labelrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bnf-advisor-labelrow > .bnf-advisor-views-label { flex: 0 0 64px; margin: 0; }
+.bnf-advisor-labelrow > .bnf-advisor-filters,
+.bnf-advisor-labelrow > .bnf-carrier-chips,
+.bnf-advisor-labelrow > .bnf-lineswitch {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.bnf-advisor-boardhead {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+/* Count left, actions right. The main block's basis is its CONTENT width, so
+   when the two cannot share a line it is the button group that drops to a
+   second, right-aligned line (margin-left:auto) — not the count sentence
+   wrapping mid-way beside the buttons. */
+.bnf-advisor-boardhead-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.bnf-advisor-boardhead-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.bnf-advisor-boardhead .bnf-filter-count { display: block; margin: 0; }
+.bnf-advisor-boardhead .bnf-conc-editing-note { margin: 0; }
+.bnf-advisor-boardhead .bnf-count-actions {
+  margin-left: auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+}
+.bnf-advisor-boardhead .btn { flex: 0 0 auto; }
+
+/* Move to (D-089 addendum, 2026-10-14): the ☐ column between ＋ and ★, and the
+   bar that moves the ticked rows, between the board head and the table. The
+   bar stretches its items so the native select matches .btn-sm's height. */
+.bnf-move-check { width: 16px; height: 16px; margin: 0; vertical-align: middle; cursor: pointer; }
+.bnf-move-check:disabled { cursor: not-allowed; opacity: 0.4; }
+.bnf-move-corner { margin-right: 8px; }
+.bnf-advisor-selectbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--blue);
+  border-radius: 8px;
+  background: var(--blue-bg);
+  font-size: 13px;
+}
+.bnf-advisor-selectbar .btn { flex: 0 0 auto; }
+.bnf-advisor-selectbar-count { display: flex; align-items: center; font-weight: 600; color: var(--ink); }
+.bnf-advisor-selectbar-line { display: flex; align-items: center; gap: 6px; color: var(--ink2); }
+.bnf-advisor-selectbar-line .filter-select { align-self: stretch; padding: 4px 8px; font-size: 12.5px; }
+
+.bnf-advisor-tablebar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  padding: 8px 12px;
+  background: var(--page);
+  border-bottom: 1px solid var(--border);
+}
+.bnf-advisor-tablebar .bnf-preset-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.bnf-advisor-tablebar-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.bnf-advisor-tablebar .bnf-transpose-btn { margin-left: 0; }
+/* The sort select sits among 28px pills — .filter-select's page padding
+   would make it the tallest thing on the bar. */
+.bnf-advisor-tablebar .filter-select { padding: 4px 8px; font-size: 12.5px; }
+
+/* The board. Must be a single element: .bnf-advisor-tab-split > div:first-child
+   above carries the flex sizing, and a Fragment root would collapse it. */
+.bnf-sl-board { display: flex; flex-direction: column; gap: 14px; }
+.bnf-sl-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.bnf-sl-head > div:first-child { flex: 1 1 340px; min-width: 0; }
+.bnf-sl-head > .btn {
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+.bnf-sl-basis { font-size: 12px; color: var(--ink3); margin-top: 2px; }
+.bnf-sl-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--ink2);
+  margin-bottom: 6px;
+}
+.bnf-sl-warn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--amber-bg);
+  border: 1px solid var(--amber);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+
+/* The in-force snapshot — one column of facts about one contract. */
+.bnf-sl-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+.bnf-sl-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.bnf-sl-card-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--ink2);
+}
+.bnf-sl-card-value {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  color: var(--ink);
+  margin-top: 3px;
+}
+.bnf-sl-card-note { font-size: 11px; color: var(--ink3); margin-top: 2px; }
+.bnf-sl-card-verdict {
+  border-left: 3px solid var(--navy);
+  background: var(--blue-bg);
+}
+.bnf-sl-card-verdict .bnf-sl-card-value { font-size: 20px; font-weight: 700; }
+.bnf-sl-terms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--ink2);
+}
+.bnf-sl-term b { color: var(--ink); font-weight: 600; }
+
+/* The verdict — a ranking should be a shape, not a column you read down. */
+.bnf-sl-ranks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+}
+.bnf-sl-rank {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.bnf-sl-rank-best { border-left: 3px solid var(--green); background: var(--green-bg); }
+.bnf-sl-rank-base { background: var(--blue-bg); }
+.bnf-sl-rank-top { display: flex; align-items: center; gap: 6px; }
+.bnf-sl-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.bnf-sl-rank-best .bnf-sl-rank-badge { background: var(--green); }
+.bnf-sl-rank-name { display: flex; flex-direction: column; min-width: 0; }
+.bnf-sl-rank-name b { font-size: 12.5px; color: var(--ink); }
+.bnf-sl-rank-name span { font-size: 11px; color: var(--ink3); }
+.bnf-sl-rank-mal {
+  font-family: var(--font-mono);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 8px;
+}
+.bnf-sl-rank-vs { font-size: 12px; margin-top: 2px; }
+.bnf-sl-rank-figs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 12px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--ink2);
+}
+.bnf-sl-punchline {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--ink2);
+}
+
+/* The option table. Transposed, like the grid and the workbook's own sheet. */
+.bnf-sl-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bnf-sl-table th,
+.bnf-sl-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border-soft);
+  text-align: left;
+  vertical-align: top;
+}
+.bnf-sl-table th { background: var(--page); font-size: 12px; }
+/* .bnf-benefit-col brings the sticky-left this column needs, but its own
+   white-cell rule is scoped to .bnf-compare-table — restate it here. */
+.bnf-sl-table td.bnf-benefit-col { background: #fff; }
+.bnf-sl-verdict-row td { background: var(--blue-bg); font-weight: 700; }
+.bnf-sl-delta-row .bnf-benefit-col { padding-left: 22px; font-weight: 500; }
+/* A top accent rather than a fill: --green-bg is already .bnf-plan-col-sold. */
+.bnf-sl-col-best { box-shadow: inset 0 3px 0 var(--green); }
+.bnf-sl-note { padding: 8px 12px; font-size: 11.5px; color: var(--ink3); }

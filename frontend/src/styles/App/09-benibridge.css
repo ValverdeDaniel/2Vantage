@@ -1,0 +1,282 @@
+/* ===== BENIBRIDGE ===== */
+
+/* Shared helpers */
+.bb-mono { font-family: var(--font-mono); }
+.bb-green { color: var(--green); }
+.bb-amber { color: var(--amber); }
+.bb-rose { color: var(--rose); }
+.bb-violet { color: var(--violet); }
+.bb-mb { margin-bottom: 0.85rem; }
+.bb-mb-lg { margin-bottom: 1.6rem; }
+.bb-mt { margin-top: 1.1rem; }
+.bb-flex-1 { flex: 1; }
+.bb-full-width { width: 100%; }
+
+.bb-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b95a3;
+  margin-bottom: 7px;
+}
+
+.bb-title {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
+
+.bb-title-sm { font-size: 23px; letter-spacing: -0.3px; margin-bottom: 6px; }
+
+.bb-subtitle {
+  color: var(--ink2);
+  font-size: 13.5px;
+  margin-top: 6px;
+}
+
+.bb-back-link {
+  color: var(--ink2);
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bb-back-link:hover { color: var(--ink); }
+
+.bb-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--navy-dark);
+  color: #fff;
+  padding: 13px 20px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  z-index: 300;
+  box-shadow: var(--shadow-toast);
+}
+/* showToast(message, 'error'): a failure no longer draws as the navy box a
+   success gets. Any other tone, and no tone, keep the navy box. */
+.bb-toast-error { background: var(--rose); }
+
+/* Buttons */
+.bb-btn-violet {
+  background: var(--violet);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 15px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.bb-btn-violet-outline {
+  width: 100%;
+  background: #fff;
+  color: var(--violet);
+  border: 1.5px solid #ddd2f2;
+  border-radius: 9px;
+  padding: 11px;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.bb-btn-violet-outline:hover { background: #faf8fe; }
+
+.bb-btn-sm { width: auto; padding: 9px 15px; font-size: 13px; border-radius: 8px; }
+
+.bb-btn-white {
+  background: #fff;
+  color: var(--navy);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 15px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Transfers dashboard */
+.bb-dash { max-width: 1120px; margin: 0 auto; }
+
+.bb-dash-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+
+.bb-new-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  font-size: 13.5px;
+}
+
+.bb-plus { font-size: 17px; line-height: 1; }
+
+.bb-stat-row, .bb-metric-row {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.bb-stat-card {
+  flex: 1;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.bb-stat-label { font-size: 12px; color: #8b95a3; font-weight: 500; }
+
+.bb-stat-value { font-size: 24px; font-weight: 600; margin-top: 4px; }
+.bb-stat-sub { font-size: 11px; color: var(--ink2); margin-top: 3px; }
+
+/* Summary graph cards (dashboard) — title, number, % change, sparkline */
+.bnf-graph-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.bnf-graph-row > .bb-stat-card { min-width: 160px; }
+.bnf-graph-card {
+  flex: 1;
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.bnf-graph-meta { min-width: 0; }
+.bnf-graph-label { font-size: 12px; color: #8b95a3; font-weight: 500; }
+.bnf-graph-value { font-size: 28px; font-weight: 600; margin-top: 4px; line-height: 1.1; }
+.bnf-graph-change {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.bnf-graph-change-note { color: var(--ink3); font-weight: 500; }
+.bnf-spark { flex-shrink: 0; display: block; }
+@media (max-width: 720px) {
+  .bnf-graph-row { flex-wrap: wrap; }
+}
+
+.bb-transfers-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.bb-transfers-head {
+  display: flex;
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink3);
+}
+
+.bb-th-account { flex: 1; }
+.bb-th-stage { width: 150px; }
+.bb-th-progress { width: 190px; }
+.bb-th-date { width: 96px; text-align: right; font-size: 12.5px; color: var(--ink2); }
+
+.bb-transfer-row {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-softer);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.bb-transfer-row:hover { background: #f8fafc; }
+.bb-transfer-row:last-child { border-bottom: none; }
+
+.bb-account-cell { display: flex; align-items: center; gap: 13px; }
+
+.bb-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: var(--navy);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  flex: 0 0 38px;
+}
+
+.bb-account-name { font-weight: 600; font-size: 14px; }
+.bb-account-sub { color: #8b95a3; font-size: 12px; margin-top: 2px; }
+
+.bb-stage-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.bb-stage-extracting { background: var(--blue-bg); color: var(--blue); }
+.bb-stage-review { background: var(--border-soft); color: var(--ink2); }
+.bb-stage-client { background: var(--violet-bg); color: var(--violet); }
+.bb-stage-complete { background: var(--green-bg); color: var(--green); }
+.bb-stage-lost { background: var(--rose-bg); color: var(--rose); }
+
+.bb-progress-cell { display: flex; align-items: center; gap: 9px; }
+
+.bb-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--border-soft);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bb-bar-track-lg { height: 7px; border-radius: 5px; margin-bottom: 22px; }
+
+.bb-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.35s ease;
+}
+
+.bb-bar-green { background: var(--green); }
+.bb-bar-amber { background: var(--amber); }
+.bb-bar-blue { background: var(--blue); }
+.bb-bar-gradient { background: linear-gradient(90deg, var(--blue), var(--logo-blue)); }
+
+.bb-bar-pct {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink2);
+  width: 34px;
+  text-align: right;
+}

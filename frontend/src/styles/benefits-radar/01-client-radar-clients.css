@@ -1,0 +1,187 @@
+/* Client Radar — clients book, calendar, settings. */
+
+/* ===== CLIENT RADAR — clients book + reminder calendar ===== */
+
+/* Calendar filters */
+.bnf-cal-filters {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.bnf-cal-owner {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  background: #fff;
+  color: var(--ink);
+}
+.bnf-cal-cats { display: flex; gap: 6px; flex-wrap: wrap; }
+.bnf-cat-chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background: var(--blue-bg);
+  color: var(--blue);
+}
+.bnf-cat-renewal { background: var(--blue-bg); color: var(--blue); }
+.bnf-cat-compliance { background: var(--rose-bg); color: var(--rose); }
+.bnf-cat-stewardship { background: var(--violet-bg); color: var(--violet); }
+.bnf-cat-data_quality { background: var(--amber-bg); color: var(--amber); }
+.bnf-cat-custom { background: #eef1f5; color: var(--ink2); }
+.bnf-cat-revenue { background: var(--green-bg); color: var(--green); }
+.bnf-cat-off { opacity: 0.35; text-decoration: line-through; }
+.bnf-cat-static { cursor: default; }
+
+/* Calendar agenda groups */
+.bnf-cal-group { border-bottom: 1px solid var(--border); }
+.bnf-cal-group:last-child { border-bottom: none; }
+.bnf-cal-group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  background: #fafbfc;
+}
+.bnf-cal-group-head.bnf-cal-overdue { color: var(--rose); background: var(--rose-bg); }
+.bnf-cal-count {
+  background: #e6e8ec;
+  color: var(--ink2);
+  border-radius: 999px;
+  padding: 0 7px;
+  font-size: 11px;
+}
+.bnf-cal-row {
+  display: grid;
+  grid-template-columns: 74px 12px 1fr auto auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 18px;
+  border-top: 1px solid #f1f3f5;
+}
+.bnf-cal-who {
+  font-size: 12px;
+  color: var(--ink2);
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bnf-cal-date { font-size: 13px; color: var(--ink2); white-space: nowrap; }
+.bnf-cal-dot { width: 9px; height: 9px; border-radius: 50%; }
+.bnf-dot-error { background: var(--rose); }
+.bnf-dot-warn { background: var(--amber); }
+.bnf-dot-info { background: var(--blue); }
+.bnf-cal-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bnf-cal-client {
+  background: none;
+  border: none;
+  padding: 0;
+  font-weight: 700;
+  color: var(--navy);
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+}
+.bnf-cal-client:hover { text-decoration: underline; }
+.bnf-cal-label { font-size: 13px; color: var(--ink); }
+/* A calendar task with somewhere to go (D-109): the label opens its work. */
+.bnf-cal-label-link {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+.bnf-cal-label-link:hover { color: var(--blue); text-decoration: underline; }
+/* An Agenda row's way to where its work is done. */
+.bnf-agenda-open {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--blue);
+}
+.bnf-agenda-open:hover { text-decoration: underline; }
+.bnf-agenda-detail { font-size: 12px; color: var(--ink3); line-height: 1.35; }
+.bnf-cal-done {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink2);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bnf-cal-done:hover { border-color: var(--green); color: var(--green); }
+.bnf-cal-done:disabled { opacity: 0.5; cursor: default; }
+.bnf-cal-link-card { cursor: pointer; }
+
+/* Reminder rule settings — firm-wide config for the computed rules */
+.bnf-cal-headbtns { display: flex; gap: 10px; align-items: flex-start; }
+/* Clients dashboard table: Client · Deal size · Owner · Next action · Reminders · Deals · Archive */
+.bnf-clients-head,
+.bnf-clients-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 0.95fr 2.2fr 1.2fr 0.55fr 4.2rem;
+  align-items: center;
+  gap: 12px;
+}
+/* Narrow: Client · Deal size · Reminders · Deals — scoped to this table, since
+   the same cell classes ride the New clients and Work queue tables. */
+@media (max-width: 900px) {
+  .bnf-clients-head, .bnf-clients-row { grid-template-columns: 1.8fr 1fr 1.3fr 0.6fr 4.2rem; }
+  .bnf-clients-head .bnf-th-owner, .bnf-clients-row .bnf-th-owner,
+  .bnf-clients-head .bnf-th-action, .bnf-clients-row .bnf-th-action { display: none; }
+}
+/* Phone: the row Archive column would be clipped; archive from the client's
+   Overview there. */
+@media (max-width: 640px) {
+  .bnf-clients-head, .bnf-clients-row { grid-template-columns: 1.8fr 1fr 1.3fr 0.6fr; }
+  .bnf-clients-head .bnf-th-archive, .bnf-clients-row .bnf-th-archive { display: none; }
+}
+.bnf-th-owner, .bnf-th-roll, .bnf-th-cases { font-size: 13px; }
+/* Ad-hoc event form */
+.bnf-event-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.bnf-event-title {
+  flex: 1 1 180px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+}
+.bnf-event-form input[type="date"],
+.bnf-event-form select,
+.bnf-py-add input[type="date"],
+.bnf-py-field input,
+.bnf-py-field select {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  background: #fff;
+  color: var(--ink);
+}

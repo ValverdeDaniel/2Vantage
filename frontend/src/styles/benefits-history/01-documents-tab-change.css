@@ -1,0 +1,148 @@
+/* The Documents tab's change history card (D-090,
+   benefits/shared/ChangeHistoryCard.jsx). */
+
+.hst-card {
+  margin-top: 18px;
+  padding: 14px 16px;
+}
+
+.hst-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.hst-sub {
+  font-size: 12px;
+  color: var(--ink2);
+  margin-top: 2px;
+}
+
+.hst-live {
+  font-size: 12.5px;
+  padding: 7px 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background: var(--blue-bg);
+  color: var(--navy);
+}
+
+.hst-live-stale {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+
+.hst-empty {
+  font-size: 12.5px;
+  color: var(--ink3);
+  padding: 8px 0;
+}
+
+.hst-groups {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hst-group + .hst-group { border-top: 1px solid var(--border-soft); }
+
+.hst-group-head {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 9px 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+}
+
+.hst-group-head:hover .hst-who { text-decoration: underline; }
+
+.hst-caret {
+  width: 12px;
+  color: var(--ink3);
+  font-size: 11px;
+}
+
+.hst-who {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.hst-who-client { color: var(--violet); }
+.hst-who-system { color: var(--ink2); }
+
+.hst-when {
+  font-size: 12px;
+  color: var(--ink2);
+  font-variant-numeric: tabular-nums;
+}
+
+.hst-summary {
+  font-size: 12px;
+  color: var(--ink2);
+  margin-left: auto;
+}
+
+.hst-items {
+  list-style: none;
+  margin: 0 0 10px 24px;
+  padding: 0;
+}
+
+.hst-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 5px 0;
+  font-size: 12.5px;
+}
+
+.hst-time {
+  flex: 0 0 64px;
+  color: var(--ink3);
+  font-variant-numeric: tabular-nums;
+}
+
+.hst-icon {
+  flex: 0 0 16px;
+  text-align: center;
+  color: var(--ink2);
+}
+
+.hst-text {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.hst-verb { font-weight: 600; }
+.hst-muted { color: var(--ink2); }
+
+.hst-label {
+  margin-left: 6px;
+  font-style: italic;
+  color: var(--ink2);
+}
+
+.hst-diff-btn { flex: 0 0 auto; }
+
+.hst-diff {
+  flex: 1 1 100%;
+  margin: 4px 0 6px 90px;
+}
+
+.hst-more {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+}
+
+.hst-more .btn { flex: 0 0 auto; }

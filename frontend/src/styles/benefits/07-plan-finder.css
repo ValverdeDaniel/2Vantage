@@ -1,0 +1,161 @@
+/* ---- The plan finder (FIND-1, 2026-10-09) ---------------------------------
+   The Advisor's search box heads the filters row on a line of its own, and the
+   chips that count the same words on the OTHER lines sit directly under it. A
+   found plan's row (transposed: its column) flashes once the page has scrolled
+   to it. The scroll margin keeps it clear of the fixed 56px navbar. The flash
+   is a box-shadow tint, not a background: .bnf-pv-source and
+   .bnf-plan-col-current set theirs with !important, which an animated
+   background could never beat. Scoped under .bnf-advisor-filters because the
+   stop-loss board's controls row shares that class. */
+.bnf-advisor-filters .bnf-advisor-finder {
+  flex: 1 1 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.bnf-advisor-search { max-width: 100%; }
+.bnf-advisor-search .bnf-filter-text { width: 340px; max-width: 100%; }
+.bnf-find-lines {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.bnf-find-lead { font-size: 12px; color: var(--ink3); }
+.bnf-find-chip {
+  border: 1px solid var(--blue);
+  background: var(--blue-bg);
+  color: var(--navy);
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+}
+.bnf-find-chip:hover { background: var(--blue); color: #fff; }
+.bnf-advisor-table [data-plan-id] { scroll-margin: calc(var(--chrome-top) + 28px) 0 28px; }
+@keyframes bnf-find-flash-row-kf {
+  0%, 30% {
+    box-shadow: inset 0 0 0 100vmax rgba(46, 111, 199, 0.2),
+      inset 0 2px 0 var(--blue), inset 0 -2px 0 var(--blue);
+  }
+  100% {
+    box-shadow: inset 0 0 0 100vmax rgba(46, 111, 199, 0),
+      inset 0 2px 0 rgba(46, 111, 199, 0), inset 0 -2px 0 rgba(46, 111, 199, 0);
+  }
+}
+@keyframes bnf-find-flash-col-kf {
+  0%, 30% {
+    box-shadow: inset 0 0 0 100vmax rgba(46, 111, 199, 0.2),
+      inset 2px 0 0 var(--blue), inset -2px 0 0 var(--blue);
+  }
+  100% {
+    box-shadow: inset 0 0 0 100vmax rgba(46, 111, 199, 0),
+      inset 2px 0 0 rgba(46, 111, 199, 0), inset -2px 0 0 rgba(46, 111, 199, 0);
+  }
+}
+/* The class is on for 1.5s (FIND_FLASH_MS in AdvisorTab.jsx); the animation
+   finishes a touch before it goes. */
+.bnf-advisor-table tr.bnf-find-flash > td {
+  animation: bnf-find-flash-row-kf 1.4s ease-out;
+}
+.bnf-advisor-transposed th.bnf-find-flash,
+.bnf-advisor-transposed td.bnf-find-flash {
+  animation: bnf-find-flash-col-kf 1.4s ease-out;
+}
+/* Reduced motion: the same highlight, held still for the same 1.5s. */
+@media (prefers-reduced-motion: reduce) {
+  .bnf-advisor-table tr.bnf-find-flash > td {
+    animation: none;
+    box-shadow: inset 0 0 0 100vmax rgba(46, 111, 199, 0.2),
+      inset 0 2px 0 var(--blue), inset 0 -2px 0 var(--blue);
+  }
+  .bnf-advisor-transposed th.bnf-find-flash,
+  .bnf-advisor-transposed td.bnf-find-flash {
+    animation: none;
+    box-shadow: inset 0 0 0 100vmax rgba(46, 111, 199, 0.2),
+      inset 2px 0 0 var(--blue), inset -2px 0 0 var(--blue);
+  }
+}
+
+/* ---- Advisor views: the stop-loss analysis board (D-025, 2026-09-02) ------
+   A second pill row above the line switcher picks WHAT KIND of analysis is on
+   screen. Distinct classes from .bnf-preset-tab on purpose: two stacked pill
+   rows must read as different things, and a preset-tab restyle must not move
+   the view bar. */
+.bnf-advisor-views {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: -2px 0 14px;
+}
+.bnf-advisor-views-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--ink2);
+  margin-right: 2px;
+}
+.bnf-viewtab {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink3);
+  cursor: pointer;
+}
+.bnf-viewtab:hover { border-color: var(--blue); color: var(--ink); }
+.bnf-viewtab-on {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
+/* Saved setups — the row under the view pills. Reuses the views label so the
+   two rows read as one control stack. */
+.bnf-advisor-saved {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.bnf-saved-pick { min-width: 220px; max-width: 320px; }
+.bnf-advisor-saved .btn { flex: 0 0 auto; }
+.bnf-saved-note {
+  font-size: 11.5px;
+  color: var(--ink3);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bnf-saved-modal { width: 480px; }
+.bnf-saved-field { display: block; margin-bottom: 14px; }
+.bnf-saved-field > span {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink2);
+  margin-bottom: 4px;
+}
+.bnf-saved-field > span i { font-weight: 400; color: var(--ink3); font-style: normal; }
+.bnf-saved-field input[type="text"],
+.bnf-saved-field input:not([type]) {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+}
+.bnf-saved-field .filter-select { width: 100%; }
+.bnf-saved-error { display: block; margin-top: 4px; font-size: 11.5px; color: var(--rose); font-style: normal; }
+.bnf-saved-share { font-size: 12.5px; }

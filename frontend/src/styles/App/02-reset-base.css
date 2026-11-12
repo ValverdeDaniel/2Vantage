@@ -1,0 +1,290 @@
+/* Reset & Base */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--page);
+  color: var(--ink);
+  line-height: 1.6;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  height: 11px;
+  width: 11px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cdd3dc;
+  border-radius: 8px;
+  border: 3px solid var(--page);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b6bdc8;
+}
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Layout */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  padding-top: calc(var(--chrome-top) + 1.5rem);
+}
+
+/* Navbar */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-h);
+  background-color: var(--navy-dark);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  z-index: 100;
+}
+
+.navbar-brand {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.navbar-brand:hover {
+  text-decoration: none;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.navbar-links a {
+  color: #9db4cf;
+  font-size: 0.9rem;
+}
+
+.navbar-links a:hover {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #9db4cf;
+  font-size: 0.9rem;
+}
+
+.navbar-user a {
+  color: #9db4cf;
+}
+
+.navbar-user a:hover {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.navbar .btn-danger {
+  background-color: transparent;
+  color: #9db4cf;
+  border: 1px solid #2b4a6e;
+}
+
+.navbar .btn-danger:hover {
+  color: #ffffff;
+  border-color: #7fa3cc;
+}
+
+/* Card */
+.card {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 2rem;
+  max-width: 420px;
+  margin: 2rem auto;
+}
+
+.card h2 {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  letter-spacing: -0.3px;
+  text-align: center;
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #3a4452;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  background-color: #ffffff;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(46, 111, 199, 0.12);
+}
+
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  background-color: #ffffff;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(46, 111, 199, 0.12);
+}
+
+/* Buttons.
+
+   Two rules here are what make a row of mixed variants line up, and both were
+   missing. The border is 1px TRANSPARENT rather than none, so .btn-primary —
+   which sets no border of its own — occupies the same box as .btn-secondary,
+   which does; without it a primary measured 2px shorter than every secondary
+   beside it. And line-height is pinned, because the default is glyph-dependent:
+   "🧭 Advisor" built a taller line box than "Send to client ▸", so two buttons
+   with identical classes rendered 1px apart. Any new variant inherits both. */
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.25rem;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.btn-primary {
+  background-color: var(--navy);
+  color: #ffffff;
+  box-shadow: var(--shadow-btn);
+}
+
+/* The full width .btn-primary used to carry everywhere, kept only where a kept
+   screen relied on it (O.5): the login form, the intake answer editor and
+   signature rows, the add-plan bar, the empty Advisor panel, and the commission
+   filter row, party form and booking note. :where() keeps the old specificity. */
+:where(.page-container > .card > form, .bnf-intake-editor, .bnf-subcard-row, .bnf-addplan-bar,
+  .bb-tab-page > .bb-panel, .bnf-com-filters, .bnf-com-party-form, .bnf-com-placeholder) > .btn-primary {
+  width: 100%;
+}
+
+.btn-primary:hover {
+  background-color: var(--navy-dark);
+}
+
+.btn-secondary {
+  background-color: #ffffff;
+  color: var(--navy);
+  border: 1px solid #cdd8e6;
+}
+
+.btn-secondary:hover {
+  background-color: #f5f8fc;
+}
+
+/* The client/employer accent as a .btn variant, so it inherits the .btn and
+   .btn-sm box instead of carrying its own. Violet means "the client" across the
+   app (.bb-swatch-client, .bb-client-banner, .bb-btn-violet on "Approve all"),
+   and "Request info from client" is the one client-facing action in a toolbar
+   of file exports — it should read differently without being a different size.
+   Distinct from .bb-btn-violet-outline (:1773), which is a full-width panel CTA
+   and keeps its own geometry. */
+.btn-violet {
+  background-color: #ffffff;
+  color: var(--violet);
+  border: 1px solid #ddd2f2;
+}
+
+.btn-violet:hover {
+  background-color: #faf8fe;
+}
+
+.btn-danger {
+  background-color: transparent;
+  color: var(--ink2);
+  border: 1px solid var(--input-border);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.btn-danger:hover {
+  color: var(--rose);
+  border-color: var(--rose);
+}
+
+/* Messages */
+.error-message {
+  background-color: var(--rose-bg);
+  border: 1px solid #f1c3bd;
+  color: var(--rose);
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.success-message {
+  background-color: var(--green-bg);
+  border: 1px solid #cce8d6;
+  color: var(--green);
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}

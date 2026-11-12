@@ -1,0 +1,283 @@
+{
+ "deal": "GD1",
+ "client": "Golden Manufacturing (synthetic)",
+ "checked_by": null,
+ "checked_on": null,
+ "method": null,
+ "note": "Worked out by hand in M3-M6, independently of the app; not yet signed. Stephanie signs it before slice 7, and a figure changes only with her agreement (plan.md §12.6).",
+ "plans": {
+  "A": {
+   "monthly": 18251,
+   "annual": 219012,
+   "change": null
+  },
+  "B": {
+   "monthly": 16978,
+   "annual": 203736,
+   "change": null
+  },
+  "C": {
+   "monthly": 10663,
+   "annual": 127956,
+   "change": null
+  },
+  "A2": {
+   "monthly": 19820,
+   "annual": 237840,
+   "change": {
+    "delta": 18828,
+    "pct": 8.6
+   }
+  },
+  "B2": {
+   "monthly": 18421,
+   "annual": 221052,
+   "change": {
+    "delta": 17316,
+    "pct": 8.5
+   }
+  },
+  "C2": {
+   "monthly": 11569,
+   "annual": 138828,
+   "change": {
+    "delta": 10872,
+    "pct": 8.5
+   }
+  },
+  "CG1": {
+   "monthly": 17743,
+   "annual": 212916,
+   "change": {
+    "delta": -6096,
+    "pct": -2.8
+   }
+  },
+  "CG1N": {
+   "monthly": 17424,
+   "annual": 209088,
+   "change": {
+    "delta": -9924,
+    "pct": -4.5
+   }
+  },
+  "CG2": {
+   "monthly": 17034,
+   "annual": 204408,
+   "change": {
+    "delta": -14604,
+    "pct": -6.7
+   }
+  },
+  "CG3": {
+   "monthly": 16319,
+   "annual": 195828,
+   "change": {
+    "delta": -7908,
+    "pct": -3.9
+   }
+  },
+  "CG4": {
+   "monthly": 10243,
+   "annual": 122916,
+   "change": {
+    "delta": -5040,
+    "pct": -3.9
+   }
+  },
+  "U1": {
+   "monthly": 17989,
+   "annual": 215868,
+   "change": {
+    "delta": -3144,
+    "pct": -1.4
+   }
+  },
+  "U2": {
+   "monthly": 16727,
+   "annual": 200724,
+   "change": {
+    "delta": -3012,
+    "pct": -1.5
+   }
+  },
+  "U3": {
+   "monthly": 10397,
+   "annual": 124764,
+   "change": {
+    "delta": -3192,
+    "pct": -2.5
+   }
+  },
+  "U5": {
+   "monthly": 27200,
+   "annual": 326400,
+   "change": {
+    "delta": -5292,
+    "pct": -1.6
+   }
+  },
+  "D1": {
+   "monthly": 8292,
+   "annual": 99504,
+   "change": null
+  },
+  "D2": {
+   "monthly": 10462,
+   "annual": 125544,
+   "change": null
+  },
+  "DN": {
+   "monthly": 2202,
+   "annual": 26424,
+   "change": null
+  },
+  "DN2": {
+   "monthly": 2312,
+   "annual": 27744,
+   "change": {
+    "delta": 1320,
+    "pct": 5.0
+   }
+  },
+  "DNA": {
+   "monthly": 2104,
+   "annual": 25248,
+   "change": {
+    "delta": -1176,
+    "pct": -4.5
+   }
+  },
+  "VS": {
+   "monthly": 340,
+   "annual": 4080,
+   "change": null
+  },
+  "VS2": {
+   "monthly": 340,
+   "annual": 4080,
+   "change": {
+    "delta": 0,
+    "pct": 0.0
+   }
+  },
+  "VSA": {
+   "monthly": 329,
+   "annual": 3948,
+   "change": {
+    "delta": -132,
+    "pct": -3.2
+   }
+  }
+ },
+ "packages": {
+  "medical": {
+   "Current": {
+    "annual": 550704,
+    "same_people": true,
+    "change": null
+   },
+   "Renewal": {
+    "annual": 597720,
+    "same_people": true,
+    "change": {
+     "delta": 47016,
+     "pct": 8.5
+    }
+   },
+   "UnitedHealthcare": {
+    "annual": 541356,
+    "same_people": true,
+    "change": {
+     "delta": -9348,
+     "pct": -1.7
+    }
+   },
+   "UHC consolidated": {
+    "annual": 542268,
+    "same_people": true,
+    "change": {
+     "delta": -8436,
+     "pct": -1.5
+    }
+   },
+   "Cigna dual choice": {
+    "annual": 543792,
+    "same_people": true,
+    "change": {
+     "delta": -6912,
+     "pct": -1.3
+    }
+   }
+  },
+  "dental": {
+   "Current": {
+    "annual": 26424,
+    "same_people": true,
+    "change": null
+   },
+   "Renewal": {
+    "annual": 27744,
+    "same_people": true,
+    "change": {
+     "delta": 1320,
+     "pct": 5.0
+    }
+   },
+   "Delta Dental": {
+    "annual": 25248,
+    "same_people": true,
+    "change": {
+     "delta": -1176,
+     "pct": -4.5
+    }
+   }
+  },
+  "vision": {
+   "Current": {
+    "annual": 4080,
+    "same_people": true,
+    "change": null
+   },
+   "Renewal": {
+    "annual": 4080,
+    "same_people": true,
+    "change": {
+     "delta": 0,
+     "pct": 0.0
+    }
+   },
+   "EyeMed": {
+    "annual": 3948,
+    "same_people": true,
+    "change": {
+     "delta": -132,
+     "pct": -3.2
+    }
+   }
+  }
+ },
+ "recommendation": {
+  "medical": {
+   "covered": true,
+   "plans": [
+    "CG1",
+    "CG1N",
+    "U2",
+    "C2"
+   ]
+  },
+  "dental": {
+   "covered": true,
+   "plans": [
+    "DNA"
+   ]
+  },
+  "vision": {
+   "covered": true,
+   "plans": [
+    "VS2"
+   ]
+  }
+ }
+}

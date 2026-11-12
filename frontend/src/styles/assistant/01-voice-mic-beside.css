@@ -1,0 +1,48 @@
+/* Voice (components/voice/): the mic beside a text box. */
+.hlp-mic-wrap { position: relative; display: inline-flex; flex: 0 0 auto; }
+
+.hlp-mic {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--input-border);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.hlp-mic:hover:not(:disabled) { background: var(--blue-bg); }
+.hlp-mic:disabled { color: var(--ink3); cursor: default; }
+
+.hlp-mic--on {
+  background: var(--rose);
+  border-color: var(--rose);
+  color: #ffffff;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.hlp-mic-pop {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: var(--shadow-btn);
+  font-size: 0.76rem;
+  color: var(--ink);
+  z-index: 1;
+}
+
+.hlp-mic-interim { color: var(--ink3); }
+.hlp-mic-setup { display: flex; flex-direction: column; gap: 6px; }
+.hlp-mic-setup-actions { display: flex; gap: 6px; }
+.hlp-mic-setup-actions .btn { flex: 0 0 auto; }

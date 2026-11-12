@@ -1,0 +1,115 @@
+/* Client portal */
+.bb-portal {
+  min-height: 100vh;
+  background: #eef1f5;
+  font-size: 14px;
+}
+
+.bb-portal-topbar {
+  height: 54px;
+  background: var(--navy-dark);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 11px;
+}
+
+.bb-portal-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--logo-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.bb-portal-brand { color: #fff; font-weight: 600; font-size: 15px; }
+.bb-portal-expiry { color: #7fa3cc; font-size: 12px; margin-left: auto; }
+
+.bb-portal-body {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 34px 22px 70px;
+}
+
+.bb-portal-card {
+  background: #fff;
+  border: 1px solid #e2e6ec;
+  border-radius: 14px;
+  padding: 24px 26px;
+  margin-bottom: 16px;
+}
+
+.bb-portal-heading {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
+}
+
+.bb-portal-intro { color: var(--ink2); font-size: 13.5px; line-height: 1.6; }
+
+.bb-portal-fields { display: flex; flex-wrap: wrap; gap: 14px; }
+
+/* One free-text ask's upload slot on the /c/ client link. The drop card
+   carries its own spacing; this only groups the hidden input with it. */
+.bb-portal-ask { margin-bottom: 4px; }
+.bb-portal-ask .bb-drop-card { padding: 26px; }
+.bb-portal-ask .bb-badge { margin-top: 6px; }
+
+.bb-portal-field { flex: 1 1 220px; }
+
+.bb-portal-field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #3a4452;
+  margin-bottom: 5px;
+}
+
+.bb-portal-field input,
+.bb-portal-field select {
+  width: 100%;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  background: #fff;
+  outline: none;
+}
+
+.bb-portal-field input:focus,
+.bb-portal-field select:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(46, 111, 199, 0.12);
+}
+
+.bb-portal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.bb-portal-lock { font-size: 12px; color: #8b95a3; }
+
+.bb-portal-submit { padding: 13px 26px; font-size: 14.5px; border-radius: 10px; }
+
+.bb-portal-center { text-align: center; padding: 40px; }
+.bb-portal-thanks { margin-top: 30px; }
+.bb-portal-thanks-title { font-size: 19px; font-weight: 600; margin-bottom: 7px; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .bb-workspace { flex-direction: column; }
+  .bb-sidebar { position: static; width: 100%; flex: none; min-height: 0; }
+  .bb-content { padding-left: 0; padding-top: 1rem; }
+  .bb-overview-cols, .bb-policy-cols { flex-direction: column; }
+  .bb-upload-fields { grid-template-columns: 1fr; }
+  .bb-metric-row, .bb-stat-row { flex-wrap: wrap; }
+}

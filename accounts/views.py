@@ -8,6 +8,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .access import can_direct, commission_tier
+
 
 def user_payload(user):
     return {
@@ -18,6 +20,9 @@ def user_payload(user):
         'full_name': user.get_full_name() or user.username,
         'email': user.email,
         'is_admin': user.is_staff,
+        # The Profile flags (A3), as they apply: an admin's commission tier is always all.
+        'claude_direct': can_direct(user),
+        'commissions_access': commission_tier(user),
     }
 
 

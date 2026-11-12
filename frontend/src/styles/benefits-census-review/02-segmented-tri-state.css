@@ -1,0 +1,298 @@
+/* A segmented tri-state: Auto / Required / Waived. */
+.bnf-review-reqtoggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bnf-review-reqbtn {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 4px;
+  background: #fff;
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  color: #4a5563;
+  white-space: nowrap;
+}
+.bnf-review-reqbtn:last-child { border-right: none; }
+.bnf-review-reqbtn:disabled { cursor: default; opacity: 0.5; }
+.bnf-review-reqbtn-on { background: var(--navy); color: #fff; }
+.bnf-review-reqbtn-waived.bnf-review-reqbtn-on {
+  background: #6b7683;
+}
+
+.bnf-review-boardhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 10px 0 8px;
+}
+.bnf-review-count { font-size: 13px; }
+.bnf-review-note { font-size: 11px; color: #6b7683; }
+.bnf-review-actions { display: flex; gap: 8px; align-items: center; }
+
+.bnf-review-actions .btn,
+.bnf-review-tablebar .btn,
+.bnf-send-modal .btn { flex: 0 0 auto; white-space: nowrap; }
+.bnf-send-modal .bb-full-width { width: 100%; }
+
+.bnf-review-tablebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.bnf-review-presets { display: flex; gap: 4px; flex-wrap: wrap; }
+.bnf-review-preset {
+  font-size: 12px;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+.bnf-review-preset-on { background: var(--navy); color: #fff; border-color: var(--navy); }
+.bnf-review-preset-count { opacity: 0.7; margin-left: 4px; }
+.bnf-review-empty { padding: 24px 12px; text-align: center; color: #6b7683; }
+.bnf-review-search {
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  min-width: 180px;
+}
+.bnf-review-check { font-size: 12px; display: inline-flex; gap: 4px; align-items: center; }
+
+/* --- the send panel ------------------------------------------------------ */
+.bnf-send-modal { max-width: 620px; }
+.bnf-send-modes { display: flex; flex-direction: column; gap: 6px; }
+.bnf-send-mode-locked { opacity: 0.65; }
+/* The reason a mode is locked is TEXT, not a title attribute: a disabled
+   control whose only explanation is a tooltip is a dead end on a touch screen
+   or with a keyboard, and "honest reason" has to mean legible. */
+.bnf-send-locked-why {
+  font-size: 12px;
+  color: #6b7683;
+  background: var(--page);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin: 4px 0 8px 22px;
+}
+.bnf-send-people { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.bnf-send-person {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+.bnf-send-name { font-weight: 600; font-size: 13px; }
+.bnf-send-role { font-size: 11px; color: #6b7683; }
+.bnf-send-count { margin-left: auto; font-size: 12px; }
+.bnf-send-gaps { font-size: 11px; color: #6b7683; }
+.bnf-send-empty { font-size: 12px; color: #6b7683; padding: 8px 0; }
+.bnf-send-link { margin: 8px 0; }
+.bnf-send-linkhead {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin-bottom: 3px;
+}
+
+@media (max-width: 1100px) {
+  .bnf-review-head,
+  .bnf-review-row {
+    grid-template-columns:
+      30px minmax(150px, 1.4fr) 0 106px minmax(130px, 1fr) 130px 185px;
+    gap: 8px;
+  }
+  /* The band track collapses to 0 and the cell is hidden, NEVER
+     display:none: display:none would drop the element from the grid and
+     shift every later column, so the head and the rows would stop lining
+     up. */
+  .bnf-review-bandcell { visibility: hidden; padding: 0; overflow: hidden; }
+  .bnf-review-drillrow { padding-left: 38px; }
+}
+
+/* ===== Who we asked (?tab=census&view=requests) =====================
+   The third census view. It reuses the send panel's person card
+   (.bnf-send-person / -name / -role / -count / -gaps) verbatim so the
+   "what we plan to send" card and the modal that actually sends cannot
+   drift apart visually, and adds only what is genuinely new here: the
+   stat strip, the expandable column list, and the sent-link rows. */
+
+.bnf-req-stats {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.bnf-req-stat {
+  flex: 1 1 130px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  padding: 10px 12px;
+}
+.bnf-req-statnum { font-size: 22px; font-weight: 600; color: var(--ink); }
+.bnf-req-statlab { font-size: 12px; color: inherit; margin-top: 2px; }
+
+/* `.bb-grid-card` is padding:0 + overflow:hidden -- every user supplies its
+   own gutter, and without one the right-hand controls are clipped mid-word. */
+.bnf-req-sechead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px 0 14px;
+  margin-bottom: 10px;
+}
+.bnf-req .bnf-review-empty { padding: 0 14px 14px 14px; }
+
+/* --- what we'd send now ------------------------------------------- */
+
+.bnf-req-plan { display: block; padding: 0; margin: 0 14px; }
+.bnf-req-planhead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.bnf-req-planhead:hover { background: var(--page); }
+.bnf-req-planhead > span:first-child { flex: 1 1 auto; min-width: 0; }
+.bnf-req-caret { color: inherit; font-size: 12px; }
+
+.bnf-req-cols {
+  border-top: 1px solid var(--border);
+  padding: 8px 12px 12px 12px;
+  background: var(--page);
+}
+.bnf-req-col { padding: 6px 0; }
+.bnf-req-col + .bnf-req-col { border-top: 1px dashed var(--border); }
+.bnf-req-col-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--ink);
+}
+.bnf-req-col-band { font-size: 11px; color: inherit; }
+/* The sentence the employer will actually read under the box. */
+.bnf-req-col-help {
+  font-size: 12px;
+  color: inherit;
+  margin-top: 2px;
+  max-width: 70ch;
+}
+.bnf-req-orphans { margin: 10px 14px 14px 14px; }
+
+/* --- what has gone out -------------------------------------------- */
+
+.bnf-req-link { padding: 12px 14px; }
+.bnf-req-link + .bnf-req-link { border-top: 1px solid var(--border); }
+.bnf-req-linkhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.bnf-req-linkmeta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: inherit;
+  margin-top: 3px;
+}
+.bnf-req-asks {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.bnf-req-linkfoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+/* The actions sit at the right of a space-between row and used to run past
+   the card's padding, clipping "Mark as sent". */
+.bnf-req-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.bnf-req-linkfoot > .bnf-req-prog,
+.bnf-req-linkfoot > .bnf-req-prog-note,
+.bnf-req-linkfoot > .bnf-req-prog-none { min-width: 0; }
+
+.bnf-req-prog { display: flex; align-items: center; gap: 8px; }
+.bnf-req-bar {
+  display: block;
+  width: 120px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--page);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.bnf-req-bar-fill { display: block; height: 100%; background: var(--green); }
+.bnf-req-prog-text { font-size: 12px; color: inherit; }
+/* `rebuilt` and `unrecorded` are states, not fractions -- they print a
+   sentence and never a bar, so a producer is never shown "0 of 0". */
+.bnf-req-prog-note,
+.bnf-req-prog-none {
+  font-size: 12px;
+  color: inherit;
+  font-style: italic;
+  border-bottom: 1px dotted var(--border);
+  cursor: help;
+}
+.bnf-req-prog-none { border-bottom: none; cursor: default; }
+
+.bnf-req-chip-answered { background: var(--green-bg); color: var(--green); }
+.bnf-req-chip-waiting { background: var(--amber-bg); color: var(--amber); }
+.bnf-req-chip-expired { background: var(--rose-bg); color: var(--rose); }
+
+@media (max-width: 700px) {
+  .bnf-req-bar { width: 80px; }
+}
+
+/* The send panel stacks .bnf-send-name / -role as sibling DIVs; here they are
+   inline spans inside one cell, so they need the stacking back. Scoped to
+   .bnf-req so the modal those classes were written for is untouched. */
+.bnf-req .bnf-send-name,
+.bnf-req .bnf-send-role { display: block; }
+.bnf-req .bnf-send-count { text-align: right; white-space: nowrap; }
+.bnf-req .bnf-send-gaps { display: block; }
+.bnf-req-chip-draft {
+  background: var(--page);
+  color: inherit;
+  border: 1px dashed var(--border);
+}
+.bnf-req-opened { color: var(--green); }
+/* Not a warning colour: "not opened yet" a day after sending is ordinary. */
+.bnf-req-unopened { color: inherit; }

@@ -1,0 +1,294 @@
+/* ===== DEV HARNESS =====
+   Only genuinely new pieces live here. The catalog tree, results list, status
+   dots, progress bar and history rows all reuse the existing .admin-* /
+   .test-* / .history-* classes. */
+
+.dev-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.dev-search {
+  flex: 1;
+  min-width: 220px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.dev-selection-count { font-size: 13px; color: var(--ink2); }
+
+/* The copy bar. This is the highest-value affordance in the whole module:
+   it turns a screen of red into a bug report in one click. */
+.dev-copy-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  margin: 12px 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  position: sticky;
+  top: var(--chrome-top);
+  z-index: 5;
+}
+
+.dev-copy-bar-label { font-weight: 600; font-size: 13px; }
+.dev-copy-bar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.dev-copy-fallback {
+  margin: 8px 0;
+  padding: 10px;
+  background: var(--amber-bg);
+  border: 1px solid var(--amber);
+  border-radius: 6px;
+}
+
+.dev-copy-fallback-note { font-size: 12px; margin-bottom: 6px; color: var(--amber); }
+
+.dev-copy-fallback textarea {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 6px;
+}
+
+/* "The harness could not do its job" — a different page from "your tests
+   failed", and the banner has to say so. */
+.dev-harness-banner {
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: var(--rose-bg);
+  border-left: 4px solid var(--rose);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.dev-harness-hint { color: var(--ink2); font-size: 12px; margin-top: 4px; }
+
+.dev-newly-failing {
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: var(--amber-bg);
+  border-left: 4px solid var(--amber);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.dev-newly-failing ul { margin: 6px 0 0; padding-left: 18px; }
+.dev-newly-failing code { font-family: var(--font-mono); font-size: 11px; }
+
+.dev-new-badge,
+.dev-kind-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.dev-new-badge { background: var(--amber-bg); color: var(--amber); }
+.dev-kind-badge { background: var(--ink3, #e6e8ec); color: var(--ink2); }
+
+/* Failures, hoisted above the full results list with their tracebacks already
+   open. This is the part of the screen you actually came for. */
+.dev-failures {
+  margin-bottom: 18px;
+}
+
+.dev-failures-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.dev-failures-head h3 {
+  margin: 0;
+  font-size: 15px;
+  color: var(--rose);
+}
+
+.dev-failure-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--rose);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.dev-failure-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.dev-failure-id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  word-break: break-all;
+}
+
+.dev-failure-spacer { flex: 1; }
+
+.dev-failure-what {
+  font-size: 13px;
+  color: var(--ink2);
+  margin-bottom: 8px;
+}
+
+.dev-failure-card .test-output {
+  margin: 0;
+  max-height: 320px;
+}
+
+.dev-progress {
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.dev-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.dev-progress-error { margin-top: 6px; font-size: 12px; color: var(--amber); }
+
+/* The gap since the last result. `.counter-pass` / `.counter-fail` beside it
+   only colour a `.progress-counter-count` child, which RunProgress does not
+   render, so this chip carries its own colour. */
+.dev-progress-quiet { color: var(--ink2); }
+.dev-progress-quiet.is-stale { color: var(--rose); font-weight: 600; }
+
+/* A run whose heartbeat has stopped. Rose rather than amber: amber on this
+   screen already means "a poll failed, retrying", which is the opposite claim. */
+.dev-progress-stalled {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--rose-bg);
+  border-left: 3px solid var(--rose);
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dev-suite-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dev-suite-card {
+  padding: 14px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dev-suite-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dev-suite-label { font-weight: 600; font-size: 14px; }
+
+/* The "why this matters" sentence — a suite you cannot justify in one line is
+   a suite nobody will maintain. */
+.dev-why { font-size: 12px; color: var(--ink2); margin: 0; line-height: 1.5; }
+
+.dev-coverage {
+  padding: 14px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.dev-coverage-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.dev-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--ink2);
+}
+
+.dev-lane-chip {
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: var(--blue-bg);
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.dev-history-label { font-size: 12px; color: var(--ink2); }
+
+.dev-env-table td { vertical-align: top; }
+.dev-env-label { font-weight: 600; width: 200px; }
+.dev-section-title { margin: 22px 0 8px; font-size: 15px; }
+
+.dev-placeholder {
+  padding: 24px;
+  background: #fff;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.dev-placeholder h3 { margin: 0 0 8px; font-size: 15px; }
+
+/* Live checks lane */
+
+.dev-live-banner {
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--ink2);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.dev-live-banner code { font-family: var(--font-mono); font-size: 12px; }
+
+
+.dev-live-spending {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}

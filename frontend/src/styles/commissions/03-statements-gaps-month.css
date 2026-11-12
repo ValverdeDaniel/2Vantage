@@ -1,0 +1,294 @@
+/* Phase 2 — statements, gaps, the month strip */
+.bnf-com-tabcount { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--rose-bg); color: var(--rose); font-size: 10.5px; font-weight: 600; }
+.bnf-com-lines td, .bnf-com-lines th { font-size: 12px; vertical-align: top; }
+.bnf-com-lines td input.bnf-intake-input, .bnf-com-lines td select.bnf-intake-input { font-size: 12px; padding: 4px 6px; width: 100%; box-sizing: border-box; }
+.bnf-com-lineeditor { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-softer); }
+.bnf-com-reversal td { color: var(--ink2); font-style: italic; }
+.bnf-com-reversed td { text-decoration: line-through; color: var(--ink2); }
+.bnf-com-matches { margin-top: 6px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); max-width: 460px; }
+.bnf-com-match { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; cursor: pointer; font-size: 12px; border-bottom: 1px solid var(--border-softer); }
+.bnf-com-match:last-child { border-bottom: none; }
+.bnf-com-match:hover { background: var(--page); }
+.bnf-com-disputed td { background: var(--amber-bg); }
+.bnf-com-gapactions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.bnf-com-gapctl { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.bnf-com-gapctl select.bnf-intake-input, .bnf-com-gapctl input.bnf-intake-input { font-size: 12px; padding: 4px 6px; }
+.bnf-com-gapctl input.bnf-intake-input { width: 180px; }
+.bb-badge-rose { background: var(--rose-bg); color: var(--rose); }
+.bnf-com-monthstrip { margin: 6px 0 12px; }
+.bnf-com-months { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; }
+@media (max-width: 1100px) { .bnf-com-months { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.bnf-com-month {
+  display: flex; flex-direction: column; align-items: stretch; gap: 1px;
+  padding: 6px 4px; border-radius: 8px; border: 1px solid var(--border-softer); background: var(--page);
+  font: inherit; font-size: 10.5px; cursor: pointer; text-align: left; color: var(--ink2);
+}
+.bnf-com-month:hover, .bnf-com-month.selected { border-color: var(--blue); }
+.bnf-com-month-name { font-weight: 600; color: var(--ink); }
+.bnf-com-month-amt { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink); }
+.bnf-com-month-exp { font-size: 9.5px; }
+.bnf-com-month-paid { background: var(--green-bg); border-color: var(--green-bg); }
+.bnf-com-month-paid .bnf-com-month-amt { color: var(--green); }
+.bnf-com-month-open { background: var(--rose-bg); border-color: var(--rose-bg); }
+.bnf-com-month-open .bnf-com-month-amt { color: var(--rose); }
+.bnf-com-month-disputed { background: var(--amber-bg); border-color: var(--amber); }
+.bnf-com-month-not_due { background: var(--amber-bg); border-color: var(--amber-bg); }
+.bnf-com-month-explained { background: #eef1f5; }
+.bnf-com-month-future, .bnf-com-month-unknown { opacity: .6; }
+.bnf-com-month-totals { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-top: 8px; font-size: 12.5px; }
+.bnf-com-month-detail { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--page); font-size: 12.5px; }
+.bnf-com-receipts { margin-top: 8px; }
+.bnf-com-receipts summary { cursor: pointer; }
+
+/* --- Producer profiles (Producers & partners drawer; 2026-08-19 D-017) --- */
+.bnf-com-profile-link {
+  border: none; background: none; padding: 0; margin-right: 10px;
+  font: inherit; font-size: 12.5px; color: var(--blue); cursor: pointer;
+}
+.bnf-com-profile-link:hover { text-decoration: underline; }
+.bnf-com-profile-meta { font-size: 11px; color: var(--ink2); margin-top: 1px; }
+.bnf-com-profile-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px 26px;
+}
+@media (max-width: 980px) { .bnf-com-profile-grid { grid-template-columns: 1fr; } }
+.bnf-com-profile-section { min-width: 0; }
+.bnf-com-profile-title {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 4px;
+}
+.bnf-com-profile-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0;
+}
+.bnf-com-profile-row select, .bnf-com-profile-row input {
+  border: 1px solid var(--border); border-radius: 7px; padding: 4px 7px;
+  font: inherit; font-size: 12.5px; background: var(--card); color: var(--ink);
+}
+.bnf-com-profile-row input[type="date"] { width: 128px; }
+.bnf-com-profile-note { width: 110px; }
+.bnf-com-profile-carrier .bnf-com-profile-cname {
+  font-weight: 600; font-size: 12.5px; min-width: 110px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bnf-com-profile-agency { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; }
+.bnf-com-profile-agency input { width: 100px; }
+.bnf-com-profile-pencil {
+  border: none; background: none; padding: 0; font-size: 11px;
+  color: var(--ink2); cursor: pointer;
+}
+.bnf-com-profile-pencil:hover { color: var(--blue); }
+.bnf-com-profile-addrow { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.bnf-com-profile-addrow select {
+  border: 1px solid var(--border); border-radius: 7px; padding: 4px 7px;
+  font: inherit; font-size: 12.5px; background: var(--card); color: var(--ink2);
+}
+.bnf-com-profile-newcarrier { display: inline-flex; align-items: center; gap: 6px; }
+.bnf-com-profile-newcarrier input {
+  border: 1px solid var(--border); border-radius: 7px; padding: 4px 7px;
+  font: inherit; font-size: 12.5px;
+}
+.bnf-com-profile-field { display: block; font-size: 12px; color: var(--ink2); margin: 8px 0; }
+.bnf-com-profile-field input, .bnf-com-profile-field select {
+  display: block; width: 100%; max-width: 340px; margin-top: 3px;
+  border: 1px solid var(--border); border-radius: 7px; padding: 5px 8px;
+  font: inherit; font-size: 12.5px; background: var(--card); color: var(--ink);
+}
+.bnf-com-profile-w9 { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; font-size: 12.5px; }
+.bnf-com-profile-history { max-height: 150px; overflow-y: auto; }
+
+/* --- Split agreements + year ladders (2026-08-20) --- */
+.bnf-com-ladder { display: flex; flex-direction: column; gap: 4px; }
+.bnf-com-ladder-step { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink2); }
+.bnf-com-sendsign { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-softer); }
+.bnf-com-agmt { border: 1px solid var(--border-softer); border-radius: 9px; padding: 6px 10px; margin-top: 8px; }
+.bnf-com-agmt-old { opacity: .72; }
+.bnf-com-agmt-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 12.5px; }
+.bnf-com-agmt-body { margin-top: 6px; border-top: 1px solid var(--border-softer); padding-top: 4px; }
+.bnf-com-agmt-counter { display: inline-flex; align-items: center; gap: 6px; }
+.bnf-com-agmt-counter input {
+  border: 1px solid var(--border); border-radius: 7px; padding: 3px 7px;
+  font: inherit; font-size: 12px; width: 170px;
+}
+
+/* The public signer page (/s/:token) — chrome-less, portal-style */
+.bnf-sign-page { min-height: 100vh; background: var(--page, #f6f7f9); padding: 34px 16px; font-family: var(--font-sans, 'IBM Plex Sans', sans-serif); }
+.bnf-sign-card {
+  max-width: 760px; margin: 0 auto; background: var(--card, #fff);
+  border: 1px solid var(--border, #e6e8ec); border-radius: 14px; padding: 26px 30px;
+  color: var(--ink, #1c2430);
+}
+.bnf-sign-card h1 { font-size: 19px; color: var(--navy, #173a63); margin: 0 0 4px; }
+.bnf-sign-card h2 { font-size: 13px; color: var(--navy, #173a63); margin: 18px 0 6px; }
+.bnf-sign-muted { font-size: 12px; color: var(--ink2, #5b6573); }
+.bnf-sign-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.bnf-sign-table th { text-align: left; font-size: 11px; color: var(--ink3, #8a93a0); border-bottom: 1px solid var(--navy, #173a63); padding: 5px 8px; }
+.bnf-sign-table td { padding: 6px 8px; border-bottom: 1px solid var(--border-softer, #eef0f3); }
+.bnf-sign-me td { background: var(--blue-bg, #eaf1fb); font-weight: 600; }
+.bnf-sign-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 4px 0; border-bottom: 1px dashed var(--border-softer, #eef0f3); }
+.bnf-sign-box { margin-top: 16px; border: 1px solid var(--border, #e6e8ec); border-radius: 10px; padding: 12px 14px; font-size: 13px; background: var(--page, #f6f7f9); }
+.bnf-sign-done { background: #e9f6ef; border-color: #bfe4cf; }
+.bnf-sign-inputrow { display: flex; gap: 8px; margin-top: 8px; }
+.bnf-sign-inputrow input { flex: 1; border: 1px solid var(--border, #e6e8ec); border-radius: 8px; padding: 8px 10px; font: inherit; }
+.bnf-sign-inputrow button {
+  border: none; border-radius: 8px; background: var(--navy, #173a63); color: #fff;
+  padding: 8px 16px; font: inherit; font-weight: 600; cursor: pointer;
+}
+.bnf-sign-inputrow button:disabled { opacity: .5; cursor: default; }
+.bnf-sign-footer { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+.bnf-sign-link { border: none; background: none; padding: 0; color: var(--blue, #2e6fc7); font: inherit; font-size: 12.5px; cursor: pointer; text-decoration: underline; }
+.bnf-sign-toast { margin-top: 10px; font-size: 12.5px; color: var(--green, #1f8a5b); }
+
+/* ===== Exports + book split-up (D-021, 2026-08-25) ===== */
+.bnf-com-booked-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.bnf-com-bs-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.bnf-com-bs-card { border: 1px solid var(--border, #e6e8ec); border-radius: 10px; background: var(--card, #fff); padding: 12px 14px; }
+.bnf-com-bs-card-name { font-weight: 600; font-size: 13.5px; color: var(--navy, #173a63); }
+.bnf-com-bs-card-meta { font-size: 12px; color: var(--ink2, #5b6573); margin-top: 2px; }
+.bnf-com-bs-months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; margin-top: 10px; align-items: end; height: 46px; }
+.bnf-com-bs-month { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; height: 100%; }
+.bnf-com-bs-bar { width: 100%; border-radius: 2px 2px 0 0; background: var(--blue, #2e6fc7); min-height: 2px; }
+.bnf-com-bs-bar.empty { background: var(--border, #e6e8ec); }
+.bnf-com-bs-monthlabel { font-size: 8.5px; color: var(--ink3, #8a93a0); }
+.bnf-com-bs-unknown { color: var(--amber, #a9710a); }
+
+/* Payee readiness (2026-08-25, D-019) */
+.bnf-com-payee-flag { font-size: 11px; color: var(--rose, #c1352e); white-space: nowrap; cursor: help; }
+.bnf-sign-payee { background: var(--rose-bg, #faeceb); border-color: var(--rose, #c1352e); }
+
+/* ===== Statement documents — upload, read, review (D-032, 2026-09-04) =====
+   Reuses the bb-* panel/badge primitives and bnf-com-table wholesale; only
+   the pieces with no existing equivalent are declared here. */
+
+/* The drop zone. Sits inside .bnf-com-filters so it shares that row's layout. */
+.bnf-com-drop {
+  flex: 1 1 auto;
+  min-width: 260px;
+  padding: 10px 14px;
+  border: 1px dashed var(--border, #e6e8ec);
+  border-radius: 8px;
+  background: var(--page, #f6f7f9);
+  color: var(--ink2, #5b6573);
+  font-size: 12.5px;
+  cursor: pointer;
+  text-align: center;
+}
+.bnf-com-drop:hover { border-color: var(--blue, #2e6fc7); color: var(--ink, #1c2430); }
+.bnf-com-dropover {
+  border-color: var(--blue, #2e6fc7);
+  background: var(--blue-bg, #eaf1fb);
+  color: var(--navy, #173a63);
+}
+
+/* Document ABOVE the read, both full width — the benefits Documents-tab
+   arrangement, and for the same reason. The review is a twelve-column table of
+   inputs; beside a viewer it cannot show the amount and the match chip at once,
+   which are the two columns a reviewer is actually there for. Stacked, every
+   column fits and the document is one scroll away. "Hide document" collapses
+   the top pane when the table wants the whole screen. */
+.bnf-com-doccols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  align-items: start;
+  margin-top: 12px;
+}
+
+/* Capped so the review below is always reachable without a long scroll; the
+   viewer and the sheet grid each scroll inside it. */
+.bnf-com-docpane { max-height: 560px; overflow: auto; }
+.bnf-com-scanpane { min-width: 0; }
+
+.bnf-com-docmeta {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 10px; margin-bottom: 10px;
+}
+
+/* Spreadsheet source view — the XLSX answer to the PDF viewer. Deliberately
+   dense and monospaced: it is being read against a table, not browsed. */
+.bnf-com-sheetview { max-height: 60vh; overflow: auto; }
+.bnf-com-sheettable { border-collapse: collapse; font-family: var(--font-mono); font-size: 10.5px; }
+.bnf-com-sheettable td {
+  border: 1px solid var(--border-softer, #f0f1f4);
+  padding: 2px 6px; white-space: nowrap; color: var(--ink, #1c2430);
+}
+.bnf-com-sheetrownum {
+  position: sticky; left: 0;
+  background: var(--page, #f6f7f9); color: var(--ink3, #8a93a0);
+  text-align: right; min-width: 28px;
+}
+
+/* Reading / failed / not-yet-read states. */
+.bnf-com-scanrun, .bnf-com-scanfail, .bnf-com-scanidle { padding: 6px 2px; }
+.bnf-com-scanrun .progress-bar-track { margin: 10px 0 6px; }
+.bnf-com-scanfail .btn, .bnf-com-scanidle .btn { margin-top: 10px; }
+
+/* The review itself. */
+.bnf-com-scanhead {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
+}
+.bnf-com-scanactions { display: flex; gap: 8px; flex-shrink: 0; }
+
+.bnf-com-scantotals {
+  display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center;
+  padding: 8px 12px; margin-bottom: 12px;
+  border: 1px solid var(--border, #e6e8ec); border-left: 3px solid var(--green, #1f8a5b);
+  border-radius: 8px; background: var(--card, #fff); font-size: 12px;
+}
+/* Declared and read disagree — the one check that catches a missed page. */
+.bnf-com-scanoff { border-left-color: var(--amber, #a9710a); background: var(--amber-bg, #fdf5e6); }
+
+.bnf-com-scanheader {
+  display: flex; flex-wrap: wrap; gap: 10px 14px; margin-bottom: 6px;
+}
+.bnf-com-scanheader label {
+  display: flex; flex-direction: column; gap: 3px;
+  font-size: 11px; color: var(--ink2, #5b6573);
+}
+.bnf-com-scanheader input, .bnf-com-scanheader select {
+  padding: 5px 8px; font-size: 12.5px; font-family: var(--font-sans);
+  border: 1px solid var(--border, #e6e8ec); border-radius: 6px;
+  background: var(--card, #fff); color: var(--ink, #1c2430); min-width: 130px;
+}
+.bnf-com-scanagency { margin: 0 0 10px; }
+.bnf-com-scanagency code { font-family: var(--font-mono); font-size: 11px; }
+
+.bnf-com-scanlines td { vertical-align: top; padding: 4px 5px; }
+.bnf-com-scanlines th { padding: 6px 5px; font-size: 10.5px; white-space: nowrap; }
+.bnf-com-scanlines input.bnf-intake-input, .bnf-com-scanlines select.bnf-intake-input {
+  font-size: 11.5px; padding: 3px 5px; width: 100%; min-width: 0; box-sizing: border-box;
+}
+/* A floor, so the table scrolls inside its own pane instead of squeezing every
+   input down to two characters when the chat rail is open. The percentages
+   below then divide THIS width, not whatever is left over. */
+.bnf-com-scanlines { min-width: 940px; }
+
+/* Column widths, so the money and the match verdict are never the ones pushed
+   off the edge. */
+.bnf-com-scanlines col.c-idx    { width: 46px; }
+.bnf-com-scanlines col.c-client { width: 17%; }
+.bnf-com-scanlines col.c-policy { width: 10%; }
+.bnf-com-scanlines col.c-plan   { width: 12%; }
+.bnf-com-scanlines col.c-cov    { width: 10%; }
+.bnf-com-scanlines col.c-month  { width: 12%; }
+.bnf-com-scanlines col.c-prem   { width: 9%; }
+.bnf-com-scanlines col.c-lives  { width: 5%; }
+.bnf-com-scanlines col.c-amt    { width: 9%; }
+.bnf-com-scanlines col.c-kind   { width: 13%; }
+.bnf-com-scanlines col.c-match  { width: 1%; white-space: nowrap; }
+.bnf-com-scanlines col.c-x      { width: 22px; }
+.bnf-com-scanlines td .bb-badge { white-space: nowrap; max-width: 210px; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: middle; }
+.bnf-com-scanidx {
+  color: var(--ink3, #8a93a0); font-family: var(--font-mono); font-size: 11px;
+  text-align: right; white-space: nowrap;
+}
+/* A row the reader was unsure of. Amber, not rose: it is a "look at this",
+   not an error — an offline read flags every row this way by design. */
+.bnf-com-scanlow td { background: var(--amber-bg, #fdf5e6); }
+.bnf-com-scanfoot { margin-top: 10px; }
+
+/* ===== Statement version history (D-032) =====
+   Rail on the left, the selected version or diff on the right. Read-only by
+   design — there is no Restore here, because this module corrects money by
+   reversing it and a posted receipt is frozen. */
+
+.bnf-com-histpane { margin-top: 12px; }

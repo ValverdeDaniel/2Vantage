@@ -1,0 +1,18 @@
+# Intended differences between old Vantage and 2Vantage in client FILES (plan.md §12.7; Q.5 "Judging").
+# Screens have their own register: browser/look/accepted.json. Empty until the Fidelity lane arrives (slice 28).
+#
+# One entry per difference the plan causes on purpose. Anything that differs and is not listed here (or within
+# Q.5's tolerances) fails the lane. Daniel signs each entry once; a changed file is judged again.
+#
+#   - item: J25                  # the plan item that causes it (an X.3 row ID or an OQ)
+#     deal: GD1                  # the golden deal it shows on
+#     file: proposal-pdf         # workbook | proposal-pdf | deck | paper | carrier:<name> | questionnaire | stop-loss
+#     where: "page 2, plan table header"   # sheet!cell, page and block, or slide and shape
+#     old: "what the old app prints"
+#     new: "what 2Vantage prints"
+#     why: "one sentence, in the plan's words"
+#     signed_by: null            # Daniel, once he agrees
+#     signed_on: null            # YYYY-MM-DD
+#
+# A whole class of difference (a renamed sheet, a dropped page) may be one entry with `where: all`.
+intended: []

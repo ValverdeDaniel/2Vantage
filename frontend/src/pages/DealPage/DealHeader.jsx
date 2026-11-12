@@ -1,54 +1,25 @@
 import { useState } from 'react';
-import { useReopenDeal, useUpdateDeal } from '../../api/deals';
-import { LOST, manualStages, relationshipLabel } from '../../api/meta';
-import { errorText } from '../../lib/errors';
+import { useUpdateDeal } from '../../api/deals';
+import { LOST, manualStages, relationshipLabel, stageLabel } from '../../api/meta';
+import { initialsOf, stagePillClass, statusBadgeClass } from '../../lib/dealLook';
 import { formatDate } from '../../lib/format';
-import Badge from '../../ui/Badge';
-import Button from '../../ui/Button';
 import Menu from '../../ui/Menu';
 import SaveStatus from '../../ui/SaveStatus';
-import VisuallyHidden from '../../ui/VisuallyHidden';
 import ActivityDrawer from './ActivityDrawer';
 import ClientDialog from './ClientDialog';
-import styles from './DealHeader.module.css';
 import EffectiveDate from './EffectiveDate';
 import LinesPicker from './LinesPicker';
+import LostBanner from './LostBanner';
 import LostDialog from './LostDialog';
 import OwnerPicker from './OwnerPicker';
-import StageStepper from './StageStepper';
 
-// "Lost — <reason>" with Reopen. A lost deal stays editable (plan.md §3.6); only its stage waits for Reopen.
-function LostBanner({ deal }) {
-  const reopen = useReopenDeal(deal.id);
-  return (
-    <div className={styles.lostBanner} role="status">
-      <span aria-hidden="true" className={styles.lostIcon}>
-        ⊘
-      </span>
-      <p className={styles.lostText}>
-        <strong>Lost</strong> — {deal.lost_reason}
-        {deal.lost_at && <span className={styles.lostDate}> (marked lost {formatDate(deal.lost_at)})</span>}
-      </p>
-      {reopen.isError && (
-        <span role="alert" className={styles.inlineError}>
-          {errorText(reopen.error)}
-        </span>
-      )}
-      <Button size="sm" onClick={() => reopen.mutate()} busy={reopen.isPending}>
-        Reopen
-      </Button>
-    </div>
-  );
-}
-
-// Stage ▾ — intake / quoting / proposal by hand (sold comes from marking a plan sold; lost from Mark lost).
+// Stage ▾ — intake, quoting or proposal by hand (A30); sold comes from marking a plan sold, lost from Mark as lost.
 function StageMenu({ deal, meta, update }) {
   const lost = deal.stage === LOST;
   return (
     <Menu
       label="Stage"
       ariaLabel="Set stage"
-      align="end"
       disabled={lost}
       title={lost ? 'Reopen the deal to change its stage.' : undefined}
       items={manualStages(meta).map((stage) => ({
@@ -64,59 +35,66 @@ function StageMenu({ deal, meta, update }) {
 }
 
 /**
- * Deal header (plan.md §8.4): client name (edit dialog), effective date, owner, actions, Lines, stage stepper,
- * lost banner. Every change goes through PATCH and refreshes the rest of the deal's queries.
+ * The header strip on every tab (plan.md §8.4; new against the old app, M112), built from the old Overview header's
+ * classes (bnf-ov-*): the client's name (opens the client dialog until slice 67) and status, the stage pill with
+ * Stage ▾, the effective date and the owner, Lines, Activity with Revert, Mark as lost… and the lost banner. Every
+ * change goes through PATCH and refreshes the rest of the deal's queries.
  */
 export default function DealHeader({ deal, meta }) {
   const [open, setOpen] = useState(null); // 'client' | 'lost' | 'activity'
   const stageUpdate = useUpdateDeal(deal.id);
   const lost = deal.stage === LOST;
   const close = () => setOpen(null);
+  const { client } = deal;
 
   return (
-    <header className={styles.header}>
-      {lost && <LostBanner deal={deal} />}
-
-      <div className={styles.topRow}>
-        <div className={styles.facts}>
-          <h1 className={styles.name}>
-            <button type="button" className={styles.nameButton} onClick={() => setOpen('client')}>
-              {deal.client.name}
-              <span aria-hidden="true" className={styles.pencil}>
-                ✎
-              </span>
-              <VisuallyHidden> (edit name and type)</VisuallyHidden>
-            </button>
-          </h1>
-          <Badge tone="neutral">{relationshipLabel(meta, deal.client.relationship)}</Badge>
-          <span aria-hidden="true" className={styles.sep}>
-            ·
-          </span>
-          <EffectiveDate deal={deal} />
-          <span aria-hidden="true" className={styles.sep}>
-            ·
-          </span>
-          <OwnerPicker deal={deal} />
+    <div className="bb-panel bnf-ov-header">
+      <div className="bnf-ov-identity">
+        <div className="bb-avatar bnf-ov-avatar" aria-hidden="true">
+          {initialsOf(client.name)}
         </div>
-        <div className={styles.actions}>
-          <Button variant="ghost" onClick={() => setOpen('activity')}>
+        <div className="bnf-ov-identity-main">
+          <button
+            type="button"
+            className="bnf-ov-name bnf-wq-namebtn"
+            title="Edit the client's name and status"
+            onClick={() => setOpen('client')}
+          >
+            {client.name}
+          </button>
+          <div className="bnf-ov-chips">
+            <span className={statusBadgeClass(client.relationship)} title="Client status">
+              {relationshipLabel(meta, client.relationship)}
+              {client.client_since ? ` · since ${formatDate(client.client_since)}` : ''}
+            </span>
+            <span className={stagePillClass(deal.stage)} title="Deal stage">
+              {stageLabel(meta, deal.stage)}
+            </span>
+            <SaveStatus mutation={stageUpdate} />
+            <EffectiveDate deal={deal} />
+            <OwnerPicker deal={deal} />
+          </div>
+        </div>
+        <div className="bnf-ov-titlebtns">
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setOpen('activity')}>
             Activity
-          </Button>
+          </button>
           <StageMenu deal={deal} meta={meta} update={stageUpdate} />
-          {!lost && <Button onClick={() => setOpen('lost')}>Mark lost</Button>}
+          {!lost && (
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setOpen('lost')}>
+              Mark as lost…
+            </button>
+          )}
         </div>
       </div>
-
-      <LinesPicker deal={deal} meta={meta} />
-
-      <div className={styles.stageRow}>
-        <StageStepper stage={deal.stage} meta={meta} />
-        <SaveStatus mutation={stageUpdate} />
+      <div className="bnf-ov-facts">
+        <LinesPicker deal={deal} meta={meta} />
       </div>
+      {lost && <LostBanner deal={deal} />}
 
       {open === 'client' && <ClientDialog deal={deal} meta={meta} onClose={close} />}
       {open === 'lost' && <LostDialog deal={deal} onClose={close} />}
       <ActivityDrawer dealId={deal.id} open={open === 'activity'} onClose={close} />
-    </header>
+    </div>
   );
 }

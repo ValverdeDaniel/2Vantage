@@ -1,0 +1,17 @@
+{
+  "name": "2vantage-browser",
+  "private": true,
+  "description": "The Look and Walk lanes (plan.md §12.7, Q.5): old Vantage and 2Vantage driven in the installed Chrome through playwright-core. Output goes outside the repository.",
+  "type": "module",
+  "scripts": {
+    "look": "node look/run.mjs",
+    "walk": "node walk/run.mjs",
+    "check-loaded": "node check/loaded.mjs"
+  },
+  "dependencies": {
+    "pixelmatch": "8.0.0",
+    "playwright-core": "1.62.1",
+    "pngjs": "7.0.0",
+    "yaml": "2.9.1"
+  }
+}

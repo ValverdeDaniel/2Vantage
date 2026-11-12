@@ -1,0 +1,253 @@
+/* Benefits — the Benefits home: the New clients and Work queue tables (the
+   Clients book's table lives in benefits-radar.css). */
+
+/* ===== BENEFITS WORK QUEUE — unified cases + reminders dashboard ===== */
+
+.bnf-wq-headbtns { display: flex; gap: 10px; }
+
+/* The view pill, under the summary cards and right above the filters. */
+.bnf-home-viewbar { display: flex; align-items: center; margin: 0 0 12px; }
+
+.bnf-wq-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.bnf-wq-chiprow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.bnf-wq-filterlabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  min-width: 38px;
+}
+.bnf-wq-chip {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.bnf-wq-chip:hover { border-color: var(--blue); color: var(--blue); }
+.bnf-wq-chip-on {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+.bnf-wq-selects { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.bnf-wq-selects select {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  background: #fff;
+  color: var(--ink);
+}
+.bnf-wq-clear {
+  background: none;
+  border: none;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.bnf-wq-clear:hover { text-decoration: underline; }
+
+/* Client search — typeahead next to the Type/Due chip rows */
+.bnf-wq-toprow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.bnf-wq-chipcol { display: flex; flex-direction: column; gap: 10px; }
+.bnf-wq-search { position: relative; width: 220px; }
+.bnf-wq-search input {
+  width: 100%;
+  padding: 6px 26px 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  background: #fff;
+  color: var(--ink);
+}
+.bnf-wq-search input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(46, 111, 199, 0.12);
+}
+.bnf-wq-search-x {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: var(--ink3);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.bnf-wq-search-x:hover { color: var(--ink); }
+.bnf-wq-search-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-modal);
+  z-index: 30;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.bnf-wq-search-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  cursor: pointer;
+}
+.bnf-wq-search-menu button:hover { background: var(--blue-bg); color: var(--blue); }
+.bnf-wq-search-empty {
+  padding: 10px;
+  font-size: 12px;
+  color: var(--ink3);
+}
+
+/* Work queue: Client · Deal size · Type · Next action · Client response · Stage/category · Due · Owner · Archive */
+.bnf-wq-head,
+.bnf-wq-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.95fr 0.8fr 1.8fr 1.5fr 1.15fr 0.8fr 0.8fr 4.2rem;
+  align-items: center;
+  gap: 12px;
+}
+/* New clients: Client · Deal size · Next action · Client response · Stage · Due · Owner · Archive */
+.bnf-nc-head,
+.bnf-nc-row {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr 2fr 1.55fr 1.25fr 0.85fr 0.85fr 4.2rem;
+  align-items: center;
+  gap: 12px;
+}
+.bnf-wq-th-type, .bnf-wq-th-extra { font-size: 13px; }
+.bnf-wq-stagecell { display: flex; align-items: center; gap: 8px; }
+.bnf-wq-bar { flex: 1; max-width: 70px; }
+.bnf-wq-overdue { color: var(--rose); font-weight: 700; }
+
+/* A queue row has two targets: the name opens the record, the action chip
+   (.bnf-action-btn, benefits.css) does the next action, and the row background
+   keeps the action. `.bb-account-name` is shared with the transfers and clients
+   dashboards, so this class ONLY neutralises the button UA styling — it never
+   restates font-size/weight (this sheet loads after App.css at equal
+   specificity, so `font:`/`font-size: inherit` would win and shrink the name).
+   inline-block keeps the hover underline hugging the text instead of running
+   the whole column; vertical-align kills the baseline gap above .bb-account-sub. */
+.bnf-wq-namebtn {
+  display: inline-block;
+  vertical-align: top;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  white-space: normal;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+.bnf-wq-namebtn:hover { color: var(--blue); text-decoration: underline; }
+.bnf-wq-namebtn:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+
+/* Narrow: Client · Deal size · Next action · Due. Owner is hidden per TABLE —
+   an unscoped .bnf-th-owner rule used to shift the Clients book's cells too. */
+@media (max-width: 900px) {
+  .bnf-wq-head, .bnf-wq-row,
+  .bnf-nc-head, .bnf-nc-row { grid-template-columns: 1.6fr 0.85fr 1.8fr 1.4fr 0.85fr 4.2rem; }
+  .bnf-wq-th-type, .bnf-wq-th-extra,
+  .bnf-wq-head .bnf-th-owner, .bnf-wq-row .bnf-th-owner,
+  .bnf-nc-head .bnf-th-owner, .bnf-nc-row .bnf-th-owner { display: none; }
+}
+/* Phone: the row Archive column would be clipped, so it goes; archive from
+   the deal's Overview there (the same button, tooltip and confirm). */
+@media (max-width: 640px) {
+  .bnf-wq-head, .bnf-wq-row,
+  .bnf-nc-head, .bnf-nc-row { grid-template-columns: 1.5fr 0.8fr 1.7fr 1.3fr 0.8fr; }
+  .bnf-wq-head .bnf-th-archive, .bnf-wq-row .bnf-th-archive,
+  .bnf-nc-head .bnf-th-archive, .bnf-nc-row .bnf-th-archive { display: none; }
+}
+
+
+/* --- The Client response column (D-159, client-responses-dashboard.md §2.2) --
+   shared/home/HomeCells.jsx ResponseCell: whether we have answered what the
+   client sent, over when they last reached out. Its chips are NOT
+   `.bnf-action-chip` (guides ring a row's first one). */
+.bnf-th-response { min-width: 0; }
+/* "CLIENT RESPONSE ▼" wraps rather than clip (headers never truncate). */
+.bnf-th-response.bnf-th-sortable { white-space: normal; line-height: 1.3; }
+.bnf-response-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.bnf-response-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.bnf-response-chip:hover { text-decoration: underline; }
+.bnf-response-chip:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+.bnf-response-question { background: var(--rose-bg); color: var(--rose); }
+.bnf-response-answers { background: var(--violet-bg); color: var(--violet); }
+.bnf-response-answering { background: var(--amber-bg); color: var(--amber); font-weight: 600; }
+.bnf-response-handled { background: var(--green-bg); color: var(--green); font-weight: 600; }
+.bnf-response-when {
+  margin-top: 3px;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--ink2);
+  overflow-wrap: anywhere;
+}
+/* The "Responses first" toggle in the filters, and its count. */
+.bnf-responses-count {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--rose-bg);
+  color: var(--rose);
+  font-weight: 700;
+}
+/* The Client responses summary card is a button: no UA chrome. */
+.bnf-responses-card {
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.bnf-responses-card:hover { border-color: var(--rose); }
+.bnf-responses-card:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }

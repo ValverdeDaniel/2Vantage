@@ -1,0 +1,165 @@
+/* ===== Export cards (the close-out packet) and the census lens's first-rows
+   table. The RFP page stopped using the cards in D-063; the preview table
+   below now renders the Census tab's format lens. ===== */
+.bnf-export-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+}
+.bnf-export-card { padding: 16px; }
+/* A previewing card takes the full grid row so the table gets real estate. */
+.bnf-export-card-expanded { grid-column: 1 / -1; }
+.bnf-export-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.bnf-export-toolbar .bb-panel-title { margin-bottom: 0; }
+.bnf-export-chev {
+  display: inline-block;
+  margin-left: 6px;
+  transition: transform 0.15s ease;
+}
+.bnf-export-chev-open { transform: rotate(90deg); }
+.bnf-export-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.bnf-export-name {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bnf-export-fmt {
+  font-size: 10.5px;
+  color: var(--ink2);
+  background: var(--page);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.bnf-export-hint {
+  font-size: 12px;
+  color: var(--ink2);
+  margin-top: 8px;
+}
+.bnf-export-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.bnf-export-actions .btn { flex: 0 0 auto; white-space: nowrap; }
+.bnf-export-preview {
+  margin-top: 12px;
+  animation: bnf-export-reveal 0.18s ease;
+}
+@keyframes bnf-export-reveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+.bnf-export-preview-scroll {
+  overflow-x: auto;
+  max-height: 62vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.bnf-export-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+.bnf-export-preview-table th {
+  background: var(--navy);
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+  padding: 6px 10px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.bnf-export-preview-table td {
+  padding: 5px 10px;
+  border-top: 1px solid var(--border-softer);
+  color: var(--ink);
+}
+.bnf-export-preview-table tbody tr:nth-child(even) { background: var(--page); }
+/* Row-number column stays pinned during horizontal scroll. */
+.bnf-export-preview-table td.bnf-export-rownum {
+  position: sticky;
+  left: 0;
+  background: var(--page);
+  border-right: 1px solid var(--border);
+  color: var(--ink2);
+  text-align: right;
+  z-index: 1;
+}
+.bnf-export-preview-table th.bnf-export-rownum {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+}
+.bnf-export-cell-missing {
+  background: var(--amber-bg);
+  color: var(--amber);
+  box-shadow: inset 0 0 0 1px var(--amber);
+}
+.bnf-export-empty {
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink2);
+  font-size: 13px;
+}
+.bnf-export-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--ink2);
+}
+.bnf-export-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--amber);
+}
+.bnf-export-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--amber-bg);
+  box-shadow: inset 0 0 0 1px var(--amber);
+}
+.bnf-export-pdf {
+  width: 100%;
+  height: 640px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-top: 12px;
+}
+.bnf-export-card-expanded .bnf-export-pdf { height: 78vh; }
+.bnf-export-handoff {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+.bnf-export-handoff .btn { flex: 0 0 auto; white-space: nowrap; }

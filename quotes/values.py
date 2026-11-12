@@ -13,7 +13,7 @@ _YES = {'yes', 'y', 'true', '1'}
 _NO = {'no', 'n', 'false', '0'}
 
 
-def _number_text(raw):
+def number_text(raw):
     text = str(raw).replace('$', '').replace(',', '').replace('%', '').strip()
     return text if _NUMBER.match(text) else None
 
@@ -38,12 +38,12 @@ def clean(field, raw):
     if kind == 'text':
         return text, None
     if kind in ('amount', 'percent'):
-        number = _number_text(text)
+        number = number_text(text)
         return (_format_number(number) if number is not None else text), None
     if kind in ('rate', 'rate4'):
         if text.lower() in _BLANK_RATE:
             return '', None
-        number = _number_text(text)
+        number = number_text(text)
         if number is None:
             return text, f'{label} takes a number, not "{text}"'
         places = 2 if kind == 'rate' else 4
@@ -54,7 +54,7 @@ def clean(field, raw):
     if kind == 'number':
         if not text:
             return '', None
-        number = _number_text(text)
+        number = number_text(text)
         if number is None:
             return text, f'{label} takes a number, not "{text}"'
         return _format_number(number), None
@@ -87,5 +87,5 @@ def as_float(value):
     """A stored value as a number, or None (carrier text such as "20% after deductible" is not a number)."""
     if value in (None, ''):
         return None
-    text = _number_text(value)
+    text = number_text(value)
     return float(text) if text is not None else None

@@ -1,0 +1,231 @@
+/* The Excel view (D-194, close/WorkbookViewer.jsx): the checks strip, the grid
+   on a stage that never outgrows the window, and the tabs along the bottom as
+   Excel draws them. */
+.bnf-xw-mode { display: inline-flex; gap: 4px; }
+.bnf-xw-checks { display: flex; flex-direction: column; gap: 4px; }
+.bnf-xw-capped { color: var(--ink2); font-size: 12px; }
+.bnf-xw-checklist {
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.bnf-xw-check {
+  padding: 1px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.bnf-xw-check:hover { text-decoration: underline; }
+.bnf-xw-stage {
+  border: 1px solid var(--border);
+  border-radius: 6px 6px 0 0;
+  background: #fff;
+  overflow: hidden;
+}
+.bnf-xw-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-top: -10px;
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 6px 6px;
+  background: #f3f3f3;
+  padding: 0 6px;
+}
+.bnf-xw-tab {
+  padding: 4px 12px;
+  border: 0;
+  border-right: 1px solid #d4d4d4;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  color: #444;
+  cursor: pointer;
+}
+.bnf-xw-tab:hover { background: #e9e9e9; }
+.bnf-xw-tab-on {
+  background: #fff;
+  color: #217346;
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 #217346;
+}
+
+/* The grid (shared/WorkbookGrid.jsx). Arial as the file is, cells cut at
+   their edge (never "…"), the letters and row numbers in Excel's grey,
+   frozen panes held by sticky offsets set inline. */
+.xg-scroll {
+  overflow: auto;
+  max-height: calc(100vh - var(--chrome-top) - 190px);
+  min-height: 320px;
+  position: relative;
+}
+.xg-sheet { position: relative; }
+.xg-table {
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: Arial, "Liberation Sans", Helvetica, sans-serif;
+  color: #000;
+  background: #fff;
+}
+.xg-table td.xg-cell {
+  padding: 0 2px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+  line-height: 1.15;
+  vertical-align: top;
+  background-clip: padding-box;
+}
+.xg-gridlines td.xg-cell { box-shadow: inset -1px -1px 0 #e1e1e1; }
+.xg-table th {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 400;
+  color: #444;
+  background: #f3f3f3;
+  border-right: 1px solid #d4d4d4;
+  border-bottom: 1px solid #d4d4d4;
+  padding: 0;
+  text-align: center;
+}
+.xg-colhead { position: sticky; top: 0; z-index: 5; }
+.xg-rowhead { position: sticky; left: 0; z-index: 5; }
+.xg-corner { position: sticky; top: 0; left: 0; z-index: 8; }
+.xg-head-on { background: #d3f0e0 !important; color: #217346 !important; font-weight: 700 !important; }
+.xg-freeze-row { border-bottom: 1px solid #9aa0a6 !important; }
+.xg-freeze-col { border-right: 1px solid #9aa0a6 !important; }
+.xg-sel { outline: 2px solid #217346; outline-offset: -2px; }
+.xg-mark-bad { box-shadow: inset 0 0 0 9999px rgba(224, 49, 49, 0.12); }
+.xg-mark-warn { box-shadow: inset 0 0 0 9999px rgba(217, 140, 0, 0.13); }
+.xg-pad { visibility: hidden; }
+.xg-link { cursor: pointer; }
+.xg-spill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  white-space: nowrap;
+  overflow: hidden;
+  pointer-events: none;
+  padding: 0 2px;
+  box-sizing: border-box;
+}
+.xg-dd {
+  position: absolute;
+  right: -17px;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid #a6a6a6;
+  background: #f3f3f3;
+  font-size: 10px;
+  line-height: 14px;
+  color: #333;
+  cursor: pointer;
+  z-index: 9;
+}
+.xg-sel:has(.xg-dd) { position: relative; overflow: visible; }
+.xg-img { position: absolute; pointer-events: none; }
+.xg-pop { position: absolute; z-index: 10; }
+.xg-prompt {
+  max-width: 280px;
+  padding: 6px 8px;
+  border: 1px solid #c9c38f;
+  background: #ffffe1;
+  font-family: Arial, sans-serif;
+  font-size: 11.5px;
+  color: #000;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+.xg-prompt b { display: block; margin-bottom: 2px; }
+.xg-list {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #a6a6a6;
+  background: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 11.5px;
+  box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.2);
+}
+.xg-list-note {
+  padding: 4px 8px;
+  background: #f3f3f3;
+  color: #555;
+  font-size: 11px;
+  border-bottom: 1px solid #e1e1e1;
+}
+.xg-list-item { padding: 2px 8px; white-space: nowrap; }
+.xg-list-on { background: #d3f0e0; }
+
+/* Printed pages (close/WorkbookPages.jsx): one sheet of letter paper at a
+   time, the tab drawn on it at its print scale. */
+.bnf-xw-pages { display: flex; flex-direction: column; gap: 8px; }
+.bnf-xw-pages-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--ink2);
+}
+.bnf-xw-pages-head .btn { flex: 0 0 auto; }
+.bnf-xw-pagechips { display: flex; flex-wrap: wrap; gap: 4px; }
+.bnf-xw-paperstage {
+  padding: 16px;
+  background: #e6e8eb;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  overflow: auto;
+}
+.bnf-xw-paper {
+  position: relative;
+  flex: 0 0 auto;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(15, 45, 79, 0.25);
+  overflow: hidden;
+}
+.bnf-xw-print { position: absolute; transform-origin: 0 0; }
+.bnf-xw-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: Calibri, Carlito, Arial, sans-serif;
+  color: #000;
+}
+.bnf-xw-papernote {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--amber-bg);
+  font-size: 11.5px;
+}
+/* A cell's box: the row's own height, clipped as Excel clips it. */
+.xg-in {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.xg-text { max-width: 100%; }
+td.xg-cell .xg-in { white-space: inherit; }
+.xg-rowhead-in {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  line-height: 1;
+}

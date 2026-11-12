@@ -1,0 +1,64 @@
+{
+ "deal": "GD2",
+ "client": "Golden Small Shop (synthetic)",
+ "checked_by": null,
+ "checked_on": null,
+ "method": null,
+ "note": "Worked out by hand in M3-M6, independently of the app; not yet signed. Stephanie signs it before slice 7, and a figure changes only with her agreement (plan.md §12.6).",
+ "plans": {
+  "S": {
+   "monthly": 5342,
+   "annual": 64104,
+   "change": null
+  },
+  "S2": {
+   "monthly": 5823,
+   "annual": 69876,
+   "change": {
+    "delta": 5772,
+    "pct": 9.0
+   }
+  },
+  "SA": {
+   "monthly": 5065,
+   "annual": 60780,
+   "change": {
+    "delta": -3324,
+    "pct": -5.2
+   }
+  }
+ },
+ "packages": {
+  "medical": {
+   "Current": {
+    "annual": 64104,
+    "same_people": true,
+    "change": null
+   },
+   "Renewal": {
+    "annual": 69876,
+    "same_people": true,
+    "change": {
+     "delta": 5772,
+     "pct": 9.0
+    }
+   },
+   "AmeriHealth": {
+    "annual": 60780,
+    "same_people": true,
+    "change": {
+     "delta": -3324,
+     "pct": -5.2
+    }
+   }
+  }
+ },
+ "recommendation": {
+  "medical": {
+   "covered": true,
+   "plans": [
+    "SA"
+   ]
+  }
+ }
+}

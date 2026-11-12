@@ -1,0 +1,47 @@
+/* ===== Documents tab: the chat rail + click-to-source (2026-09-07) =====
+
+   The commissions Documents tab now has the same three panes the benefits one
+   does — document, read, chat. The chat's INTERNALS reuse benefits' .bnf-scanchat
+   / .bnf-advisor-msg rules (every stylesheet is global, registered in main.jsx),
+   so only the column that holds it is new here. */
+.bnf-com-workcols {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 12px;
+}
+.bnf-com-workstack { flex: 1 1 auto; min-width: 0; }
+@media (max-width: 1100px) {
+  .bnf-com-workcols { flex-wrap: wrap; }
+}
+
+.bnf-com-docactions {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* The source affordance on a review row. A line the reader could quote is
+   clickable back to the document; one it could not stays inert and says so on
+   hover, rather than offering a jump that lands nowhere. */
+.bnf-com-scansrc { cursor: pointer; }
+.bnf-com-scansrc:hover { background: #eaf1fb; }
+.bnf-com-scansrc .bb-drop-meta { color: #2e6fc7; }
+.bnf-com-scanrow-active > td { background: #eaf1fb; }
+.bnf-com-scanrow-active > td:first-child {
+  box-shadow: inset 3px 0 0 #2e6fc7;
+}
+
+/* The spreadsheet's answer to the PDF highlight. */
+.bnf-com-sheetrow-hit > td {
+  background: var(--amber-bg, #fdf3e0);
+  box-shadow: inset 0 -1px 0 var(--amber, #a9710a), inset 0 1px 0 var(--amber, #a9710a);
+}
+.bnf-com-sheetmiss { padding: 4px 2px 8px; color: var(--amber, #a9710a); }
+
+/* A line that matched because somebody taught us the carrier's spelling
+   (D-035). Worth marking: "the names agree" and "we were told these are the
+   same people" are different facts, and only one of them can be wrong in a
+   way a person should go look at. */
+.bnf-com-viaalias { opacity: 0.85; }

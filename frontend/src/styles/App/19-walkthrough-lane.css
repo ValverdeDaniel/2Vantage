@@ -1,0 +1,141 @@
+/* Walkthrough lane */
+
+.dev-preflight {
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.dev-preflight-ok {
+  background: var(--green-bg);
+  border-left: 4px solid var(--green);
+  color: var(--green);
+}
+
+.dev-seeder-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.dev-seeder-row code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 6px;
+}
+
+.dev-guide-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dev-suite-card-blocked { opacity: 0.62; }
+
+/* The live banner. Fixed above everything, but pointer-transparent so it can
+   never swallow a click meant for the app or the guide card beneath it. */
+.dev-runner-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.dev-runner-banner-inner {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 14px;
+  margin-top: 6px;
+  background: var(--navy);
+  color: #fff;
+  border-radius: 20px;
+  font-size: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.dev-runner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green-dot, #47c27b);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.dev-runner-count { font-family: var(--font-mono); opacity: 0.85; }
+.dev-runner-name { font-weight: 600; }
+.dev-runner-step { opacity: 0.8; }
+.dev-runner-failed { color: #ffb4b0; font-weight: 600; }
+
+/* Per-step table inside a walkthrough failure */
+.dev-steps-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.dev-steps-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.dev-steps-table tr.is-failed { background: var(--rose-bg); }
+.dev-steps-table tr.is-warn { background: var(--amber-bg); }
+.dev-step-num { font-family: var(--font-mono); color: var(--ink2); width: 34px; }
+.dev-step-why { font-family: var(--font-mono); font-size: 11px; color: var(--rose); }
+
+/* ===== ERROR BOUNDARY =====
+   Shown when a render throws. Before this the frontend had no boundary at all,
+   so one undefined identifier blanked the entire app with nothing on screen to
+   say why (ComparisonGrid, 2026-09-01). Deliberately plain and calm: this is
+   not a status colour, it is a dead end with a way out. */
+.app-crash {
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 20px 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--rose);
+  border-radius: 6px;
+}
+.app-crash-title { font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.app-crash-msg {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--rose);
+  background: var(--rose-bg);
+  padding: 8px 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+.app-crash-hint { color: var(--ink2); font-size: 13px; margin: 10px 0; }
+.app-crash-details { margin: 10px 0 14px; }
+.app-crash-details summary { cursor: pointer; color: var(--ink2); font-size: 13px; }
+.app-crash-details pre {
+  margin-top: 8px;
+  padding: 10px;
+  max-height: 320px;
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink2);
+  background: var(--page);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  white-space: pre-wrap;
+}

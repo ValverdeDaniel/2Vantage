@@ -1,0 +1,179 @@
+/* Benefits — workspace, tabs, census, portal, carriers, checklist.
+   Extracted from App.css in the module restructure; class names unchanged.
+   Load order (set in main.jsx): after App.css, before the other benefits-*.css. */
+
+/* ===== BENEFITS (Quote-to-Proposal / Census Normalizer / Data Hub) ===== */
+
+/* Pipeline dashboard: next-action column + chips */
+.bnf-th-action { width: 200px; }
+.bnf-pipeline-head .bb-th-stage,
+.bnf-pipeline-row .bb-th-stage { width: 120px; }
+.bnf-pipeline-head .bb-th-progress,
+.bnf-pipeline-row .bb-th-progress { width: 160px; }
+/* Potential deal size — a column on all three Benefits home tables. No fixed
+   width: in a grid track that would right-align short of the column edge. */
+.bnf-th-deal { text-align: right; color: var(--ink2); }
+.bb-transfer-row .bnf-th-deal { font-size: 12.5px; }
+/* "POTENTIAL DEAL SIZE ▼" is wider than its column — let that header wrap. */
+.bnf-th-deal.bnf-th-sortable { white-space: normal; line-height: 1.3; }
+.bnf-th-days { width: 78px; text-align: right; font-size: 12.5px; color: var(--ink2); }
+.bnf-th-sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+.bnf-th-sortable:hover { color: var(--ink); }
+.bnf-action-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.bnf-action-error { background: var(--rose-bg); color: var(--rose); }
+.bnf-action-warn { background: var(--amber-bg); color: var(--amber); }
+.bnf-action-info { background: var(--blue-bg); color: var(--blue); }
+.bnf-action-done { background: var(--green-bg); color: var(--green); }
+/* The home tables' "Next action" chip is a real button (jumps to the action). */
+.bnf-action-btn { border: none; cursor: pointer; font-family: inherit; }
+.bnf-action-btn:hover { filter: brightness(0.96); text-decoration: underline; }
+
+/* Benefits home: the eyebrow bar, and the New clients / Clients / Work queue
+   pill — which renders under the summary cards, inside .bnf-home-viewbar
+   (benefits-workqueue.css). NB: .bnf-viewtab / .bnf-viewtab-on are redefined
+   further down for the Advisor's view pills, and that later rule wins. */
+.bnf-benefits-topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 1.25rem;
+}
+.bnf-viewtabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  background: #eef0f3;
+  border-radius: 999px;
+}
+.bnf-viewtab {
+  padding: 5px 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.bnf-viewtab:hover { color: var(--navy); }
+.bnf-viewtab-on {
+  background: #fff;
+  color: var(--navy);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Deep-linked agenda row flash (from a reminder next-action) */
+@keyframes bnf-agenda-flash-kf {
+  0% { background: var(--blue-bg); box-shadow: inset 3px 0 0 var(--blue); }
+  100% { background: transparent; box-shadow: inset 3px 0 0 transparent; }
+}
+.bnf-agenda-flash { animation: bnf-agenda-flash-kf 2.2s ease-out; border-radius: 8px; }
+
+/* New-case "Renewal for <client>" pre-link banner */
+.bnf-renewal-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--amber-bg);
+  border: 1px solid #ecd9a8;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 1.25rem;
+  font-size: 13px;
+  color: var(--ink2);
+}
+
+/* Renewal banner + the per-artifact carry/fresh choice, one block (the
+   data-guide="new-case-renewal" anchor rides the wrapper). */
+.bnf-renewal-block { margin-bottom: 1.25rem; }
+.bnf-renewal-block .bnf-renewal-banner:last-child { border-radius: 10px; }
+/* What to know before this year starts (S9): warnings, never a refusal. */
+.bnf-renewal-warnings {
+  margin: 0;
+  padding: 8px 14px 8px 30px;
+  background: #fff;
+  border: 1px solid #ecd9a8;
+  border-top: 0;
+  font-size: 12.5px;
+  color: var(--ink2);
+}
+.bnf-renewal-warnings:last-child { border-radius: 0 0 10px 10px; }
+.bnf-renewal-warnings li + li { margin-top: 3px; }
+.bnf-renewal-block .bnf-renewal-banner {
+  margin-bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.bnf-carry-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #ecd9a8;
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  padding: 10px 14px;
+}
+.bnf-carry-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.bnf-carry-choice input { margin-top: 2px; flex-shrink: 0; }
+
+/* Renewal carry: "prepopulated from last year — confirm it" (Overview banner,
+   the compact Census/Questionnaire notices, and the portal's confirm note) */
+.bnf-carry-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--amber-bg);
+  border: 1px solid #ecd9a8;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 1.25rem;
+}
+.bnf-carry-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.bnf-carry-sub { font-size: 12.5px; color: var(--ink2); margin-top: 3px; }
+.bnf-carry-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.bnf-carry-actions .btn { flex: 0 0 auto; white-space: nowrap; }
+.bnf-carry-settled {
+  background: var(--page);
+  border-color: var(--border);
+}
+
+.bnf-carry-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--amber-bg);
+  border: 1px solid #ecd9a8;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 12.5px;
+  color: var(--ink2);
+}
+.bnf-carry-notice-text { flex: 1; min-width: 200px; }

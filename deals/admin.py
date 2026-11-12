@@ -1,16 +1,14 @@
-"""Django admin: agency settings and a read-only look at clients (plan.md §7.2, §8.14)."""
+"""Django admin: agency settings and a read-only look at clients (plan.md §7.2, §8.14). Users: accounts/admin.py."""
 
 import io
 
 from django import forms
-from django.contrib import admin, messages
-from django.contrib.auth import get_user_model
-from django.contrib.auth.admin import UserAdmin
+from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from PIL import Image
 
-from .models import AgencySettings, Client
+from .models import Activity, AgencySettings, Client
 
 MAX_LOGO_BYTES = 2 * 1024 * 1024
 
@@ -28,6 +26,8 @@ class AgencySettingsForm(forms.ModelForm):
             'logo',
             'default_commission',
             'rfp_return_email',
+            'producer_name',
+            'producer_npn',
         ]
 
     def clean_logo(self):
@@ -68,20 +68,28 @@ class AgencySettingsAdmin(admin.ModelAdmin):
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'relationship', 'owner', 'created_at')
+    list_display = ('name', 'relationship', 'client_since', 'owner', 'created_at')
+    list_filter = ('relationship',)
     search_fields = ('name',)
+    # The status changes only through deals.services.set_status and sale_changed (§5.1), never here.
+    readonly_fields = ('relationship', 'client_since', 'converted_by_sale')
 
 
-User = get_user_model()
-admin.site.unregister(User)
+@admin.register(Activity)
+class ActivityAdmin(admin.ModelAdmin):
+    """Read-only: the log, including the downloads and views the deal feed leaves out (§3.8)."""
 
+    list_display = ('updated_at', 'deal', 'area', 'action', 'actor', 'actor_kind', 'summary', 'count', 'document_id')
+    list_filter = ('area', 'action', 'actor_kind')
+    list_select_related = ('deal__client', 'actor')
+    date_hierarchy = 'created_at'
 
-@admin.register(User)
-class SafeUserAdmin(UserAdmin):
-    """An admin cannot deactivate or demote themselves (§8.14)."""
+    def has_add_permission(self, request):
+        return False
 
-    def save_model(self, request, obj, form, change):
-        if change and obj.pk == request.user.pk and (not obj.is_active or not obj.is_staff):
-            messages.error(request, "Not saved: you can't remove your own admin access or deactivate yourself.")
-            return
-        super().save_model(request, obj, form, change)
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+

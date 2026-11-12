@@ -3,6 +3,7 @@
 from deals import lines
 from quotes import fields
 from quotes import math as m
+from quotes import values as cleaning
 
 from . import formatting as fmt
 
@@ -81,7 +82,7 @@ def cost_rows(line, columns, results, by_id):
     keys = m.enrollment_keys(basis)
     if basis == 'composite':
         for tier in m.TIERS:
-            cells = [fmt.rate(m.cleaning.as_float(p.values.get(m.TIER_RATE[tier]))) for p in columns]
+            cells = [fmt.rate(cleaning.as_float(p.values.get(m.TIER_RATE[tier]))) for p in columns]
             rows.append({'label': f'Monthly rate — {tier}', 'cells': cells, 'kind': 'rate'})
     else:
         cells = [fmt.value('unit_rate', p.values.get('unit_rate')) for p in columns]

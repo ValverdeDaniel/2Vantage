@@ -1,13 +1,12 @@
 import { useRef } from 'react';
 import { errorText } from '../lib/errors';
 import Button from './Button';
-import styles from './ConfirmDialog.module.css';
 import Modal from './Modal';
 
 /**
  * "Are you sure?" Focus starts on Cancel; Escape cancels.
  *   open, title, message, confirmLabel='Confirm', cancelLabel='Cancel', tone: 'primary' | 'danger',
- *   busy (confirm shows a spinner), error (shown under the message), onConfirm, onCancel
+ *   busy (confirm disabled while it runs), error (shown under the message), onConfirm, onCancel
  */
 export default function ConfirmDialog({
   open,
@@ -31,21 +30,20 @@ export default function ConfirmDialog({
       initialFocus={cancelRef}
       footer={
         <>
-          <Button ref={cancelRef} onClick={onCancel} disabled={busy}>
+          <Button ref={cancelRef} size="sm" onClick={onCancel} disabled={busy}>
             {cancelLabel}
           </Button>
-          <Button variant={tone === 'danger' ? 'danger' : 'primary'} busy={busy} onClick={onConfirm}>
+          <Button size="sm" variant={tone === 'danger' ? 'danger' : 'primary'} busy={busy} onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </>
       }
     >
-      {message && <p className={styles.message}>{message}</p>}
+      {message && <p className="bb-subtitle">{message}</p>}
       {error && (
-        <p role="alert" className={styles.error}>
-          <span aria-hidden="true">⚠ </span>
+        <div role="alert" className="error-message bb-mt">
           {errorText(error)}
-        </p>
+        </div>
       )}
     </Modal>
   );

@@ -1,0 +1,77 @@
+/* --- coverage notes ------------------------------------------------------
+ *
+ * Every note written against a coverage & marketing intent line, gathered.
+ * Quiet by construction: the card does not render at all unless some line
+ * carries one, so it never occupies the side column to say "nothing here".
+ */
+.bnf-ov-cvgnote-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+.bnf-ov-cvgnote {
+  border-left: 2px solid var(--border);
+  padding-left: 10px;
+}
+.bnf-ov-cvgnote-head { font-size: 12px; }
+.bnf-ov-cvgnote-line { font-weight: 600; color: var(--ink); }
+.bnf-ov-cvgnote-body {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink);
+  margin-top: 2px;
+  /* A note is typed prose: keep the producer's own line breaks, and never
+     let one long word push the side column wide. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Who we've asked — the per-link list under the three outreach tiles.
+   `outreach_payload` has always computed `links[]`, `people_waiting[]` and
+   `unasked_contacts[]` on every overview request; until now the only thing
+   that read any of it was the three aggregates above. */
+.bnf-ov-links {
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+  padding-top: 10px;
+}
+.bnf-ov-links-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.bnf-ov-link {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 5px 0;
+  font-size: 12px;
+}
+.bnf-ov-link + .bnf-ov-link { border-top: 1px dashed var(--border); }
+.bnf-ov-link-who { font-weight: 600; color: var(--ink); }
+/* One line, ellipsised — the full list is on the title and on the census
+   Requests view; this strip is a glance, not the record. */
+.bnf-ov-link-asks {
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bnf-ov-link-state { text-align: right; white-space: nowrap; }
+.bnf-ov-link-unasked { margin-top: 8px; }
+
+@media (max-width: 800px) {
+  .bnf-ov-link { grid-template-columns: 1fr; gap: 2px; }
+  .bnf-ov-link-state { text-align: left; }
+}
+
+/* D-060: the values that are neither scanned, typed nor from the client —
+   carried from last year, demo data, or on file from before we recorded. */
+.bnf-ov-conf-more { margin: -8px 0 14px; }

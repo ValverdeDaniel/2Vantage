@@ -1,0 +1,176 @@
+/* --- The chip row over a section's Review queue (kit ReviewChips). It wraps, so
+   a phone keeps the page's width. */
+.rr-lane-chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 12px; }
+
+/* The context beside the queue (U3d, review-requests-one-way.md §2 B; the
+   handoff's `.cr-split`): what the item is about on the left, the queue on
+   the right, 420px (360px below 1200px). A file's queue (Read by AI) is
+   340px and stacks under the file below 1100px; on a narrow screen every
+   split stacks, context first. The queue stays in view while the context
+   scrolls the page. */
+.rr-split {
+  display: grid; grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 16px; align-items: start; min-width: 0;
+}
+.rr-split-solo { grid-template-columns: minmax(0, 1fr); }
+.rr-split-context, .rr-split-queue { min-width: 0; }
+.rr-split:not(.rr-split-solo) > .rr-split-queue {
+  position: sticky; top: calc(var(--chrome-top, 56px) + 12px);
+}
+.rr-split:not(.rr-split-solo) > .rr-split-queue > .rr-queue {
+  max-height: calc(100vh - var(--chrome-top, 56px) - 24px);
+}
+@media (max-width: 1200px) {
+  .rr-split { grid-template-columns: minmax(0, 1fr) 360px; }
+}
+.rr-split.rr-split-file { grid-template-columns: minmax(0, 1fr) 340px; }
+@media (max-width: 1100px) {
+  .rr-split.rr-split-file { grid-template-columns: minmax(0, 1fr); }
+  .rr-split.rr-split-file > .rr-split-queue { position: static; }
+}
+@media (max-width: 900px) {
+  .rr-split, .rr-split.rr-split-file { grid-template-columns: minmax(0, 1fr); }
+  .rr-split:not(.rr-split-solo) > .rr-split-queue { position: static; }
+}
+.rr-split-solo > .rr-split-queue { position: static; }
+
+/* The queue header's group chips (U3d): what came back by column and
+   change, the picked one with its "Approve all N ✓". */
+.rr-groups { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 8px; min-width: 0; }
+.rr-groups-label {
+  font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--ink3); margin-right: 2px;
+}
+.rr-group { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; min-width: 0; }
+.rr-group-sub { font-style: normal; color: var(--ink3); }
+.rr-group .rr-chip-on .rr-group-sub { color: var(--navy); opacity: 0.75; }
+.rr-group .btn.rr-group-approve { flex: 0 0 auto; padding: 2px 9px; font-size: 11.5px; }
+
+/* A queue item's flag (U3d2, review-requests-one-way.md §6a): what it
+   blocks, under its badge ("blocks Aetna", "required to market"). */
+.rr-qi-badge { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.rr-flag-chip {
+  display: inline-block; padding: 1px 7px; border-radius: 9px; font-size: 10.5px;
+  font-weight: 600; white-space: nowrap; background: var(--rose-bg); color: var(--rose);
+}
+
+/* The form beside the queue (U3d2, ReviewFormContext): the section that
+   holds the focused item, read-only, each answer old (struck) → new in its
+   review state, the focused row ringed. It scrolls inside its own pane, so
+   the focus can bring a row a third of the way down. */
+.rr-form-ctx { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.rr-form-ctx-bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 6px 12px; min-width: 0;
+}
+.rr-form-ctx-title { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.rr-form-ctx-title b { font-size: 13.5px; color: var(--ink); }
+.rr-form-ctx-title span { font-size: 12px; color: var(--ink3); }
+.rr-form-ctx-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--ink2); }
+.rr-form-ctx-legend span { display: inline-flex; align-items: center; }
+.rr-fc-swatch {
+  width: 11px; height: 11px; border-radius: 3px; display: inline-block;
+  border: 1px solid transparent; margin-right: 5px;
+}
+.rr-fc-swatch.rr-fc-pending { background: var(--violet-bg); border-color: #c9b8ee; }
+.rr-fc-swatch.rr-fc-ok { background: var(--green-bg); border-color: #a7dcb8; }
+.rr-fc-swatch.rr-fc-back { background: var(--rose-bg); border-color: #f3c1c8; }
+.rr-form-ctx-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  overflow: hidden; min-width: 0;
+}
+.rr-form-ctx-head {
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  font-size: 13px; font-weight: 700; color: var(--navy);
+}
+.rr-form-ctx-scroll {
+  max-height: max(320px, calc(100vh - var(--chrome-top, 56px) - 300px));
+  overflow-y: auto; padding: 4px 0;
+}
+.rr-form-ctx-empty { padding: 24px 16px; font-size: 13px; color: var(--ink2); text-align: center; }
+.rr-fc-group {
+  padding: 10px 14px 4px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--ink3);
+}
+.rr-fc-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 2px 12px; align-items: baseline; padding: 7px 14px;
+  border-left: 3px solid transparent; font-size: 13px;
+}
+.rr-fc-row + .rr-fc-row, .rr-fc-wrap + .rr-fc-wrap > .rr-fc-row { border-top: 1px solid var(--page); }
+.rr-fc-label { color: var(--ink2); min-width: 0; overflow-wrap: anywhere; }
+.rr-fc-req { color: var(--rose); margin-left: 2px; }
+.rr-fc-value {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px;
+  color: var(--ink); min-width: 0; overflow-wrap: anywhere; position: relative;
+}
+.rr-fc-blank { color: var(--ink3); }
+.rr-fc-old { opacity: 0.6; }
+.rr-fc-arrow { color: var(--ink3); }
+.rr-fc-note { grid-column: 1 / -1; font-size: 11.5px; color: var(--ink3); }
+.rr-fc-q {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--violet); align-self: center;
+}
+.rr-fc-row.rr-fc-pending { background: var(--violet-bg); }
+.rr-fc-row.rr-fc-pending .rr-fc-value { color: var(--violet); font-weight: 600; }
+.rr-fc-row.rr-fc-ok { background: var(--green-bg); }
+.rr-fc-row.rr-fc-ok .rr-fc-value { color: var(--green); font-weight: 600; }
+.rr-fc-row.rr-fc-back { background: var(--rose-bg); }
+.rr-fc-row.rr-fc-back .rr-fc-value { color: var(--rose); font-weight: 600; }
+.rr-fc-click { cursor: pointer; }
+.rr-fc-click:hover { filter: brightness(0.98); }
+.rr-fc-row.rr-fc-focus {
+  border-left-color: var(--navy); box-shadow: inset 0 0 0 1px rgba(23, 58, 99, 0.35);
+  animation: rr-fc-pulse 1.1s ease-out 1;
+}
+@keyframes rr-fc-pulse {
+  0% { box-shadow: inset 0 0 0 1px rgba(23, 58, 99, 0.35), 0 0 0 0 rgba(23, 58, 99, 0.35); }
+  100% { box-shadow: inset 0 0 0 1px rgba(23, 58, 99, 0.35), 0 0 0 6px rgba(23, 58, 99, 0); }
+}
+@media (max-width: 600px) {
+  .rr-fc-row { grid-template-columns: minmax(0, 1fr); padding: 7px 12px; }
+}
+
+/* --- The request page (D-153 C1, review-request-page.md §4.1;
+   `RequestPage`, kit `RequestRail` and `FollowUpCart`): the header (a tab
+   per open link, the message, Send), then three columns -- the rail
+   280px, the cart 1fr, the cards 360px (C3b; hidden while empty). Below
+   1100px the cards column goes: each card sits under its question inside
+   their form (`renderAside`); below 900px everything stacks. The rail and
+   the cards column keep their place while the form scrolls the page. --- */
+.rr-reqpage-top { margin-bottom: 12px; }
+.rr-reqpage-title { min-width: 0; }
+.rr-reqpage-wrap { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.rr-reqpage-refusal {
+  padding: 8px 12px; border-radius: 8px; font-size: 13px;
+  background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber);
+}
+.rr-reqpage {
+  display: grid; grid-template-columns: 280px minmax(0, 1fr) auto;
+  gap: 16px; align-items: start; min-width: 0;
+}
+.rr-reqpage-rail, .rr-reqpage-cart, .rr-reqpage-cards { min-width: 0; }
+.rr-reqpage-rail {
+  position: sticky; top: calc(var(--chrome-top, 56px) + 12px);
+  max-height: calc(100vh - var(--chrome-top, 56px) - 24px); overflow-y: auto;
+}
+/* The cards column (D-162): the comment margin, as tall as the centre and
+   scrolling with it, so each card stands level with its question. */
+.rr-reqpage-cards {
+  width: 360px; display: flex; flex-direction: column; gap: 8px; align-self: stretch;
+}
+.rr-reqpage-cards:empty { display: none; }
+.rr-reqpage-colhead {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin: 0 0 8px;
+}
+.rr-reqpage-colhead b { font-size: 14px; color: var(--ink); }
+.rr-reqpage-colhead span { font-size: 12px; color: var(--ink3); }
+@media (max-width: 1100px) {
+  .rr-reqpage { grid-template-columns: 280px minmax(0, 1fr); }
+  .rr-reqpage-cards { display: none; }
+}
+@media (max-width: 900px) {
+  .rr-reqpage { grid-template-columns: minmax(0, 1fr); }
+  .rr-reqpage-rail { position: static; max-height: none; overflow: visible; }
+}

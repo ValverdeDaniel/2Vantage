@@ -7,15 +7,14 @@ from . import preview, selection
 from .models import ProposalConfig
 
 
-def proposal_lines(deal):
+def proposal_lines(deal, states):
     """Requested lines that have plans, in §4.1 order."""
-    with_plans = set(deal.plans.values_list('line', flat=True))
-    return [key for key in lines.LINE_KEYS if key in deal.requested_lines and key in with_plans]
+    return [key for key in lines.LINE_KEYS if key in deal.requested_lines and key in states]
 
 
-def line_payload(deal, line, config):
-    plans, data, results, packages, recommendation = quotes.line_state(deal, line)
-    columns, is_default = selection.presented_for(config.lines, line, plans)
+def line_payload(line, state, config):
+    plans, data, results, packages, recommendation = state
+    columns, is_default = selection.presented_for(state)
     by_id = data.by_id
     labels = {p.id: p.option_label or '—' for p in plans}
     names = {p.id: f'{p.option_label} · {p.name}' if p.option_label else p.name for p in plans}
@@ -72,7 +71,8 @@ def line_payload(deal, line, config):
 
 def payload(deal):
     config = ProposalConfig.for_deal(deal)
-    line_payloads = [line_payload(deal, line, config) for line in proposal_lines(deal)]
+    states = quotes.deal_state(deal)  # every line in one grouped read (Q.7)
+    line_payloads = [line_payload(line, states[line], config) for line in proposal_lines(deal, states)]
     blockers = [
         f'{p["label"]}: Nothing recommended for {", ".join(p["recommendation"]["missing"])}'
         for p in line_payloads

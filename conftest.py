@@ -36,6 +36,24 @@ def anon_api():
     return APIClient()
 
 
+# ---- the Q.3 contracts (plan.md §12.3): helpers in contract_helpers.py, each app's tables in its own tests ------
+from contract_helpers import check_permissions, sweep_gets, write_path_contract  # noqa: E402, F401
+
+
+@pytest.fixture
+def actors(anon_api, api, admin_api):
+    """The permission matrix's actors that exist today (Q.3 #3); later slices add theirs (owner, tiers, portal)."""
+    return {'signed_out': anon_api, 'producer': api, 'admin': admin_api}
+
+
+@pytest.fixture
+def no_csrf_api(user):
+    """A signed-in producer whose client enforces CSRF and sends no token: every write answers 403 (§3.6)."""
+    client = APIClient(enforce_csrf_checks=True)
+    client.force_login(user)
+    return client
+
+
 def make_client(user, name='Example Co.', **deal_kwargs):
     from deals.services import create_client
 
@@ -50,3 +68,96 @@ def make_deal(user, **kwargs):
 @pytest.fixture
 def deal(user):
     return make_deal(user)
+
+
+# ---- the golden deals (plan.md §12.6, Q.2): built once per test module; app tests never import `golden` -----------
+@pytest.fixture(scope='module')
+def golden(django_db_setup, django_db_blocker):
+    """{'GD1': Golden(deal, refs, spec), …}: every golden deal, built once for this test module through the services
+    and removed after it. `refs` maps the spec's plan refs to plan ids. Read-only: a test that writes uses a factory
+    deal. A transactional test (`transaction=True`) in the same module would wipe them."""
+    from golden import seed
+
+    with django_db_blocker.unblock():
+        builder, _ = get_user_model().objects.get_or_create(username='golden-builder')
+        built = seed.build_all(builder)
+    yield built
+    with django_db_blocker.unblock():
+        seed.remove_all(builder)
+        builder.delete()
+
+
+@pytest.fixture(scope='module')
+def gd1(golden):
+    return golden['GD1']
+
+
+@pytest.fixture(scope='module')
+def gd2(golden):
+    return golden['GD2']
+
+
+@pytest.fixture(scope='session')
+def golden_keys():
+    """{'GD1': its answer key, …} (Q.4): the figures, with checked_by, checked_on and method (null until signed)."""
+    from golden import specs
+
+    return {key: specs.answer_key(key) for key in specs.keys()}
+
+
+# ---- GD-Big (plan.md §13.4, Q.7): scale, in tests only; the builder is the root's gd_big.py -------------------------
+def make_big_deal(user, plans, name='Big shape (synthetic)'):
+    """GD-Big's shape at any size, inside a test: a scaling test compares two sizes (Q.3 #4)."""
+    import gd_big as big
+
+    return big.build(user, plans=plans, name=name)
+
+
+@pytest.fixture(scope='module')
+def gd_big(django_db_setup, django_db_blocker):
+    """A deal with 600 medical plans (links, stars, read values), built once for this test module and removed after
+    it. Read-only, like the golden deals; `make_big_deal(user, 10)` makes the same shape small inside a test."""
+    import gd_big as big
+
+    with django_db_blocker.unblock():
+        builder, _ = get_user_model().objects.get_or_create(username='gd-big-builder')
+        deal = big.build(builder)
+    yield deal
+    with django_db_blocker.unblock():
+        big.remove(builder, deal)
+        builder.delete()
+
+
+# ---- the socket guard (plan.md §3.5, Q.2): a test may open only the database socket ---------------------------------
+class NetworkBlocked(RuntimeError):
+    """A test tried to reach something other than the database: nothing leaves the machine (§12.1)."""
+
+
+@pytest.fixture(autouse=True, scope='session')
+def _socket_guard():
+    import socket
+
+    from django.conf import settings
+
+    db = settings.DATABASES['default']
+    host, port = db.get('HOST') or 'localhost', int(db.get('PORT') or 5432)
+    allowed = {(host, port)}
+    try:
+        allowed |= {(info[4][0], port) for info in socket.getaddrinfo(host, port)}
+    except OSError:
+        pass
+    unix_path = f'{host}/.s.PGSQL.{port}' if host.startswith('/') else None
+    real = socket.socket.connect, socket.socket.connect_ex
+
+    def guarded(method):
+        def connect(sock, address):
+            inet = sock.family in (socket.AF_INET, socket.AF_INET6) and tuple(address[:2]) in allowed
+            if inet or (unix_path and address == unix_path):
+                return method(sock, address)
+            raise NetworkBlocked(f'A test tried to connect to {address!r}; tests may open only the database.')
+
+        return connect
+
+    socket.socket.connect, socket.socket.connect_ex = guarded(real[0]), guarded(real[1])
+    yield
+    socket.socket.connect, socket.socket.connect_ex = real

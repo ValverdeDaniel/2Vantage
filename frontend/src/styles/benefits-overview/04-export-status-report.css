@@ -1,0 +1,258 @@
+/* ---- Export status report modal: settings rail + full-height preview ---- */
+
+/* A definite height (not just max-height) is what lets the preview column be
+   flex:1 and scroll inside the modal instead of growing it. */
+.bnf-rep-modal {
+  width: 960px;
+  max-width: calc(100vw - 2rem);
+  height: min(86vh, 820px);
+}
+
+.bnf-rep-modal .bb-modal-header {
+  align-items: flex-start;
+  padding: 18px 24px 16px;
+}
+
+.bnf-rep-modal .bb-modal-sub {
+  margin-top: 3px;
+}
+
+.bnf-rep-close {
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink3);
+  font-size: 22px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+}
+.bnf-rep-close:hover { color: var(--ink); }
+
+/* Body: rail | stage. min-height:0 on the grid and its children is required
+   for the inner scroll containers to actually scroll. */
+.bnf-rep-body {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  flex: 1;
+  min-height: 0;
+}
+
+.bnf-rep-rail {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 18px 18px;
+  border-right: 1px solid var(--border-soft);
+  background: var(--page);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.bnf-rep-control-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 7px;
+}
+
+.bnf-rep-control .bb-drop-meta {
+  margin-top: 6px;
+  line-height: 1.45;
+}
+
+.bnf-rep-control.is-dim { opacity: 0.55; }
+.bnf-rep-control.is-dim:hover { opacity: 1; }
+
+/* Full-width segmented control in the rail. */
+.bnf-rep-seg { display: flex; width: 100%; }
+.bnf-rep-seg .bnf-viewtab { flex: 1; text-align: center; }
+
+/* Headline — the answer the whole modal is about. */
+.bnf-rep-headline {
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.bnf-rep-headline-label {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.bnf-rep-headline-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 7px;
+}
+
+.bnf-rep-side {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.bnf-rep-side-us {
+  background: var(--navy);
+  color: #fff;
+}
+
+.bnf-rep-side-them {
+  background: var(--violet-bg);
+  color: var(--violet);
+}
+
+/* Window picker as a vertical radio list. */
+.bnf-rep-radios {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bnf-rep-radio {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.bnf-rep-radio:hover { background: #eef2f7; }
+.bnf-rep-radio.is-on { background: #fff; font-weight: 600; box-shadow: inset 0 0 0 1px var(--border); }
+
+.bnf-rep-radio-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink3);
+  flex: none;
+}
+.bnf-rep-radio.is-on .bnf-rep-radio-dot {
+  border-color: var(--navy);
+  background: radial-gradient(circle, var(--navy) 45%, transparent 50%);
+}
+
+/* Stage: caption + the preview box filling the rest of the modal. */
+.bnf-rep-stage {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 14px 20px 16px;
+}
+
+.bnf-rep-preview-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 8px;
+  flex: none;
+}
+
+/* The preview is the real digest, monospaced at the width it was wrapped to,
+   so the producer sees the line breaks the recipient will get. */
+.bnf-rep-preview {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin: 0;
+  padding: 14px 18px;
+  background: var(--page);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* PDF view: the same box, holding real rendered pages at natural size. */
+.bnf-rep-pdfwrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 18px;
+  background: var(--page);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+
+.bnf-rep-pdfpages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.bnf-rep-pdfpage {
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(15, 45, 79, 0.18);
+}
+
+.bnf-rep-pdfpage canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.bnf-rep-pdfnote {
+  text-align: center;
+  padding: 8px 0;
+}
+
+/* Footer pinned under the body. */
+.bnf-rep-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex: none;
+  padding: 14px 24px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.bnf-rep-actions-main {
+  display: flex;
+  gap: 8px;
+}
+
+
+@media (max-width: 860px) {
+  .bnf-rep-modal { height: auto; }
+  .bnf-rep-body { grid-template-columns: 1fr; }
+  .bnf-rep-rail {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-soft);
+    overflow: visible;
+  }
+  .bnf-rep-preview,
+  .bnf-rep-pdfwrap { max-height: 50vh; min-height: 200px; }
+}
+
+@media (max-width: 700px) {
+  .bnf-ov-titlerow {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,293 @@
+/* "Replacing: [current plan ▾]" beside a plan (D-174, D-221). */
+.bnf-link-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #5b6573;
+}
+.bnf-link-picker select {
+  max-width: 190px;
+  font-size: 12.5px;
+  padding: 4px 8px;
+}
+.bnf-link-picker-open select { border-color: #c1352e; color: #c1352e; }
+.bnf-link-picker-text { font-size: 12px; color: #5b6573; }
+.bnf-share-card-replaces { font-size: 12px; color: #5b6573; margin-top: 2px; }
+.bnf-build-parts { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+/* Two plans printed as one column (2026-11-10, ProposalPlansCard). */
+.bnf-pp-merged { font-size: 12px; color: var(--ink2); white-space: nowrap; }
+.bnf-pp-merge { max-width: 180px; font-size: 12px; }
+/* The note under a line's plan table (2026-11-10). */
+.bnf-build-tablenote { display: flex; flex-direction: column; gap: 4px; margin: 10px 0 4px; }
+.bnf-build-tablenote span { font-size: 12px; font-weight: 600; color: var(--ink2); }
+.bnf-build-tablenote textarea { width: 100%; font: inherit; font-size: 13px; resize: vertical; }
+.bnf-build-rowshead {
+  display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px;
+}
+/* The all/none pairs on the row list, its groups and the summary blocks.
+   Text links rather than buttons because they sit ON the list they govern —
+   the same call CoverageIntentPanel made — and a group heading is 10.5px
+   uppercase, which no real button fits inside. */
+.bnf-build-selectall {
+  margin-left: 6px; font-weight: 400;
+  text-transform: none; letter-spacing: normal;
+}
+.bnf-build-selectall button {
+  background: none; border: none; padding: 0 3px; cursor: pointer;
+  color: var(--blue); font-size: 11px; text-decoration: underline;
+}
+.bnf-build-selectall button:disabled { opacity: 0.5; cursor: default; }
+.bnf-build-rows {
+  display: grid; gap: 10px 20px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  max-height: 320px; overflow-y: auto;
+  border: 1px solid var(--border); border-radius: 6px; padding: 10px;
+}
+.bnf-build-rowgroup { display: flex; flex-direction: column; gap: 3px; }
+.bnf-build-rowgroup-title {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--ink2); margin-bottom: 2px;
+}
+.bnf-build-blocks {
+  display: grid; gap: 4px 20px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+}
+.bnf-build-blocks .bb-drop-meta { margin-left: 6px; }
+.bnf-build-preview {
+  border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px;
+}
+.bnf-build-stat {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 4px 0; border-bottom: 1px dashed var(--border);
+}
+.bnf-build-stat:last-child { border-bottom: none; }
+.bnf-build-stat-label { flex: 0 0 46%; font-size: 12px; color: var(--ink2); }
+.bnf-build-stat-value {
+  font-size: 13px; font-weight: 600; display: flex; align-items: baseline; gap: 8px;
+  flex-wrap: wrap;
+}
+.bnf-build-stat-value em { font-style: normal; font-size: 11.5px; }
+.bnf-build-stat-value i { font-style: normal; }
+.bnf-build-stat-off .bnf-build-stat-label { color: var(--ink3); }
+.bnf-build-stat-off-why { font-size: 11.5px; color: var(--ink3); font-style: italic; }
+
+/* Coverage-state awareness in the builder (2026-09-03). */
+.bnf-state-chip {
+  display: inline-block; margin-left: 6px; padding: 1px 7px;
+  border-radius: 999px; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.bnf-state-guaranteed { background: var(--amber-bg); color: var(--amber); }
+.bnf-state-new { background: var(--blue-bg); color: var(--blue); }
+/* A line the coverage intent keeps off every client document
+   (builder-intent-and-quotes.md slice B). */
+.bnf-state-off { background: var(--page); color: var(--ink3); border: 1px solid var(--border); }
+.bnf-build-offline {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  flex-wrap: wrap; padding: 8px 10px; border-radius: 6px; font-size: 12.5px;
+  background: var(--amber-bg); color: var(--ink);
+}
+.bnf-build-offline-actions { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.bnf-build-offline-actions .btn { flex: 0 0 auto; }
+.bnf-build-toolbar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.bnf-build-toolbar-spacer { flex: 1 1 auto; }
+.bnf-build-toolbar > .btn { flex: 0 0 auto; }
+/* A deliverable being prepared (ProposalBuilder `inFlight`). The button stays
+   clickable on purpose: a second click is answered with a toast, not swallowed
+   (and .btn has no disabled look of its own to borrow). */
+.bnf-build-toolbar > .btn[aria-busy="true"] { opacity: 0.5; cursor: progress; }
+/* Expected enrollment on a tier-rated line's quotes card (builder-polish P4). */
+.bnf-build-enroll {
+  margin: 8px 0; padding: 8px 10px; border-radius: 6px; font-size: 12.5px;
+  border: 1px solid var(--border); background: var(--page);
+}
+.bnf-build-enroll.is-empty { background: var(--amber-bg); border-color: transparent; }
+.bnf-build-enroll-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+}
+.bnf-build-enroll-note { color: var(--ink2); }
+.bnf-build-enroll-actions { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.bnf-build-enroll .btn { flex: 0 0 auto; }
+.bnf-build-enroll-form {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px;
+}
+.bnf-build-enroll-form label { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+.bnf-build-enroll-form input { width: 64px; padding: 3px 6px; }
+.bnf-build-enroll-bad { color: var(--rose); }
+/* The PDF's orientation beside its download button (builder-polish P3). */
+.bnf-build-toolbar > .bnf-build-orient {
+  border: 1px solid var(--border); background: var(--page); color: var(--ink2);
+  border-radius: 999px; padding: 2px 10px; font-size: 11.5px; cursor: pointer;
+  white-space: nowrap; line-height: 1.6;
+}
+.bnf-build-toolbar > .bnf-build-orient:hover { color: var(--blue); border-color: var(--blue); }
+/* The before-you-export list (builder-intent-and-quotes.md slice D): a
+   toolbar button, and the list it opens below the toolbar. Amber while there
+   is something to check; it never blocks an export. */
+.bnf-build-toolbar > .bnf-build-checks-btn-open { color: var(--amber); border-color: var(--amber); }
+.bnf-build-checks {
+  border: 1px solid var(--border); border-left: 3px solid var(--amber);
+  border-radius: 6px; padding: 10px 12px; background: #fff;
+}
+.bnf-build-checks-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.bnf-build-checks-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.bnf-build-check {
+  display: flex; align-items: baseline; gap: 10px; font-size: 12.5px;
+  padding: 5px 0; border-top: 1px solid var(--border-softer);
+}
+.bnf-build-check:first-child { border-top: none; }
+.bnf-build-check-level {
+  flex: 0 0 auto; min-width: 46px; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.03em; color: var(--ink3);
+}
+.bnf-build-check-stop .bnf-build-check-level { color: var(--rose); }
+.bnf-build-check-warn .bnf-build-check-level { color: var(--amber); }
+.bnf-build-check-msg { flex: 1 1 auto; }
+/* How the documents look (OutputPanel, OUT-2): a builder card (D-113), so
+   the box, the head and the collapse are .bnf-bcard's. */
+.bnf-output-body { display: flex; flex-direction: column; gap: 10px; }
+.bnf-output-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.bnf-output-label { width: 88px; flex: 0 0 auto; font-size: 12px; color: var(--ink2); }
+.bnf-output-seg { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.bnf-output .btn { flex: 0 0 auto; }
+/* .btn has no disabled look of its own: best-only waiting on a pick says so. */
+.bnf-output .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.bnf-output-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.bnf-output-hint { font-size: 12px; color: var(--ink3); }
+.bnf-chip-renewal { background: var(--violet-bg); color: var(--violet); }
+.bnf-chip-new { background: var(--blue-bg); color: var(--blue); }
+.bnf-build-incumbent {
+  display: flex; flex-direction: column; gap: 8px;
+  border: 1px solid var(--border); border-radius: 6px; padding: 10px;
+  background: var(--page);
+}
+.bnf-build-incumbent-fact { font-size: 12.5px; color: var(--ink2); }
+.bnf-build-incumbent-fact b { color: var(--ink); }
+.bnf-build-incumbent-note {
+  font-size: 12px; color: var(--ink2);
+  border-top: 1px dashed var(--border); padding-top: 8px;
+}
+.bnf-build-order {
+  display: inline-flex; align-items: center; gap: 4px; margin-left: auto;
+}
+.bnf-build-order-btn {
+  border: 1px solid var(--border); background: var(--card); border-radius: 4px;
+  padding: 1px 7px; font-size: 10.5px; cursor: pointer; color: var(--ink2);
+}
+.bnf-build-order-btn:disabled { opacity: 0.4; cursor: default; }
+.bnf-build-order-btn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
+.bnf-build-preset { flex: 0 0 auto; width: auto; }
+.bnf-build-newhint { margin-bottom: 4px; }
+.bnf-build-chosen {
+  border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.bnf-build-chosen-row {
+  display: flex; align-items: center; gap: 6px; font-size: 12.5px;
+}
+.bnf-build-chosen-label { flex: 1 1 auto; }
+.bnf-build-block-pin { flex: 0 0 auto; font-size: 11.5px; padding: 2px 6px; }
+
+/* Presented-only (rate-guaranteed) lines on the client surfaces. */
+.bnf-share-incumbent .bnf-share-card-note { font-style: italic; }
+.bnf-share-incumbent-fact { margin-top: 6px; }
+.bnf-share-tableline {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--ink2); margin: 14px 0 6px;
+}
+.bnf-proposal-incumbent {
+  border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 6px; background: #fff;
+}
+.bnf-proposal-incumbent-fact {
+  display: flex; justify-content: space-between; gap: 16px; font-size: 13px;
+  border-bottom: 1px dashed var(--border); padding-bottom: 5px;
+}
+.bnf-proposal-incumbent-fact span { color: var(--ink2); }
+.bnf-proposal-incumbent-note { font-size: 12px; color: var(--ink2); font-style: italic; }
+
+/* The executive summary as it renders on the client-facing pages. */
+.bnf-exec {
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; margin: 14px 0; background: var(--card);
+}
+.bnf-exec-title {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--ink2); margin-bottom: 10px;
+}
+.bnf-exec-grid {
+  display: grid; gap: 12px 22px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.bnf-exec-line {
+  grid-column: 1 / -1; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink3);
+  border-top: 1px solid var(--border-soft); padding-top: 8px;
+}
+.bnf-exec-grid > .bnf-exec-line:first-child { border-top: none; padding-top: 0; }
+.bnf-exec-label { font-size: 11.5px; color: var(--ink2); }
+.bnf-exec-value { font-size: 19px; font-weight: 700; line-height: 1.2; }
+.bnf-exec-delta { font-size: 12px; font-weight: 600; }
+.bnf-exec-delta-good { color: var(--green); }
+.bnf-exec-delta-bad { color: var(--rose); }
+.bnf-exec-sub { font-size: 11px; color: var(--ink3); }
+
+/* ===== Markets checked (proposal-polish.md) ===== */
+/* The firm's "Markets Checked" sheet: one table per line, Carrier | Quoted |
+   On this proposal | Notes. Framed like the executive summary above it. */
+.bnf-markets {
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; margin: 14px 0; background: var(--card);
+}
+.bnf-markets-line + .bnf-markets-line { margin-top: 12px; }
+.bnf-markets .bnf-exec-line { border-top: none; padding: 0 0 6px; }
+/* Fixed layout so every line's table puts its columns in the same place. */
+.bnf-markets-table {
+  width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed;
+}
+.bnf-markets-table th:nth-child(1) { width: 34%; }
+.bnf-markets-table th:nth-child(2) { width: 12%; }
+.bnf-markets-table th:nth-child(3) { width: 18%; }
+.bnf-build-markets th:nth-child(5) { width: 8%; }
+.bnf-markets-table th {
+  text-align: left; font-size: 11px; font-weight: 700; color: var(--ink2);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border); padding: 6px 8px;
+}
+.bnf-markets-table td {
+  padding: 7px 8px; border-bottom: 1px solid var(--border-soft);
+  vertical-align: top;
+}
+.bnf-markets-scroll { overflow-x: auto; }
+/* A floor width so a phone scrolls the table instead of breaking "Yes"
+   mid-word under the headers. */
+.bnf-markets .bnf-markets-table { min-width: 460px; }
+.bnf-markets-table th { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bnf-markets-table td:first-child, .bnf-markets-table td:last-child { overflow-wrap: anywhere; }
+.bnf-markets-current { color: var(--ink3); }
+.bnf-markets-noquote td:nth-child(2) { color: var(--ink3); }
+.bnf-markets-note { color: var(--ink2); }
+/* The builder's card-stat picker (proposal-polish.md). */
+.bnf-build-cardstats { margin: 10px 0 12px; }
+.bnf-build-cardstats .bnf-build-chosen { margin-top: 4px; }
+.bnf-build-cardstats-add { margin-top: 6px; max-width: 280px; }
+/* The builder's editable copy of the table. */
+.bnf-build-markets { margin-top: 10px; }
+.bnf-build-markets .bnf-intake-input { width: 100%; min-width: 0; box-sizing: border-box; }
+.bnf-build-markets-hidden td { opacity: 0.5; }
+
+/* ===== Lost deals (D-037) ===== */
+.bnf-action-lost { background: var(--rose-bg); color: var(--rose); }
+.bnf-lost-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin: 10px 0 14px; padding: 10px 14px;
+  background: var(--rose-bg); color: var(--rose);
+  border: 1px solid var(--rose); border-radius: 8px; font-size: 13px;
+}
+.bnf-lost-confirm { justify-content: flex-start; }
+.bnf-lost-confirm .bnf-intake-input { flex: 1; max-width: 420px; }
+.bnf-lost-confirm .btn { flex: 0 0 auto; white-space: nowrap; }
+.bnf-ov-titlebtns { display: flex; gap: 8px; align-items: flex-start; }

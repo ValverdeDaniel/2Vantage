@@ -1,0 +1,172 @@
+/* ----- Client-portal intake acceleration (upload-to-prefill + guidance) ----- */
+.bnf-prefill-hero {
+  border: 1px solid var(--blue);
+  background: var(--blue-bg);
+}
+.bnf-prefill-heading {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--navy);
+  margin-bottom: 4px;
+}
+.bnf-prefill-sub {
+  color: var(--ink2);
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.bnf-prefill-note { margin-top: 8px; color: var(--green); }
+
+.bnf-progress-card { padding-top: 14px; padding-bottom: 14px; }
+.bnf-progress-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.bnf-progress-label { font-weight: 600; color: var(--ink); }
+.bnf-progress-count { font-size: 12.5px; color: var(--ink2); }
+.bnf-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.bnf-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--green);
+  transition: width 0.3s ease;
+}
+
+/* Portal to-do list (the progressive missing-item checklist) */
+.bnf-todo-card {
+  padding-top: 14px;
+  padding-bottom: 10px;
+  position: sticky;
+  top: 12px;
+  z-index: 5;
+}
+
+/* Benefits portal two-column shell — the to-do list on a sticky left rail.
+   Only the benefits portal widens (bb-portal-body is shared with the
+   benibridge portal and the proposal share page). */
+.bnf-portal-wide { max-width: 1040px; }
+.bnf-portal-grid {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 18px;
+  /* LOAD-BEARING: with the default stretch, the rail is as tall as the page
+     and position:sticky inside it silently does nothing. */
+  align-items: start;
+}
+.bnf-portal-rail {
+  position: sticky;
+  top: 12px;
+  z-index: 5;
+}
+/* The rail is the sticky element now — the card inside must not double up. */
+.bnf-portal-rail .bnf-todo-card { position: static; }
+@media (max-width: 860px) {
+  .bnf-portal-grid { grid-template-columns: 1fr; }
+  .bnf-portal-rail { position: static; }
+}
+/* D-162: at 1200px and up the page grows a comment margin to the right of
+   the form (`CommentMargin`, styled in reviewrequest.css). The margin alone
+   stretches to the row's height: the cards sit level with their items. */
+.bnf-portal-wide.bnf-portal-has-margin { max-width: 1360px; }
+.bnf-portal-grid.bnf-portal-grid-margin { grid-template-columns: 240px minmax(0, 1fr) 300px; }
+.bnf-portal-solo-margin { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+.bnf-portal-margin { align-self: stretch; min-width: 0; }
+.bnf-todo-items { margin-top: 12px; }
+.bnf-todo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 4px;
+  border: none;
+  border-bottom: 1px solid var(--border-softer);
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.bnf-todo-item:last-child { border-bottom: none; }
+.bnf-todo-item:hover { background: var(--page); }
+.bnf-todo-check {
+  flex: none;
+  width: 18px;
+  color: var(--ink3);
+  font-weight: 700;
+}
+.bnf-todo-item-done .bnf-todo-check { color: var(--green); }
+.bnf-todo-item-done .bnf-todo-label { color: var(--ink2); }
+.bnf-todo-label { flex: 1; font-weight: 600; }
+.bnf-todo-count { font-size: 12px; color: var(--ink2); }
+.bnf-todo-staged { color: var(--violet); font-weight: 600; }
+
+/* Portal received-document row (resume state) */
+.bnf-doc-received { padding: 10px 0; }
+.bnf-doc-received .bb-badge { margin-left: auto; }
+
+/* Producer checklist overrides (waive / re-ask / custom asks) */
+.bb-badge-muted { background: var(--border-softer); color: var(--ink2); }
+.bnf-marketing-row.is-waived .bnf-marketing-label,
+.bnf-marketing-row.is-waived .bnf-marketing-detail { color: var(--ink3); }
+/* Opt-in offer rows (the un-armed stop-loss disclosure): visible so the
+   producer can turn them on, but visually outside the required set. */
+.bnf-marketing-row.is-offer .bnf-marketing-label,
+.bnf-marketing-row.is-offer .bnf-marketing-detail { color: var(--ink3); }
+.bnf-override-link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bnf-override-link:hover { text-decoration: underline; }
+/* "Still needed ▸" only. Rebecca, 2026-09-24: "can we make the still needed
+   button red so that it's like highlighted… just so it stands out a little
+   more, like when there are pending items." Its own modifier rather than a
+   colour change on `.bnf-override-link`, which three other actions share —
+   Undo, Not needed and Remove are not warnings. */
+.bnf-override-link.is-reask { color: var(--rose); }
+.bnf-client-note { color: var(--violet); }
+.bnf-override-note {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+}
+.bnf-override-note input {
+  flex: 1;
+  min-width: 200px;
+  font-size: 12.5px;
+  padding: 5px 8px;
+}
+.bnf-override-note .btn { flex: 0 0 auto; }
+.bnf-ask-form {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-softer);
+}
+.bnf-ask-form input { flex: 1; font-size: 12.5px; padding: 5px 8px; }
+.bnf-ask-form .btn { flex: 0 0 auto; }
+
+/* Forced-item note shown to the client inside the portal drop card */
+.bnf-portal-doc-note {
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--violet);
+  margin-bottom: 4px;
+}

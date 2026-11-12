@@ -6,21 +6,31 @@ import { downloadFile } from '../../lib/download';
 import { errorText } from '../../lib/errors';
 import Button from '../../ui/Button';
 import cx from '../../ui/cx';
-import EmptyState from '../../ui/EmptyState';
 import InlineError from '../../ui/InlineError';
+import Loading from '../../ui/Loading';
 import Menu from '../../ui/Menu';
-import Skeleton from '../../ui/Skeleton';
+import RefreshChip from '../../ui/RefreshChip';
 import { useToast } from '../../ui/useToast';
-import styles from './AdvisorTab.module.css';
 import EnrollmentCard from './EnrollmentCard';
 import PackagesPanel from './PackagesPanel';
 import PlanDialog from './PlanDialog';
 import PlanTable from './PlanTable';
 import TemplateImport from './TemplateImport';
 
+// The old empty Advisor (AdvisorTab.jsx at 891f1b3): a panel with a title and a grey line.
+function EmptyPanel({ title, children }) {
+  return (
+    <div className="bb-panel">
+      <div className="bb-panel-title">{title}</div>
+      <div className="bb-panel-sub">{children}</div>
+    </div>
+  );
+}
+
 /**
- * The Advisor (plan.md §8.11): every plan on a line side by side, priced by the server. In Release 1 a plain
- * table of inputs. Its queries live under ['deal', id, 'advisor', …] with staleTime 0.
+ * The Advisor (plan.md §8.14): 2V's simplified Advisor (F134) until slice 9 replaces it — every plan on a line side
+ * by side, priced by the server, in the old Proposal grid's look. Its queries live under ['deal', id, 'advisor', …]
+ * with staleTime 0.
  */
 export default function AdvisorTab({ deal }) {
   const toast = useToast();
@@ -79,81 +89,106 @@ export default function AdvisorTab({ deal }) {
     }
   }
 
-  if (lines.isPending) return <Skeleton lines={6} height="18px" label="Loading the Advisor…" />;
-  if (lines.isError) return <InlineError error={lines.error} onRetry={() => lines.refetch()} />;
-  if (!lines.data.length) {
-    return (
-      <EmptyState title="No lines to quote yet">
-        Add the lines to quote in the deal header (Lines), then add plans here.
-      </EmptyState>
-    );
+  if (lines.isPending) return <Loading label="Loading the quotes…" />;
+  if (lines.isError) {
+    return <InlineError title="Quote advisor" error={lines.error} onRetry={() => lines.refetch()} />;
   }
 
   const data = comparison.data;
   return (
-    <div className={styles.tab}>
-      <nav className={styles.linePicker} aria-label="Lines of coverage">
-        {lines.data.map((row) => (
-          <button
-            key={row.line}
-            type="button"
-            aria-current={row.line === line ? 'true' : undefined}
-            className={cx(styles.lineButton, row.line === line && styles.lineActive)}
-            onClick={() => setParams({ line: row.line })}
-            title={`${row.current} current · ${row.renewal} renewal · ${row.alternate} alternate`}
-          >
-            {row.label}{' '}
-            <span className={styles.counts}>
-              ({row.current}·{row.renewal}·{row.alternate})
-            </span>
-            {row.recommendation_covered && <span className={styles.covered} aria-label="Every current plan has a recommendation"> ✓</span>}
-          </button>
-        ))}
-      </nav>
-
-      <div className={styles.toolbar}>
-        <Button variant="primary" onClick={() => setPlanDialog({ plan: null })}>
-          + Plan
-        </Button>
-        <Button onClick={() => setEnrollment({ preselect: [] })} disabled={!data?.plans.length}>
-          Enrollment
-        </Button>
-        <Menu
-          label="Template"
-          items={[
-            { key: 'line', label: 'Download plan template (this line)', onSelect: () => download('line') },
-            { key: 'all', label: 'Download plan template (all lines)', onSelect: () => download('all') },
-            { key: 'import', label: 'Import plan template…', onSelect: () => setImporting(true) },
-          ]}
-        />
-        <label className={styles.hideEmpty}>
-          <input type="checkbox" checked={hideEmpty} onChange={(event) => setHideEmpty(event.target.checked)} /> Hide
-          empty rows
-        </label>
+    <div className="bb-tab-page">
+      <div className="bb-sov-header">
+        <div>
+          <div className="bb-tab-title">
+            Quote advisor
+            <RefreshChip
+              label="Refreshing quotes…"
+              loading={Boolean(data) && comparison.isFetching}
+              error={Boolean(data) && comparison.isError}
+              onRetry={() => comparison.refetch()}
+            />
+          </div>
+          <div className="bb-subtitle">
+            Plans as columns, benefits as rows. Click any cell to edit. Coloured cells need attention.
+          </div>
+        </div>
       </div>
 
-      {comparison.isError && <InlineError error={comparison.error} onRetry={() => comparison.refetch()} />}
-      {!data && comparison.isPending && <Skeleton lines={8} height="18px" label="Loading plans…" />}
-      {data?.warnings?.map((warning) => (
-        <p key={warning.code} className={styles.warning} role="status">
-          <span aria-hidden="true">⚠ </span>
-          {warning.message}
-        </p>
-      ))}
-      {data && !data.plans.length && (
-        <EmptyState title="No plans on this line yet" compact>
-          Add a plan, or import the plan template.
-        </EmptyState>
-      )}
-      {data && data.plans.length > 0 && (
+      {!lines.data.length ? (
+        <EmptyPanel title="No lines to quote yet">
+          Add the lines to quote in the deal header (Lines), then add plans here.
+        </EmptyPanel>
+      ) : (
         <>
-          <PlanTable comparison={data} fieldsByKey={fieldsByKey} hideEmpty={hideEmpty} actions={actions} />
-          <PackagesPanel
-            comparison={data}
-            create={mutations.createPackage}
-            update={mutations.updatePackage}
-            remove={mutations.deletePackage}
-          />
+          <nav className="bnf-lineswitch" aria-label="Lines of coverage">
+            {lines.data.map((row) => (
+              <button
+                key={row.line}
+                type="button"
+                aria-current={row.line === line ? 'true' : undefined}
+                className={cx('bnf-linetab', row.line === line && 'bnf-linetab-on')}
+                onClick={() => setParams({ line: row.line })}
+                title={`${row.current} current · ${row.renewal} renewal · ${row.alternate} alternate`}
+              >
+                {row.label}
+                <span className="bnf-linetab-count">
+                  {row.current}·{row.renewal}·{row.alternate}
+                </span>
+                {row.recommendation_covered && (
+                  <span className="bnf-linetab-done" aria-label="Every current plan has a recommendation">
+                    ✓
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
+
+          <div className="bb-sov-toolbar bnf-grid-toolbar">
+            <label className="bnf-filter-check">
+              <input type="checkbox" checked={hideEmpty} onChange={(event) => setHideEmpty(event.target.checked)} />
+              Hide empty rows
+            </label>
+            <div className="bb-toolbar-actions">
+              <Menu
+                label="Template"
+                items={[
+                  { key: 'line', label: 'Download plan template (this line)', onSelect: () => download('line') },
+                  { key: 'all', label: 'Download plan template (all lines)', onSelect: () => download('all') },
+                  { key: 'import', label: 'Import plan template…', onSelect: () => setImporting(true) },
+                ]}
+              />
+              <Button size="sm" onClick={() => setEnrollment({ preselect: [] })} disabled={!data?.plans.length}>
+                Enrollment
+              </Button>
+              <Button size="sm" variant="primary" onClick={() => setPlanDialog({ plan: null })}>
+                ＋ Plan
+              </Button>
+            </div>
+          </div>
+
+          {comparison.isError && !data && (
+            <InlineError compact error={comparison.error} onRetry={() => comparison.refetch()} />
+          )}
+          {!data && comparison.isPending && <Loading label="Loading the quotes…" />}
+          {data?.warnings?.map((warning) => (
+            <div key={warning.code} className="bnf-tiersource-note bnf-tiersource-none" role="status">
+              ⚠ {warning.message}
+            </div>
+          ))}
+          {data && !data.plans.length && (
+            <EmptyPanel title="No plans on this line yet">Add a plan, or import the plan template.</EmptyPanel>
+          )}
+          {data && data.plans.length > 0 && (
+            <>
+              <PlanTable comparison={data} fieldsByKey={fieldsByKey} hideEmpty={hideEmpty} actions={actions} />
+              <PackagesPanel
+                comparison={data}
+                create={mutations.createPackage}
+                update={mutations.updatePackage}
+                remove={mutations.deletePackage}
+              />
+            </>
+          )}
         </>
       )}
 

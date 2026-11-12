@@ -1,0 +1,115 @@
+# Old Vantage (891f1b3) as its own Compose project, beside 2Vantage (plan.md §3.4, §12.7; Q.5). Synthetic data only.
+#
+#   docker compose -f tools/parity/docker-compose.yml up -d --build      (after bash tools/parity/export_old.sh)
+#
+# Its own name, database and media volumes, and ports: frontend http://localhost:4002, backend :8005, postgres :5437
+# (2Vantage uses 4001/8004/5436, the real old app 4000/8003/5435). The app's containers sit on an internal network
+# with no route out; only the gateway publishes ports. Code is mounted read-only from the export folder, never from
+# the old repository. The AI key is a dummy that can never reach Claude.
+name: vantage-parity
+
+x-export: &export ${PARITY_EXPORT_DIR:-${LOCALAPPDATA}/2vantage-parity/old-891f1b3}
+
+x-backend-env: &backend-env
+  ENVIRONMENT: local
+  DJANGO_DEBUG: "True"
+  DJANGO_SECRET_KEY: parity-only-not-secret
+  DB_NAME: parity_old
+  DB_USER: parity
+  DB_PASSWORD: parity-only
+  DB_HOST: db
+  DB_PORT: "5432"
+  FRONTEND_URL: http://localhost:4002
+  ANTHROPIC_API_KEY: dummy-no-calls
+  # Belt and braces: the internal network has no route out, and any HTTP client that tried would hit a dead proxy.
+  HTTP_PROXY: http://0.0.0.0:9
+  HTTPS_PROXY: http://0.0.0.0:9
+  NO_PROXY: localhost,127.0.0.1,db,backend,frontend
+  PARITY_SPECS: /parity/specs
+
+services:
+  db:
+    image: postgres:15
+    command: ["postgres", "-c", "recovery_init_sync_method=syncfs"]
+    stop_grace_period: 60s
+    environment:
+      POSTGRES_DB: parity_old
+      POSTGRES_USER: parity
+      POSTGRES_PASSWORD: parity-only
+    volumes: [db:/var/lib/postgresql/data]
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U parity -d parity_old"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  backend:
+    build:
+      context: *export
+      dockerfile: Dockerfile
+    image: vantage-parity-backend:891f1b3
+    environment: *backend-env
+    volumes:
+      - type: bind
+        source: *export
+        target: /app
+        read_only: true
+      - media:/app/media
+      - references:/app/referenceFiles
+      - static:/app/staticfiles
+      # The same golden specs 2Vantage's seed reads, and the loader, read-only.
+      - ../../golden/specs:/parity/specs:ro
+      - ./old_loader.py:/parity/old_loader.py:ro
+    networks: [internal]
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ${PARITY_EXPORT_DIR:-${LOCALAPPDATA}/2vantage-parity/old-891f1b3}/frontend
+      dockerfile: Dockerfile.dev
+    image: vantage-parity-frontend:891f1b3
+    command: ["npx", "vite", "--host", "--port", "4000", "--strictPort"]
+    environment:
+      # The browser calls the old API straight, as the old app does (its api base is VITE_API_URL).
+      VITE_API_URL: http://localhost:8005/api
+    volumes:
+      - type: bind
+        source: ${PARITY_EXPORT_DIR:-${LOCALAPPDATA}/2vantage-parity/old-891f1b3}/frontend
+        target: /app
+        read_only: true
+      - /app/node_modules
+    networks: [internal]
+    depends_on: [backend]
+
+  gateway:
+    image: nginx:1.27-alpine
+    volumes: [./gateway.conf:/etc/nginx/nginx.conf:ro]
+    ports: ["4002:4000", "8005:8000", "5437:5432"]
+    networks: [internal, edge]
+    depends_on: [frontend, backend, db]
+
+  # The tools image (plan.md §12.7): LibreOffice, poppler and the Python readers, for Recalc and Fidelity
+  # (slices 27–28). Run on demand:  docker compose -f tools/parity/docker-compose.yml run --rm tools <command>
+  tools:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vantage-parity-tools:1
+    profiles: [tools]
+    network_mode: none
+    volumes: ["../..:/work:ro"]
+
+networks:
+  internal:
+    internal: true
+  edge: {}
+
+volumes:
+  db:
+  media:
+  references:
+  static:

@@ -1,0 +1,291 @@
+/* D-151: the step-up buttons beside Undo, the running model, the file chip. */
+.bnf-work-retry { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-left: 6px; }
+.bnf-work-model { font-size: 12px; color: var(--ink2); margin: 4px 0 2px; }
+.bnf-scanchat-doc-facts { color: var(--ink2); font-size: 11px; }
+.bnf-scanchat-doc-kind {
+  font-size: 11px; padding: 0 2px; border: 1px solid #d0d7de;
+  border-radius: 4px; background: transparent; color: inherit; width: auto;
+}
+.bnf-chat-window-hint {
+  margin: 8px 0 0; padding: 6px 10px; border-radius: 6px; font-size: 12px;
+  background: var(--blue-bg); color: var(--ink2);
+}
+.bnf-wwc-guidance {
+  margin: 0 0 12px; padding: 8px 12px; border: 1px solid var(--border);
+  border-radius: 8px; background: #fff;
+}
+.bnf-wwc-guidance-head {
+  display: flex; align-items: center; justify-content: space-between; width: 100%;
+  padding: 0; border: 0; background: none; cursor: pointer; text-align: left;
+}
+.bnf-wwc-caret { color: var(--ink3); font-size: 12px; }
+.bnf-wwc-guidance .bnf-guidance-text { margin-top: 6px; white-space: pre-wrap; font-size: 13px; }
+.bnf-wwc-guidance-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.bnf-wwc-guidance-actions .btn { flex: 0 0 auto; }
+/* Work with Claude's one door on the Advisor and Proposal tabs (D-089): a navy
+   pill fixed bottom-right, rendered once by CaseWorkspace, gone while the
+   drawer is open. z 140: above the page stickies (sticky th, the proposal
+   toolbar at 10), below the drawer it opens (150), modals (200), the toast
+   (300) and the guide overlay (400). App.css gives .btn-primary width:100%;
+   the doubled class scopes it back whatever the order. */
+.btn.bnf-wwc-fab {
+  position: fixed; right: 24px; bottom: 24px; z-index: 140;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 999px; font-size: 14px;
+  white-space: nowrap; box-shadow: var(--shadow-toast);
+}
+.btn.bnf-wwc-fab:focus-visible { outline: 3px solid var(--logo-blue); outline-offset: 2px; }
+.bnf-wwc-fab-glyph { font-size: 15px; line-height: 1; }
+/* Scroll room, so a page's last rows can clear the pill. */
+.bnf-wwc-room .bb-content { padding-bottom: 72px; }
+@media (max-width: 640px) {
+  .btn.bnf-wwc-fab {
+    right: 16px; bottom: 16px; width: 44px; height: 44px;
+    padding: 0; justify-content: center;
+  }
+  .bnf-wwc-fab-label { display: none; }
+}
+.bb-extract-head .bnf-scan-stop { width: auto; flex: 0 0 auto; }
+.bb-extract-head .bnf-scan-stop:disabled { opacity: 0.6; cursor: progress; }
+
+.bnf-compare-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+.bnf-compare-table th,
+.bnf-compare-table td {
+  border-bottom: 1px solid var(--border-softer);
+  border-right: 1px solid var(--border-softer);
+  padding: 7px 10px;
+  text-align: left;
+  min-width: 150px;
+  vertical-align: top;
+  position: relative;
+}
+.bnf-compare-table thead th {
+  background: #fbfcfd;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.bnf-benefit-col {
+  position: sticky;
+  left: 0;
+  background: #fbfcfd;
+  min-width: 190px !important;
+  max-width: 220px;
+  font-weight: 600;
+  color: var(--ink2);
+  font-size: 12.5px;
+  z-index: 2;
+  box-shadow: 1px 0 0 var(--border-soft);
+}
+.bnf-compare-table td.bnf-benefit-col { background: #fff; }
+.bnf-plan-col-current { background: var(--blue-bg) !important; }
+.bnf-plan-col-sold { background: var(--green-bg) !important; }
+.bnf-plan-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.bnf-plan-carrier { font-weight: 700; color: var(--ink); }
+.bnf-plan-name { font-size: 12px; color: var(--ink2); font-weight: 400; }
+.bnf-plan-chip {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+.bnf-chip-current { background: var(--blue); color: #fff; }
+.bnf-chip-sold { background: var(--green); color: #fff; }
+.bnf-plan-menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--ink3);
+  padding: 0 3px;
+  line-height: 1;
+}
+.bnf-plan-menu-btn:hover { color: var(--ink); }
+.bnf-plan-menu {
+  position: absolute;
+  top: 34px;
+  right: 6px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-modal);
+  z-index: 30;
+  min-width: 170px;
+  padding: 4px;
+  font-weight: 400;
+}
+.bnf-plan-menu div {
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+.bnf-plan-menu div:hover { background: var(--page); }
+.bnf-menu-danger { color: var(--rose) !important; }
+/* "Move to line…" (phase 10k): the picker that replaces the menu item. */
+.bnf-plan-menu-line {
+  display: flex; align-items: center; gap: 6px; padding: 7px 10px;
+  font-size: 12.5px; color: var(--ink);
+}
+.bnf-plan-menu-line select { font: inherit; font-size: 12.5px; max-width: 160px; }
+/* CUR-1: the current-plan items wait for Edit. */
+.bnf-plan-menu .bnf-menu-disabled { color: var(--ink3); cursor: not-allowed; }
+.bnf-plan-menu .bnf-menu-disabled:hover { background: none; }
+/* D-220: a plan's place in the client's order (OrderArrows.jsx): ◀ ▶ beside a
+   Proposal grid column's ⋯, and in the Advisor's Plan cell. */
+.bnf-order-arrows {
+  display: inline-flex; gap: 2px; flex: 0 0 auto; align-self: flex-start;
+  white-space: nowrap;
+}
+.bnf-order-arrows .bnf-build-order-btn { padding: 0 5px; line-height: 1.5; }
+.bnf-advisor-order { display: flex; margin-top: 4px; }
+.bnf-group-row td {
+  background: #f2f5f9;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--ink2);
+  position: sticky;
+  left: 0;
+}
+.bnf-tiercounts {
+  margin-left: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink3);
+}
+.bnf-cell { cursor: pointer; }
+.bnf-cell.bnf-computed {
+  cursor: default;
+  font-weight: 600;
+  color: var(--ink);
+}
+.bnf-computed-row .bnf-benefit-col { color: var(--ink); }
+
+/* Census grid extras */
+.bnf-person-col {
+  flex: 0 0 70px !important;
+  width: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 0 6px;
+}
+.bnf-dep-row { background: #fafbfc; }
+.bnf-dep-marker { font-size: 10.5px; color: var(--violet); font-weight: 600; }
+.bnf-row-actions { display: none; gap: 2px; }
+.bb-grid-row:hover .bnf-row-actions { display: inline-flex; }
+.bnf-row-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink3);
+  padding: 0 2px;
+  line-height: 1;
+}
+.bnf-row-btn:hover { color: var(--blue); }
+.bnf-row-delete:hover { color: var(--rose); }
+/* The roster's Person column (CensusGrid's PERSON_PX): "＋ Dep" always
+   shows on an employee's row, greyed until ✎ Edit; × keeps its room and
+   appears on hover, so a delete is never a stray click away. Never widen
+   the shared .bnf-person-col: Documents' census grid uses it at 70px. */
+.bnf-person-col.bnf-census-person { flex: 0 0 116px !important; width: 116px; }
+.bnf-census-person .bnf-row-actions { display: inline-flex; align-items: center; flex: 0 0 auto; }
+.bnf-census-person .bnf-row-delete { visibility: hidden; }
+.bb-grid-row:hover .bnf-census-person .bnf-row-delete { visibility: visible; }
+.bnf-census-empid, .bnf-census-person .bnf-dep-marker {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bnf-dep-add {
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--violet);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.bnf-dep-add:hover:not(:disabled) { border-color: var(--violet); background: #f6f3ff; }
+.bnf-dep-add:disabled { color: var(--ink3); opacity: 0.55; cursor: not-allowed; }
+/* Its list, portalled to <body> at the button (fixed): above the roster's
+   sticky header, below the walkthrough scrim and the Ask Claude bubble. */
+.bnf-dep-menu {
+  position: fixed; z-index: 60;
+  display: flex; flex-direction: column; min-width: 180px;
+  padding: 4px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--card); box-shadow: 0 8px 24px rgba(16, 28, 46, 0.18);
+}
+.bnf-dep-menu-head {
+  padding: 6px 10px 4px; font-size: 11.5px; color: var(--ink3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px;
+}
+.bnf-dep-menu-item {
+  padding: 7px 10px; border: none; border-radius: 8px; background: none;
+  text-align: left; font-size: 13px; color: var(--ink); cursor: pointer;
+}
+.bnf-dep-menu-item:hover, .bnf-dep-menu-item:focus-visible { background: var(--page); outline: none; }
+.bnf-cell-error { box-shadow: inset 0 -2px 0 var(--rose); }
+.bnf-cell-warn { box-shadow: inset 0 -2px 0 var(--amber); }
+.bnf-swatch-error { background: var(--rose); }
+/* Stands inside .bb-toolbar-actions between btn-sm buttons, so it wears
+   the btn-sm box: same padding, font, radius and 1px border as
+   .btn-secondary — it is in a button row, not a form. align-self:stretch
+   closes the last pixel, since a native select's intrinsic height differs
+   from a button's per browser. (Same treatment as .bnf-advisor-tablebar
+   .filter-select further up.) */
+.bnf-template-select {
+  padding: 0 0.75rem;
+  border: 1px solid #cdd8e6;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--navy);
+  background: #fff;
+  max-width: 230px;
+  flex: 0 0 auto;
+  line-height: 1.25;
+  /* A native select carries internal chrome a button does not, so it
+     measured 3px taller than its neighbours even at identical padding.
+     Vertical padding is dropped and the height comes from stretch, which
+     is exactly the flex line's cross size — i.e. the buttons. */
+  align-self: stretch;
+  cursor: pointer;
+}
+
+/* The census empty state's three CTAs — scan, hand-entry, ask the
+   employer — as one row, the .bnf-intake-head-actions idiom. Replaces a
+   bare .bb-mt div plus an inline marginLeft. */
+.bnf-census-empty-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 1.1rem;
+}
+.bnf-census-empty-actions .btn { flex: 0 0 auto; }
+.bnf-export-warnings { padding: 4px 0 14px; }
+.bnf-export-ok { color: var(--green); font-size: 13px; font-weight: 600; }
+.bnf-export-warning {
+  color: var(--amber);
+  font-size: 13px;
+  padding: 4px 0;
+}

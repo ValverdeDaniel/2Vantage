@@ -14,7 +14,7 @@ from deals.downloads import file_response
 from deals.models import Deal
 from documents import services as documents
 
-from . import template
+from . import services, template
 
 
 class TemplateDownloadView(APIView):
@@ -44,5 +44,5 @@ class TemplateImportView(APIView):
         with transaction.atomic():  # the stored file and every change, or nothing
             stored = SimpleUploadedFile(upload.name, content)
             document = documents.upload(request.user, deal, stored, {'kind': 'other', 'label': 'Plan template import'})
-            result = template.apply(request.user, deal, operations, document)
+            result = services.apply_template(request.user, deal, operations, document)
         return Response({**result, 'errors': []})

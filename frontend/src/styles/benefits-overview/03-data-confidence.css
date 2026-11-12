@@ -1,0 +1,211 @@
+/* --- data confidence ------------------------------------------------------ */
+
+.bnf-ov-conf-split {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.bnf-ov-conf-cell {
+  background: var(--page);
+  border-radius: 9px;
+  padding: 10px 12px;
+}
+
+.bnf-ov-conf-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.bnf-ov-conf-label {
+  font-size: 11.5px;
+  color: var(--ink2);
+  margin-top: 1px;
+}
+
+.bnf-ov-conf-bar {
+  margin-bottom: 5px;
+}
+
+.bnf-ov-conf-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 7px;
+  font-size: 11.5px;
+  color: var(--ink2);
+}
+
+/* the two confirmations are never conflated: a person's sign-off is navy,
+   the re-read's is a lighter tint of the same idea */
+.bnf-ov-key {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  margin-right: 5px;
+  vertical-align: -1px;
+}
+
+.bnf-ov-key-user { background: var(--navy); }
+.bnf-ov-key-auto { background: var(--blue-bg); border: 1px solid var(--blue); }
+
+.bnf-ov-conf-docs {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.bnf-ov-conf-doc {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-softer);
+}
+
+.bnf-ov-conf-doc:last-child {
+  border-bottom: none;
+}
+
+.bnf-ov-conf-docmain {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.bnf-ov-conf-docmeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 3px;
+}
+
+/* --- the AI re-read ------------------------------------------------------- */
+
+.bnf-ov-audit {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--page);
+  border-radius: 10px;
+}
+
+.bnf-ov-audit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.bnf-ov-audit-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.bnf-ov-audit-result {
+  font-size: 12.5px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.bnf-ov-audit-rows {
+  margin-top: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.bnf-ov-audit-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  padding: 6px 8px;
+  background: #fff;
+  border: 1px solid var(--border-soft);
+  border-radius: 7px;
+  font-size: 12px;
+}
+
+.bnf-ov-audit-label {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.bnf-ov-audit-diff {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.bnf-ov-audit-arrow {
+  color: var(--ink3);
+}
+
+/* --- responsive ----------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+  .bnf-ov-cols {
+    flex-direction: column;
+  }
+
+  .bnf-ov-cols .bb-panel-wide,
+  .bnf-ov-cols .bb-overview-side {
+    width: 100%;
+  }
+}
+
+@media (max-width: 860px) {
+  .bnf-ov-identity {
+    flex-wrap: wrap;
+  }
+
+  .bnf-ov-clientbox {
+    text-align: left;
+    align-items: flex-start;
+    max-width: none;
+  }
+
+  .bnf-ov-clientmeta {
+    justify-content: flex-start;
+  }
+
+  .bnf-ov-outreach,
+  .bnf-ov-conf-split,
+  .bnf-ov-docsplit {
+    grid-template-columns: 1fr;
+  }
+
+  .bnf-ov-comm-meta {
+    padding-left: 0;
+  }
+
+  .bnf-ov-timeline .bnf-ov-event {
+    grid-template-columns: 100px 12px 1fr;
+  }
+
+  .bnf-ov-actor {
+    display: none;
+  }
+}
+
+/* --- export status report ------------------------------------------------- */
+
+.bnf-ov-titlerow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 1.6rem;
+}
+
+/* .btn-primary/.btn-secondary carry no width, but the title row must not let
+   the button stretch when the heading wraps on a narrow viewport. */
+.bnf-ov-exportbtn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}

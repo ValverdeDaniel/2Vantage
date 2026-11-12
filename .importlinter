@@ -1,0 +1,24 @@
+# The app chain (plan.md §3.3, O.1): an app imports only from apps to its left. Run: docker compose exec backend
+# lint-imports (the Lint lane, Q.2). Each later app joins `layers` in the slice that creates it, in chain order:
+# accounts → deals → documents → ai → intake → census → quotes → questionnaire → commission → rfp → proposals
+#          → review → agenda → overview → golden
+# backend/ (settings, URLs, /api/meta/) is the composition root and is not a layer; tests import the root conftest.
+[importlinter]
+root_packages =
+    accounts
+    deals
+    documents
+    quotes
+    proposals
+    golden
+
+[importlinter:contract:chain]
+name = The app chain: an app imports only from apps to its left
+type = layers
+layers =
+    golden
+    proposals
+    quotes
+    documents
+    deals
+    accounts

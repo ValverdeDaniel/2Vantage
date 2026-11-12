@@ -1,0 +1,296 @@
+/* --- the COBRA check on the Census tab (2026-09-24) ----------------------- */
+/* Violet rather than amber: the carry notice beside it is amber, and two
+   amber strips stacked read as one warning rather than two different things.
+   This is a reminder to look somewhere else, not a problem with the file. */
+.bnf-cobra-check {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--violet-bg);
+  border: 1px solid #d9cdf0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 12.5px;
+  color: var(--ink2);
+}
+
+.bnf-cobra-check.bnf-cobra-done {
+  background: var(--green-bg);
+  border-color: #bfe3ce;
+}
+
+/* Waived says so quietly — somebody decided, and a strip that still looked
+   like a to-do would be arguing with them. */
+.bnf-cobra-check.bnf-cobra-waived {
+  background: var(--border-softer);
+  border-color: var(--border);
+  color: var(--ink3);
+}
+
+.bnf-cobra-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 260px;
+}
+
+.bnf-cobra-label input { margin: 0; flex: none; position: relative; top: 2px; }
+.bnf-cobra-label input:disabled { cursor: default; }
+.bnf-cobra-text { flex: 1; }
+.bnf-cobra-stamp { color: var(--ink3); font-size: 11.5px; white-space: nowrap; }
+.bnf-cobra-hint { color: var(--ink3); font-size: 11.5px; flex-basis: 100%; }
+
+.bnf-canned-message textarea {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.bnf-canned-message .btn { margin-top: 6px; }
+
+.bnf-portal-prefill-note { border-left: 3px solid var(--blue); }
+
+/* Workspace: next-step banner (Overview) */
+.bnf-next-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: var(--blue-bg);
+  border: 1px solid #cfe0f5;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 1.25rem;
+}
+.bnf-next-banner.bnf-next-error { background: var(--rose-bg); border-color: #f2cfcb; }
+.bnf-next-banner.bnf-next-warn { background: var(--amber-bg); border-color: #ecd9a8; }
+.bnf-next-label { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--ink3); }
+.bnf-next-text { font-weight: 600; color: var(--ink); }
+
+/* Overview: account & contact snapshot */
+.bnf-snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 28px;
+  margin-top: 10px;
+}
+.bnf-snapshot-grid .bb-account-row:last-child,
+.bnf-snapshot-grid .bb-account-row:nth-last-child(2) { border-bottom: none; }
+@media (max-width: 720px) {
+  .bnf-snapshot-grid { grid-template-columns: 1fr; }
+}
+
+/* Proposal tab: tier-counts source note */
+.bnf-tiersource-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink2);
+  margin-bottom: 10px;
+}
+.bnf-tiersource-note.bnf-tiersource-none { color: var(--amber); }
+.bnf-tiersource-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blue);
+  cursor: pointer;
+}
+.bnf-tiersource-link:hover { text-decoration: underline; }
+
+/* Dashboard extras */
+.bnf-error-chip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--rose-bg);
+  color: var(--rose);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* New case: two drop cards side by side */
+.bnf-drop-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Workspace sidebar: stacked mini readiness meters */
+.bnf-readiness { display: flex; flex-direction: column; gap: 10px; }
+.bnf-meter-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 3px;
+}
+.bnf-meter-label { font-size: 11.5px; color: var(--ink2); }
+.bnf-meter-pct { font-size: 12px; font-weight: 600; }
+
+/* Overview tool cards & document rows */
+.bnf-tool-card { margin-bottom: 0; }
+.bnf-tool-card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+.bnf-tool-pct { font-size: 18px; font-weight: 700; }
+.bnf-docs-panel { margin-top: 1.25rem; }
+.bnf-doc-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-softer);
+  font-size: 13px;
+}
+.bnf-doc-row:last-child { border-bottom: none; }
+.bnf-doc-icon { font-size: 15px; }
+.bnf-doc-name { font-weight: 600; color: var(--ink); flex: 0 1 auto; }
+.bnf-doc-row .bb-drop-meta { margin-left: auto; }
+.bnf-doc-row .bb-drop-meta + .bb-drop-meta { margin-left: 12px; }
+
+/* Comparison grid (transposed: plans as columns) */
+.bnf-extract-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink2);
+  margin-bottom: 10px;
+}
+.bnf-addplan-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--blue-bg);
+  border: 1px solid #cfe0f5;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+.bnf-addplan-bar input {
+  padding: 6px 10px;
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+}
+/* The comparison and census grid toolbars (phase 10j). .btn has no disabled
+   look of its own, so "＋ Add plan" waiting for ✎ Edit looked live and
+   swallowed the click. The wrapping span carries the tooltip, because a
+   disabled button gets no hover in every browser. SOVGrid shares
+   .bb-sov-toolbar and is left alone. */
+.bnf-grid-toolbar .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.bnf-locked-hint { display: inline-flex; }
+/* Stop on the scan chat's progress card, after the percent (phase 10j). */
+.bnf-extract-right { display: inline-flex; align-items: center; gap: 10px; }
+/* Work with Claude (phase 10m): the chat bar (chats, ＋ New chat, the two
+   model picks, the spend), each reply's cost line, the window hint, and the
+   drawer's client-guidance box. */
+.bnf-chatbar { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 8px; }
+.bnf-chatbar-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bnf-chatbar-row .btn { flex: 0 0 auto; }
+.bnf-chatbar select {
+  font: inherit; font-size: 12.5px; padding: 3px 6px; border-radius: 6px;
+  border: 1px solid var(--input-border); background: #fff; color: var(--ink);
+}
+.bnf-chatbar-chats { max-width: 320px; }
+/* D-096: a chat list that failed to load says so, with a retry; the keyless
+   panel shows the deal's chats read-only. */
+.bnf-scanchat-loaderr {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 8px 10px; font-size: 12.5px; color: var(--ink2);
+}
+.bnf-scanchat-loaderr .btn { flex: 0 0 auto; }
+.bnf-scanchat-readonly { margin-bottom: 8px; }
+/* D-096: the drawer head's kind picker (Carrier quotes · SBCs, or the armed
+   questionnaire forms), and the Documents tab's "File as" list — files wait
+   here, each with its type, until every one has one. */
+.bnf-wwc-kinds { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink2); }
+/* The plan table locked from Claude (ClaudeLockSwitch). */
+.bnf-claude-lock { display: inline-flex; align-items: center; gap: 5px; width: auto; white-space: nowrap; }
+.bnf-claude-lock.pill {
+  font: inherit; font-size: 12px; line-height: 1.3; padding: 3px 9px;
+  border-radius: 999px; border: 1px solid var(--input-border);
+  background: #fff; color: var(--ink2); cursor: pointer;
+}
+.bnf-claude-lock.pill:hover:not(:disabled) { border-color: var(--ink3); color: var(--ink); }
+.bnf-claude-lock.on, .bnf-claude-lock.on:hover:not(:disabled) {
+  background: var(--amber-bg); border-color: var(--amber); color: var(--amber); font-weight: 600;
+}
+.bnf-claude-lock:disabled { opacity: 0.6; cursor: default; }
+.bnf-claude-lock-by { font-weight: 400; }
+.bnf-wwc-lock-row { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; flex-wrap: wrap; }
+.bnf-wwc-lock-note { font-size: 11.5px; color: var(--ink2); }
+.bnf-scanchat-quiet {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--amber-bg); border: 1px solid var(--amber);
+  border-radius: 8px; padding: 7px 9px; font-size: 12px; color: var(--ink);
+  line-height: 1.45; margin-top: 8px;
+}
+.bnf-wwc-kinds select {
+  font: inherit; font-size: 12.5px; padding: 3px 6px; border-radius: 6px;
+  border: 1px solid var(--input-border); background: #fff; color: var(--ink); max-width: 220px;
+}
+.bnf-scanchat-fileas {
+  margin: 6px 0 10px; padding: 8px 10px; border: 1px dashed var(--blue);
+  border-radius: 8px; background: var(--blue-bg);
+}
+.bnf-scanchat-fileas-head { font-size: 12.5px; color: var(--ink2); margin-bottom: 6px; }
+.bnf-scanchat-fileas-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.bnf-scanchat-fileas-name {
+  flex: 1 1 auto; min-width: 0; font-size: 13px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.bnf-scanchat-fileas-drop {
+  border: none; background: none; color: var(--ink3); cursor: pointer; padding: 2px 6px;
+  font-size: 13px; border-radius: 6px;
+}
+.bnf-scanchat-fileas-drop:hover { color: var(--ink); background: #fff; }
+.bnf-scanchat-fileas .btn { margin-top: 2px; }
+/* D-096: a renewal's earlier years — the client's earlier deals' chats, listed
+   on demand and opened read-only in place of this year's transcript. */
+.bnf-scanchat-prior { margin: 2px 0 8px; font-size: 12.5px; }
+.bnf-scanchat-prior-toggle {
+  border: none; background: none; padding: 2px 0; color: var(--ink2); cursor: pointer;
+  font: inherit; font-size: 12.5px;
+}
+.bnf-scanchat-prior-toggle:hover { color: var(--ink); text-decoration: underline; }
+.bnf-scanchat-prior-year { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 4px 0 0 12px; }
+.bnf-scanchat-prior-label { color: var(--ink3); font-size: 12px; }
+.bnf-scanchat-prior-chat {
+  border: 1px solid var(--border); background: #fff; border-radius: 999px;
+  padding: 2px 10px; font: inherit; font-size: 12px; color: var(--ink); cursor: pointer;
+}
+.bnf-scanchat-prior-chat:hover { background: var(--blue-bg); border-color: var(--blue); }
+.bnf-scanchat-prior-banner {
+  margin: 0 0 8px; padding: 6px 10px; border-radius: 6px; font-size: 12.5px;
+  background: var(--blue-bg); color: var(--ink2);
+}
+.bnf-chatbar-pick { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink2); }
+.bnf-chatbar-pick select { max-width: 230px; }
+.bnf-chatbar-spend { margin-left: auto; font-size: 12px; color: var(--ink3); white-space: nowrap; }
+.bnf-msg-cost { margin-top: 4px; font-size: 11px; color: var(--ink3); }
+.bnf-advisor-msg-user .bnf-msg-cost { color: inherit; opacity: 0.75; }
+.bnf-lastrun { margin: 6px 2px 0; }
+/* D-149: a turn the deal's Claude budget refused, held for "Run anyway". */
+.bnf-overbudget { margin: 8px 2px 0; padding: 8px 10px; border: 1px solid var(--rose, #c0392b);
+  border-radius: 8px; background: #fff7f6; color: var(--ink); font-size: 12.5px; }
+.bnf-overbudget-actions { display: flex; gap: 6px; margin-top: 6px; }
+/* D-149: a renewal column's chip, beside the CURRENT chip's family. */
+.bnf-chip-renewal { background: #eef4ff; color: #2c4f9e; border: 1px solid #c9d8f5; }
+/* D-149: an agent turn's live steps, and Undo under its reply. */
+.bnf-work-steps .bb-extract-line { font-size: 12px; }
+.bnf-work-undo { margin-top: 6px; }

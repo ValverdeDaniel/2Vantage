@@ -1,18 +1,19 @@
-"""The Excel plan template: export and all-or-nothing import (plan.md §9.3)."""
+"""The Excel plan template (plan.md §9.3): export, read and the dry run. `services.imports` applies a read file."""
 
 import io
 import re
 
-from django.db import transaction
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 from deals import lines
 
-from . import fields, selectors, services
+from . import fields, selectors
 from . import values as cleaning
 from .models import Plan
+from .services.imports import would_change
+from .services.roles import ROLES
 
 HEADER_ROWS = [
     (4, 'Plan ID', 'id'),
@@ -48,7 +49,7 @@ def put(ws, row, column, value):
 def _link(plan):
     if plan.role == 'renewal':
         return str(plan.renews_id or '')
-    return ', '.join(str(p.id) for p in plan.replaces.all())
+    return ', '.join(str(pid) for pid in plan.replaces_ids)
 
 
 def export(deal, line=None):
@@ -73,7 +74,7 @@ def export(deal, line=None):
         for row, label, field_key in rows:
             put(ws, row, 1, label)
             put(ws, row, 2, field_key).fill = GREY
-        plans = selectors.ordered_plans(deal, key)
+        plans = selectors.line_state(deal, key).plans  # in `order.layout`'s order (F120)
         for index, plan in enumerate(plans):
             column = FIRST_PLAN_COLUMN + index
             header = {
@@ -180,7 +181,7 @@ def read(deal, content):
                                 'message': f'{label} is required for a new plan',
                             }
                         )
-            if role and role not in services.ROLES:
+            if role and role not in ROLES:
                 errors.append(
                     {
                         'sheet': ws.title,
@@ -228,63 +229,12 @@ def _changed_cells(plan, values):
     return sum(1 for key, value in values.items() if plan is None or plan.values.get(key) != value)
 
 
-def _detail_changes(op):
-    """An existing plan's carrier, name, number, role and links that the file changes; what it repeats is left out."""
-    plan, head, role, ids = op['plan'], op['head'], op['role'], op['links']
-    data = {
-        key: head[key] for key in ('carrier', 'name', 'plan_number') if head[key] and head[key] != getattr(plan, key)
-    }
-    if role == 'renewal':
-        links, same = {'renews_id': ids[0] if ids else None}, plan.renews_id == (ids[0] if ids else None)
-    else:
-        links, same = {'replaces_ids': ids}, sorted(ids) == sorted(p.id for p in plan.replaces.all())
-    if role != plan.role or (head['link'] and not same):
-        data.update({'role': role, **links})
-    return data
-
-
-@transaction.atomic
-def apply(user, deal, operations, document):
-    created = updated = cells = 0
-    for op in operations:
-        head, plan = op['head'], op['plan']
-        link = (
-            {'renews_id': op['links'][0] if op['links'] else None}
-            if op['role'] == 'renewal'
-            else {'replaces_ids': op['links']}
-        )
-        if plan is None:
-            services.create_plan(
-                user,
-                deal,
-                line=op['line'],
-                role=op['role'],
-                carrier=head['carrier'],
-                name=head['name'],
-                plan_number=head['plan_number'],
-                values=op['values'],
-                source_origin='import',
-                document=document,
-                cells=op['cells'],
-                **link,
-            )
-            created += 1
-            cells += len(op['values'])
-            continue
-        data = {'values': op['values'], **_detail_changes(op)}
-        _, changed = services.update_plan(user, plan.id, data, 'import', document, op['cells'])
-        if changed or len(data) > 1:
-            updated += 1
-        cells += len(changed)
-    return {'create': created, 'update': updated, 'cells_changed': cells}
-
-
 def dry_run(operations):
     created = sum(1 for op in operations if op['plan'] is None)
     updates = [op for op in operations if op['plan'] is not None]
     cells = [_changed_cells(op['plan'], op['values']) for op in updates]
     return {
         'create': created,
-        'update': sum(1 for op, n in zip(updates, cells, strict=True) if n or _detail_changes(op)),
+        'update': sum(1 for op, n in zip(updates, cells, strict=True) if n or would_change(op)),
         'cells_changed': sum(cells) + sum(len(op['values']) for op in operations if op['plan'] is None),
     }

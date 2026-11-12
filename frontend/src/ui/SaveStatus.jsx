@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { errorText } from '../lib/errors';
 import cx from './cx';
-import styles from './SaveStatus.module.css';
-import Spinner from './Spinner';
 
 /**
- * The quiet save marker beside a value (plan.md §8.17): "Saving…", then a tick for a moment, or the error.
+ * The quiet save marker beside a value (plan.md §8.22), in the old "Saving…" note's look (`bnf-q-saving`):
+ * "Saving…", then "✓ Saved" for a moment, or the error in rose.
  * Pass a TanStack mutation: <SaveStatus mutation={update} />, or status ('idle'|'pending'|'success'|'error') + error.
  */
 export default function SaveStatus({ mutation, status = mutation?.status, error = mutation?.error, className }) {
@@ -19,32 +18,12 @@ export default function SaveStatus({ mutation, status = mutation?.status, error 
   }, [status, stamp]);
 
   let content = null;
-  if (status === 'pending') {
-    content = (
-      <>
-        <Spinner size="sm" label="" /> Saving…
-      </>
-    );
-  } else if (status === 'success' && hiddenStamp !== stamp) {
-    content = (
-      <>
-        <span aria-hidden="true" className={styles.tick}>
-          ✓
-        </span>{' '}
-        Saved
-      </>
-    );
-  } else if (status === 'error') {
-    content = (
-      <span className={styles.error}>
-        <span aria-hidden="true">⚠ </span>
-        {errorText(error)}
-      </span>
-    );
-  }
+  if (status === 'pending') content = 'Saving…';
+  else if (status === 'success' && hiddenStamp !== stamp) content = '✓ Saved';
+  else if (status === 'error') content = <span className="bb-rose">⚠ {errorText(error)}</span>;
 
   return (
-    <span className={cx(styles.status, className)} role="status" aria-live="polite">
+    <span className={cx('bnf-q-saving', className)} role="status" aria-live="polite">
       {content}
     </span>
   );

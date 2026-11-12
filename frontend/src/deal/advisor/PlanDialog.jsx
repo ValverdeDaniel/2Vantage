@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { fieldErrors, formErrorText } from '../../lib/errors';
 import Button from '../../ui/Button';
+import ChipToggles from '../../ui/ChipToggles';
 import Field from '../../ui/Field';
 import Modal from '../../ui/Modal';
-import MultiSelect from '../../ui/MultiSelect';
 import Select from '../../ui/Select';
 import TextInput from '../../ui/TextInput';
 
@@ -14,7 +14,8 @@ const ROLES = [
 ];
 
 /**
- * "+ Plan" (plan is null) or "Change role & links" (plan given) — plan.md §8.11.
+ * "＋ Plan" (plan is null) or "Change role & links" (plan given) — plan.md §8.14; 2V's dialog, which has no old twin
+ * (§8.15's gap), on the old modal and form classes.
  * An alternate replaces none, one or several current plans (several = a consolidation, none = an added plan). When
  * a second alternate takes the place of the same current plan, the member says whether it is an option (it carries
  * that plan's whole enrollment) or bought together (onBoughtTogether opens the Enrollment card to split the people).
@@ -42,6 +43,7 @@ function PlanForm({ onClose, line, plan, plans, create, update, onBoughtTogether
   const [name, setName] = useState(plan?.name ?? '');
   const [number, setNumber] = useState(plan?.plan_number ?? '');
   const [kind, setKind] = useState('option');
+  const kindId = useId();
   const mutation = plan ? update : create;
   const errors = fieldErrors(mutation.error);
 
@@ -78,8 +80,10 @@ function PlanForm({ onClose, line, plan, plans, create, update, onBoughtTogether
       onSubmit={() => submit().catch(() => {})}
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={mutation.isPending}>
+          <Button size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="sm" type="submit" variant="primary" busy={mutation.isPending}>
             {plan ? 'Save' : 'Add plan'}
           </Button>
         </>
@@ -101,31 +105,32 @@ function PlanForm({ onClose, line, plan, plans, create, update, onBoughtTogether
       {role === 'alternate' && (
         <Field
           label="Replaces"
+          group
           help="One plan: in its place. Several: a consolidation. None: a plan added beside the current plans."
           error={errors.links}
         >
-          <MultiSelect
+          <ChipToggles
             value={replaces}
             onChange={setReplaces}
-            placeholder="Search current plans…"
-            emptyText={current.length ? 'None chosen: a plan added beside them.' : 'No current plans on this line yet.'}
+            emptyText="No current plans on this line yet."
             options={current.map((p) => ({ value: String(p.id), label: `${p.carrier} ${p.name}` }))}
           />
         </Field>
       )}
       {askKind && (
-        <fieldset>
-          <legend>Another plan already replaces {current.find((p) => String(p.id) === replaces[0])?.name}.</legend>
-          <label>
+        <div role="radiogroup" aria-labelledby={kindId} className="bnf-build-panel bb-mb">
+          <div id={kindId} className="bnf-packet-note">
+            Another plan already replaces {current.find((p) => String(p.id) === replaces[0])?.name}.
+          </div>
+          <label className="bnf-output-check">
             <input type="radio" checked={kind === 'option'} onChange={() => setKind('option')} /> An option — the
             client picks one; it carries the plan&apos;s whole enrollment
           </label>
-          <br />
-          <label>
+          <label className="bnf-output-check">
             <input type="radio" checked={kind === 'together'} onChange={() => setKind('together')} /> Bought together
             — offered side by side; split the people in the Enrollment card next
           </label>
-        </fieldset>
+        </div>
       )}
       {!plan && (
         <>
@@ -140,8 +145,10 @@ function PlanForm({ onClose, line, plan, plans, create, update, onBoughtTogether
           </Field>
         </>
       )}
-      {mutation.error && (
-        <p role="alert">{formErrorText(mutation.error, ['carrier', 'name', 'renews_id', 'links'])}</p>
+      {mutation.error && formErrorText(mutation.error, ['carrier', 'name', 'renews_id', 'links']) && (
+        <div role="alert" className="error-message">
+          {formErrorText(mutation.error, ['carrier', 'name', 'renews_id', 'links'])}
+        </div>
       )}
     </Modal>
   );

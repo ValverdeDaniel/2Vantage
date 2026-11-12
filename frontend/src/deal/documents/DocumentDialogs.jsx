@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { formErrorText } from '../../lib/errors';
 import Button from '../../ui/Button';
+import ChipToggles from '../../ui/ChipToggles';
 import Field from '../../ui/Field';
 import Modal from '../../ui/Modal';
-import MultiSelect from '../../ui/MultiSelect';
 import Select from '../../ui/Select';
 import TextInput from '../../ui/TextInput';
-import styles from './DocumentsTab.module.css';
 
 const ROLE_KINDS = ['quote', 'renewal', 'sbc'];
 
@@ -34,11 +33,10 @@ function MetaFields({ meta, value, onChange }) {
       <Field label="Carrier">
         <TextInput value={value.carrier} onChange={(event) => set('carrier')(event.target.value)} />
       </Field>
-      <Field label="Lines it covers">
-        <MultiSelect
+      <Field label="Lines it covers" group>
+        <ChipToggles
           value={value.lines}
           onChange={set('lines')}
-          placeholder="Search lines…"
           options={meta.lines.map((line) => ({ value: line.key, label: line.label }))}
         />
       </Field>
@@ -48,7 +46,7 @@ function MetaFields({ meta, value, onChange }) {
 
 const blank = { kind: 'other', role: '', carrier: '', lines: [], label: '' };
 
-/** Upload one or several files; each gets its own kind, role, carrier and lines (plan.md §8.13). */
+/** Upload one or several files; each gets its own kind, role, carrier and lines (plan.md §8.16). */
 export function UploadDialog({ open, onClose, meta, upload, onDone }) {
   return open ? <UploadForm onClose={onClose} meta={meta} upload={upload} onDone={onDone} /> : null;
 }
@@ -83,23 +81,26 @@ function UploadForm({ onClose, meta, upload, onDone }) {
       open
       size="lg"
       title="Upload documents"
+      sub="PDF, Excel, CSV, images, Word, text or email, up to 50 MB each."
       onClose={onClose}
       onSubmit={() => submit()}
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={!items.length} busy={upload.isPending}>
+          <Button size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="sm" type="submit" variant="primary" disabled={!items.length} busy={upload.isPending}>
             Upload {items.length > 1 ? `${items.length} files` : ''}
           </Button>
         </>
       }
     >
-      <Field label="Files" help="PDF, Excel, CSV, images, Word, text or email, up to 50 MB each.">
+      <Field label="Files">
         <input type="file" multiple onChange={(event) => choose(event.target.files ?? [])} />
       </Field>
       {items.map((item, index) => (
-        <fieldset key={`${item.file.name}-${index}`} className={styles.fileBlock}>
-          <legend>{item.file.name}</legend>
+        <fieldset key={`${item.file.name}-${index}`} className="bb-panel bb-mb">
+          <legend className="bb-panel-title">{item.file.name}</legend>
           <MetaFields
             meta={meta}
             value={item.meta}
@@ -107,7 +108,11 @@ function UploadForm({ onClose, meta, upload, onDone }) {
           />
         </fieldset>
       ))}
-      {failed && <p role="alert">{failed}</p>}
+      {failed && (
+        <div role="alert" className="error-message">
+          {failed}
+        </div>
+      )}
     </Modal>
   );
 }
@@ -139,8 +144,10 @@ function EditForm({ document, onClose, meta, update }) {
       onSubmit={() => submit().catch(() => {})}
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={update.isPending}>
+          <Button size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="sm" type="submit" variant="primary" busy={update.isPending}>
             Save
           </Button>
         </>
@@ -150,7 +157,11 @@ function EditForm({ document, onClose, meta, update }) {
         <TextInput value={value.label} onChange={(event) => setValue({ ...value, label: event.target.value })} />
       </Field>
       <MetaFields meta={meta} value={value} onChange={setValue} />
-      {update.error && <p role="alert">{formErrorText(update.error)}</p>}
+      {update.error && (
+        <div role="alert" className="error-message">
+          {formErrorText(update.error)}
+        </div>
+      )}
     </Modal>
   );
 }

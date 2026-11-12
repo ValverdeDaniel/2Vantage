@@ -3,7 +3,7 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from deals import lines, stages
+from deals import carriers, lifecycle, lines, stages
 from documents import kinds
 from quotes import fields
 
@@ -19,10 +19,11 @@ class MetaView(APIView):
                 'lines': lines.meta(),
                 'tiers': [{'code': code, 'label': label} for code, label in lines.TIERS],
                 'stages': _pairs(stages.STAGES),
-                'relationships': [{'key': 'new', 'label': 'New'}, {'key': 'existing', 'label': 'Existing'}],
+                'relationships': lifecycle.meta(),
                 'funding': _pairs(lines.FUNDING),
                 'document_kinds': _pairs(kinds.KINDS),
                 'document_roles': _pairs(kinds.ROLES),
                 'plans': fields.meta(),
+                'carriers': carriers.meta(),
             }
         )

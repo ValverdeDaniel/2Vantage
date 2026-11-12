@@ -89,10 +89,10 @@ def test_an_unchanged_write_changes_nothing(api, deal, user):
 def test_two_concurrent_writes_to_different_keys_both_survive(user):
     deal = make_deal(user)
     plan = services.create_plan(user, deal, line='medical', role='current', carrier='Aetna', name='HDHP')
-    real_clean = services.clean_values
+    real_clean = services.plans.clean_values
 
     def slow_clean(line, raw):
-        time.sleep(0.4)  # hold the row between read and write
+        time.sleep(0.2)  # hold the row between read and write
         return real_clean(line, raw)
 
     def write(key, value):
@@ -101,7 +101,7 @@ def test_two_concurrent_writes_to_different_keys_both_survive(user):
         finally:
             connection.close()
 
-    with mock.patch.object(services, 'clean_values', slow_clean):
+    with mock.patch.object(services.plans, 'clean_values', slow_clean):
         threads = [
             threading.Thread(target=write, args=('pcp_copay', '25')),
             threading.Thread(target=write, args=('er_copay', '300')),
@@ -128,7 +128,12 @@ def test_sold_and_recommended_any_number(api, deal):
     b = add(api, deal, name='PPO')
     x = add(api, deal, role='alternate', carrier='Cigna', name='X', replaces_ids=[a['id']])
     y = add(api, deal, role='alternate', carrier='Cigna', name='Y', replaces_ids=[a['id']])
-    assert api.post(f'/api/plans/{a["id"]}/recommend/', {'recommended': True}, format='json').status_code == 400
+    refused = api.post(f'/api/plans/{a["id"]}/recommend/', {'recommended': True}, format='json')
+    assert refused.status_code == 409
+    assert (
+        refused.json()['detail']
+        == "A current plan can't be recommended — recommend its renewal to keep what they have."
+    )
     for plan in (x, y):
         assert api.post(f'/api/plans/{plan["id"]}/recommend/', {'recommended': True}, format='json').json()[
             'recommended'
@@ -165,10 +170,9 @@ def test_enrollment_by_basis_and_comparison_prices(api, deal):
 
 
 def test_quoted_premium_only_plans_do_not_flag_tier_rates_missing(api, deal):
-    plan = add(api, deal, values={'group_premium_monthly': '15000'})
-    status = api.get(f'/api/deals/{deal.id}/plans/?line=medical').json()['plans'][0]['status']
-    assert status.get('rate_ee') == 'blank' and status.get('deductible_single') == 'missing'
-    del plan
+    add(api, deal, values={'group_premium_monthly': '15000'})
+    cells = api.get(f'/api/deals/{deal.id}/plans/?line=medical').json()['plans'][0]['cells']
+    assert 'rate_ee' not in cells and cells['deductible_single'] == {'s': 'missing'}
 
 
 def test_member_built_packages(api, deal):

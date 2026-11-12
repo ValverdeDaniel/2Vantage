@@ -2,12 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useUpdateDeal } from '../../api/deals';
 import { errorText } from '../../lib/errors';
 import { formatDate } from '../../lib/format';
-import Button from '../../ui/Button';
 import DateInput from '../../ui/DateInput';
 import SaveStatus from '../../ui/SaveStatus';
-import styles from './HeaderFields.module.css';
 
-/** "Effective 01/01/2027 ✎": click to edit inline; Enter or Save saves, Escape or Cancel leaves it. */
+/** "Effective 01/01/2027 ✎" in the header chips: click to edit inline; Enter or Save saves, Escape or Cancel leaves. */
 export default function EffectiveDate({ deal }) {
   const update = useUpdateDeal(deal.id);
   const [draft, setDraft] = useState(null); // null: not editing
@@ -44,23 +42,20 @@ export default function EffectiveDate({ deal }) {
 
   if (draft === null) {
     return (
-      <span className={styles.fact}>
-        <span className={styles.label}>Effective</span>
+      <span className="bb-drop-meta">
+        Effective{' '}
         <button
           ref={buttonRef}
           type="button"
-          className={styles.inlineEdit}
+          className="bnf-wq-namebtn bb-drop-meta"
           aria-label={`Effective date: ${shown || 'not set'}. Change`}
           onClick={() => {
             update.reset();
             setDraft(deal.effective_date || '');
           }}
         >
-          {shown || <span className={styles.placeholder}>not set</span>}
-          <span aria-hidden="true" className={styles.pencil}>
-            ✎
-          </span>
-        </button>
+          {shown || 'not set'} ✎
+        </button>{' '}
         <SaveStatus mutation={update} />
       </span>
     );
@@ -68,17 +63,16 @@ export default function EffectiveDate({ deal }) {
 
   return (
     <form
-      className={styles.inlineForm}
+      className="bnf-ov-chips"
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
         save();
       }}
     >
-      <span className={styles.label}>Effective</span>
+      <span className="bb-drop-meta">Effective</span>
       <DateInput
-        size="sm"
-        className={styles.dateInput}
+        className="bnf-intake-input"
         aria-label="Effective date"
         aria-invalid={update.isError || undefined}
         value={draft}
@@ -91,14 +85,14 @@ export default function EffectiveDate({ deal }) {
           }
         }}
       />
-      <Button size="sm" type="submit" variant="primary" busy={update.isPending}>
+      <button type="submit" className="btn btn-primary btn-sm" disabled={update.isPending}>
         Save
-      </Button>
-      <Button size="sm" variant="ghost" onClick={cancel}>
+      </button>
+      <button type="button" className="btn btn-secondary btn-sm" onClick={cancel}>
         Cancel
-      </Button>
+      </button>
       {update.isError && (
-        <span role="alert" className={styles.error}>
+        <span role="alert" className="bb-rose">
           {errorText(update.error)}
         </span>
       )}

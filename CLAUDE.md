@@ -11,11 +11,11 @@ docker compose exec backend python manage.py migrate
 docker compose exec backend python manage.py seed_golden   # golden deals to click through (golden app from slice 3)
 docker compose restart worker                   # job worker: manage.py run_worker, its own service (slice 16)
 docker compose exec backend pytest [<app>]      # Fast lane: one app ≤10 s, everything ≤60 s
-docker compose exec backend ruff check .        # then, from slice 6: docker compose exec backend lint-imports
+docker compose exec backend ruff check . && docker compose exec backend lint-imports   # chain contract: .importlinter
 docker compose exec backend python manage.py makemigrations --check --dry-run
 docker compose exec frontend npm run lint && docker compose exec frontend npm run build
 docker compose exec frontend npm test           # Vitest, pure modules only (slice 6)
-docker compose exec frontend npx stylelint "src/**/*.css"   # undefined custom properties refused (slice 2)
+docker compose exec frontend npx stylelint "src/**/*.css"; node frontend/scripts/port-proof.mjs   # CSS (slice 2)
 docker compose exec backend pytest -m perf   # Perf (slice 7); Eval, opt-in: manage.py reader_eval --set all (slice 18)
 Look and Walk (slice 3): npm --prefix browser run look -- --screens <key>; npm --prefix browser run walk -- --need <n>
 Parity (slice 3): tools/parity/ runs old Vantage (../Vantage, read-only) as its own Compose project, with a tools image
@@ -28,7 +28,7 @@ An app imports only from apps to its left (lint-imports); a fact read by an app 
 To reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
 AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client,
 never business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far:
-accounts, deals, documents, quotes, proposals. The chain orders imports, not screens: the deal sidebar keeps old
+accounts, deals, documents, quotes, proposals, golden. The chain orders imports, not screens: the deal sidebar keeps old
 Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review & requests, Intake, Census,
 Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close: Advisor, Proposal · Shared: Documents.
 Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry the Advisor and Proposal.
@@ -54,7 +54,7 @@ index.js exports only what others mount. Other pages live in pages/ (home; Archi
 7. The old look (slice 2 on): old Vantage's stylesheets, cut into ≤300-line files under src/styles/<old sheet>/ and
    imported once, in the old order, by one manifest in main.jsx (the port proof checks them). Every component, new ones
    too, uses the old class names (bb-*, bnf-*, gk-*, rr-*). No CSS modules (2V's go in slice 4), no per-route sheets.
-8. No file over 300 lines, except data modules (vocabularies, tables). Split code before it grows past that.
+8. No file over 300 lines, except data modules (vocabularies, tables). Split by responsibility, never by line count.
 9. Sign-in is Django's session; every write sends X-CSRFToken. Every user sees every deal (OQ3). Users, their Profile
    flags (claude_direct, commissions_access; slice 6) and agency settings live in Django admin.
 10. PHI (census people, medical answers, lasers, files carrying them): never in logs, Activity, Job steps, error text,

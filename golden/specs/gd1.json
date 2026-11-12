@@ -1,0 +1,464 @@
+{
+  "key": "GD1",
+  "about": "Three current medical plans with renewals; alternates from two carriers; a consolidation; plans bought together; two picks for one plan; dental and vision.",
+  "client": "Golden Manufacturing (synthetic)",
+  "status": "prospect",
+  "effective_date": "2027-01-01",
+  "lines": ["medical", "dental", "vision"],
+  "plans": [
+    {
+      "ref": "A", "line": "medical", "role": "current", "carrier": "Aetna", "name": "Open Access HDHP 3300", "links": [],
+      "values": {
+        "plan_type": "HDHP",
+        "network": "Open Access",
+        "metal_level": "Bronze",
+        "funding": "fully_insured",
+        "minimum_value": "Yes",
+        "deductible_single": "3300",
+        "deductible_family": "6600",
+        "coinsurance": "20",
+        "oop_max_single": "6000",
+        "oop_max_family": "12000",
+        "pcp_copay": "Deductible, then 20%",
+        "specialist_copay": "Deductible, then 20%",
+        "telehealth": "$0 after deductible",
+        "urgent_care_copay": "75",
+        "er_copay": "350",
+        "rx_deductible": "Integrated",
+        "rx_t1": "10",
+        "rx_t2": "40",
+        "rx_t3": "75",
+        "sbc_url": "https://example.com/sbc/hdhp-3300.pdf",
+        "rate_ee": "512.34",
+        "rate_es": "1101.53",
+        "rate_ec": "960.12",
+        "rate_fam": "1580.47"
+      },
+      "enrollment": {"EE": 10, "ES": 3, "EC": 2, "FAM": 5}
+    },
+    {
+      "ref": "B", "line": "medical", "role": "current", "carrier": "Aetna", "name": "Choice POS II PPO 1500", "links": [],
+      "values": {
+        "plan_type": "PPO",
+        "network": "Choice POS II",
+        "metal_level": "Gold",
+        "funding": "fully_insured",
+        "minimum_value": "Yes",
+        "deductible_single": "1500",
+        "deductible_family": "3000",
+        "coinsurance": "20",
+        "oop_max_single": "5000",
+        "oop_max_family": "10000",
+        "pcp_copay": "25",
+        "specialist_copay": "50",
+        "urgent_care_copay": "75",
+        "er_copay": "300",
+        "rx_t1": "10",
+        "rx_t2": "35",
+        "rx_t3": "70",
+        "rate_ee": "640.25",
+        "rate_es": "1376.54",
+        "rate_ec": "1200.10",
+        "rate_fam": "1975.66"
+      },
+      "enrollment": {"EE": 8, "ES": 2, "EC": 1, "FAM": 4}
+    },
+    {
+      "ref": "C", "line": "medical", "role": "current", "carrier": "Aetna", "name": "HMO 1000", "links": [],
+      "values": {
+        "plan_type": "HMO",
+        "network": "Aetna HMO",
+        "metal_level": "Gold",
+        "funding": "fully_insured",
+        "minimum_value": "Yes",
+        "deductible_single": "1000",
+        "deductible_family": "2000",
+        "coinsurance": "10",
+        "oop_max_single": "4000",
+        "oop_max_family": "8000",
+        "pcp_copay": "20",
+        "specialist_copay": "40",
+        "er_copay": "250",
+        "rx_t1": "5",
+        "rx_t2": "30",
+        "rx_t3": "60",
+        "rate_ee": "590.00",
+        "rate_es": "1268.50",
+        "rate_ec": "1106.25",
+        "rate_fam": "1820.80"
+      },
+      "enrollment": {"EE": 6, "ES": 1, "EC": 2, "FAM": 2}
+    },
+    {
+      "ref": "A2", "line": "medical", "role": "renewal", "carrier": "Aetna", "name": "Open Access HDHP 3300", "links": ["A"],
+      "values": {
+        "plan_type": "HDHP",
+        "network": "Open Access",
+        "metal_level": "Bronze",
+        "funding": "fully_insured",
+        "minimum_value": "Yes",
+        "deductible_single": "3300",
+        "deductible_family": "6600",
+        "coinsurance": "20",
+        "oop_max_single": "6000",
+        "oop_max_family": "12000",
+        "pcp_copay": "Deductible, then 20%",
+        "specialist_copay": "Deductible, then 20%",
+        "telehealth": "$0 after deductible",
+        "urgent_care_copay": "75",
+        "er_copay": "350",
+        "rx_deductible": "Integrated",
+        "rx_t1": "10",
+        "rx_t2": "40",
+        "rx_t3": "75",
+        "sbc_url": "https://example.com/sbc/hdhp-3300.pdf",
+        "rate_ee": "556.39",
+        "rate_es": "1196.26",
+        "rate_ec": "1042.69",
+        "rate_fam": "1716.39"
+      }
+    },
+    {
+      "ref": "B2", "line": "medical", "role": "renewal", "carrier": "Aetna", "name": "Choice POS II PPO 1500", "links": ["B"],
+      "values": {
+        "plan_type": "PPO",
+        "network": "Choice POS II",
+        "metal_level": "Gold",
+        "funding": "fully_insured",
+        "minimum_value": "Yes",
+        "deductible_single": "1500",
+        "deductible_family": "3000",
+        "coinsurance": "20",
+        "oop_max_single": "5000",
+        "oop_max_family": "10000",
+        "pcp_copay": "25",
+        "specialist_copay": "50",
+        "urgent_care_copay": "75",
+        "er_copay": "300",
+        "rx_t1": "10",
+        "rx_t2": "35",
+        "rx_t3": "70",
+        "rate_ee": "694.67",
+        "rate_es": "1493.55",
+        "rate_ec": "1302.11",
+        "rate_fam": "2143.59"
+      }
+    },
+    {
+      "ref": "C2", "line": "medical", "role": "renewal", "carrier": "Aetna", "name": "HMO 1000", "links": ["C"],
+      "values": {
+        "plan_type": "HMO",
+        "network": "Aetna HMO",
+        "metal_level": "Gold",
+        "funding": "fully_insured",
+        "minimum_value": "Yes",
+        "deductible_single": "1000",
+        "deductible_family": "2000",
+        "coinsurance": "10",
+        "oop_max_single": "4000",
+        "oop_max_family": "8000",
+        "pcp_copay": "20",
+        "specialist_copay": "40",
+        "er_copay": "250",
+        "rx_t1": "5",
+        "rx_t2": "30",
+        "rx_t3": "60",
+        "rate_ee": "640.15",
+        "rate_es": "1376.32",
+        "rate_ec": "1200.28",
+        "rate_fam": "1975.57"
+      }
+    },
+    {
+      "ref": "CG1", "line": "medical", "role": "alternate", "carrier": "Cigna", "name": "LocalPlus HDHP 3000", "links": ["A"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "HDHP",
+        "deductible_single": "3000",
+        "oop_max_single": "6500",
+        "pcp_copay": "Deductible, then 20%",
+        "rate_ee": "498.10",
+        "rate_es": "1070.92",
+        "rate_ec": "933.44",
+        "rate_fam": "1536.52"
+      }
+    },
+    {
+      "ref": "CG1N", "line": "medical", "role": "alternate", "carrier": "Cigna", "name": "LocalPlus HDHP 3000 — negotiated", "links": ["A"], "copy_of": "CG1",
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "HDHP",
+        "deductible_single": "3000",
+        "oop_max_single": "6500",
+        "pcp_copay": "Deductible, then 20%",
+        "rate_ee": "489.15",
+        "rate_es": "1051.67",
+        "rate_ec": "916.66",
+        "rate_fam": "1508.92"
+      }
+    },
+    {
+      "ref": "CG2", "line": "medical", "role": "alternate", "carrier": "Cigna", "name": "LocalPlus HDHP 3500", "links": ["A"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "HDHP",
+        "deductible_single": "3500",
+        "oop_max_single": "6500",
+        "pcp_copay": "Deductible, then 20%",
+        "rate_ee": "478.20",
+        "rate_es": "1028.13",
+        "rate_ec": "896.14",
+        "rate_fam": "1475.15"
+      }
+    },
+    {
+      "ref": "CG3", "line": "medical", "role": "alternate", "carrier": "Cigna", "name": "Open Access Plus 1500", "links": ["B"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "PPO",
+        "deductible_single": "1500",
+        "oop_max_single": "6000",
+        "pcp_copay": "30",
+        "rate_ee": "615.40",
+        "rate_es": "1323.11",
+        "rate_ec": "1153.52",
+        "rate_fam": "1898.95"
+      }
+    },
+    {
+      "ref": "CG4", "line": "medical", "role": "alternate", "carrier": "Cigna", "name": "LocalPlus 1000", "links": ["C"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "HMO",
+        "deductible_single": "1000",
+        "oop_max_single": "5000",
+        "pcp_copay": "20",
+        "rate_ee": "566.75",
+        "rate_es": "1218.51",
+        "rate_ec": "1062.66",
+        "rate_fam": "1749.12"
+      }
+    },
+    {
+      "ref": "U1", "line": "medical", "role": "alternate", "carrier": "UnitedHealthcare", "name": "Choice Plus HDHP 3300", "links": ["A"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "HDHP",
+        "deductible_single": "3300",
+        "oop_max_single": "6500",
+        "pcp_copay": "Deductible, then 20%",
+        "rate_ee": "505.00",
+        "rate_es": "1085.75",
+        "rate_ec": "946.36",
+        "rate_fam": "1557.83"
+      }
+    },
+    {
+      "ref": "U2", "line": "medical", "role": "alternate", "carrier": "UnitedHealthcare", "name": "Choice Plus 1500", "links": ["B"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "PPO",
+        "deductible_single": "1500",
+        "oop_max_single": "6000",
+        "pcp_copay": "30",
+        "rate_ee": "630.80",
+        "rate_es": "1356.22",
+        "rate_ec": "1182.40",
+        "rate_fam": "1946.52"
+      }
+    },
+    {
+      "ref": "U3", "line": "medical", "role": "alternate", "carrier": "UnitedHealthcare", "name": "Navigate HMO 1000", "links": ["C"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "HMO",
+        "deductible_single": "1000",
+        "oop_max_single": "5000",
+        "pcp_copay": "20",
+        "rate_ee": "575.30",
+        "rate_es": "1236.90",
+        "rate_ec": "1078.70",
+        "rate_fam": "1775.50"
+      }
+    },
+    {
+      "ref": "U5", "line": "medical", "role": "alternate", "carrier": "UnitedHealthcare Consolidated", "name": "Choice Plus 2000", "links": ["B", "C"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "PPO",
+        "deductible_single": "2000",
+        "oop_max_single": "6000",
+        "pcp_copay": "30",
+        "rate_ee": "610.00",
+        "rate_es": "1311.50",
+        "rate_ec": "1143.75",
+        "rate_fam": "1882.38"
+      }
+    },
+    {
+      "ref": "D1", "line": "medical", "role": "alternate", "carrier": "Cigna Dual", "name": "Dual choice — HDHP 5000", "links": ["A"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "HDHP",
+        "deductible_single": "5000",
+        "oop_max_single": "7000",
+        "pcp_copay": "Deductible, then 20%",
+        "rate_ee": "430.00",
+        "rate_es": "924.50",
+        "rate_ec": "806.25",
+        "rate_fam": "1327.10"
+      },
+      "enrollment": {"EE": 6, "ES": 1, "EC": 1, "FAM": 3}
+    },
+    {
+      "ref": "D2", "line": "medical", "role": "alternate", "carrier": "Cigna Dual", "name": "Dual choice — PPO 1000", "links": ["A"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "PPO",
+        "deductible_single": "1000",
+        "oop_max_single": "6000",
+        "pcp_copay": "30",
+        "rate_ee": "640.00",
+        "rate_es": "1376.00",
+        "rate_ec": "1199.80",
+        "rate_fam": "1975.30"
+      },
+      "enrollment": {"EE": 4, "ES": 2, "EC": 1, "FAM": 2}
+    },
+    {
+      "ref": "DN", "line": "dental", "role": "current", "carrier": "Guardian", "name": "Dental PPO 1500", "links": [],
+      "values": {
+        "den_annual_max": "1500",
+        "den_deductible": "50",
+        "den_preventive": "0",
+        "rate_ee": "38.20",
+        "rate_es": "76.90",
+        "rate_ec": "92.15",
+        "rate_fam": "130.60"
+      },
+      "enrollment": {"EE": 15, "ES": 4, "EC": 3, "FAM": 8}
+    },
+    {
+      "ref": "DN2", "line": "dental", "role": "renewal", "carrier": "Guardian", "name": "Dental PPO 1500", "links": ["DN"],
+      "values": {
+        "den_annual_max": "1500",
+        "den_deductible": "50",
+        "den_preventive": "0",
+        "rate_ee": "40.11",
+        "rate_es": "80.75",
+        "rate_ec": "96.76",
+        "rate_fam": "137.13"
+      }
+    },
+    {
+      "ref": "DNA", "line": "dental", "role": "alternate", "carrier": "Delta Dental", "name": "PPO 1500", "links": [],
+      "values": {
+        "den_annual_max": "1500",
+        "den_deductible": "50",
+        "den_preventive": "0",
+        "rate_ee": "36.50",
+        "rate_es": "73.40",
+        "rate_ec": "88.10",
+        "rate_fam": "124.85"
+      }
+    },
+    {
+      "ref": "VS", "line": "vision", "role": "current", "carrier": "VSP", "name": "Choice 10/25", "links": [],
+      "values": {
+        "vis_exam_copay": "10",
+        "vis_frame_allowance": "150",
+        "rate_ee": "7.10",
+        "rate_es": "13.40",
+        "rate_ec": "14.05",
+        "rate_fam": "20.75"
+      },
+      "enrollment": {"EE": 14, "ES": 4, "EC": 3, "FAM": 7}
+    },
+    {
+      "ref": "VS2", "line": "vision", "role": "renewal", "carrier": "VSP", "name": "Choice 10/25", "links": ["VS"],
+      "values": {
+        "vis_exam_copay": "10",
+        "vis_frame_allowance": "150",
+        "rate_ee": "7.10",
+        "rate_es": "13.40",
+        "rate_ec": "14.05",
+        "rate_fam": "20.75"
+      }
+    },
+    {
+      "ref": "VSA", "line": "vision", "role": "alternate", "carrier": "EyeMed", "name": "Insight 10/25", "links": [],
+      "values": {
+        "vis_exam_copay": "10",
+        "vis_frame_allowance": "130",
+        "rate_ee": "6.85",
+        "rate_es": "12.95",
+        "rate_ec": "13.60",
+        "rate_fam": "20.10"
+      }
+    }
+  ],
+  "starred": ["CG1", "CG1N", "CG3", "CG4", "U1", "U2", "U5", "D1", "D2", "DNA", "VSA"],
+  "recommended": ["CG1", "CG1N", "U2", "C2", "DNA", "VS2"],
+  "packages": [
+    {"line": "medical", "name": "UHC consolidated", "plans": ["U1", "U5"]},
+    {"line": "medical", "name": "Cigna dual choice", "plans": ["D1", "D2", "CG3", "CG4"]}
+  ],
+  "reasons": {
+    "medical": "Cigna keeps the HDHP within budget; UHC matches the PPO network; the HMO renews.",
+    "dental": "Delta Dental matches the plan for less.",
+    "vision": "The VSP renewal holds its rates."
+  },
+  "parity": {
+    "old_app": "891f1b3",
+    "case": {
+      "stage": "intake"
+    },
+    "client_book": null,
+    "values_layer": "edited",
+    "values_left_out": {
+      "funding": "The old app keeps funding on the deal's coverage line, not on a plan."
+    },
+    "links": {
+      "U5": "B"
+    },
+    "copies": {
+      "CG1N": "duplicate"
+    },
+    "recommended_by_current": {
+      "medical": {
+        "A": "CG1",
+        "B": "U2",
+        "C": "C2"
+      }
+    },
+    "recommended_by_line": {
+      "dental": "DNA",
+      "vision": "VS2"
+    },
+    "line_counts": {
+      "dental": "DN",
+      "vision": "VS"
+    },
+    "figures_left_out": {
+      "U5": "Priced on B's enrollment alone: the old option compares with one current plan, so the consolidation's B + C counts cannot reach it."
+    },
+    "left_out": [
+      {
+        "what": "U5 replaces both B and C (a consolidation)",
+        "why": "An old option compares with one current plan (Plan.compares_to); U5 is linked to B."
+      },
+      {
+        "what": "CG1N as a second recommendation for A",
+        "why": "The old app keeps one pick per current plan (D-175); A keeps CG1."
+      },
+      {
+        "what": "The packages \"UHC consolidated\" and \"Cigna dual choice\"",
+        "why": "The old app derives one package per presented plan and has no saved packages."
+      },
+      {
+        "what": "Funding on every plan",
+        "why": "The old app keeps funding on the deal's coverage line (CoverageLine.funding)."
+      }
+    ]
+  }
+}

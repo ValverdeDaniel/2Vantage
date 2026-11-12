@@ -1,0 +1,286 @@
+/* Benefits — the journey stepper + phase cards (three modules since D-046). */
+
+/* ===== BENEFITS — the journey (Get to Market / Quote to Close / Implementation) ===== */
+
+/* Workspace stepper strip */
+.bnf-journey {
+  display: flex;
+  align-items: flex-start;
+  /* Wraps since D-046 took the strip to three modules and fourteen steps:
+     with `min-width: 0` the modules squeezed past their own nowrap labels
+     and printed on top of each other instead of scrolling. */
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px 10px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+/* Each module keeps its natural width — never squashed below its steps. */
+.bnf-journey-module { flex: 0 0 auto; min-width: 0; }
+.bnf-journey-module + .bnf-journey-module {
+  border-left: 1px solid var(--border);
+  padding-left: 22px;
+}
+/* A module that wrapped onto its own line has nothing to its left, so the
+   divider would float against the card edge. */
+@media (max-width: 1400px) {
+  .bnf-journey-module + .bnf-journey-module { border-left: none; padding-left: 0; }
+}
+.bnf-journey-module-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--navy);
+  margin-bottom: 8px;
+  white-space: nowrap;
+}
+.bnf-journey-module-skipped .bnf-journey-module-label { color: var(--ink3); }
+.bnf-journey-skip-tag { font-weight: 500; color: var(--ink3); text-transform: none; }
+.bnf-journey-steps { display: flex; align-items: center; }
+.bnf-journey-step {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bnf-journey-connector {
+  display: inline-block;
+  width: 18px;
+  height: 2px;
+  background: var(--border);
+  margin: 0 4px;
+}
+.bnf-journey-step-done .bnf-journey-connector { background: var(--green); }
+.bnf-journey-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: #fff;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.bnf-journey-step-done .bnf-journey-dot {
+  background: var(--green);
+  border-color: var(--green);
+}
+.bnf-journey-step-current .bnf-journey-dot {
+  border-color: var(--navy);
+  box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 8px var(--navy);
+}
+.bnf-journey-step-skipped .bnf-journey-dot {
+  border-style: dashed;
+  color: var(--ink3);
+  opacity: 0.7;
+}
+.bnf-journey-step-label {
+  font-size: 11px;
+  color: var(--ink3);
+  margin-left: 5px;
+}
+.bnf-journey-step-done .bnf-journey-step-label { color: var(--ink2, #4a5568); }
+.bnf-journey-step-current .bnf-journey-step-label {
+  color: var(--navy);
+  font-weight: 700;
+}
+.bnf-journey-step-skipped .bnf-journey-step-label {
+  color: var(--ink3);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  opacity: 0.8;
+}
+.bnf-journey-step:hover .bnf-journey-step-label { color: var(--navy); }
+.bnf-journey-done-badge {
+  margin-left: auto;
+  align-self: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  white-space: nowrap;
+}
+.bnf-journey-compact .bnf-journey-module-label { margin-bottom: 5px; }
+.bnf-journey-compact .bnf-journey-connector { width: 10px; }
+
+/* Workspace sidebar phase groups */
+.bnf-nav-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink3);
+  margin: 14px 0 4px 10px;
+}
+
+/* Dashboard two-segment progress */
+.bnf-journey-cell { display: flex; flex-direction: column; gap: 3px; }
+.bnf-seg-bar { display: flex; gap: 3px; width: 100%; }
+.bnf-seg {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: #e9edf2;
+  overflow: hidden;
+}
+.bnf-seg-fill { height: 100%; border-radius: 3px; }
+.bnf-seg-fill-1 { background: var(--navy); }
+.bnf-seg-fill-2 { background: var(--green); }
+.bnf-seg-skipped {
+  background: repeating-linear-gradient(
+    45deg, #e9edf2, #e9edf2 3px, #f6f7f9 3px, #f6f7f9 6px
+  );
+}
+.bnf-seg-skipped .bnf-seg-fill { opacity: 0.45; }
+.bnf-phase-label {
+  font-size: 10px;
+  color: var(--ink3);
+  white-space: nowrap;
+}
+
+/* Overview phase cards */
+.bnf-phase-cols {
+  display: grid;
+  /* Three cards since D-046 (Get to Market · Quote to Close ·
+     Implementation). A bare third child on the old 1fr/1fr grid orphaned
+     onto a second row half the width of the page. */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+@media (max-width: 1280px) {
+  .bnf-phase-cols { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 900px) {
+  .bnf-phase-cols { grid-template-columns: 1fr; }
+}
+.bnf-phase-card { display: flex; flex-direction: column; }
+.bnf-phase-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.bnf-phase-step-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--page);
+}
+.bnf-phase-step-row .bnf-journey-dot {
+  align-self: center;
+  width: 16px;
+  height: 16px;
+  font-size: 9px;
+}
+.bnf-phase-step-label { color: var(--ink); font-weight: 600; white-space: nowrap; }
+.bnf-phase-step-detail { color: var(--ink3); font-size: 12px; }
+.bnf-phase-skipped-note {
+  font-size: 12px;
+  color: var(--ink3);
+  font-style: italic;
+  margin: 6px 0;
+}
+.bnf-phase-card-foot {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+/* Get to Market requirements board (GetToMarketCard.jsx) */
+.bnf-req-rollup {
+  font-size: 12px;
+  color: var(--ink3);
+  margin: 6px 0 8px;
+}
+.bnf-req-group {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.bnf-req-group.is-done { background: var(--page); }
+.bnf-req-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.12s;
+}
+.bnf-req-head:hover { background: #f2f6fb; }
+.bnf-req-chevron {
+  font-size: 9px;
+  color: var(--ink3);
+  transition: transform 0.15s;
+  display: inline-block;
+}
+.bnf-req-chevron.expanded { transform: rotate(90deg); }
+.bnf-req-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  flex: 1;
+}
+.bnf-req-count {
+  font-size: 11px;
+  color: var(--ink3);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+.bnf-req-body {
+  padding: 4px 12px 10px 28px;
+  border-top: 1px solid var(--page);
+}
+.bnf-req-item { padding: 4px 0; }
+.bnf-req-item + .bnf-req-item { border-top: 1px solid var(--page); }
+.bnf-req-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 13px;
+  color: var(--ink);
+}
+.bnf-req-detail {
+  font-size: 12px;
+  color: var(--ink3);
+  padding: 1px 0 3px;
+}
+.bnf-req-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 4px 0 2px;
+}
+.bnf-req-formpick label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink3);
+}
+.bnf-req-askform {
+  flex-wrap: wrap;
+  width: 100%;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 0;
+}
+.bnf-req-askform input {
+  flex: 1;
+  min-width: 140px;
+}

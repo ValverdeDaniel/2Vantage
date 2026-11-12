@@ -1,0 +1,256 @@
+/* --- Threads on the client's page (D-153 C3a, D-162, review-request-page.md
+   §4.3, §4.8): each conversation's card (`ItemThread`: our note and their
+   questions, "Ask a question") in the comment margin, or under its item's
+   input on a narrow page; under the input of every item, "This is right"
+   and a quiet "Ask a question" while it has no conversation (`ItemFoot`);
+   what is new, in the to-do list and never over the form (`TodoNews`, D-192),
+   and the short follow-up list at the form's foot. Text wraps everywhere, so
+   a phone keeps the page's width. --- */
+.bnf-qcard {
+  display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  margin: 2px 0 6px; padding: 8px 10px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--card);
+}
+.bnf-qcard-new { border-color: var(--violet); box-shadow: inset 3px 0 0 var(--violet); }
+.bnf-qcard .bnf-fu-note, .bnf-qcard .bnf-fu-asked { font-size: 12.5px; padding: 7px 10px; }
+.bnf-qcard-h { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.bnf-qcard-newtag {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  font-size: 11px; font-weight: 700; color: var(--violet);
+}
+.bnf-qcard-newtag i, .bnf-todo-newsline i {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--violet);
+}
+/* A question newly on the form, with no note: a dot under its label. */
+.bnf-qmark-added { margin: 2px 0 4px; }
+.bnf-qcard-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.bnf-qcard-ask, .bnf-qcard-confirm {
+  font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.bnf-qcard-ask { padding: 0; border: none; background: none; color: var(--violet); }
+.bnf-qcard-ask:hover:not(:disabled) { text-decoration: underline; }
+.bnf-qcard-confirm {
+  padding: 2px 10px; border: 1px solid var(--green); border-radius: 999px;
+  background: var(--card); color: var(--green);
+}
+.bnf-qcard-confirm:hover:not(:disabled) { background: var(--green-bg); }
+.bnf-qcard-ask:disabled, .bnf-qcard-confirm:disabled { opacity: 0.55; cursor: not-allowed; }
+.bnf-qcard-why { font-size: 11.5px; font-style: italic; color: var(--ink2); overflow-wrap: anywhere; }
+.bnf-qcard-confirmed { font-size: 12px; font-weight: 600; color: var(--green); }
+.bnf-qcard .bnf-fu-ask .btn { flex: 0 0 auto; }
+/* What is new, in their to-do list (D-192): how many replies, how many questions added. */
+.bnf-todo-news { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+.bnf-todo-newsline {
+  display: flex; align-items: baseline; gap: 6px; width: 100%;
+  padding: 5px 8px; text-align: left; cursor: pointer;
+  font: inherit; font-size: 12.5px; color: var(--ink);
+  border: 1px solid var(--violet); border-radius: 8px; background: var(--violet-bg);
+}
+/* The rail is narrow: the words wrap in their own column, with the dot and Show beside them. */
+.bnf-todo-newsline i { flex: 0 0 auto; }
+.bnf-todo-newsline b { flex: 1 1 auto; min-width: 0; color: var(--violet); font-weight: 600; }
+.bnf-todo-newsline span { flex: 0 0 auto; color: var(--ink2); white-space: nowrap; }
+/* The follow-up list at the form's foot: what the form cannot carry itself. */
+.bnf-fu-summary { gap: 8px; }
+.bnf-fu-row { display: flex; flex-direction: column; gap: 6px; padding: 7px 0 0; border-top: 1px solid var(--page); }
+.bnf-fu-row-new .bnf-fu-h b { color: var(--violet); }
+/* A hidden item's answer box, opened in its row (D-162): in a column,
+   `.bb-portal-field`'s 220px basis would be a height (`.bnf-fu`'s own fix). */
+.bnf-fu-row .bb-portal-field { flex: 0 0 auto; }
+.bnf-fu-go {
+  margin-left: auto; padding: 0; border: none; background: none; cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--navy); white-space: nowrap;
+}
+.bnf-fu-go:hover { text-decoration: underline; }
+[data-ask-ref].bnf-ask-flash { animation: bnf-ask-flash 1.6s ease-out 1; border-radius: 8px; }
+@keyframes bnf-ask-flash {
+  0% { box-shadow: 0 0 0 3px var(--violet); }
+  100% { box-shadow: 0 0 0 3px transparent; }
+}
+
+/* --- The comment margin (D-162, kit `CommentMargin.jsx`): each item's
+   conversation in a card to the right of the form, level with its item,
+   never inside it; only items with a conversation (or the one being
+   written on) have a card. The picked card lines up with its item, which
+   gets a soft violet halo; the others make room. Under the breakpoint
+   (the client's page 1200px, the request page 1100px) there is no right
+   side and a card sits under its item's input instead. --- */
+.cm-margin { position: relative; min-width: 0; }
+.cm-slot { position: absolute; left: 0; right: 0; min-width: 0; transition: top 0.12s ease; }
+.cm-slot-on { z-index: 1; }
+[data-ask-ref].cm-anchor-on, [data-fu-row].cm-anchor-on {
+  border-radius: 8px; background: var(--violet-bg); box-shadow: 0 0 0 4px var(--violet-bg);
+}
+/* A card in the margin, the picked one ringed. */
+.cm-slot .bnf-qcard { margin: 0; cursor: pointer; }
+.cm-slot-on .bnf-qcard { cursor: default; border-color: var(--violet); box-shadow: inset 3px 0 0 var(--violet); }
+.bnf-qcard-title { font-size: 12px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
+/* Under its item on a narrow page. */
+.bnf-qcard-below { margin: 6px 0 2px; }
+/* The mark on an item that has a conversation: a click picks its card. */
+.bnf-qmark {
+  display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; max-width: 100%;
+  margin: 2px 0; padding: 0 8px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--card); color: var(--navy); font: inherit; font-size: 11px; font-weight: 600;
+  line-height: 18px; white-space: nowrap; cursor: pointer;
+}
+.bnf-qmark:hover { border-color: var(--violet); }
+.bnf-qmark-new, .bnf-qmark-open { border-color: var(--violet); color: var(--violet); }
+.bnf-qmark i {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--violet);
+}
+/* Under an item's input: "This is right", why it takes no question, and
+   "Ask a question" while it has no conversation. */
+.bnf-qfoot { display: flex; flex-direction: column; gap: 4px; min-width: 0; margin-top: 4px; }
+
+/* The rail: "Add what's missing", by section. */
+.rr-rail { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.rr-rail-title { font-size: 14px; font-weight: 700; color: var(--ink); }
+.rr-rail-sub, .rr-rail-note { font-size: 12px; color: var(--ink2); }
+.rr-rail-onfile { align-self: flex-start; margin-top: 2px; font-size: 11.5px; }
+.rr-rail-sec { border: 1px solid var(--border); border-radius: 10px; background: var(--card); min-width: 0; }
+.rr-rail-sechead { display: flex; align-items: center; gap: 6px; padding: 7px 10px; min-width: 0; }
+.rr-rail-toggle {
+  display: flex; align-items: baseline; gap: 6px; flex: 1 1 auto; min-width: 0;
+  font: inherit; text-align: left; background: none; border: none; padding: 0; cursor: pointer;
+}
+.rr-rail-toggle b { font-size: 13px; color: var(--ink); overflow-wrap: anywhere; }
+.rr-rail-caret { font-size: 11px; color: var(--ink3); }
+.rr-rail-count { font-size: 11.5px; color: var(--ink3); white-space: nowrap; }
+.rr-rail-addall {
+  flex: 0 0 auto; font: inherit; font-size: 11.5px; font-weight: 600; white-space: nowrap;
+  padding: 2px 8px; border: 1px solid var(--violet); border-radius: 999px;
+  background: var(--card); color: var(--violet); cursor: pointer;
+}
+.rr-rail-addall:hover:not(:disabled) { background: var(--violet-bg); }
+.rr-rail-addall:disabled { opacity: 0.45; cursor: default; }
+.rr-rail-body { display: flex; flex-direction: column; padding: 0 10px 8px; min-width: 0; }
+.rr-rail-form {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px;
+  margin: 2px 0 6px; padding: 6px 8px; border-radius: 8px; background: var(--violet-bg);
+}
+.rr-rail-form .rr-rail-addall { white-space: normal; text-align: left; }
+.rr-rail-q { display: flex; flex-direction: column; gap: 2px; padding: 5px 0; border-top: 1px solid var(--page); min-width: 0; }
+.rr-rail-qhead { display: flex; align-items: flex-start; gap: 6px; font-size: 12.5px; cursor: pointer; min-width: 0; }
+.rr-rail-qhead input { margin: 2px 0 0; flex: 0 0 auto; }
+.rr-rail-qlabel { color: var(--ink); overflow-wrap: anywhere; min-width: 0; }
+/* A question's label that shows it in their form (D-163); the tick adds. */
+.rr-rail-qpick {
+  padding: 0; border: none; background: none; cursor: pointer;
+  font: inherit; font-size: inherit; text-align: left;
+}
+.rr-rail-qpick:hover { color: var(--violet); text-decoration: underline; }
+.rr-rail-q-on_file .rr-rail-qlabel, .rr-rail-q-answered .rr-rail-qlabel { color: var(--ink2); }
+.rr-rail-req { font-style: normal; color: var(--rose); margin-left: 2px; }
+.rr-rail-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 6px; padding-left: 20px; }
+.rr-rail-chip {
+  display: inline-flex; align-items: center; gap: 2px; padding: 0 7px; border-radius: 9px;
+  font-size: 11px; line-height: 18px; white-space: nowrap; background: var(--page); color: var(--ink2);
+}
+.rr-rail-chip-cart { background: var(--violet-bg); color: var(--violet); font-weight: 600; }
+.rr-rail-chip-asked { background: var(--amber-bg); color: var(--amber); }
+.rr-rail-chip-ended { background: var(--page); color: var(--ink2); border: 1px dashed var(--border); }
+.rr-rcard-enterbtn { align-self: flex-start; margin-top: 6px; font-size: 12px; font-weight: 600; }
+.rr-rail-chip-question { background: var(--violet-bg); color: var(--violet); }
+.rr-rail-chip-answered { background: var(--blue-bg); color: var(--blue); }
+.rr-rail-chip-file { background: var(--green-bg); color: var(--green); }
+.rr-rail-x {
+  border: none; background: none; padding: 0 0 0 4px; font-size: 13px; line-height: 1;
+  color: inherit; cursor: pointer;
+}
+.rr-rail-x:hover:not(:disabled) { color: var(--rose); }
+.rr-rail-why {
+  position: relative; font-size: 11px; color: var(--ink3); cursor: help;
+  border-bottom: 1px dotted var(--ink3);
+}
+.rr-rail-why-tip {
+  display: none; position: absolute; left: 0; top: calc(100% + 4px); z-index: 5;
+  width: 220px; max-width: 60vw; padding: 6px 8px; border-radius: 6px;
+  background: var(--navy); color: #fff; font-size: 11.5px; line-height: 1.35; white-space: normal;
+}
+.rr-rail-why:hover .rr-rail-why-tip, .rr-rail-why:focus .rr-rail-why-tip { display: block; }
+
+/* The tray bar's snippet pop-up (`FollowUpSnippet`): sticky at the tab's
+   foot where the bar sits, never fixed over the page. */
+.rr-snippet {
+  position: sticky; bottom: 12px; z-index: 30;
+  display: flex; flex-direction: column; min-width: 0;
+  margin: 16px auto 0; max-width: 520px; max-height: min(60vh, 460px);
+  border: 1px solid var(--border); border-radius: 12px; background: var(--card);
+  box-shadow: 0 8px 28px rgba(16, 28, 46, 0.28);
+}
+.rr-snippet-head {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-radius: 12px 12px 0 0; background: var(--navy); color: #fff;
+}
+.rr-snippet-close {
+  border: none; background: none; color: #fff; font-size: 18px; line-height: 1;
+  cursor: pointer; padding: 0 2px; opacity: 0.8;
+}
+.rr-snippet-close:hover { opacity: 1; }
+.rr-snippet-list { overflow-y: auto; padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; }
+.rr-snippet-group { display: flex; flex-direction: column; gap: 2px; }
+.rr-snippet-item {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+  padding: 3px 0; font-size: 12.5px; color: var(--ink); border-top: 1px solid var(--page);
+}
+.rr-snippet-item span { min-width: 0; overflow-wrap: anywhere; }
+.rr-snippet-warn { color: var(--amber); }
+.rr-snippet-more { font-size: 12px; color: var(--ink3); }
+.rr-snippet-foot {
+  display: flex; justify-content: flex-end; gap: 8px; padding: 8px 12px;
+  border-top: 1px solid var(--border);
+}
+.rr-snippet-foot .btn { flex: 0 0 auto; }
+@media (max-width: 600px) {
+  .rr-snippet { max-width: none; }
+}
+
+/* The request page, the v2 layout (review-requests-v2.md slices 3-7). Widths
+   were set by measuring the rows at 1100, 1280, 1440 and 1920. */
+.rr-deadline {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  font-size: 12.5px; color: var(--ink2); min-height: 20px;
+}
+.rr-deadline b { color: var(--ink); }
+.rr-deadline-keys { margin-left: auto; }
+.rr-deadline-keylist { flex: 1 1 100%; text-align: right; font-size: 12px; color: var(--ink3); }
+.rr-next {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 14px;
+  border: 1px solid var(--violet); border-radius: 10px; background: var(--violet-bg);
+}
+.rr-next-mark { font-weight: 700; color: var(--violet); }
+.rr-next-words { flex: 1 1 280px; min-width: 0; display: flex; flex-wrap: wrap; gap: 2px 10px; }
+.rr-next-words b { color: var(--ink); font-size: 13.5px; }
+.rr-next-words span { color: var(--ink2); font-size: 12.5px; }
+.rr-next-actions, .rr-next-call { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.rr-next-actions .btn, .rr-next-call .btn { flex: 0 0 auto; }
+.rr-next-call input { min-width: 220px; padding: 4px 8px; font-size: 13px; }
+.rr-who-access { font-size: 11px; color: var(--ink3); border-left: 1px solid var(--border); padding-left: 6px; }
+.rr-who-peoplelink { margin-left: auto; align-self: center; }
+
+/* The page's body (D-187): one card holding the tabs, Ask and the form, with the
+   question and note cards beside it. A sticky Ask list needs every ancestor up to
+   the page to leave overflow alone. */
+.rr-reqbody { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; min-width: 0; }
+.rr-reqbody-cardsmin { grid-template-columns: minmax(0, 1fr) 46px; }
+.rr-reqbody-solo { grid-template-columns: minmax(0, 1fr); }
+.rr-reqbody > .rr-reqpage-cards { width: auto; min-width: 0; }
+.rr-build { min-width: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+.rr-build > .rr-panes { padding: 4px 12px 0; }
+.rr-build-body { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; padding: 12px; }
+.rr-build-wide .rr-build-body { grid-template-columns: minmax(360px, 45%) minmax(0, 1fr); }
+.rr-build-folded .rr-build-body { grid-template-columns: 46px minmax(0, 1fr); }
+.rr-reqdoc { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.rr-cards-foldrow { display: flex; justify-content: flex-end; }
+@media (max-width: 1180px) {
+  .rr-reqbody, .rr-reqbody-cardsmin { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .rr-reqbody > .rr-reqpage-cards { display: none; }
+}
+@media (max-width: 900px) {
+  .rr-build-body, .rr-build-wide .rr-build-body, .rr-build-folded .rr-build-body { grid-template-columns: minmax(0, 1fr); }
+}
+
+.rr-rail-titlerow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rr-rail-titletools { display: inline-flex; align-items: center; gap: 2px; }
+.rr-rail-fold { font-size: 16px; line-height: 1; padding: 2px 6px; }

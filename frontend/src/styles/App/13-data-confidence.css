@@ -1,0 +1,261 @@
+/* Data confidence (the benefits Overview panel, transcribed) */
+.bb-confidence { margin-top: 18px; }
+.bb-conf-split { display: flex; gap: 24px; margin: 12px 0 14px; }
+.bb-conf-cell { min-width: 110px; }
+.bb-conf-value { font-size: 22px; font-weight: 600; }
+.bb-conf-label { font-size: 12px; color: inherit; }
+.bb-conf-meta { font-size: 11.5px; color: inherit; }
+.bb-conf-bar-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 12px; color: inherit; margin-bottom: 4px;
+}
+.bb-conf-legend {
+  display: flex; gap: 14px; font-size: 11.5px; color: inherit;
+  margin-top: 6px;
+}
+.bb-conf-docs { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+.bb-conf-doc { padding: 6px 0; }
+.bb-conf-docmain { display: flex; align-items: baseline; gap: 10px; }
+.bb-conf-docname { font-size: 13px; font-weight: 600; }
+.bb-conf-headline { font-size: 11.5px; }
+.bb-conf-docmeta {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+
+/* Embedded PDF viewer */
+.bb-pdf-viewer { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+
+.bb-pdf-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: #fafbfc;
+  font-size: 12px;
+  color: var(--ink2);
+}
+
+.bb-pdf-btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-size: 11.5px;
+  font-family: inherit;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.bb-pdf-btn:hover:not(:disabled) { border-color: var(--blue); color: var(--ink); }
+.bb-pdf-btn:disabled { opacity: 0.45; cursor: default; }
+
+.bb-pdf-pageinput {
+  width: 38px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 2px 3px;
+  font-size: 11.5px;
+}
+
+.bb-pdf-notfound-inline { color: var(--amber); font-size: 11.5px; }
+.bb-pdf-foundnote { color: var(--green); font-size: 11.5px; }
+.bb-pdf-ocrnote { color: var(--ink3); font-size: 11.5px; }
+.bb-pdf-notfound {
+  color: var(--amber);
+  background: var(--amber-bg);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+}
+
+.bb-pdf-canvas-wrap {
+  position: relative;
+  overflow: auto;
+  max-height: 80vh;
+  background: #eceef1;
+  padding: 12px;
+}
+
+.bb-pdf-page { position: relative; margin: 0 auto; width: fit-content; }
+.bb-pdf-page canvas { display: block; box-shadow: 0 1px 6px rgba(16, 24, 40, 0.14); }
+
+.bb-pdf-highlight {
+  position: absolute;
+  background: rgba(255, 193, 7, 0.35);
+  outline: 2px solid rgba(255, 193, 7, 0.55);
+  border-radius: 2px;
+  pointer-events: none;
+  animation: bb-pdf-highlight-flash 1.2s ease-out 1;
+}
+
+@keyframes bb-pdf-highlight-flash {
+  0% { background: rgba(255, 193, 7, 0.75); outline-color: rgba(230, 150, 0, 0.95); }
+  60% { background: rgba(255, 193, 7, 0.75); outline-color: rgba(230, 150, 0, 0.95); }
+  100% { background: rgba(255, 193, 7, 0.35); outline-color: rgba(255, 193, 7, 0.55); }
+}
+
+/* The snippet region around a pinpointed value — faint context, no flash. */
+.bb-pdf-highlight-context {
+  position: absolute;
+  background: rgba(255, 193, 7, 0.12);
+  outline: 1px dashed rgba(230, 150, 0, 0.45);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.bb-pdf-loading { padding: 40px; color: var(--ink3); font-size: 12.5px; }
+
+/* Extraction mapping rows */
+.bb-mapping-row { padding: 10px 0; border-bottom: 1px solid #f3f5f7; }
+.bb-mapping-row.bb-clickable { cursor: pointer; margin: 0 -8px; padding: 10px 8px; border-radius: 7px; }
+.bb-mapping-row.bb-clickable:hover { background: #f6f8fb; }
+.bb-mapping-row.bb-active { background: var(--blue-bg); }
+
+.bb-mapping-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bb-mapping-target { font-size: 13px; font-weight: 600; }
+.bb-mapping-note { font-size: 11.5px; color: #8b95a3; margin-top: 3px; }
+
+.bb-mapping-src { margin-top: 5px; }
+.bb-mapping-snippet {
+  font-style: italic;
+  color: var(--ink2);
+  font-size: 11.5px;
+  border-left: 2px solid var(--border);
+  padding-left: 8px;
+  margin-bottom: 3px;
+}
+.bb-mapping-srclink { font-size: 11.5px; color: var(--blue); }
+
+/* SOV provenance tooltip (position: fixed — escapes the grid scroll clip) */
+.bb-tooltip {
+  position: fixed;
+  z-index: 300;
+  transform: translate(-50%, calc(-100% - 7px));
+  background: var(--ink);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 6px 9px;
+  border-radius: 6px;
+  max-width: 320px;
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.25);
+}
+
+.bb-tooltip-line { white-space: nowrap; }
+
+.bb-tooltip-link {
+  display: block;
+  margin-top: 3px;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ec5f5;
+  cursor: pointer;
+}
+.bb-tooltip-link:hover { text-decoration: underline; }
+
+/* Gap check panel + lessons */
+.bb-gap-panel { margin-top: 20px; }
+
+.bb-gap-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.bb-gap-progress { margin-top: 12px; }
+.bb-gap-log { font-size: 11px; color: var(--ink3); margin-top: 5px; }
+
+.bb-gap-results { margin-top: 12px; }
+.bb-gap-summary { font-size: 12.5px; font-weight: 600; margin-bottom: 8px; }
+.bb-gap-empty { font-size: 12.5px; color: var(--ink3); margin-top: 10px; }
+
+.bb-gap-finding {
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f5f7;
+  font-size: 12.5px;
+}
+
+.bb-gap-finding-head { display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; }
+.bb-gap-found .bb-gap-marker { color: var(--green); }
+.bb-gap-notfound { color: var(--ink3); }
+.bb-gap-notfound .bb-gap-marker { color: var(--ink3); }
+.bb-gap-loc { color: var(--ink2); }
+.bb-gap-where { color: var(--ink3); font-size: 11.5px; }
+
+.bb-gap-view {
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--blue);
+  cursor: pointer;
+}
+.bb-gap-view:hover { text-decoration: underline; }
+
+.bb-gap-snippet {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink2);
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bb-gap-why { font-size: 11.5px; color: var(--ink3); margin-top: 2px; }
+
+.bb-lessons { margin-top: 14px; border-top: 1px solid var(--border-soft); padding-top: 10px; }
+.bb-lessons-title { font-size: 12.5px; font-weight: 600; margin-bottom: 6px; }
+.bb-lessons-sub { font-weight: 400; color: var(--ink3); font-size: 11.5px; }
+
+.bb-lesson-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 12px;
+}
+.bb-lesson-field { font-weight: 600; white-space: nowrap; }
+.bb-lesson-text { color: var(--ink2); flex: 1; }
+.bb-lesson-source { color: var(--ink3); font-size: 11px; white-space: nowrap; }
+
+.bb-lesson-delete {
+  border: none;
+  background: none;
+  color: var(--ink3);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 3px;
+  line-height: 1;
+}
+.bb-lesson-delete:hover { color: var(--rose); }
+
+/* ACORD & submit tab */
+.bb-submit-page { max-width: 840px; }
+
+.bb-warn-banner {
+  background: #fdf4ec;
+  border: 1px solid #f3d9bf;
+  border-radius: 11px;
+  padding: 14px 17px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 13px;
+  color: #7a5410;
+}
+
+.bb-warn-icon { color: #b5780b; font-size: 17px; }

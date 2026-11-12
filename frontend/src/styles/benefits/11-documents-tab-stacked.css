@@ -1,0 +1,283 @@
+/* ===== Documents tab: stacked doc-over-data + focus mode =====
+   .bnf-docs-cols is the Documents tab's own modifier — .bb-policy-cols /
+   .bb-policy-doc are shared with BeniBridge's PolicyTab, which keeps the stock
+   THREE-column layout, so every rule here stays .bnf-docs-* scoped. Here the
+   viewer and the scanned data are two rows of one middle column instead, with
+   the chat still a column beside them. */
+.bnf-docs-cols { gap: 14px; }
+.bnf-docs-cols .bb-policy-doc { padding: 12px; }
+
+/* The viewer and the scanned data are two ROWS in one middle column, so each
+   spans the full width between the case sidebar and the chat rail. */
+.bnf-docs-stack {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+/* Auto height out here: a column flex container with height:auto and
+   flex-basis:0 children collapses to nothing, so the ratios are scoped to
+   focus mode below, where the fixed layer gives the stack a height to split. */
+.bnf-docs-stack > .bb-policy-doc,
+.bnf-docs-stack > .bnf-scan-panel { flex: 0 0 auto; }
+
+/* Shorter than the old 230px: stacked, the viewer would otherwise overrun the
+   fold and push the scanned-data card out of sight entirely. 420px lands the
+   card's bottom edge just inside a ~950px viewport, so the "Scanned data"
+   header peeks and there is something to scroll to. At full width the page
+   also renders about twice as large, so less viewport goes further. The floor
+   keeps a short laptop screen from collapsing the PDF to a letterbox. */
+.bnf-docs-cols .bb-pdf-canvas-wrap { max-height: max(360px, calc(100vh - 420px)); }
+
+.bnf-docs-expand-btn {
+  margin-left: auto;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--ink2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bnf-docs-expand-btn:hover { border-color: var(--blue); color: var(--ink); }
+
+/* Focus mode: the doc+data row becomes a full-viewport layer under the top
+   bar. z 160 sits above the page stickies and the 150 scan drawer, below
+   modals (200) and the guide overlay (400). */
+.bnf-docs-cols.bnf-docs-expanded {
+  position: fixed;
+  inset: var(--chrome-top) 0 0 0;
+  z-index: 160;
+  background: var(--page);
+  margin: 0;
+  padding: 14px 18px;
+  gap: 14px;
+  overflow: hidden;
+  /* .bb-policy-cols is align-items:flex-start, which would leave the stack at
+     content height with nothing to divide between the two panes. */
+  align-items: stretch;
+}
+.bnf-docs-expanded .bnf-docs-stack { height: 100%; min-height: 0; }
+.bnf-docs-expanded .bnf-docs-stack > .bb-policy-doc {
+  flex: 1 1 58%;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+}
+.bnf-docs-expanded .bnf-docs-stack > .bnf-scan-panel {
+  flex: 1 1 42%;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+}
+/* A plan grid with frozen panes (D-166) needs its own scroller to stick
+   in, so in focus mode it takes the panel's leftover height instead of
+   nesting a second scrollbar inside the panel's. The column chain hands the
+   height down (.bnf-scan-panel and .bnf-scan-split are already flex); the
+   scroller's own cap is lifted in benefits-freeze.css. */
+.bnf-docs-expanded .bnf-scan-body.bnf-scan-fill {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.bnf-docs-expanded .bnf-scan-fill > .bnf-scan-grid {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* The pane is the single scroller in focus mode — capping the canvas wrap
+   inside an already-scrolling pane nests two scrollbars on one gesture. */
+.bnf-docs-expanded .bb-pdf-canvas-wrap { max-height: none; }
+
+/* Inside focus mode the data panel can collapse so the document really takes
+   the whole screen. Stacked, it drops to a strip along the BOTTOM rather than
+   a rail down the side. Content is hidden, never unmounted — the guide
+   anchors inside must stay in the DOM. */
+.bnf-docs-expanded .bnf-docs-stack > .bnf-scan-panel.bnf-docs-hidden {
+  flex: 0 0 auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 8px 12px;
+  overflow: hidden;
+}
+.bnf-docs-hidden > :not(.bnf-docs-showdata) { display: none; }
+.bnf-docs-showdata {
+  writing-mode: vertical-rl;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--blue);
+  cursor: pointer;
+  padding: 8px 4px;
+  width: 100%;
+}
+.bnf-docs-showdata:hover { text-decoration: underline; }
+/* Scoped to the stack: the chat column is a SIBLING of it, so its rail keeps
+   the vertical label above. */
+.bnf-docs-stack .bnf-docs-showdata {
+  writing-mode: horizontal-tb;
+  width: auto;
+  text-align: left;
+  padding: 2px 0;
+}
+.bnf-docs-hidedata {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--ink3);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bnf-docs-hidedata:hover { color: var(--ink); text-decoration: underline; }
+
+/* D-125: the file in its own window (benefits/shared/DocumentWindow.jsx).
+   While it is out, the Documents tab's viewer card shrinks to one bar and the
+   scanned data takes the width, in either layout. */
+.bnf-docs-popped .bb-policy-doc { min-height: 0; }
+.bnf-docs-popped .bnf-docs-stack.bnf-docs-side { flex-direction: column; align-items: stretch; }
+.bnf-docs-popped .bnf-docs-stack.bnf-docs-side > .bb-policy-doc { position: static; flex: 0 0 auto; }
+.bnf-docs-popped .bnf-docs-stack.bnf-docs-side > .bnf-scan-panel { flex: 1 1 auto; }
+.bnf-docs-poppedbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+  margin-top: 10px; padding: 10px 12px; border-radius: 8px;
+  background: var(--blue-bg); color: var(--navy); font-size: 13px;
+}
+.bnf-docs-poppedbar > span { margin-right: auto; }
+.bnf-docs-poppedbar .btn { flex: 0 0 auto; }
+.bnf-docs-popout-btn { margin-left: 6px; }
+/* ↺ Reset sizes sits beside ⟲ History, adding no gap of its own. */
+.bnf-docs-resetsizes-btn { margin-left: 0; }
+
+.dw-page { min-height: 100vh; display: flex; flex-direction: column; background: var(--page); }
+.dw-head {
+  position: sticky; top: 0; z-index: 5; background: #fff;
+  border-bottom: 3px solid var(--navy); padding: 12px 18px 10px;
+  box-shadow: 0 2px 8px rgba(23, 58, 99, 0.08);
+}
+.dw-client { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.dw-client-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink3);
+}
+.dw-client-name { font-size: 24px; font-weight: 700; color: var(--navy); line-height: 1.2; }
+.dw-sub { margin-top: 2px; font-size: 13px; color: var(--ink2); }
+.dw-file { color: var(--ink); font-weight: 600; }
+.dw-head-row {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 6px 16px; margin-top: 8px; font-size: 12px;
+}
+.dw-status { font-weight: 600; border-radius: 999px; padding: 2px 10px; }
+.dw-status-linked { color: var(--green); background: var(--green-bg); }
+.dw-status-waiting { color: var(--amber); background: var(--amber-bg); }
+.dw-status-left { color: var(--rose); background: var(--rose-bg); }
+.dw-keys { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.dw-keys-note { color: var(--ink3); }
+.dw-body { flex: 1 1 auto; padding: 12px 18px 18px; }
+.dw-body .bb-pdf-canvas-wrap { max-height: calc(100vh - 190px); }
+.dw-body .bnf-sheet-scroll { max-height: calc(100vh - 230px); }
+.dw-empty { padding: 40px 18px; color: var(--ink2); font-size: 14px; text-align: center; }
+.dw-left {
+  position: fixed; inset: 0; z-index: 50; display: flex; align-items: center;
+  justify-content: center; background: rgba(28, 36, 48, 0.72); padding: 16px;
+}
+.dw-left-card {
+  max-width: 460px; background: #fff; border-radius: 12px; padding: 24px;
+  border-top: 4px solid var(--rose); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+.dw-left-card .btn { margin-top: 14px; }
+.dw-left-title { font-size: 19px; font-weight: 700; color: var(--ink); }
+.dw-left-text { margin-top: 8px; font-size: 14px; color: var(--ink2); }
+.dw-left-sub { margin-top: 12px; font-size: 12px; color: var(--ink3); }
+
+/* The Documents tab's chat column retired (D-096): the tab opens the
+   workspace's Work with Claude drawer instead. .bnf-docs-showdata and
+   .bnf-docs-hidedata above stay: the Scanned data rail and the commissions
+   Documents tab use them. */
+
+/* Merge-mode banner on a page-scoped staged review. */
+.bnf-staged-scope-note {
+  background: var(--violet-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12.5px;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.bnf-scan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+/* The panel's controls, all together at the right with ✎ Edit last (D-201).
+   The shared button class carries margin-left: auto for its other homes;
+   here that spread the buttons across the row and left Edit in the middle. */
+.bnf-scan-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+.bnf-scan-actions .bnf-docs-expand-btn { margin-left: 0; }
+.bnf-docs-review-btn.is-on { color: var(--navy); background: var(--blue-bg); border-color: var(--blue); }
+.bnf-scan-sub { color: var(--ink3); font-weight: 400; }
+.bnf-quality { display: flex; align-items: center; gap: 8px; }
+.bnf-quality-label { font-size: 12px; font-weight: 600; }
+.bnf-quality-label.bb-gray { color: var(--ink3); }
+.bnf-quality-chips { display: inline-flex; gap: 5px; }
+
+.bnf-scan-form { display: flex; flex-direction: column; gap: 2px; }
+.bnf-scan-field {
+  display: grid;
+  /* A fixed badge column: rows with no badge (D-209's muted questions) keep
+     their values in line with the rows that have one. */
+  grid-template-columns: 1.1fr 1.2fr 76px;
+  gap: 10px;
+  align-items: center;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--border-softer);
+  background: none;
+  padding: 8px;
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.bnf-scan-field:hover { background: #f6f8fb; }
+.bnf-scan-field.bb-active { background: var(--blue-bg); }
+.bnf-scan-field-label { color: var(--ink2); }
+.bnf-scan-field-value { font-weight: 600; }
+.bnf-scan-field > .bb-badge { justify-self: end; }
+/* An intake file's whole form (D-209): a band per Intake card, the questions
+   this file did not answer muted, and the read-only contacts and coverage. */
+.bnf-scan-section-head {
+  margin-top: 10px;
+  padding: 6px 8px;
+  background: #f2f5f9;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--ink2);
+}
+.bnf-scan-form > .bnf-scan-section-head:first-child,
+.bnf-scan-side > .bnf-scan-section-head:first-child { margin-top: 0; }
+.bnf-scan-field-other .bnf-scan-field-label,
+.bnf-scan-field-other .bnf-scan-field-value { color: var(--ink3); font-weight: 400; }
+.bnf-scan-form-note { font-size: 12px; color: var(--ink3); }
+.bnf-scan-side { display: flex; flex-direction: column; gap: 2px; }
+.bnf-scan-field-static { cursor: default; }
+.bnf-scan-field-static:hover { background: none; }
+.bnf-scan-field-none { padding: 6px 8px; font-size: 12px; color: var(--ink3); }

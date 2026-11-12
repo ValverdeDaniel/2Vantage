@@ -1,38 +1,33 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import cx from './cx';
-import IconButton from './IconButton';
-import styles from './Toast.module.css';
+import { createPortal } from 'react-dom';
 import { ToastContext } from './useToast';
 
-const ICONS = { success: '✓', error: '⚠', info: 'ℹ' };
-const LABELS = { success: 'Done', error: 'Error', info: 'Note' };
-let nextId = 1;
-
-/** The one toast provider (plan.md §3.9). Wrap the app once; components call useToast(). */
+/**
+ * The one toast provider (plan.md §3.9, §8.22), in the old look: one `bb-toast` at the foot of the screen, the newest
+ * replacing the last; errors in the error colour (`bb-toast-error`). A click dismisses it. Wrap the app once;
+ * components call useToast().
+ */
 export default function ToastProvider({ children }) {
-  const [toasts, setToasts] = useState([]);
-  const timers = useRef(new Map());
+  const [toast, setToast] = useState(null);
+  const timer = useRef(null);
+  const nextId = useRef(1);
 
   const dismiss = useCallback((id) => {
-    setToasts((list) => list.filter((toast) => toast.id !== id));
-    clearTimeout(timers.current.get(id));
-    timers.current.delete(id);
+    setToast((current) => (current && (id === undefined || current.id === id) ? null : current));
   }, []);
 
   const show = useCallback(
     (message, { tone = 'success', duration = tone === 'error' ? 8000 : 5000 } = {}) => {
-      const id = nextId++;
-      setToasts((list) => [...list, { id, message, tone }].slice(-4));
-      if (duration) timers.current.set(id, setTimeout(() => dismiss(id), duration));
+      const id = nextId.current++;
+      clearTimeout(timer.current);
+      setToast({ id, message, tone });
+      if (duration) timer.current = setTimeout(() => dismiss(id), duration);
       return id;
     },
     [dismiss],
   );
 
-  useEffect(() => {
-    const pending = timers.current;
-    return () => pending.forEach((timer) => clearTimeout(timer));
-  }, []);
+  useEffect(() => () => clearTimeout(timer.current), []);
 
   const value = useMemo(
     () => ({
@@ -48,22 +43,18 @@ export default function ToastProvider({ children }) {
   return (
     <ToastContext value={value}>
       {children}
-      <section className={styles.region} aria-label="Notifications" aria-live="polite">
-        {toasts.map((toast) => (
-          <div key={toast.id} className={cx(styles.toast, styles[toast.tone])}>
-            <span className={styles.icon} aria-hidden="true">
-              {ICONS[toast.tone]}
-            </span>
-            <p className={styles.message}>
-              <span className={styles.srOnly}>{LABELS[toast.tone]}: </span>
-              {toast.message}
-            </p>
-            <IconButton label="Dismiss" size="sm" onClick={() => dismiss(toast.id)}>
-              ✕
-            </IconButton>
-          </div>
-        ))}
-      </section>
+      {toast &&
+        createPortal(
+          <div
+            key={toast.id}
+            className={toast.tone === 'error' ? 'bb-toast bb-toast-error' : 'bb-toast'}
+            role={toast.tone === 'error' ? 'alert' : 'status'}
+            onClick={() => dismiss(toast.id)}
+          >
+            {toast.message}
+          </div>,
+          document.body,
+        )}
     </ToastContext>
   );
 }

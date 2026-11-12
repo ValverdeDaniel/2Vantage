@@ -1,0 +1,243 @@
+/* Task mode (D-139): the Agendas' shared pieces and the Work queue's picking.
+   The task bar under the navbar is benefits-taskmode.css. */
+
+/* --- Agenda rows (shared/agenda/AgendaParts.jsx) -------------------------- */
+.bnf-ag-block + .bnf-ag-block { margin-top: 6px; }
+.bnf-ag-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 6px 0 4px;
+}
+.bnf-ag-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+.bnf-ag-toggle:hover { color: var(--blue); }
+.bnf-ag-count {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--border-soft);
+  color: var(--ink2);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+.bnf-ag-section-sub { font-size: 12px; color: var(--ink3); }
+.bnf-ag-empty { font-size: 13px; color: var(--ink3); padding: 6px 0 10px; }
+
+/* One row: date · dot · words · actions. Its own track list, so the words
+   column is never squeezed (the client agenda's rule). */
+.bnf-ag-row {
+  display: grid;
+  grid-template-columns: 96px 12px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+}
+.bnf-ag-row .bnf-cal-label { overflow-wrap: anywhere; }
+.bnf-ag-item + .bnf-ag-item { border-top: 1px solid var(--border-softer); }
+/* The client agenda's rows now sit one per item: the item draws the line. */
+.bnf-ag-item > .bnf-client-agenda-row { border-top: none; }
+.bnf-ag-muted { opacity: 0.6; }
+.bnf-ag-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bnf-ag-btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink2);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bnf-ag-btn:hover { border-color: var(--blue); color: var(--blue); }
+.bnf-ag-btn:disabled { opacity: 0.5; cursor: default; }
+.bnf-ag-chip {
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+.bnf-ag-chip-task { background: var(--violet-bg); color: var(--violet); }
+
+/* Later and Log follow-up open under their row. */
+.bnf-ag-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 4px 10px 120px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--page);
+}
+.bnf-ag-form-label { font-size: 12px; font-weight: 700; color: var(--ink2); }
+.bnf-ag-form input,
+.bnf-ag-form select {
+  padding: 5px 8px;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  background: #fff;
+}
+.bnf-ag-note { flex: 1 1 200px; min-width: 0; }
+.bnf-ag-form .btn { flex: 0 0 auto; white-space: nowrap; }
+.bnf-ag-pick {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.bnf-ag-pick-on { border-color: var(--blue); color: var(--blue); background: var(--blue-bg); }
+
+/* The Add a task forms carry more fields than one line holds on a laptop. */
+.bnf-ag-addform { flex-wrap: wrap; }
+.bnf-ag-addform .btn { flex: 0 0 auto; }
+
+@media (max-width: 700px) {
+  .bnf-ag-row { grid-template-columns: 76px 12px minmax(0, 1fr); }
+  .bnf-ag-actions { grid-column: 1 / -1; justify-content: flex-start; }
+  .bnf-ag-form { margin-left: 0; }
+}
+
+/* --- The Work queue's picking (shared/home/WorkQueueTable.jsx) ------------ */
+/* The queue gains a first column for its checkboxes. New clients keeps its
+   own template; these follow benefits-workqueue.css's shared rules, so the
+   queue's win at every width. */
+.bnf-wq-head,
+.bnf-wq-row {
+  grid-template-columns: 1.6rem 1.6fr 0.95fr 0.8fr 1.8fr 1.5fr 1.15fr 0.8fr 0.8fr 4.2rem;
+}
+@media (max-width: 900px) {
+  .bnf-wq-head, .bnf-wq-row { grid-template-columns: 1.6rem 1.6fr 0.85fr 1.8fr 1.4fr 0.85fr 4.2rem; }
+}
+@media (max-width: 640px) {
+  .bnf-wq-head, .bnf-wq-row { grid-template-columns: 1.6rem 1.5fr 0.8fr 1.7fr 1.3fr 0.8fr; }
+}
+/* A step's words run longer than a next action's: on the queue the chip
+   wraps inside its own column, never into the Stage column beside it. */
+.bnf-wq-row .bnf-th-action { width: auto; min-width: 0; }
+.bnf-wq-row .bnf-action-chip { white-space: normal; text-align: left; max-width: 100%; }
+.bnf-wq-pick { display: flex; align-items: center; justify-content: center; }
+.bnf-wq-pick input { width: 15px; height: 15px; cursor: pointer; margin: 0; }
+.bnf-wq-picked { background: var(--blue-bg); }
+
+.bnf-wq-modebar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 4px 0 10px;
+}
+.bnf-wq-later-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.bnf-wq-modehint { font-size: 12px; color: var(--ink3); margin-left: auto; }
+
+/* Plan my day: sticks to the bottom of the screen while the queue scrolls. */
+.bnf-plan-tray {
+  position: sticky;
+  bottom: 12px;
+  z-index: 20;
+  margin-top: 14px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(15, 29, 45, 0.18);
+  padding: 10px 14px;
+}
+.bnf-plan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.bnf-plan-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  cursor: pointer;
+}
+.bnf-plan-count {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+  background: var(--blue-bg);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.bnf-plan-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bnf-plan-actions .btn { flex: 0 0 auto; white-space: nowrap; }
+.bnf-plan-label { font-size: 12px; color: var(--ink3); }
+.bnf-plan-note { font-size: 12px; color: var(--amber); margin-top: 6px; }
+.bnf-plan-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.bnf-plan-item {
+  display: grid;
+  grid-template-columns: 18px 22px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  border-top: 1px solid var(--border-softer);
+  cursor: grab;
+}
+.bnf-plan-item:first-child { border-top: none; }
+.bnf-plan-dropto { box-shadow: inset 0 2px 0 var(--blue); }
+.bnf-plan-grip { color: var(--ink3); font-size: 12px; letter-spacing: -2px; }
+.bnf-plan-num { font-size: 12px; color: var(--ink3); text-align: right; }
+.bnf-plan-main { display: flex; flex-direction: column; min-width: 0; }
+.bnf-plan-client { font-size: 12px; font-weight: 700; color: var(--ink2); }
+.bnf-plan-task { font-size: 13px; color: var(--ink); overflow-wrap: anywhere; }
+.bnf-plan-due { font-size: 12px; color: var(--ink2); white-space: nowrap; }
+.bnf-plan-move { display: flex; gap: 4px; }
+.bnf-plan-move button {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.bnf-plan-move button:disabled { opacity: 0.35; cursor: default; }
+.bnf-plan-move button:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }

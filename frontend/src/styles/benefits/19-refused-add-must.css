@@ -1,0 +1,286 @@
+/* A refused Add (e.g. one dollar credit ticked on two plans) must LOOK
+   refused — the global .btn-primary has no disabled state. */
+.bnf-pv-composer .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.bnf-pv-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.bnf-pv-title { font-weight: 600; font-size: 14px; }
+.bnf-pv-sub { flex: 1; font-size: 12px; color: #8b95a3; }
+.bnf-pv-planpick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.bnf-pv-picklabel { font-size: 12.5px; font-weight: 600; }
+.bnf-pv-chip {
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.bnf-pv-chip-on {
+  border-color: var(--violet);
+  background: var(--violet-bg);
+  color: var(--violet);
+  font-weight: 600;
+}
+.bnf-pv-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+.bnf-pv-quick { display: inline-flex; gap: 4px; margin-left: 4px; }
+.bnf-pv-quickbtn {
+  border: none;
+  background: none;
+  font-size: 11.5px;
+  color: var(--blue);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0 2px;
+}
+.bnf-pv-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* Summary tiers (PlanCountsCard): tier counts typed per plan. The composer's
+   posture, in blue — our own working, where violet means "the client". The
+   .bnf-pv-composer reset above already scopes .btn back to width:auto. */
+.bnf-pc-card { border-color: var(--blue); }
+.bnf-pc-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.bnf-pc-switch input { width: 16px; height: 16px; margin: 0; cursor: pointer; }
+.bnf-pc-table { border-collapse: collapse; font-size: 12.5px; }
+.bnf-pc-table th,
+.bnf-pc-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-soft);
+  text-align: center;
+  vertical-align: middle;
+}
+.bnf-pc-table thead th { font-size: 11.5px; color: #5b6573; font-weight: 600; }
+.bnf-pc-table tbody th {
+  text-align: left;
+  font-weight: 500;
+  max-width: 340px;
+}
+.bnf-pc-table input {
+  width: 64px;
+  padding: 3px 6px;
+  font-size: 12.5px;
+  text-align: right;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+}
+.bnf-pc-table input[aria-invalid='true'] { border-color: #c62828; }
+.bnf-pc-note { display: block; font-size: 11px; color: #8b95a3; font-weight: 400; }
+.bnf-pc-total { font-variant-numeric: tabular-nums; font-weight: 600; }
+.bnf-pc-total.is-empty { font-weight: 400; color: #c62828; font-size: 11.5px; }
+.bnf-pc-empty { margin: 0; font-size: 12px; color: #8b95a3; }
+.bnf-pc-error { margin: 0; font-size: 12px; color: #c62828; }
+.bnf-pc-basis { flex: 1; font-size: 12px; color: #5b6573; }
+/* The ✎ counts marker beside a Monthly total the summary tiers priced. */
+.bnf-pc-mark {
+  margin-left: 6px;
+  font-size: 10.5px;
+  color: var(--blue);
+  font-family: inherit;
+  white-space: nowrap;
+}
+/* The per-quote bundling confirmation (the Florida Blue check-and-balance). */
+.bnf-pv-states {
+  border-top: 1px dashed var(--border-soft);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.bnf-pv-states-label { font-size: 12px; color: #8b95a3; }
+.bnf-pv-staterow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.bnf-pv-statename { flex: 1; }
+.bnf-pv-footer {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border-soft);
+  padding-top: 10px;
+}
+.bnf-pv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+  flex: 1 1 220px;
+}
+.bnf-pv-field > span i { color: #8b95a3; font-style: italic; }
+.bnf-pv-field input {
+  padding: 5px 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  font-size: 13px;
+}
+.bnf-pv-actions { display: inline-flex; gap: 8px; }
+
+/* ===== ONE DOOR FOR ALL THREE (2026-09-15) =====
+   The family pills — Concession · Bundling · Premium holiday — the same row
+   in the draft and in the strip. One violet family: the glyph, not a second
+   colour, says which member (green and amber already mean other things on
+   this board). */
+.bnf-pv-family {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.bnf-pv-family-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.bnf-pv-family-compact .bnf-pv-family-pill { padding: 2px 8px; font-size: 11.5px; }
+.bnf-pv-family-pill:hover:not(:disabled) { border-color: var(--violet); }
+.bnf-pv-family-on {
+  border-color: var(--violet);
+  background: var(--violet);
+  color: #fff;
+  font-weight: 600;
+}
+.bnf-pv-family-pill:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.bnf-pv-glyph {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.95em;
+}
+.bnf-pv-inline .bnf-pv-family { margin-bottom: 4px; }
+
+/* Concession: one change on all rates, then each rate on its own. */
+.bnf-pv-conc,
+.bnf-pv-bundle,
+.bnf-pv-holiday {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bnf-pv-allrow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.bnf-pv-eachlist {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 0 2px 8px;
+  border-left: 2px solid #b9d2f0;
+}
+.bnf-pv-eachrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.bnf-pv-eachname { min-width: 120px; color: var(--ink); }
+/* "as all (% off 5)" must read in full — the blue row's 92px cap is for the
+   narrow table cells, not this list. */
+.bnf-pv-eachrow .bnf-pv-formula-op { max-width: none; }
+
+/* Bundling: per placed ancillary line, a change AND the quote that has to
+   sell for it (2026-09-15) — "if we sell Aetna dental … we get 5% off the
+   medical". One row per line: name · op · amount · requires. */
+.bnf-pv-bundlegrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(300px, 1fr));
+  gap: 4px 16px;
+}
+.bnf-pv-bundlegrid-compact {
+  grid-template-columns: 1fr;
+  gap: 3px;
+}
+.bnf-pv-bundleline {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.bnf-pv-bundlename { flex: 0 0 74px; }
+.bnf-pv-bundleline .bnf-filter-num { width: 62px; }
+.bnf-pv-requires {
+  flex: 1 1 120px;
+  min-width: 0;
+  font-size: 11.5px;
+  padding: 2px 3px;
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ink);
+}
+/* What a bundled version requires — the live preview in the editor, and the
+   saved line under the twin on the board. Internal: full plan names. */
+.bnf-pv-requireline,
+.bnf-conc-requires {
+  display: block;
+  font-size: 11px;
+  color: var(--violet);
+  white-space: normal;
+}
+.bnf-conc-requires { margin-top: 2px; font-style: italic; }
+/* A linked quote from another carrier — allowed, but said out loud. */
+.bnf-pv-crosswarn {
+  display: block;
+  font-size: 11px;
+  color: var(--amber);
+}
+/* The same condition in the client's words, on /p/. */
+.bnf-share-card-requires {
+  font-size: 12px;
+  color: #8b95a3;
+  margin: 2px 0 6px;
+}
+
+/* The blue adjustment layer's read-only cells (a bundle's −2.5%, a premium
+   holiday's credit) — the same blue as the formula controls. */
+.bnf-pv-formula-static {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--blue);
+  white-space: nowrap;
+}
+
+/* The Δ column's net-of-credit line under a premium holiday. */
+.bnf-delta-net {
+  display: block;
+  font-size: 11px;
+  color: var(--green);
+  white-space: nowrap;
+}

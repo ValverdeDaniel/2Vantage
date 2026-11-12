@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { errorText } from '../../lib/errors';
-import Badge from '../../ui/Badge';
 import ConfirmDialog from '../../ui/ConfirmDialog';
 import cx from '../../ui/cx';
-import Menu from '../../ui/Menu';
 import { useToast } from '../../ui/useToast';
 import { roleText } from './display';
-import styles from './PlanTable.module.css';
+import PlanMenu from './PlanMenu';
 
-const ROLE_TONE = { current: 'neutral', renewal: 'info', alternate: 'success' };
+// The old column chips (ComparisonGrid.jsx at 891f1b3): CURRENT blue, RENEWAL, and the new-plan tint for alternates.
+const ROLE_CHIP = { current: 'bnf-chip-current', renewal: 'bnf-chip-renewal', alternate: 'bnf-chip-new' };
 
 function InlineText({ value, label, onSave, className }) {
   const [draft, setDraft] = useState(null);
@@ -16,7 +15,7 @@ function InlineText({ value, label, onSave, className }) {
     <input
       aria-label={label}
       title={value}
-      className={cx(styles.headerInput, className)}
+      className={cx('bb-cell-input', className)}
       value={draft ?? value}
       onFocus={() => setDraft(value)}
       onChange={(event) => setDraft(event.target.value)}
@@ -30,7 +29,7 @@ function InlineText({ value, label, onSave, className }) {
   );
 }
 
-/** The sticky header of one plan column (plan.md §8.11). */
+/** The head of one plan column (plan.md §8.14; 2V's simplified Advisor, F134), in the old grid's column head. */
 export default function PlanHeaderCell({ plan, byId, actions, isFirst, isLast }) {
   const toast = useToast();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -58,40 +57,69 @@ export default function PlanHeaderCell({ plan, byId, actions, isFirst, isLast })
       onSelect: () => run(actions.copy.mutateAsync(plan.id), 'Copied as an alternate'),
     },
     { key: 'links', label: 'Change role & links…', onSelect: () => actions.editLinks(plan) },
-    { key: 'left', label: 'Move left', disabled: isFirst, onSelect: () => actions.move(plan, -1) },
-    { key: 'right', label: 'Move right', disabled: isLast, onSelect: () => actions.move(plan, 1) },
-    { key: 'delete', label: 'Delete…', onSelect: () => setConfirmDelete(true) },
+    { key: 'delete', label: 'Delete…', danger: true, onSelect: () => setConfirmDelete(true) },
   ].filter(Boolean);
 
   const save = (changes) => run(actions.update.mutateAsync({ planId: plan.id, changes }));
+  const role = roleText(plan, byId);
+  const moving = actions.order.isPending;
 
   return (
-    <th scope="col" className={cx(styles.planHead, styles[plan.role])}>
-      <div className={styles.headTop}>
-        <Badge tone={ROLE_TONE[plan.role]} className={styles.roleBadge} title={roleText(plan, byId)}>
-          {roleText(plan, byId)}
-        </Badge>
-        <Menu label="⋯" ariaLabel={`Actions for ${plan.name}`} items={items} align="end" />
+    <th
+      scope="col"
+      className={cx(plan.role === 'current' && 'bnf-plan-col-current', plan.sold && 'bnf-plan-col-sold')}
+    >
+      <div className="bnf-plan-head">
+        <div>
+          <span className={cx('bnf-plan-chip', ROLE_CHIP[plan.role])} title={role}>
+            {role}
+          </span>{' '}
+          {plan.sold && <span className="bnf-plan-chip bnf-chip-sold">SOLD ✓</span>}
+          <InlineText
+            value={plan.carrier}
+            label="Carrier"
+            className="bnf-plan-carrier"
+            onSave={(carrier) => save({ carrier })}
+          />
+          <InlineText value={plan.name} label="Plan name" className="bnf-plan-name" onSave={(name) => save({ name })} />
+        </div>
+        <span className="bnf-order-arrows">
+          <button
+            type="button"
+            className="bnf-build-order-btn"
+            disabled={moving || isFirst}
+            aria-label={`Move ${plan.name} left`}
+            title="Move left"
+            onClick={() => actions.move(plan, -1)}
+          >
+            ◀
+          </button>
+          <button
+            type="button"
+            className="bnf-build-order-btn"
+            disabled={moving || isLast}
+            aria-label={`Move ${plan.name} right`}
+            title="Move right"
+            onClick={() => actions.move(plan, 1)}
+          >
+            ▶
+          </button>
+          <PlanMenu label={`Actions for ${plan.name}`} items={items} />
+        </span>
       </div>
-      <InlineText value={plan.carrier} label="Carrier" onSave={(carrier) => save({ carrier })} />
-      <InlineText
-        value={plan.name}
-        label="Plan name"
-        className={styles.planName}
-        onSave={(name) => save({ name })}
-      />
-      <div className={styles.toggles}>
+      <div className="bnf-present-checks">
         <button
           type="button"
-          className={cx(styles.star, plan.starred && styles.on)}
+          className={cx('bnf-star-btn', plan.starred && 'active')}
           aria-pressed={plan.starred}
+          aria-label="Star"
           title={plan.starred ? 'Starred: shortlisted for the proposal' : 'Star to shortlist for the proposal'}
           onClick={() => run(actions.star.mutateAsync({ planIds: [plan.id], starred: !plan.starred }))}
         >
-          {plan.starred ? '★' : '☆'} <span className={styles.toggleText}>Star</span>
+          {plan.starred ? '★' : '☆'}
         </button>
         {plan.role !== 'current' && (
-          <label className={styles.check}>
+          <label className="bnf-filter-check">
             <input
               type="checkbox"
               checked={plan.recommended}
@@ -102,7 +130,7 @@ export default function PlanHeaderCell({ plan, byId, actions, isFirst, isLast })
             Rec.
           </label>
         )}
-        <label className={styles.check}>
+        <label className="bnf-filter-check">
           <input
             type="checkbox"
             checked={plan.sold}

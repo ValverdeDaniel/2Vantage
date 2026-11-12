@@ -1,0 +1,297 @@
+/* ===== client workspace sections (bnf-cw-) ================================
+   The /benefits/clients/:id page is a bb-workspace (App.css) — sidebar +
+   content — with seven sections. Everything here is what those sections add
+   on top of bb-/bnf-ov-/bnf-phase-/bnf-cal-/bnf-py-/bnf-com- vocabulary. */
+
+/* sidebar: nav items are real buttons (keyboard-reachable) + the chip row */
+.bnf-cw-navbtn {
+  border: 0;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+}
+.bnf-cw-sidechips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+.bb-nav-badge-amber { background: var(--amber); }
+.bb-nav-badge-green { background: var(--green); }
+.bb-nav-badge-rose { background: var(--rose); }
+/* The Plan year block (existing-clients S7): the client's years and one
+   year's sections under the client's own nav. Two navs make the sidebar
+   taller than a screen, so it scrolls inside its sticky box; at 900px and
+   under the box is not sticky (App.css) and the page scrolls it. */
+@media (min-width: 901px) {
+  .bnf-cw-sidebar {
+    max-height: calc(100vh - var(--chrome-top) - 2rem);
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+}
+.bnf-cw-year {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-softer);
+}
+.bnf-cw-year-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--navy);
+  margin: 0 0 2px 10px;
+}
+.bnf-cw-year .bnf-case-years { margin-top: 4px; }
+/* Next plan year, pencilled in while it has no deal (D-109). */
+.bnf-cw-year-next {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 6px 0 0 10px;
+  padding: 3px 9px;
+  border: 1px dashed var(--blue);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blue);
+  background: transparent;
+}
+.bnf-cw-year-next:hover { background: var(--blue-bg); text-decoration: none; }
+.bnf-cw-year-next-sub { font-weight: 400; color: var(--ink2); }
+.bnf-cw-year .bnf-case-pastyear { margin: 4px 0 0; }
+.bnf-cw-year-sub { font-size: 11.5px; color: var(--ink3); margin: 10px 0 2px 10px; }
+.bnf-cw-year .bb-readiness { margin-top: 12px; }
+/* A year's sections listed as links on the bare client page. */
+a.bb-nav-item:hover { text-decoration: none; }
+/* The year's own header above its sections. */
+.bnf-cw-yearhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.bnf-cw-yearhead-year { font-size: 15px; font-weight: 700; color: var(--navy); }
+.bnf-cw-yearhead-link { margin-left: auto; font-size: 12.5px; }
+/* The deal page's way to the same year on the client page (S8). */
+.bnf-case-client-year { display: block; margin-top: 4px; font-size: 12px; }
+/* title rows with more than one button. .btn-primary is width:100% globally
+   (a form button everywhere else) — every button on this page that sits in a
+   row gets its natural width back. */
+.bnf-cw-titlebtns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.bnf-cw-titlebtns .btn,
+.bnf-cw-banner .bnf-next-banner > .btn,
+.bnf-cw-event-form .btn,
+.bnf-cw-unlinked .btn,
+.bnf-phase-card-foot .btn,
+.bnf-py-add .btn,
+.bnf-cw-agenda-head .btn,
+.bnf-client-newform .btn,
+.bnf-cal-headbtns .btn,
+.bnf-set-actions .btn,
+.bnf-set-headbtns .btn,
+.bnf-set-bar-btns .btn {
+  flex: 0 0 auto;
+}
+
+/* header card: select rows + the lines-of-business checkbox row */
+.bnf-cw-select { max-width: 320px; }
+.bnf-cw-lobrow { display: flex; gap: 14px; flex-wrap: wrap; cursor: default; }
+
+/* agenda: the rows get a track list of their own so the label column can
+   never be squeezed into word-per-line wrapping again, whatever contains it */
+.bnf-cal-row-client {
+  grid-template-columns: 96px 12px minmax(0, 1fr) auto auto;
+}
+.bnf-cal-row-client .bnf-cal-label { overflow-wrap: anywhere; }
+.bnf-cw-agenda-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.bnf-cw-chiprow { display: flex; flex-wrap: wrap; gap: 6px; }
+.bnf-cw-event-form { margin-top: 0; padding-top: 0; border-top: none; flex-wrap: nowrap; align-items: center; }
+.bnf-cw-event-form .bnf-event-title { flex: 1 1 auto; min-width: 0; }
+.bnf-cw-event-form .btn { flex: 0 0 auto; }
+@media (max-width: 700px) { .bnf-cw-event-form { flex-wrap: wrap; } }
+.bnf-cw-done-row { opacity: 0.8; }
+.bnf-dot-done { background: var(--green); }
+
+/* plan years: a two-up grid of the existing cards */
+.bnf-cw-py-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: start;
+}
+.bnf-cw-py-grid .bnf-py-card { margin-bottom: 0; background: #fff; }
+.bnf-cw-py-headright { display: inline-flex; align-items: center; gap: 8px; }
+.bnf-cw-py-case { margin-left: auto; font-size: 12px; color: var(--blue); text-decoration: none; }
+.bnf-cw-py-case:hover { text-decoration: underline; }
+
+/* upkeep card step rows */
+.bnf-cw-step-done { color: var(--ink3); font-weight: 500; text-decoration: line-through; }
+.bnf-cw-step-done-btn { margin-left: auto; padding: 2px 8px; font-size: 11px; }
+
+/* tables (cases & history, coverage in force) */
+.bnf-cw-table-wrap { overflow-x: auto; }
+.bnf-cw-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.bnf-cw-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.bnf-cw-table td {
+  padding: 9px 8px;
+  border-bottom: 1px solid #f1f3f5;
+  vertical-align: middle;
+}
+.bnf-cw-table tr:last-child td { border-bottom: none; }
+.bnf-cw-table td { white-space: nowrap; }
+.bnf-cw-table td.bnf-cw-wrap { white-space: normal; }
+.bnf-cw-titlebtns .btn { white-space: nowrap; }
+.bnf-cw-num { text-align: right; white-space: nowrap; }
+.bnf-cw-caserow { cursor: pointer; }
+.bnf-cw-caserow:hover td { background: #f8fafc; }
+.bnf-cw-caserow-current td { background: #f6f9fe; }
+.bnf-cw-unlinked { cursor: default; }
+.bnf-cw-unlinked .bnf-client-case-name { cursor: pointer; }
+
+/* history strip (overview side column) */
+.bnf-cw-history { display: flex; flex-direction: column; }
+.bnf-cw-history-row {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid #f1f3f5;
+  text-decoration: none;
+  color: inherit;
+}
+.bnf-cw-history-row:first-child { border-top: none; }
+.bnf-cw-history-row:hover .bnf-cw-history-title { text-decoration: underline; }
+.bnf-cw-history-current .bnf-cw-history-year { color: var(--blue); }
+.bnf-cw-history-year { font-size: 13px; font-weight: 600; color: var(--navy); }
+.bnf-cw-history-main { display: flex; flex-direction: column; min-width: 0; }
+.bnf-cw-history-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+.bnf-cw-history-sub { font-size: 11.5px; color: var(--ink3); }
+.bnf-cw-history-amt { font-size: 12.5px; white-space: nowrap; }
+.bnf-cw-history-row { cursor: pointer; }
+
+/* "on file" chips — one year's intake / census / questionnaires, each
+   opening that year's own tab (history strip + the deals table) */
+.bnf-cw-artifacts { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.bnf-cw-artifact {
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink2);
+  background: var(--page);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bnf-cw-artifact:hover { border-color: var(--blue); color: var(--blue); }
+.bnf-cw-artifact .bb-mono { font-size: 10.5px; color: var(--ink3); }
+.bnf-cw-artifact:hover .bb-mono { color: var(--blue); }
+.bnf-cw-artifact-done { color: var(--green); border-color: #cfe8db; }
+.bnf-cw-artifact-done:hover { border-color: var(--green); color: var(--green); }
+
+/* commission snapshot rows (overview side column) */
+.bnf-cw-snap-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid #f1f3f5;
+  font-size: 13px;
+}
+.bnf-cw-snap-label { font-size: 12px; color: var(--ink2); }
+
+/* notes */
+.bnf-cw-brief { width: 100%; }
+.bnf-cw-note-mini { padding: 8px 0; }
+
+/* notifications */
+.bnf-cw-rulegroup { margin-top: 14px; }
+.bnf-cw-rulegroup-title { margin-bottom: 4px; }
+.bnf-cw-rule {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 9px 0;
+  border-top: 1px solid #f1f3f5;
+}
+.bnf-cw-rule-off { opacity: 0.6; }
+.bnf-cw-rule-main { min-width: 0; }
+.bnf-cw-rule-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+.bnf-cw-rule-desc { font-size: 12px; color: var(--ink2); margin-top: 2px; }
+.bnf-cw-rule-next { font-size: 12px; color: var(--ink3); margin-top: 2px; }
+.bnf-cw-rule-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  white-space: nowrap;
+}
+.bnf-cw-followup { cursor: default; }
+.bnf-cw-followup .bnf-cal-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.bnf-cw-howlist { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--ink2); }
+
+/* commissions: the expandable month strip under a statement line */
+.bnf-cw-stmt-toggle {
+  border: none;
+  background: none;
+  padding: 0 6px 0 0;
+  cursor: pointer;
+  color: var(--ink3);
+  font: inherit;
+  font-size: 11px;
+}
+.bnf-cw-stmt-case { margin-left: 8px; font-size: 11.5px; color: var(--blue); text-decoration: none; }
+.bnf-cw-stmt-case:hover { text-decoration: underline; }
+.bnf-cw-stmt-open { background: #fafbfc; border-radius: 8px; }
+.bnf-cw-stmt-months { padding: 8px 0 4px 18px; }
+
+/* commissions: the statement as a full-width plan-year-grouped table
+   (2026-08-19 phase 1d — the Book's grouped-table pattern, transposed) */
+.bnf-cw-stmt-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.bnf-cw-stmt-people-filter { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.bnf-cw-person-chip {
+  border: 1px solid var(--border); border-radius: 999px; background: var(--card);
+  padding: 2px 10px; font: inherit; font-size: 11.5px; color: var(--ink2); cursor: pointer;
+}
+.bnf-cw-person-chip:hover { border-color: var(--blue); color: var(--ink); }
+.bnf-cw-person-chip.active { border-color: var(--blue); background: var(--blue); color: #fff; }
+.bnf-cw-person-clear { border-style: dashed; }
+.bnf-cw-stmt-scroll { overflow-x: auto; margin-top: 8px; }
+.bnf-cw-stmt-table { min-width: 860px; }
+.bnf-cw-stmt-table .bnf-com-grouphead td { padding-top: 14px; }
+.bnf-cw-stmt-togglecol { width: 24px; padding-right: 0 !important; }
+.bnf-cw-stmt-people-cell { white-space: normal; min-width: 220px; }
+.bnf-cw-stmt-short { font-size: 11px; font-family: var(--font-mono); white-space: nowrap; }
+.bnf-cw-stmt-emptyrow { font-style: italic; padding-left: 24px !important; }
+.bnf-cw-stmt-openrow td { background: #fafbfc; }
+.bnf-cw-stmt-striprow > td { background: var(--page); padding: 8px 14px 12px 24px; }
+.bnf-cw-com-below { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr); gap: 18px; align-items: start; margin-top: 4px; }
+@media (max-width: 900px) { .bnf-cw-com-below { grid-template-columns: 1fr; } }

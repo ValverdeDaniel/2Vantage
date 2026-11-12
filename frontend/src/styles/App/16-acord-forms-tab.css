@@ -1,0 +1,244 @@
+/* ---- ACORD forms tab (interactive 125 / 126 / 140 / 130) ---- */
+
+.bb-link { color: var(--blue); cursor: pointer; text-decoration: underline; }
+
+.bb-acord-picker { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+
+.bb-acord-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--card, #fff);
+  border: 1px solid var(--border, #e6e8ec);
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.bb-acord-chip:hover { border-color: #b9c6d8; }
+
+.bb-acord-chip.active {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 1px var(--navy);
+}
+
+.bb-acord-chip-num {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #eef3fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--navy);
+  flex-shrink: 0;
+}
+
+.bb-acord-chip.active .bb-acord-chip-num { background: var(--navy); color: #fff; }
+
+.bb-acord-chip-body { display: flex; flex-direction: column; }
+.bb-acord-chip-title { font-weight: 600; font-size: 12.5px; }
+.bb-acord-chip-sub { font-size: 11px; color: #8b95a3; }
+
+.bb-acord-paper {
+  background: #fff;
+  border: 1px solid var(--border, #e6e8ec);
+  border-top: 3px solid var(--navy);
+  border-radius: 10px;
+  padding: 22px 26px 26px;
+}
+
+.bb-acord-paper-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border, #e6e8ec);
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.bb-acord-paper-id { display: flex; align-items: center; gap: 12px; }
+
+.bb-acord-paper-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.bb-acord-viewtoggle {
+  display: inline-flex;
+  border: 1px solid var(--border, #e6e8ec);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.bb-acord-viewtoggle button {
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 12px;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  color: var(--ink2);
+}
+
+.bb-acord-viewtoggle button.active {
+  background: var(--navy);
+  color: #fff;
+}
+
+.bb-acord-meta-row {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--ink2);
+  margin-bottom: 18px;
+}
+
+.bb-acord-section { margin-bottom: 20px; }
+
+.bb-acord-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--navy);
+  background: #eef3fa;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.bb-acord-fieldgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px 16px;
+}
+
+.bb-acord-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6a7482;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bb-acord-req { color: var(--rose, #c1352e); }
+
+.bb-acord-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  padding: 0;
+  display: inline-block;
+}
+
+.bb-acord-dot.bb-badge-green { background: var(--green, #1f8a5b); }
+.bb-acord-dot.bb-badge-amber { background: var(--amber, #a9710a); }
+.bb-acord-dot.bb-badge-rose { background: var(--rose, #c1352e); }
+.bb-acord-dot.bb-badge-violet { background: var(--violet, #6d4bb6); }
+.bb-acord-dot.bb-badge-gray { background: #c3c9d2; }
+
+.bb-acord-value {
+  border: 1px solid var(--border, #e6e8ec);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 13px;
+  min-height: 33px;
+  cursor: text;
+  background: #fbfcfd;
+}
+
+.bb-acord-value:hover { border-color: #b9c6d8; }
+.bb-acord-value.bb-empty { color: #a9b1bc; font-size: 12px; }
+
+.bb-acord-value.bb-acord-low { background: var(--amber-bg, #fdf3e1); border-color: #e5c684; }
+.bb-acord-value.bb-acord-missing { background: var(--rose-bg, #fbe9e8); border-color: #e5a19d; }
+.bb-acord-value.bb-acord-client { background: var(--violet-bg, #efe9f9); border-color: #c4b1e6; }
+
+.bb-acord-input {
+  width: 100%;
+  border: 1px solid var(--navy);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.bb-acord-note {
+  font-size: 12px;
+  color: var(--ink2);
+  background: #f6f7f9;
+  border: 1px dashed var(--border, #e6e8ec);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.bb-acord-premises-scroll { overflow-x: auto; }
+
+.bb-acord-premises {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.bb-acord-premises th {
+  text-align: left;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6a7482;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border, #e6e8ec);
+  white-space: nowrap;
+}
+
+.bb-acord-premises td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #f0f2f5;
+  white-space: nowrap;
+}
+
+.bb-acord-td-missing { color: var(--rose, #c1352e); }
+
+.bb-acord-overflow-row td { opacity: 0.55; }
+
+.bb-acord-locpicker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+
+.bb-acord-locchip {
+  font: inherit;
+  font-size: 12px;
+  padding: 5px 12px;
+  border: 1px solid var(--border, #e6e8ec);
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  color: var(--ink2);
+}
+
+.bb-acord-locchip.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
+/* P&C Intake — account panels above the per-location gap grid */
+.bb-pc-account { padding: 16px 18px; margin-bottom: 16px; }
+.bb-pc-account-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.bb-pc-account-title { font-weight: 600; color: var(--ink); }
+.bb-pc-grid-title { margin: 20px 0 10px; }

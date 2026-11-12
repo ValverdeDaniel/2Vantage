@@ -1,0 +1,200 @@
+/* The keyboard grid (benefits/shared/useGridKeys.js) and the census grid's
+   spreadsheet chrome. Contract: PlanningDocs/Benefits/grid-keys-and-change-history.md. */
+
+/* The container takes focus so the arrows reach it; the cursor cell, not a
+   box round the whole grid, shows where the keys will land. */
+.gk-grid:focus,
+.gk-grid:focus-visible { outline: none; }
+
+.gk-cursor {
+  box-shadow: inset 0 0 0 2px var(--blue) !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* Focus went elsewhere (a toolbar button, the page): the cursor stays put,
+   paler, so it is clear the keys are not going to the grid right now. */
+.gk-grid:not(:focus-within) .gk-cursor {
+  box-shadow: inset 0 0 0 2px #a9c1ea !important;
+}
+
+/* The census scrolls under its own header, like a frozen Excel row 1. The
+   scroller is what makes sticky mean anything (see .bnf-review-scroll), and
+   the scroll-padding keeps an arrowed-to cell clear of the header (up to
+   two lines, about 48px) and the frozen Person column (CensusGrid's
+   PERSON_PX). */
+.bnf-census-scroll {
+  max-height: 70vh;
+  overflow: auto;
+  scroll-padding: 52px 0 0 116px;
+}
+
+.bnf-census-scroll .bb-col-headers {
+  position: sticky;
+  top: 0;
+  z-index: 7;
+}
+
+/* "＋ Add employee" at the bottom of the roster, pinned to the left edge so
+   it stays in reach however far right the grid is scrolled. */
+.bnf-census-addrow {
+  position: sticky;
+  left: 0;
+  width: max-content;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+}
+
+.bnf-census-addrow .btn { flex: 0 0 auto; }
+
+.bnf-census-addrow-hint {
+  font-size: 11.5px;
+  color: var(--ink3);
+}
+
+/* A coded census column's "what does this accept" mark (2026-10-16). The
+   header's own tooltip carries the words; this only says one is there, and
+   never shrinks: the column is widened to leave it room (CensusGrid's
+   `hintRoom`). */
+.bnf-col-hint {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink3);
+  cursor: help;
+}
+
+/* The Advisor's quote board in ✎ Edit (D-091): it reads as a grid, so it
+   works like one. Cell lines, a cell cursor on hover, numbers lined up. */
+.bnf-advisor-gridmode td { border-right: 1px solid var(--border-softer); }
+.bnf-advisor-gridmode td[data-gk] {
+  cursor: cell;
+  font-variant-numeric: tabular-nums;
+}
+.bnf-advisor-gridmode td[data-gk]:hover { box-shadow: inset 0 0 0 1px #c9d7ef; }
+
+/* The editor fills its cell, as in the census and proposal grids. */
+.bnf-advisor-gridmode .bnf-conc-cell-input {
+  width: 100%;
+  min-width: 70px;
+  box-sizing: border-box;
+}
+
+/* The header stays above a ringed cell scrolling under it. */
+.bnf-advisor-gridmode th { z-index: 3; }
+
+/* Picking cells to review them on the Documents grid (D-123,
+   benefits/shared/useGridSelection.js, PlanningDocs/Benefits/
+   grid-selection-review.md). A picked cell keeps its own colour under a
+   translucent blue, so a flagged value still reads as flagged; the active
+   cell (the one whose source the file shows) gets the cursor's ring. */
+[data-gs] { cursor: cell; }
+[data-gs-head] { cursor: pointer; }
+.gs-picked {
+  background-image: linear-gradient(rgba(46, 111, 199, 0.11), rgba(46, 111, 199, 0.11)) !important;
+  box-shadow: inset 0 0 0 1px rgba(46, 111, 199, 0.55);
+}
+.gs-active {
+  box-shadow: inset 0 0 0 2px var(--blue) !important;
+  position: relative;
+  z-index: 1;
+}
+.gk-grid:not(:focus-within) .gs-active { box-shadow: inset 0 0 0 2px #a9c1ea !important; }
+/* Mid-drag: no text selection across cells. */
+.gs-dragging,
+.gs-dragging * { user-select: none; -webkit-user-select: none; }
+
+.gs-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  margin-top: 10px; min-height: 30px;
+}
+.gs-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.gs-filters .bnf-frl-chip:disabled { opacity: 0.5; cursor: default; }
+.gs-rows-only {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; color: var(--ink2); cursor: pointer; margin-left: 4px;
+}
+.gs-rows-only input { margin: 0; }
+.gs-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-left: auto; }
+.gs-pick .btn { flex: 0 0 auto; }
+.gs-pick-what { font-size: 12px; color: var(--ink2); margin-right: 4px; }
+.gs-pick-clear { min-width: 30px; }
+/* D-125: the keys, always on screen, and what the last action did with its
+   Undo. One full-width line under the buttons, on the Grid and the List. */
+.gs-legend-row {
+  flex: 1 0 100%; display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: flex-end; gap: 4px 16px; font-size: 12px; color: var(--ink2);
+}
+.bnf-frl .gs-legend-row { flex: 0 0 auto; }
+.gs-legend { display: inline-flex; flex-wrap: wrap; gap: 4px 12px; color: var(--ink2); }
+.gs-legend > span { white-space: nowrap; }
+.gs-toolbar kbd,
+.gs-legend kbd {
+  font-family: inherit; font-size: 11px; font-weight: 600; color: var(--ink2);
+  border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px;
+  padding: 0 4px; background: #fff; margin-right: 2px;
+}
+.gs-pick .btn kbd { margin: 0 0 0 4px; font-size: 10px; }
+.gs-done { color: var(--green); font-weight: 600; margin-right: auto; }
+.gs-undo { margin-left: 8px; font-weight: 600; }
+/* The List: the selected row is the blue one; the one open in the file wears
+   a dot, so selecting and opening read as two different things. */
+.bnf-frl-row.is-open .bnf-frl-label::before { content: '● '; color: var(--blue); font-size: 9px; }
+/* A plan's "⚠ n" in its header: how many of its values from this file need a look. */
+.bnf-plan-chip.gs-plan-flag { color: var(--amber); background: var(--amber-bg); border-color: transparent; }
+
+/* Find in the scanned data (D-127, benefits/shared/ScanFindBar.jsx): every
+   match under a translucent amber over the cell's own colour (the way
+   .gs-picked layers), the current one ringed. A cell that is also picked
+   keeps both. Never `position` on a match: the census Person column is
+   sticky (and the Benefit column is meant to be), so a match scrolls clear
+   of the column's width. The box sticks under the fixed 56px navbar, so a
+   match far down the grid never scrolls it away mid-typing; a match keeps
+   clear of both when a step scrolls up to it. */
+.sf-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 2px 0 0;
+  padding: 6px 0; position: sticky; top: var(--chrome-top); z-index: 3; background: var(--card);
+}
+.bnf-scan-panel [data-sf] { scroll-margin-top: calc(var(--chrome-top) + 56px); }
+.sf-bar .btn { flex: 0 0 auto; }
+.sf-bar .sf-input { width: 360px; max-width: 100%; flex: 0 1 360px; }
+.sf-count {
+  font-size: 12px; font-weight: 600; color: var(--ink2); min-width: 64px;
+  font-variant-numeric: tabular-nums;
+}
+.sf-step { min-width: 30px; padding-left: 6px; padding-right: 6px; }
+.sf-only {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; color: var(--ink2); cursor: pointer; margin-left: 4px;
+}
+.sf-only input { margin: 0; }
+.sf-only:has(input:disabled) { opacity: 0.55; cursor: default; }
+.sf-clear { font-size: 13px; padding: 0 4px; text-decoration: none; }
+.sf-hit { background-image: linear-gradient(rgba(240, 180, 30, 0.3), rgba(240, 180, 30, 0.3)) !important; }
+.sf-hit.gs-picked {
+  background-image: linear-gradient(rgba(46, 111, 199, 0.11), rgba(46, 111, 199, 0.11)),
+    linear-gradient(rgba(240, 180, 30, 0.3), rgba(240, 180, 30, 0.3)) !important;
+}
+.sf-current { box-shadow: inset 0 0 0 2px #e09b14 !important; }
+.sf-current.gs-active { box-shadow: inset 0 0 0 2px var(--blue), inset 0 0 0 4px #e09b14 !important; }
+.bnf-cell[data-sf] { scroll-margin-left: 224px; }
+.bb-cell[data-sf] { scroll-margin-left: 76px; }
+.bnf-frl-row.is-found { background-image: linear-gradient(rgba(240, 180, 30, 0.2), rgba(240, 180, 30, 0.2)); }
+.bnf-frl-row.is-found-current { box-shadow: inset 3px 0 0 var(--blue), inset 0 0 0 2px #e09b14; }
+
+/* Drawing only the plans in view (useWindowedPlans, builder-polish-and-
+   windowing.md P5). A windowed plan grid is fixed-layout, every plan column
+   PLAN_COL_PX wide, so the pads before and after the drawn columns hold the
+   exact width of the rest. Pads carry no padding or border, so their size is
+   theirs alone; nothing here sets `position` (the sticky Benefit column). */
+.bnf-compare-table.bnf-win-cols { table-layout: fixed; }
+.bnf-win-cols .bnf-cell,
+.bnf-win-cols thead th { overflow-wrap: anywhere; }
+/* A value wraps in its fixed column rather than running under the next one
+   (.bb-cell-text keeps one line in an auto-width grid, which widens instead). */
+.bnf-win-cols .bb-cell-text { white-space: normal; }
+.bnf-win-cols .bnf-win-pad { padding: 0; border: 0; background: transparent; }
+.bnf-advisor-table .bnf-win-pad > td { padding: 0; border: 0; }
+.bb-grid-scroll.bnf-win-scroll { scroll-padding-left: 210px; }

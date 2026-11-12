@@ -1,0 +1,241 @@
+/* --- the per-line note ---------------------------------------------------
+ *
+ * A sub-row under its line rather than a seventh column: the table is already
+ * 900px of controls, and a note is a sentence about the whole line, not
+ * another fact about one of them. It renders whenever the line HAS a note, so
+ * it reads inline without being opened and edits where it is shown.
+ */
+.bnf-cvg-noterow > td {
+  padding-top: 0;
+  padding-bottom: 12px;
+  border-top: 0;
+}
+.bnf-cvg-noterow .bnf-cvg-notelabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+textarea.bnf-cvg-note {
+  width: 100%;
+  resize: vertical;
+  min-height: 46px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.bnf-cvg-note { flex: 1 1 100%; }
+.bnf-cvg-notebtn {
+  font: inherit;
+  font-size: 11px;
+  padding: 4px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--blue);
+  cursor: pointer;
+}
+.bnf-cvg-notebtn:hover { text-decoration: underline; }
+/* A note COLLAPSES since 2026-09-24, so the chip is the only thing saying
+   there is one to read. Daniel: "next to the note, make it clear if there is a
+   note — give some sort of indication that there's something in there that
+   could be looked at." Filled, not a link, and the note itself is the title. */
+.bnf-cvg-notebtn.has-note {
+  display: inline-block;
+  margin-top: 6px;
+  border-radius: 10px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bnf-cvg-notebtn.has-note:hover { text-decoration: none; filter: brightness(0.96); }
+
+/* --- documents ----------------------------------------------------------- */
+
+.bnf-cvg-docs { display: flex; flex-wrap: wrap; gap: 5px; }
+.bnf-cvg-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.bnf-cvg-chip.is-on { background: var(--green-bg); color: var(--green); }
+/* Dotted, not rose: a document we have not been given yet is an outstanding
+ * ask, not an error — and this column shows several at once. */
+.bnf-cvg-chip.is-off {
+  background: transparent;
+  color: var(--ink3);
+  border: 1px dashed var(--input-border);
+}
+
+/* --- remove -------------------------------------------------------------- */
+
+.bnf-cvg-remove {
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink3);
+  cursor: pointer;
+}
+.bnf-cvg-remove:hover:not(:disabled) { background: var(--rose-bg); color: var(--rose); }
+.bnf-cvg-remove:disabled { opacity: 0.4; cursor: default; }
+
+/* --- the document picker ------------------------------------------------- */
+
+.bnf-cvg-chipwrap { display: inline-block; }
+/* The chip is a button now — it opens "which file is this?". */
+.bnf-cvg-chip.is-btn { font: inherit; cursor: pointer; }
+.bnf-cvg-chip.is-btn.is-on { border: 1px solid transparent; }
+.bnf-cvg-chip.is-btn:hover { filter: brightness(0.96); }
+.bnf-cvg-chip.is-btn:disabled { cursor: default; opacity: 0.6; }
+
+/* Catches the click that closes the popover. Transparent on purpose: this is
+ * a picker, not a modal, and dimming the deal behind it would overstate it. */
+.bnf-cvgdoc-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+/* Position, width and max-height are set inline from the chip's rect — see
+ * popStyle() in CoverageDocPicker.jsx and the overflow note there. */
+.bnf-cvgdoc-pop {
+  z-index: 41;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 45, 79, 0.16);
+  padding: 10px 12px;
+  text-align: left;
+  white-space: normal;
+}
+.bnf-cvgdoc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.bnf-cvgdoc-sec { border-top: 1px solid var(--border-softer); padding-top: 8px; margin-top: 6px; }
+.bnf-cvgdoc-secttl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 5px;
+}
+.bnf-cvgdoc-secttl.is-sub { margin-top: 8px; }
+.bnf-cvgdoc-empty { font-size: 12px; color: var(--ink2); padding: 4px 0 2px; }
+
+.bnf-cvgdoc-row { padding: 6px 0; }
+.bnf-cvgdoc-name {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  font-weight: 600;
+  word-break: break-word;
+}
+.bnf-cvgdoc-name .bb-drop-meta { font-weight: 400; }
+.bnf-cvgdoc-scope { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+.bnf-cvgdoc-scope .bnf-cvg-chip { cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; }
+.bnf-cvgdoc-all {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 10px;
+  border: 1px dashed var(--input-border);
+  background: transparent;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.bnf-cvgdoc-all.is-on {
+  background: var(--blue-bg);
+  color: var(--blue);
+  border-style: solid;
+  cursor: default;
+}
+
+/* A candidate. The second line says what picking it would DO — including
+ * narrowing an unscoped file, which is the one surprising outcome here. */
+.bnf-cvgdoc-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  gap: 1px;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  padding: 6px 7px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  background: var(--card);
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+.bnf-cvgdoc-pick:hover:not(:disabled) { background: var(--blue-bg); border-color: var(--blue); }
+.bnf-cvgdoc-pick:disabled { opacity: 0.55; cursor: default; }
+
+
+/* --- attach: the split chip and the drop target ------------------------- */
+
+/* A file hovering over this chip. The chip itself swaps its label to
+ * "Drop here" — at 70px the highlight alone is not enough to tell you the
+ * target will take it. */
+.bnf-cvg-chipwrap.is-dropping .bnf-cvg-chip {
+  border: 1px dashed var(--blue);
+  background: var(--blue-bg);
+  color: var(--blue);
+}
+
+/* A filled chip does two things, so it is two buttons: the name opens the
+ * file in Documents, the caret opens the picker. Reviewing a document should
+ * be one click. */
+.bnf-cvg-chip.is-split {
+  display: inline-flex;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+}
+.bnf-cvg-chipmain,
+.bnf-cvg-chipcaret {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 3px 5px 3px 7px;
+}
+.bnf-cvg-chipcaret {
+  padding: 3px 6px 3px 4px;
+  border-left: 1px solid rgba(31, 138, 91, 0.28);
+  opacity: 0.75;
+}
+.bnf-cvg-chipmain:hover, .bnf-cvg-chipcaret:hover { background: rgba(31, 138, 91, 0.12); }
+.bnf-cvg-chipcaret:hover { opacity: 1; }
+
+.bnf-cvgdoc-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-softer);
+}

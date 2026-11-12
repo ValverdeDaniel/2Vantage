@@ -36,7 +36,10 @@ docker compose exec frontend npm run build
 | `deals/` | Clients, deals, the Activity log, lines of coverage, stages, the agency clock |
 | `documents/` | Uploaded and stored files |
 | `quotes/` | Plans, plan fields, premium math, packages, the plan template |
-| `proposals/` | What a proposal presents, its preview, and the golden deals |
+| `proposals/` | What a proposal presents and its preview |
+| `golden/` | The golden deals: one JSON spec per deal with its parity profile, the answer keys, `seed_golden` |
 | `frontend/` | React app (one folder per deal tab under `src/deal/`) |
+| `tools/parity/` | Old Vantage beside 2Vantage, on the golden deals, for the parity lanes ([README](tools/parity/README.md)) |
+| `browser/` | The Look and Walk lanes in the installed Chrome (`npm --prefix browser ci`, then `run look` / `run walk`) |
 
 Uploaded files live in the `media` Docker volume, never inside this folder.

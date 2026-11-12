@@ -1,15 +1,15 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import cx from './cx';
-import styles from './Menu.module.css';
 
 /**
- * A button that opens a menu of actions or links ("Stage ▾", the user menu).
- *   label (button content; a ▾ is added), items: [{key, label, href? | onSelect?, checked?, disabled?}]
- *   align: 'start' | 'end' · disabled · title · buttonClassName (restyle the trigger) · ariaLabel
+ * A button that opens a menu of actions or links ("Stage ▾"), in the old ⬇ Download menu's look
+ * (`bnf-q-dlmenu`: a small secondary button, the list under it, each item's words in bold with an optional note).
+ *   label (button content; a ▾ is added), items: [{key, label, note?, href? | onSelect?, checked?, disabled?}]
+ *   disabled · title · buttonClassName (replaces the trigger's classes) · ariaLabel
  * Keyboard: Enter / Space / ↓ open; ↑ ↓ Home End move; Escape closes and returns focus; Tab closes.
  * Items with `checked` (true / false) are radio items (✓ marks the current one).
  */
-export default function Menu({ label, items, align = 'start', disabled, title, buttonClassName, ariaLabel }) {
+export default function Menu({ label, items, disabled, title, buttonClassName, ariaLabel }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
   const buttonRef = useRef(null);
@@ -59,11 +59,11 @@ export default function Menu({ label, items, align = 'start', disabled, title, b
   }
 
   return (
-    <div ref={rootRef} className={styles.root}>
+    <div ref={rootRef} className="bnf-q-dlmenu">
       <button
         ref={buttonRef}
         type="button"
-        className={cx(styles.trigger, buttonClassName)}
+        className={buttonClassName || 'btn btn-secondary btn-sm'}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
@@ -78,13 +78,10 @@ export default function Menu({ label, items, align = 'start', disabled, title, b
           }
         }}
       >
-        {label}
-        <span aria-hidden="true" className={styles.caret}>
-          ▾
-        </span>
+        {label} ▾
       </button>
       {open && (
-        <ul id={menuId} role="menu" className={cx(styles.menu, styles[align])} onKeyDown={onMenuKeyDown}>
+        <div id={menuId} role="menu" className="bnf-q-dlmenu-list" onKeyDown={onMenuKeyDown}>
           {items.map((item) => {
             const radio = item.checked !== undefined;
             const common = {
@@ -92,27 +89,30 @@ export default function Menu({ label, items, align = 'start', disabled, title, b
               'aria-checked': radio ? Boolean(item.checked) : undefined,
               'aria-disabled': item.disabled || undefined,
               tabIndex: -1,
-              className: cx(styles.item, item.disabled && styles.disabled),
+              className: cx('bnf-q-dlmenu-item', item.disabled && 'bnf-menu-disabled'),
+              title: item.title,
               onClick: (event) => select(item, event),
             };
-            return (
-              <li key={item.key} role="none">
-                {item.href ? (
-                  <a href={item.href} {...common}>
-                    {item.label}
-                  </a>
-                ) : (
-                  <button type="button" {...common}>
-                    <span className={styles.check} aria-hidden="true">
-                      {item.checked ? '✓' : ''}
-                    </span>
-                    {item.label}
-                  </button>
-                )}
-              </li>
+            const words = (
+              <>
+                <b>
+                  {radio && (item.checked ? '✓ ' : '')}
+                  {item.label}
+                </b>
+                {item.note && <span>{item.note}</span>}
+              </>
+            );
+            return item.href ? (
+              <a key={item.key} href={item.href} {...common}>
+                {words}
+              </a>
+            ) : (
+              <button key={item.key} type="button" {...common}>
+                {words}
+              </button>
             );
           })}
-        </ul>
+        </div>
       )}
     </div>
   );

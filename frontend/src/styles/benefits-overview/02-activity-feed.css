@@ -1,0 +1,227 @@
+/* --- activity feed -------------------------------------------------------- */
+
+.bnf-ov-outreach {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px 0 14px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.bnf-ov-outreach-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 3px;
+}
+
+.bnf-ov-outreach-value {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.bnf-ov-outreach-value .bb-empty {
+  color: var(--ink3);
+  font-weight: 400;
+  font-style: italic;
+}
+
+.bnf-ov-timeline {
+  margin-top: 4px;
+}
+
+/* The timeline reuses the radar's .bnf-cal-row grid, but benefits-radar.css
+   loads AFTER this file, so a single-class override would lose the cascade at
+   equal specificity — hence the two-class selectors here. 74px clipped the
+   year off "Aug 14, 2026" (it measures 94px in IBM Plex Mono at 13px). */
+.bnf-ov-timeline .bnf-ov-event {
+  grid-template-columns: 100px 12px 1fr auto;
+  align-items: baseline;
+  padding: 9px 0;
+  border-top: none;
+  border-bottom: 1px solid var(--border-softer);
+}
+
+.bnf-ov-timeline .bnf-ov-event:last-child {
+  border-bottom: none;
+}
+
+.bnf-ov-event-icon {
+  display: inline-block;
+  width: 16px;
+  color: var(--ink3);
+  font-size: 11px;
+}
+
+.bnf-ov-actor {
+  white-space: nowrap;
+}
+
+/* one dot colour per event tone — good things green, client moves violet */
+.bnf-ov-dot-info { background: var(--blue); }
+.bnf-ov-dot-good { background: var(--green); }
+.bnf-ov-dot-client { background: var(--violet); }
+.bnf-ov-dot-warn { background: var(--amber); }
+
+.bnf-ov-showall {
+  margin-top: 10px;
+}
+
+/* --- notepad -------------------------------------------------------------- */
+
+.bnf-ov-note-form {
+  margin-bottom: 14px;
+}
+
+.bnf-ov-note-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.bnf-ov-note-input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.bnf-ov-note-formfoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+.bnf-ov-note-formfoot .btn { flex: 0 0 auto; }
+
+.bnf-ov-kindchips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.bnf-ov-notelist {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bnf-ov-note {
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-softer);
+}
+
+.bnf-ov-note.is-pinned {
+  background: var(--amber-bg);
+  border-radius: 8px;
+  padding: 9px 11px;
+  border-bottom: none;
+  margin-bottom: 4px;
+}
+
+.bnf-ov-note-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.bnf-ov-note-kind {
+  background: var(--border-softer);
+  color: var(--ink2);
+}
+
+.bnf-ov-kind-call { background: var(--blue-bg); color: var(--blue); }
+.bnf-ov-kind-email { background: var(--violet-bg); color: var(--violet); }
+.bnf-ov-kind-meeting { background: var(--green-bg); color: var(--green); }
+.bnf-ov-kind-internal { background: var(--amber-bg); color: var(--amber); }
+
+/* actions stay out of the way until the row is hovered */
+.bnf-ov-note-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 9px;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.bnf-ov-note:hover .bnf-ov-note-actions,
+.bnf-ov-note-actions:focus-within {
+  opacity: 1;
+}
+
+.bnf-ov-note-body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+.bnf-ov-history {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.bnf-ov-prior {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--page);
+  border-radius: 9px;
+}
+
+.bnf-ov-prior-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink2);
+  margin-bottom: 4px;
+}
+
+/* --- commission ----------------------------------------------------------- */
+
+.bnf-ov-comm-line {
+  padding-bottom: 6px;
+}
+
+.bnf-ov-comm-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 0 6px 148px;
+}
+
+.bnf-ov-comm-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 11px;
+  border-top: 2px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.bnf-ov-comm-totalvalue {
+  font-size: 18px;
+  color: var(--green);
+}
+
+.bnf-ov-comm-note {
+  margin-top: 6px;
+}

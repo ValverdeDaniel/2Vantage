@@ -115,6 +115,8 @@ def delete(user, document_id):
     activity.record(deal, user, 'documents', 'deleted', 'Deleted a document')
 
 
-def record_download(user, document):
+def record_download(user, document, inline=False):
+    """A PHI file's download or view, by document id, never by name (§3.8, E99; the rest of E99 is slice 15)."""
     if document.kind in kinds.PHI_KINDS:
-        activity.record(document.deal, user, 'documents', 'downloaded', f'Downloaded a {document.kind} document')
+        action = 'viewed' if inline else 'downloaded'
+        activity.log_access(document.deal, user, action, f'a {document.kind} document', document.id)

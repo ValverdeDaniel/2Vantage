@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build --outDir /tmp/dist --emptyOutDir",
     "lint": "eslint . --max-warnings 0",
+    "test": "vitest run",
     "preview": "vite preview --outDir /tmp/dist"
   },
   "dependencies": {
@@ -23,7 +24,10 @@
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-react-refresh": "0.5.7",
     "globals": "16.5.0",
-    "vite": "6.4.6"
+    "stylelint": "17.16.0",
+    "stylelint-value-no-unknown-custom-properties": "6.1.1",
+    "vite": "6.4.6",
+    "vitest": "5.1.0"
   },
   "engines": {
     "node": ">=22"

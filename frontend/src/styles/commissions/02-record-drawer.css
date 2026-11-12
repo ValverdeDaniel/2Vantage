@@ -1,0 +1,268 @@
+/* Record drawer */
+.bnf-com-drawer {
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--card);
+  padding: 18px 20px;
+}
+.bnf-com-drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.bnf-com-drawer-title { font-size: 15px; font-weight: 600; }
+.bnf-com-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 28px;
+}
+.bnf-com-drawer-cols {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 20px;
+  margin-top: 12px;
+}
+@media (max-width: 860px) {
+  .bnf-com-drawer-grid, .bnf-com-drawer-cols { grid-template-columns: 1fr; }
+}
+.bnf-com-section-title {
+  font-size: 12px;
+  color: var(--ink3);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 10px 0 6px;
+}
+.bnf-com-history {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink2);
+}
+.bnf-com-history li {
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border-softer);
+}
+.bnf-com-history code { font-family: var(--font-mono); font-size: 11.5px; }
+.bnf-com-splits-edit input {
+  width: 80px;
+  font: inherit;
+  font-size: 12.5px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-align: right;
+  font-family: var(--font-mono);
+}
+.bnf-com-total-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding-top: 8px;
+  border-top: 2px solid var(--border);
+  margin-top: 6px;
+}
+.bnf-com-total-line.bad { color: var(--rose); }
+
+/* Parties tab */
+.bnf-com-party-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+.bnf-com-party-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+  color: var(--ink2);
+}
+.bnf-com-party-form input,
+.bnf-com-party-form select {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--card);
+}
+.bnf-com-inline-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.bnf-com-inline-edit input {
+  width: 64px;
+  font: inherit;
+  font-size: 12.5px;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+/* Settings tab */
+.bnf-com-settings {
+  max-width: 640px;
+}
+.bnf-com-settings .bnf-com-row-label { flex: 0 0 260px; }
+.bnf-com-placeholder {
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  font-size: 12.5px;
+  margin-bottom: 14px;
+}
+.bnf-com-confirmed {
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--green-bg);
+  color: var(--green);
+  font-size: 12.5px;
+  margin-bottom: 14px;
+}
+
+/* ===== 2026-08-18 review — roles, terms, live preview, scope, carry-forward ===== */
+.bnf-com-role-primary { background: var(--blue-bg); color: var(--blue); }
+.bnf-com-role-secondary { background: var(--violet-bg); color: var(--violet); }
+.bnf-com-role-split { background: var(--border-soft); color: var(--ink2); }
+.bnf-com-role-referral { background: var(--green-bg); color: var(--green); }
+.bnf-com-role-house { background: var(--violet-bg); color: var(--violet); }
+.bnf-com-roleselect {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  max-width: 112px;
+}
+.bnf-com-linerow { border-bottom: 1px solid var(--border-softer); }
+.bnf-com-linerow .bnf-com-row { border-bottom: none; }
+.bnf-com-share {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--green);
+  white-space: nowrap;
+}
+.bnf-com-terms-toggle {
+  font: inherit;
+  font-size: 11px;
+  color: var(--ink2);
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 2px 7px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bnf-com-terms-toggle.active, .bnf-com-terms-toggle:hover { color: var(--blue); border-color: var(--blue); }
+.bnf-com-terms {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 4px 0 8px 126px;
+  font-size: 11.5px;
+  color: var(--ink2);
+}
+.bnf-com-terms label { display: inline-flex; align-items: center; gap: 6px; }
+.bnf-com-terms select.bnf-intake-input, .bnf-com-terms input.bnf-intake-input { font-size: 11.5px; padding: 3px 6px; }
+.bnf-com-addrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.bnf-com-scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+  font-size: 11.5px;
+  color: var(--ink2);
+}
+.bnf-com-scope select.bnf-intake-input { font-size: 11.5px; padding: 3px 6px; }
+.bnf-com-carry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  font-size: 12.5px;
+}
+.bnf-com-carry .btn { white-space: nowrap; flex: 0 0 auto; }
+.bnf-com-splits-compact .bnf-com-terms { padding-left: 0; }
+.bnf-com-holes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.bnf-com-hole-badge { font-size: 10.5px; }
+
+/* Booking summary modal (after "Mark as sold") */
+.bnf-com-booking { max-width: 860px; width: min(860px, 94vw); }
+.bnf-com-booking-table td, .bnf-com-booking-table th { font-size: 12.5px; }
+.bnf-com-booking-table tr.bnf-com-hasholes td { background: var(--amber-bg); }
+.bnf-com-people { max-width: 480px; }
+.bnf-com-holes-line { color: var(--amber); }
+.bnf-com-holes-line a { font-size: 12px; }
+
+/* Who-gets-what chips (Book, By person, client statement) */
+.bnf-com-chips { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.bnf-com-chip {
+  display: inline-flex; align-items: baseline; gap: 2px;
+  font-size: 10.5px; padding: 1px 6px; border-radius: 5px; white-space: nowrap;
+  background: var(--border-soft); color: var(--ink2);
+}
+.bnf-com-chip-role { font-weight: 600; }
+.bnf-com-chip-pct { font-family: var(--font-mono); }
+.bnf-com-chip-money { font-family: var(--font-mono); font-weight: 600; }
+.bnf-com-grouphead td { background: var(--page); font-weight: 600; font-size: 12.5px; padding-top: 10px; }
+.bnf-com-groupsum { float: right; font-weight: 400; font-size: 12px; color: var(--ink2); }
+.bnf-com-grouped td:first-child { padding-left: 22px; }
+.bnf-com-subrows td { background: var(--page); padding: 6px 10px 12px 22px; }
+.bnf-com-subtable td, .bnf-com-subtable th { font-size: 12px; }
+
+/* Client commission statement — the year-over-year delta chip (the rest of
+   the statement-table styling is bnf-cw-stmt-* in benefits-radar.css, since
+   2026-08-19 phase 1d turned the div stack into a full-width table). */
+.bnf-com-delta { font-size: 11px; font-family: var(--font-mono); }
+.bnf-com-delta.up { color: var(--green); }
+.bnf-com-delta.down { color: var(--rose); }
+
+/* Commission per line grid (Overview) */
+.bnf-com-grid { margin-top: 4px; }
+.bnf-com-grid-head, .bnf-com-grid-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1.4fr 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-softer);
+  font-size: 12.5px;
+}
+.bnf-com-grid-head { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink2); }
+.bnf-com-grid-row:last-child { border-bottom: none; }
+.bnf-com-grid-muted { opacity: .7; }
+.bnf-com-grid-line { font-weight: 500; }
+.bnf-com-grid-inforce { font-family: var(--font-mono); font-size: 12px; }
+.bnf-com-grid-req { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.bnf-com-grid-basis { font-family: var(--font-sans); font-size: 10.5px; text-align: right; }
+.bnf-com-reqrates { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-softer); }
+.bnf-com-reqrate { display: inline-flex; align-items: center; gap: 8px; }
+.bnf-com-reqrate-label { font-size: 12px; color: var(--ink2); min-width: 90px; }
+
+/* Commission tab (case workspace) */
+.bnf-com-tabgrid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr); gap: 18px; align-items: start; margin-top: 14px; }
+@media (max-width: 1100px) { .bnf-com-tabgrid { grid-template-columns: 1fr; } }
+.bnf-com-tabgrid-main .bb-panel, .bnf-com-tabgrid-side .bb-panel { margin-bottom: 16px; }
+.bnf-com-nudge-wide { margin: 12px 0 0; font-size: 12.5px; }
+.bnf-com-howlist { margin: 6px 0 0 18px; padding: 0; font-size: 12.5px; color: var(--ink2); }
+.bnf-com-howlist li { margin-bottom: 4px; }
+.bnf-com-summary-people { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-softer); }

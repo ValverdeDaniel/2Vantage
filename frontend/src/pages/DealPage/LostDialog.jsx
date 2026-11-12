@@ -5,11 +5,10 @@ import Button from '../../ui/Button';
 import Field from '../../ui/Field';
 import Modal from '../../ui/Modal';
 import TextInput from '../../ui/TextInput';
-import styles from './Dialogs.module.css';
 
 const MAX_REASON = 300;
 
-/** Mark lost (plan.md §5.1): a reason of 1–300 characters. The deal stays editable and can be reopened. */
+/** Mark as lost (plan.md §5.1): a reason of 1–300 characters. The deal stays editable and can be reopened. */
 export default function LostDialog({ deal, onClose }) {
   const markLost = useMarkLost(deal.id);
   const [reason, setReason] = useState('');
@@ -32,19 +31,21 @@ export default function LostDialog({ deal, onClose }) {
       onClose={onClose}
       onSubmit={onSubmit}
       title={`Mark ${deal.client.name} lost`}
+      sub="Everything stays editable, and you can reopen the deal later."
       size="sm"
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="danger" busy={markLost.isPending}>
-            Mark lost
+          <Button size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="sm" type="submit" variant="danger" busy={markLost.isPending}>
+            Confirm lost
           </Button>
         </>
       }
     >
-      <p className={styles.note}>Everything stays editable, and you can reopen the deal later.</p>
       <Field
-        label="Reason"
+        label="Why did we lose it?"
         required
         help={`${reason.length} / ${MAX_REASON} characters`}
         error={missing && !reason.trim() ? 'Give a reason.' : errors.reason}
@@ -52,10 +53,9 @@ export default function LostDialog({ deal, onClose }) {
         <TextInput multiline maxLength={MAX_REASON} value={reason} onChange={(event) => setReason(event.target.value)} />
       </Field>
       {formError && (
-        <p role="alert" className={styles.error}>
-          <span aria-hidden="true">⚠ </span>
+        <div role="alert" className="error-message">
           {formError}
-        </p>
+        </div>
       )}
     </Modal>
   );

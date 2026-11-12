@@ -1,0 +1,87 @@
+{
+  "key": "GD2",
+  "about": "A one-plan small group with its renewal and an unlinked alternate.",
+  "client": "Golden Small Shop (synthetic)",
+  "status": "prospect",
+  "effective_date": "2027-02-01",
+  "lines": ["medical"],
+  "plans": [
+    {
+      "ref": "S", "line": "medical", "role": "current", "carrier": "Florida Blue", "name": "BlueOptions HSA 5182 / 5183", "links": [],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "HDHP",
+        "deductible_single": "3400",
+        "oop_max_single": "7000",
+        "pcp_copay": "Deductible, then 0%",
+        "rate_ee": "480.00",
+        "rate_es": "1032.00",
+        "rate_ec": "900.00",
+        "rate_fam": "1490.00"
+      },
+      "enrollment": {"EE": 4, "ES": 1, "EC": 1, "FAM": 1}
+    },
+    {
+      "ref": "S2", "line": "medical", "role": "renewal", "carrier": "Florida Blue", "name": "BlueOptions HSA 5182 / 5183", "links": ["S"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "HDHP",
+        "deductible_single": "3400",
+        "oop_max_single": "7000",
+        "pcp_copay": "Deductible, then 0%",
+        "rate_ee": "523.20",
+        "rate_es": "1124.88",
+        "rate_ec": "981.00",
+        "rate_fam": "1624.10"
+      }
+    },
+    {
+      "ref": "SA", "line": "medical", "role": "alternate", "carrier": "AmeriHealth", "name": "Bronze HSA 4000", "links": [],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "HDHP",
+        "deductible_single": "4000",
+        "oop_max_single": "7050",
+        "pcp_copay": "Deductible, then 0%",
+        "rate_ee": "455.10",
+        "rate_es": "978.47",
+        "rate_ec": "853.31",
+        "rate_fam": "1412.71"
+      }
+    }
+  ],
+  "starred": ["SA"],
+  "recommended": ["SA"],
+  "packages": [
+  ],
+  "reasons": {
+    "medical": "AmeriHealth matches the HSA for less."
+  },
+  "parity": {
+    "old_app": "891f1b3",
+    "case": {
+      "stage": "intake"
+    },
+    "client_book": null,
+    "values_layer": "edited",
+    "values_left_out": {
+      "funding": "The old app keeps funding on the deal's coverage line, not on a plan."
+    },
+    "links": {},
+    "copies": {},
+    "recommended_by_current": {},
+    "recommended_by_line": {
+      "medical": "SA"
+    },
+    "line_counts": {
+      "medical": "S"
+    },
+    "figures_left_out": {},
+    "left_out": [
+      {
+        "what": "Funding on every plan",
+        "why": "The old app keeps funding on the deal's coverage line (CoverageLine.funding)."
+      }
+    ]
+  }
+}

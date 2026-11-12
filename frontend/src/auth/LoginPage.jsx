@@ -2,11 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useSearchParams } from 'react-router';
 import { errorText } from '../lib/errors';
-import Button from '../ui/Button';
-import Field from '../ui/Field';
-import { PageSpinner } from '../ui/Spinner';
-import TextInput from '../ui/TextInput';
-import styles from './LoginPage.module.css';
+import Loading from '../ui/Loading';
 import { useAuth } from './useAuth';
 
 // Pages Django serves itself (reached through the Vite proxy): leave the SPA to open them.
@@ -25,10 +21,13 @@ function ServerRedirect({ to }) {
   useEffect(() => {
     window.location.replace(to);
   }, [to]);
-  return <PageSpinner />;
+  return <Loading />;
 }
 
-/** Sign in (plan.md §8.2): username, password, the server's message on failure. */
+/**
+ * Sign in (plan.md §8.2; LoginForm.jsx at 891f1b3): the old card with username, password and Sign in, the server's
+ * message on failure, and under the button "Forgot your password? Ask an admin to reset it." No top bar (§8.1).
+ */
 export default function LoginPage() {
   const { user, status, signIn } = useAuth();
   const location = useLocation();
@@ -42,7 +41,7 @@ export default function LoginPage() {
     document.title = 'Sign in — 2Vantage';
   }, []);
 
-  if (status === 'loading') return <PageSpinner label="Checking sign-in…" />;
+  if (status === 'loading') return <Loading label="Checking sign-in…" />;
   if (user) {
     const target = destination(location, searchParams);
     return SERVER_PAGES.test(target) ? <ServerRedirect to={target} /> : <Navigate to={target} replace />;
@@ -60,42 +59,47 @@ export default function LoginPage() {
 
   const message = missing || (submit.isError ? errorText(submit.error) : '');
 
+  // `.page-container > .card > form > .btn-primary` is where the old full-width button rule applies (O.5).
   return (
-    <main className={styles.page}>
-      <form className={styles.card} onSubmit={onSubmit} noValidate aria-labelledby="login-title">
-        <p className={styles.brand}>2Vantage</p>
-        <h1 id="login-title" className={styles.title}>
-          Sign in
-        </h1>
-        <Field label="Username">
-          <TextInput
-            name="username"
-            autoComplete="username"
-            autoFocus
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-          />
-        </Field>
-        <Field label="Password">
-          <TextInput
-            type="password"
-            name="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </Field>
+    <div className="page-container">
+      <main className="card" aria-labelledby="login-title">
+        <h2 id="login-title">Sign in</h2>
         {message && (
-          <p role="alert" className={styles.error}>
-            <span aria-hidden="true">⚠ </span>
+          <div role="alert" className="error-message">
             {message}
-          </p>
+          </div>
         )}
-        <Button type="submit" variant="primary" block busy={submit.isPending}>
-          Sign in
-        </Button>
-        <p className={styles.help}>Forgot your password? Ask an admin to reset it.</p>
-      </form>
-    </main>
+        <form onSubmit={onSubmit} noValidate>
+          <div className="form-group">
+            <label htmlFor="username">Username</label>
+            <input
+              id="username"
+              type="text"
+              name="username"
+              autoComplete="username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </div>
+          <button type="submit" className="btn btn-primary" disabled={submit.isPending}>
+            Sign in
+          </button>
+        </form>
+        <div className="form-footer">
+          <p>Forgot your password? Ask an admin to reset it.</p>
+        </div>
+      </main>
+    </div>
   );
 }

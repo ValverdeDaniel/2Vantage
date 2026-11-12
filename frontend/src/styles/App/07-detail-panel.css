@@ -1,0 +1,270 @@
+/* Detail Panel */
+.detail-row td { padding: 0 !important; }
+
+.detail-panel {
+  background: #f6f8fb;
+  padding: 1.25rem;
+  border-top: 2px solid var(--navy);
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.25rem;
+}
+
+.detail-header h3 { font-size: 1.1rem; font-weight: 600; }
+
+.detail-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: var(--ink3);
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.btn-close:hover { color: var(--ink); }
+
+.detail-subheader {
+  color: var(--ink2);
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.detail-field {}
+
+.detail-label {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8b95a3;
+  margin-bottom: 0.2rem;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.detail-deal-offer { margin-top: 12px; display: flex; align-items: center; gap: 10px; }
+.detail-deal-offer-note { font-size: 12.5px; color: #5a6472; }
+
+.detail-status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.detail-status-row label {
+  font-size: 0.8rem;
+  color: var(--ink2);
+}
+
+.detail-status-row select {
+  background: #ffffff;
+  border: 1px solid var(--input-border);
+  color: var(--ink);
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.detail-notes {
+  margin-bottom: 1rem;
+}
+
+.detail-notes label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8b95a3;
+  margin-bottom: 0.35rem;
+  font-weight: 500;
+}
+
+.detail-notes textarea {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--input-border);
+  color: var(--ink);
+  padding: 0.6rem;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.detail-notes-readonly {
+  color: var(--ink2);
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  background: #ffffff;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  min-height: 2.5rem;
+}
+
+/* COI Summary Tab */
+.coi-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1rem;
+}
+
+.coi-summary-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.coi-summary-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--navy);
+}
+
+.coi-summary-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.coi-stat { text-align: center; }
+
+.coi-stat-label {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8b95a3;
+  margin-bottom: 0.2rem;
+  font-weight: 500;
+}
+
+.coi-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Alerts Tab */
+.alerts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.alerts-heading {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.stale-heading { color: var(--amber); }
+.expiry-heading { color: var(--rose); }
+
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.alert-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.stale-item { border-left: 3px solid var(--amber); }
+.expiry-item { border-left: 3px solid var(--rose); }
+
+.alert-client {
+  font-weight: 600;
+  min-width: 180px;
+}
+
+.alert-details {
+  color: var(--ink2);
+  font-size: 0.8rem;
+  flex: 1;
+}
+
+.alert-time {
+  color: var(--amber);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.alert-expiry {
+  color: var(--rose);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* New Referral Modal */
+.new-referral-modal {
+  max-width: 600px;
+  width: 90%;
+}
+
+.new-referral-modal h2 {
+  margin-bottom: 1rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  color: var(--ink3);
+  padding: 2rem;
+  font-size: 0.9rem;
+}
+
+/* Renewal Section (COI Portal) */
+.renewal-section {
+  margin-top: 2rem;
+}

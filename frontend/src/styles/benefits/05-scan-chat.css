@@ -1,0 +1,288 @@
+/* ---- Scan chat (chat-with-Claude document scanning) ---- */
+.bnf-scanchat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 720px;
+}
+.bnf-scanchat-docs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bnf-scanchat-doc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--page);
+  color: var(--ink);
+}
+.bnf-scanchat-doc.scanned { border-color: var(--green); }
+/* Per-file type picker inside the chip. Optional by design — Claude infers
+   the kind when it's left alone — so it reads as a hint, not a field. */
+.bnf-scanchat-doctype {
+  border: none;
+  border-left: 1px solid var(--border);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink3);
+  padding: 0 2px 0 6px;
+  max-width: 150px;
+  cursor: pointer;
+}
+.bnf-scanchat-doctype:hover,
+.bnf-scanchat-doctype:focus { color: var(--ink); outline: none; }
+.bnf-scanchat-doctype:disabled { cursor: default; opacity: 0.6; }
+
+/* The Documents-tab file list: full-width rows (the workflows bank-row
+   geometry), tick-to-scan, filename opens the viewer, type starts Unknown. */
+.bnf-scanchat-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+/* Two-line rows are ~46px, so a deal with several files would push the
+   transcript and the composer below the fold. Not in focus mode — the whole
+   column already scrolls there, and nested scrollers are worse. */
+.bnf-docs-cols:not(.bnf-docs-expanded) .bnf-scanchat-rows {
+  max-height: 34vh;
+  overflow-y: auto;
+}
+.bnf-scanchat-row {
+  display: flex;
+  align-items: flex-start;  /* the tick sits on line 1, beside the name */
+  gap: 6px;
+  padding: 5px 6px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 12px;
+}
+/* Two lines: the name gets the row's whole width (so it stays readable and
+   only then ellipsises), the type and tags sit under it — indented past the
+   tick, so the row still reads as one block. */
+.bnf-scanchat-rowlines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.bnf-scanchat-rowtop,
+.bnf-scanchat-rowbot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.bnf-scanchat-tick { padding-top: 1px; }  /* optical align with the name */
+.bnf-scanchat-row:hover { background: var(--page); border-color: var(--border); }
+.bnf-scanchat-row-open { background: var(--blue-bg); border-color: var(--blue); }
+.bnf-scanchat-row-scanned .bnf-scanchat-rowname { color: var(--ink2); }
+.bnf-scanchat-tick {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.bnf-scanchat-rowname {
+  flex: 1;
+  /* min-width:0 lets the ellipsis actually clip — flex items default to
+     min-content, which is the full nowrap text width. */
+  min-width: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.bnf-scanchat-rowname:hover { color: var(--blue); }
+.bnf-scanchat-row .bnf-scanchat-doctype {
+  border-left: none;
+  /* 0 1 auto, not 1 1 auto: the select is borderless, and a stretched one
+     reads as a caption with a stray arrow. No max-width — 118px clipped
+     "Medical questionnaire". */
+  flex: 0 1 auto;
+  max-width: none;
+}
+.bnf-scanchat-open-tag {
+  flex: 0 0 auto;
+  font-size: 10px;
+  color: var(--blue);
+  white-space: nowrap;
+}
+
+/* The Scan-files row: the button IS the ask — "scan the docs" should never
+   have to be typed. */
+.bnf-scanchat-runrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.bnf-scanchat-runhint { font-size: 11.5px; color: var(--ink3); }
+.bnf-scanchat-doc-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--green);
+  font-weight: 600;
+}
+.bnf-scanchat-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+.bnf-scanchat-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bnf-scanchat-input textarea,
+.bnf-scanchat-context {
+  resize: vertical;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.bnf-scanchat-input .btn,
+.bnf-scanchat > .btn-primary { align-self: flex-start; }
+/* Mic + Send under the chat box. The mic sits at the left edge, so its card
+   opens rightward (its default anchor is the right, for the Ask composer). */
+.bnf-scanchat-send { display: flex; align-items: center; gap: 6px; }
+.bnf-scanchat-send .hlp-mic-pop { left: 0; right: auto; }
+.bnf-scanchat-attach { align-self: flex-start; }
+
+/* ---- Staged scan review (Current vs New scan diff) ---- */
+.bnf-staged-review { display: flex; flex-direction: column; }
+.bnf-staged-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.bnf-staged-actions { display: flex; gap: 8px; }
+.bnf-staged-actions .btn { flex: 0 0 auto; }
+.bnf-staged-summary {
+  font-size: 12.5px;
+  color: var(--ink2);
+  margin-top: 8px;
+}
+.bnf-staged-cell { position: relative; }
+.bnf-staged-old {
+  display: block;
+  font-size: 10.5px;
+  color: var(--ink3);
+  text-decoration: line-through;
+  margin-top: 2px;
+}
+/* How far the number moved, beside the superseded one. Deliberately NOT
+   struck through: the old VALUE is what is superseded, the movement is
+   the finding the producer is checking against what the carrier
+   promised (2026-09-22). */
+.bnf-staged-move {
+  text-decoration: none;
+  display: inline-block;
+  font-weight: 600;
+  color: var(--ink2);
+}
+.bnf-staged-changed { background: var(--amber-bg); }
+.bnf-staged-added { background: var(--green-bg); }
+.bnf-staged-removed { background: var(--rose-bg); }
+/* B5: a value this quote read did not return is kept (a read never clears
+   one), so it is not shown as removed. */
+.bnf-staged-kept { background: var(--violet-bg); }
+.bnf-staged-kept .bnf-staged-old { text-decoration: none; font-style: italic; }
+/* B5: what Use this scan keeps and leaves alone, under the diff. */
+.bnf-staged-section {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+.bnf-staged-section-title { font-weight: 700; font-size: 12.5px; color: var(--ink); }
+.bnf-staged-section-sub { font-size: 12px; color: var(--ink2); margin-top: 2px; }
+.bnf-staged-list { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--ink); }
+.bnf-staged-line { color: var(--ink3); }
+
+/* ---- Scan drawer (floating right-side home for ScanChat everywhere) ---- */
+.bnf-scan-drawer {
+  position: fixed;
+  top: var(--chrome-top);
+  right: 0;
+  bottom: 0;
+  width: min(560px, 94vw);
+  z-index: 150; /* above page stickies, below modals(200)/guide(400) */
+  background: var(--card, #fff);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-modal);
+  display: flex;
+  flex-direction: column;
+  animation: bnf-drawer-in 0.18s ease-out;
+}
+/* Widen for the Current-vs-New diff tables when a staged review is open. */
+.bnf-scan-drawer:has(.bnf-staged-review) { width: min(880px, 96vw); }
+@keyframes bnf-drawer-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.bnf-scan-drawer-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.bnf-scan-drawer-title {
+  flex: 1 1 auto;
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--ink);
+}
+.bnf-scan-drawer-close {
+  flex: 0 0 auto;
+  border: none;
+  background: none;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ink3);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+.bnf-scan-drawer-close:hover { color: var(--ink); background: var(--page); }
+.bnf-scan-drawer-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 14px 18px;
+}
+/* The drawer is the chrome — drop ScanChat's own panel box + width cap. */
+.bnf-scan-drawer .bnf-scanchat {
+  max-width: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+}
+.bnf-scan-drawer .bnf-scanchat > .bb-panel-title { display: none; } /* head shows it */

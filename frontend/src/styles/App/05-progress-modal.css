@@ -1,0 +1,212 @@
+/* Progress modal */
+.progress-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 29, 45, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.progress-modal {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 480px;
+  max-width: 90vw;
+  box-shadow: var(--shadow-modal);
+}
+
+.progress-modal h3 {
+  font-size: 1.25rem;
+  letter-spacing: -0.3px;
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.progress-bar-track {
+  background-color: var(--border-soft);
+  border-radius: 5px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar-fill {
+  background: linear-gradient(90deg, var(--blue), var(--logo-blue));
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.progress-pct {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  margin-bottom: 1rem;
+  color: var(--navy);
+}
+
+.progress-counters {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+.progress-counter {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.progress-counter-count {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.progress-counter-label {
+  font-size: 0.8rem;
+  color: var(--ink3);
+}
+
+.counter-pass .progress-counter-count {
+  color: var(--green);
+}
+
+.counter-fail .progress-counter-count {
+  color: var(--rose);
+}
+
+.progress-current-test {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.progress-bar-indeterminate {
+  animation: indeterminate 1.5s ease-in-out infinite;
+  opacity: 0.5;
+}
+
+@keyframes indeterminate {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+  100% { opacity: 0.3; }
+}
+
+.progress-setup-hint {
+  text-align: center;
+  color: var(--ink3);
+  font-size: 0.85rem;
+  margin: 1rem 0 0;
+}
+
+.progress-cancel-btn {
+  display: block;
+  margin: 1.25rem auto 0;
+  width: auto;
+  padding: 0.5rem 2rem;
+}
+
+/* History */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.history-empty {
+  text-align: center;
+  color: var(--ink3);
+  padding: 3rem 1rem;
+  font-size: 0.95rem;
+}
+
+.history-item {
+  background-color: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.history-item:hover {
+  background-color: #f8fafc;
+}
+
+.history-item-active {
+  border-color: var(--navy);
+  background-color: #eef3fa;
+}
+
+.history-status {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-weight: 600;
+  text-transform: capitalize;
+  min-width: 80px;
+  text-align: center;
+}
+
+.badge-running {
+  background-color: var(--blue-bg);
+  color: var(--blue);
+}
+
+.badge-pending {
+  background-color: var(--border-soft);
+  color: var(--ink2);
+}
+
+.history-rate {
+  font-weight: 700;
+  font-size: 0.95rem;
+  min-width: 45px;
+  text-align: center;
+}
+
+.rate-pass {
+  color: var(--green);
+}
+
+.rate-warn {
+  color: var(--amber);
+}
+
+.rate-fail {
+  color: var(--rose);
+}
+
+.history-counts {
+  font-size: 0.85rem;
+  color: var(--ink2);
+}
+
+.history-duration {
+  font-size: 0.8rem;
+  color: var(--ink3);
+  font-family: var(--font-mono);
+}
+
+.history-time {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--ink3);
+}
+
+.history-detail {
+  padding: 0.5rem 0;
+}

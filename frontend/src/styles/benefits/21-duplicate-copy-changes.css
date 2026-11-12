@@ -1,0 +1,242 @@
+/* --- Duplicate: what the copy changes (2026-09-24) ---------------------- */
+/* A copy is the plan-DESIGN path the three priced-version families refuse, so
+   its dropdown reaches every row on the line and most of those rows are not
+   money. The text variant is wider than the numeric one because a network
+   name is not four digits. */
+.bnf-pv-formula-text { width: 128px; }
+
+/* The strip's summary: what is in the draft, without scrolling the table to
+   find out. The rows themselves are edited down in the table — this is a
+   count, a readback and a way to take one back. */
+.bnf-pv-changes {
+  margin: 6px 0 2px;
+  font-size: 12px;
+}
+.bnf-pv-changes-empty { color: #8b95a3; font-style: italic; }
+.bnf-pv-changes-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--violet);
+}
+.bnf-pv-changelist {
+  list-style: none;
+  margin: 3px 0 0;
+  padding: 3px 0 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-left: 2px solid var(--violet);
+}
+.bnf-pv-changerow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.bnf-pv-changename {
+  min-width: 120px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bnf-pv-changeop { flex: 1; color: var(--violet); font-family: var(--font-mono); }
+.bnf-pv-changedrop {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #8b95a3;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0 2px;
+}
+.bnf-pv-changedrop:hover { color: var(--rose); }
+
+/* ---- The employer portal on a shared request (D-062) -------------------- */
+.bnf-portal-shared { border-left: none; }
+.bnf-portal-shared-message { font-size: 14px; margin-bottom: 6px; white-space: pre-wrap; }
+.bnf-portal-colleague { font-size: 11.5px; color: var(--ink2); margin-top: 3px; font-style: italic; }
+.bnf-portal-conflict {
+  margin-top: 6px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  border-radius: 6px;
+  background: var(--amber-bg);
+  color: var(--ink);
+  border: 1px solid var(--amber);
+}
+.bnf-portal-conflict-after { margin-top: 10px; color: var(--amber); }
+
+/* ---- A staff preview of the portal, and a staff session on it (D-153 C0 #1) --
+   `?preview=1` (the staff doors): a violet banner, the page read-only. Signed
+   in without the flag: a thin amber line, because that typing IS saved. */
+.bnf-portal-preview {
+  padding: 8px 24px;
+  background: var(--violet-bg);
+  border-bottom: 1px solid var(--violet);
+  color: var(--ink);
+  font-size: 13px;
+  text-align: center;
+}
+.bnf-portal-preview b { color: var(--violet); }
+.bnf-portal-staffnote {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 24px;
+  background: var(--amber-bg);
+  border-bottom: 1px solid var(--amber);
+  color: var(--ink);
+  font-size: 12px;
+}
+.bnf-portal-staffnote span { flex: 1; }
+.bnf-portal-staffnote-x {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--ink2);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+}
+.bnf-portal-readonly .bb-drop-card,
+.bnf-portal-readonly .bnf-chip { cursor: default; }
+.bnf-portal-readonly button:disabled { cursor: not-allowed; }
+.bnf-portal-readonly .bnf-override-link:disabled,
+.bnf-portal-readonly .bnf-fu-askbtn:disabled { opacity: 0.55; }
+
+/* ---- The request composer's result screen (D-062) ------------------------ */
+.bnf-request-result { padding: 8px 0; border-top: 1px solid var(--border); }
+.bnf-request-result-who { font-size: 13px; margin-bottom: 4px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.bnf-request-result .bb-link-row { flex-wrap: wrap; }
+.bnf-request-result .bb-link-row .btn { flex: 0 0 auto; }
+.bnf-request-error { margin-top: 8px; font-size: 12.5px; color: var(--rose); }
+
+/* The Data Hub's brand colour and logo (COV-1b). */
+.bnf-hub-colour { width: 52px; height: 30px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: none; }
+.bnf-hub-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-right: 8px; vertical-align: -2px; border: 1px solid var(--border); }
+.bnf-hub-logo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.bnf-hub-logo img { max-height: 40px; max-width: 180px; object-fit: contain; }
+.bnf-hub-logo .btn { flex: 0 0 auto; }
+.bnf-hub-logo-pick { cursor: pointer; }
+
+/* The proposal's cover (COV-1c): its own strip in the Advisor's proposal
+   builder (CoverPicker), thumbnails from one preview PDF rendered off screen. */
+.bnf-cover-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.bnf-cover-strip .btn { flex: 0 0 auto; }
+.bnf-cover-tiles { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
+.bnf-cover-tiles-off { opacity: 0.45; }
+.bnf-cover-tile { position: relative; flex: 0 0 auto; width: 152px; }
+.bnf-cover-pick {
+  display: flex; flex-direction: column; gap: 4px; width: 100%; padding: 0;
+  border: 2px solid var(--border-soft); border-radius: 6px; background: #fff; cursor: pointer;
+  text-align: left; overflow: hidden;
+}
+.bnf-cover-pick:disabled { cursor: not-allowed; }
+.bnf-cover-tile-on .bnf-cover-pick { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-bg); }
+.bnf-cover-pick img { display: block; width: 100%; height: auto; }
+.bnf-cover-wait {
+  display: flex; align-items: center; justify-content: center; height: 112px;
+  font-size: 12px; color: var(--ink3); background: var(--border-soft);
+}
+.bnf-cover-label {
+  padding: 0 6px 5px; font-size: 12px; color: var(--ink2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* The stock pictures, one row per place on the dark pages (PicturesCard.jsx, D-190). */
+.bnf-pic-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.bnf-pic-place { flex: 0 0 130px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.bnf-pic-note { display: block; margin-top: 2px; font-size: 11px; font-weight: 400; color: var(--ink2); }
+.bnf-pic-tiles { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.bnf-pic-tile {
+  width: 84px; height: 56px; padding: 0; overflow: hidden; cursor: pointer;
+  border: 2px solid var(--border-soft); border-radius: 6px; background: #fff;
+}
+.bnf-pic-tile img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.bnf-pic-tile:disabled { cursor: not-allowed; }
+.bnf-pic-tile-on { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-bg); }
+.bnf-pic-none { font-size: 12px; color: var(--ink2); }
+/* Upload on every place (2026-11-10): a label over a hidden file input, tile-sized. */
+.bnf-pic-upload {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--blue); border-style: dashed; text-align: center;
+}
+.bnf-pic-upload input { display: none; }
+.bnf-pic-upload.is-disabled { cursor: not-allowed; color: var(--ink2); }
+.bnf-cover-del {
+  position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; padding: 0;
+  border: 1px solid var(--border); border-radius: 50%; background: #fff; color: var(--ink2);
+  font-size: 14px; line-height: 1; cursor: pointer;
+}
+.bnf-cover-del:hover { color: #b42318; }
+.bnf-cover-upload {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  min-height: 130px; border: 2px dashed var(--border); border-radius: 6px; cursor: pointer;
+}
+.bnf-cover-upload[aria-busy="true"] { opacity: 0.6; cursor: progress; }
+.bnf-cover-upload-plus { font-size: 22px; color: var(--ink3); }
+.bnf-cover-render { display: none; }
+
+/* The /p/ hero: the cover image the producer chose, under the brand band. */
+.bnf-share-hero { overflow: hidden; }
+.bnf-share-hero img { display: block; width: 100%; height: 320px; object-fit: cover; }
+@media (max-width: 640px) {
+  .bnf-share-hero img { height: 180px; }
+}
+
+/* Bulk review of AI-read values (PlanningDocs/Benefits/bulk-value-review.md):
+   a warning cell's three outcomes, their legend swatches, the strip that
+   approves / ignores / flags in bulk, and the Advisor's per-quote menu. */
+.bb-cell-approved { background: var(--green-bg); color: var(--green); }
+.bb-cell-ignored { background: var(--border-softer); color: var(--ink2); font-style: italic; }
+.bb-cell-check {
+  background: var(--rose-bg); color: var(--rose); font-weight: 600;
+  box-shadow: inset 0 0 0 1px #f1c3bd;
+}
+.bb-swatch-approved { background: var(--green-bg); border: 1px solid #bfe0cf; }
+.bb-swatch-ignored { background: var(--border-softer); border: 1px dashed var(--input-border); }
+.bb-swatch-check { background: var(--rose-bg); border: 1px solid #f1c3bd; }
+
+.bnf-review-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+  margin: 8px 0; padding: 8px 12px; border-radius: 8px;
+  background: var(--amber-bg); border: 1px solid #ecd9a8; font-size: 13px;
+}
+.bnf-review-bar-clear { background: transparent; border-color: var(--border-soft); color: var(--ink3); }
+.bnf-review-bar-count { color: var(--ink); }
+.bnf-review-bar-clear .bnf-review-bar-count { color: var(--ink3); }
+.bnf-review-bar-check { color: var(--rose); }
+.bnf-review-bar-target { color: var(--ink2); }
+.bnf-review-bar-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.bnf-review-bar-actions .btn { flex: 0 0 auto; }
+.bnf-review-bar-note { flex-basis: 100%; color: var(--ink2); font-size: 12px; }
+.bnf-review-btn-check { color: var(--rose); }
+
+.bnf-flag-cell { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.bnf-flag-chip-btn { border: 0; cursor: pointer; font: inherit; font-size: 11px; }
+.bnf-flag-chip-btn:hover { filter: brightness(0.96); }
+.bnf-flag-chip-check { background: var(--rose-bg); color: var(--rose); }
+.bnf-flag-menu { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.bnf-flag-menu .btn { flex: 0 0 auto; padding: 2px 8px; }
+.bnf-tip-mark { font-weight: 600; }
+
+/* Overview > Data confidence: the ignored / needs-checking record. */
+.bnf-ov-marked { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-soft); }
+.bnf-ov-marked-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.bnf-ov-marked-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px 10px;
+  align-items: center; padding: 4px 0; font-size: 13px;
+  border-bottom: 1px solid var(--border-softer);
+}
+.bnf-ov-marked-what { min-width: 0; overflow-wrap: anywhere; }
+.bnf-ov-marked-actions { display: inline-flex; gap: 4px; }
+.bnf-ov-marked-actions .btn { flex: 0 0 auto; }
+@media (max-width: 640px) {
+  .bnf-ov-marked-row { grid-template-columns: 1fr; }
+}
+
+/* D-117 (claude-corrections.md): Claude's proposed changes in the Work with
+   Claude drawer, the strip over the Advisor and Proposal tables, and who
+   wrote each question in a shared chat. */
+.bnf-msg-author { font-size: 10.5px; font-weight: 600; opacity: 0.75; margin-bottom: 2px; }

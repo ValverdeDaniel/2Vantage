@@ -1,0 +1,266 @@
+/* Form footer links */
+.form-footer {
+  margin-top: 1.25rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--ink2);
+}
+
+.form-footer a {
+  color: var(--blue);
+}
+
+/* Notes layout */
+.notes-layout {
+  display: flex;
+  height: calc(100vh - var(--chrome-top) - 4rem);
+  gap: 1px;
+  background-color: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.notes-sidebar {
+  width: 280px;
+  min-width: 280px;
+  background-color: #fbfcfd;
+  display: flex;
+  flex-direction: column;
+}
+
+.notes-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.notes-sidebar-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.notes-list {
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.notes-list-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-softer);
+  transition: background-color 0.15s;
+}
+
+.notes-list-item:hover {
+  background-color: #f5f8fc;
+}
+
+.notes-list-item.active {
+  background-color: #eef3fa;
+  border-left: 3px solid var(--navy);
+}
+
+.notes-list-title {
+  display: block;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notes-list-date {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ink3);
+  margin-top: 0.2rem;
+}
+
+.notes-list-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--ink3);
+  font-size: 0.875rem;
+}
+
+.notes-editor {
+  flex: 1;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.notes-editor-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.notes-title-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--ink);
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
+  padding: 0.25rem 0;
+}
+
+.notes-title-input::placeholder {
+  color: var(--ink3);
+}
+
+.notes-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.notes-saving {
+  font-size: 0.75rem;
+  color: var(--ink3);
+}
+
+.notes-content-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #3a4452;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  padding: 1rem;
+  outline: none;
+  resize: none;
+  font-family: var(--font-sans);
+}
+
+.notes-content-input::placeholder {
+  color: var(--ink3);
+}
+
+.notes-empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink3);
+}
+
+/* Profile page */
+.profile-container {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.profile-container h2 {
+  margin-bottom: 1.5rem;
+}
+
+.profile-field {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.profile-field .label {
+  color: var(--ink2);
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: var(--ink2);
+}
+
+/* Admin - Test Runner */
+.admin-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.admin-header h2 {
+  font-size: 1.5rem;
+  letter-spacing: -0.3px;
+  margin-bottom: 0.25rem;
+}
+
+.admin-subtitle {
+  color: var(--ink3);
+  font-size: 0.875rem;
+}
+
+.admin-run-all {
+  width: auto;
+  padding: 0.6rem 1.5rem;
+}
+
+/* Summary bar */
+.admin-summary {
+  display: flex;
+  gap: 1px;
+  background-color: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.admin-summary.all-passed {
+  border: 1px solid var(--green);
+}
+
+.admin-summary.has-failures {
+  border: 1px solid var(--rose);
+}
+
+.summary-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background-color: #ffffff;
+}
+
+.summary-count {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.summary-label {
+  font-size: 0.75rem;
+  color: var(--ink3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+}
+
+.summary-passed .summary-count {
+  color: var(--green);
+}
+
+.summary-failed .summary-count {
+  color: var(--rose);
+}
+
+.summary-errors .summary-count {
+  color: var(--amber);
+}

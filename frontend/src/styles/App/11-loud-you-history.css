@@ -1,0 +1,281 @@
+/* Loud "you are in history" band — bold year, amber, with a jump-to-current. */
+.bnf-case-pastyear {
+  margin-top: 8px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.bnf-case-pastyear strong { font-size: 13.5px; font-weight: 700; }
+
+.bnf-case-pastyear-jump {
+  display: block;
+  margin-top: 3px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.bnf-case-years {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.bnf-case-year {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  color: var(--ink2);
+  cursor: pointer;
+}
+
+.bnf-case-year:hover { background: var(--page); color: var(--ink); }
+
+.bnf-case-year-active {
+  background: var(--page);
+  color: var(--ink);
+  font-weight: 600;
+  cursor: default;
+}
+
+/* The active row while viewing history — the year itself reads bold amber. */
+.bnf-case-year-past .bnf-case-year-label {
+  color: var(--amber);
+  font-weight: 700;
+}
+
+.bb-nav { display: flex; flex-direction: column; gap: 3px; }
+
+.bb-nav-item {
+  padding: 9px 11px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--ink2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bb-nav-item:hover { background: #f5f8fc; }
+
+.bb-nav-item.active {
+  background: #eef3fa;
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.bb-nav-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--rose);
+  border-radius: 20px;
+  padding: 1px 7px;
+}
+
+.bb-readiness {
+  margin-top: auto;
+  background: #f6f8fb;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 13px;
+}
+
+.bb-readiness-label { font-size: 11px; color: #8b95a3; font-weight: 500; margin-bottom: 7px; }
+.bb-readiness-pct { font-size: 22px; font-weight: 600; }
+
+.bb-readiness-track {
+  height: 6px;
+  background: #e6eaf0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 7px;
+}
+
+.bb-readiness-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+.bb-green-bg { background: var(--green); }
+.bb-amber-bg { background: var(--amber); }
+.bb-rose-bg { background: var(--rose); }
+
+.bb-content { flex: 1; min-width: 0; padding-left: 1.25rem; }
+
+.bb-tab-page { padding: 4px 0 40px; }
+
+.bb-tab-title { font-size: 21px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 4px; }
+
+/* Overview */
+.bb-overview-cols { display: flex; gap: 18px; align-items: flex-start; }
+
+.bb-panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 20px 22px;
+}
+
+.bb-panel-wide { flex: 1.3; }
+.bb-overview-side { flex: 1; display: flex; flex-direction: column; gap: 18px; }
+
+.bb-panel-title { font-weight: 600; font-size: 14.5px; margin-bottom: 3px; }
+.bb-panel-sub { font-size: 12px; color: #8b95a3; margin-bottom: 16px; }
+
+.bb-account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f3f5f7;
+}
+
+.bb-account-label { font-size: 12.5px; color: var(--ink2); width: 160px; flex: 0 0 160px; }
+
+.bb-account-value {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px 4px;
+}
+
+.bb-account-value:hover { background: #f5f8fc; }
+.bb-account-value.bb-empty { color: var(--ink3); }
+
+.bb-account-input {
+  flex: 1;
+  border: 1px solid var(--blue);
+  border-radius: 6px;
+  padding: 3px 6px;
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+}
+
+.bb-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.bb-badge-green { background: var(--green-bg); color: var(--green); }
+.bb-badge-amber { background: var(--amber-bg); color: var(--amber); }
+.bb-badge-rose { background: var(--rose-bg); color: var(--rose); }
+.bb-badge-violet { background: var(--violet-bg); color: var(--violet); }
+.bb-badge-gray { background: var(--border-soft); color: var(--ink2); }
+
+.bb-limit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid #f3f5f7;
+}
+
+.bb-limit-label { font-size: 12.5px; color: var(--ink2); }
+.bb-limit-value { font-size: 13px; font-weight: 600; }
+
+.bb-next-btn { margin-bottom: 9px; font-size: 13.5px; padding: 11px; }
+
+/* SOV grid */
+.bb-sov-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.bb-client-banner {
+  background: #f4f0fc;
+  border: 1px solid #ddd2f2;
+  border-radius: 11px;
+  padding: 13px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bb-client-banner-left { display: flex; align-items: center; gap: 11px; }
+
+.bb-client-banner-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--violet);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex: 0 0 26px;
+}
+
+.bb-client-banner-title { font-weight: 600; font-size: 13.5px; color: #4a3185; }
+.bb-client-banner-sub { font-size: 12px; color: #7a6aa3; }
+
+.bb-dev-notice {
+  background: #eef1f6;
+  border: 1px solid #d6dde7;
+  border-radius: 11px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  font-size: 12.5px;
+  color: #3a4452;
+  line-height: 1.5;
+}
+
+.bb-dev-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--ink);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex: 0 0 26px;
+}
+
+.bb-dev-notice-modal { margin: 0 0 20px; font-size: 12px; }
+
+.bb-sov-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 13px;
+}
+
+.bb-legend { display: flex; align-items: center; gap: 14px; font-size: 12px; }
+
+.bb-legend-item { display: flex; align-items: center; gap: 6px; color: var(--ink2); }
+
+.bb-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.bb-swatch-verified { background: #fff; border: 1px solid var(--input-border); }
+.bb-swatch-low { background: var(--amber-bg); border: 1px solid #ecd9a8; }
+.bb-swatch-missing { background: var(--rose-bg); border: 1px solid #f1c3bd; }
+.bb-swatch-client { background: var(--violet-bg); border: 1px solid #d6c9f3; }

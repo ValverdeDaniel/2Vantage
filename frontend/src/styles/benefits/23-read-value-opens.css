@@ -1,0 +1,288 @@
+/* D-122: a read value opens its file from any screen. A pin shows on hover;
+   the cell's own click stays the grid's (editing, selecting). */
+.bnf-has-src { position: relative; }
+.bnf-src-pin {
+  position: absolute; top: 1px; right: 1px; display: none; align-items: center;
+  border: 1px solid var(--border); background: #fff; border-radius: 4px;
+  font: inherit; font-size: 10.5px; line-height: 1; padding: 2px 4px;
+  color: var(--blue); cursor: pointer; z-index: 1;
+}
+.bnf-has-src:hover > .bnf-src-pin,
+.bnf-src-pin:focus-visible { display: inline-flex; }
+.bnf-staged-absent {
+  display: block; font-size: 10.5px; font-weight: 600; color: var(--rose);
+}
+
+/* D-126: "All proposals" on the Documents file row, and the proposal files
+   it puts in view (the file in the viewer keeps `.active`). */
+.bb-doc-tab.bnf-doc-all { font-weight: 600; }
+.bb-doc-tab.bnf-doc-inscope { background: var(--blue-bg); border-color: #b9cdee; }
+
+/* D-164 (documents-find-any-file.md): the viewer's file bar. It names the
+   file on screen and, after F opened a value read in another file, says why,
+   with the way back to the file the scanned data is about. It wraps; a long
+   file name never truncates. */
+.bnf-file-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+  margin: 8px 0 6px; padding: 6px 10px;
+  border: 1px solid var(--border); border-radius: 6px; background: #fff;
+  font-size: 13px;
+}
+.bnf-file-bar-name { font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.bnf-file-bar-meta { color: var(--ink2); }
+.bnf-file-bar.is-elsewhere { background: var(--blue-bg); border-color: #b9cdee; }
+.bnf-file-bar-why { flex: 1 1 260px; color: var(--ink2); }
+.bnf-file-bar .btn { flex: 0 0 auto; }
+/* A value read from a file other than the grid's: F moves the viewer there. */
+.bnf-cell-elsewhere .bb-cell-text { text-decoration-color: rgba(84, 96, 112, 0.6); }
+/* The viewer host only names the file on screen; layout never sees it. */
+.bnf-viewer-host { display: contents; }
+.bnf-frl-file { color: var(--ink3); }
+
+/* The file's own window: the deal's files, one click each (D-164). */
+.dw-what { margin-top: 4px; font-size: 13px; color: var(--ink2); }
+.dw-files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.dw-file-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--border); border-radius: 6px; background: #fff;
+  padding: 3px 9px; font: inherit; font-size: 12px; color: var(--ink2); cursor: pointer;
+}
+.dw-file-btn:hover { border-color: var(--blue); color: var(--ink); }
+.dw-file-btn.is-inscope { background: var(--blue-bg); }
+.dw-file-btn.is-on {
+  border-color: var(--navy); color: var(--navy); font-weight: 600; background: var(--blue-bg);
+}
+.dw-file-bucket { font-size: 10.5px; color: var(--ink3); text-transform: uppercase; }
+
+/* Follow-ups from Vantage on the client's link (D-142, review-hub.md R4):
+   the handoff's `cr-fu-*` cards. */
+.bnf-fu-list { display: flex; flex-direction: column; gap: 12px; }
+.bnf-fu { display: flex; flex-direction: column; gap: 9px; }
+.bnf-fu-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bnf-fu-h b { font-size: 14px; }
+.bnf-fu-badge {
+  font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px;
+  background: var(--page); color: var(--ink2); white-space: nowrap;
+}
+.bnf-fu-badge-need { background: var(--amber-bg); color: var(--amber); }
+.bnf-fu-badge-done { background: var(--green-bg); color: var(--green); }
+.bnf-fu-note {
+  background: #eef3fa; border-radius: 12px 12px 12px 3px;
+  padding: 9px 12px; font-size: 13px; line-height: 1.45; color: var(--ink);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.bnf-fu-asked {
+  align-self: flex-end; max-width: 80%;
+  background: var(--violet-bg); border-radius: 12px 12px 3px 12px;
+  padding: 9px 12px; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.bnf-fu-note span, .bnf-fu-asked span {
+  display: block; font-size: 11px; font-weight: 700; color: var(--navy); margin-bottom: 2px;
+}
+.bnf-fu-asked span { color: var(--violet); }
+.bnf-fu-ask { display: flex; flex-direction: column; gap: 6px; }
+.bnf-fu-ask textarea {
+  min-height: 60px; border: 1px solid #c5ccd6; border-radius: 8px;
+  padding: 8px 10px; font: inherit; font-size: 13px;
+}
+.bnf-fu-ask div { display: flex; gap: 6px; }
+.bnf-fu-ask .btn { flex: 0 0 auto; }
+.bnf-fu-askbtn {
+  align-self: flex-start; border: 1.5px solid var(--violet); color: var(--violet);
+  background: #fff; border-radius: 999px; padding: 5px 14px;
+  font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.bnf-fu-askbtn:hover { background: var(--violet-bg); }
+.bnf-fu-file { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.bnf-fu-inline {
+  background: #eef3fa; border-left: 3px solid var(--navy); border-radius: 0 8px 8px 0;
+  padding: 6px 10px; font-size: 12.5px; color: var(--ink); margin: 2px 0 4px;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.bnf-fu-inline span { display: block; font-size: 10.5px; font-weight: 700; color: var(--navy); }
+/* `.bb-portal-field` grows to 220px in a row of fields; in a card's column
+   that basis became a 220px-tall gap under the answer. */
+.bnf-fu .bb-portal-field { flex: 0 0 auto; }
+/* D-124 slice 11: a value we read, on the client's link. */
+.bnf-we-read { font-size: 11.5px; color: var(--ink2); margin: 0 0 4px; font-style: italic; }
+/* "＋ Ask" (D-142, R5): a missing answer into the request tray. */
+.bnf-ask-btn {
+  font: inherit; font-size: 11.5px; font-weight: 600; padding: 1px 8px; margin-left: 6px;
+  border: 1px dashed var(--violet); border-radius: 999px; background: var(--card);
+  color: var(--violet); cursor: pointer; white-space: nowrap;
+}
+.bnf-ask-btn:hover { background: var(--violet-bg); }
+.bnf-in-tray { font-size: 11.5px; color: var(--violet); margin-left: 6px; white-space: nowrap; }
+
+/* The export check before every download (D-143, R6). */
+.bnf-xcheck { max-width: 640px; width: 100%; }
+.bnf-xcheck-row { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.bnf-xcheck-row:last-child { border-bottom: 0; }
+.bnf-xcheck-icon { color: var(--amber); flex: 0 0 auto; }
+.bnf-xcheck-text { flex: 1 1 auto; font-size: 13px; color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
+.bnf-xcheck-where { display: block; font-size: 11px; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.04em; }
+.bnf-xcheck-people { display: block; font-size: 12px; color: var(--ink2); margin-top: 2px; }
+.bnf-xcheck-stale { background: var(--amber-bg); color: var(--amber); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; margin-bottom: 6px; }
+.bnf-xcheck-footer { display: flex; justify-content: flex-end; gap: 8px; }
+.bnf-xcheck-footer .btn { flex: 0 0 auto; }
+
+/* Export readiness cards over the census Review view (D-143). */
+.bnf-xready { margin-bottom: 14px; }
+.bnf-xready-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
+.bnf-xready-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.bnf-xready-card {
+  display: flex; flex-direction: column; gap: 8px; padding: 10px 12px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px; cursor: pointer;
+}
+.bnf-xready-card:hover { border-color: var(--ink3); }
+.bnf-xready-card-on { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(23, 58, 99, 0.1); }
+.bnf-xready-name b { display: block; font-size: 13.5px; }
+.bnf-xready-name span { font-size: 11.5px; color: var(--ink3); }
+.bnf-xready-foot { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.bnf-xready-foot .btn { flex: 0 0 auto; }
+.bnf-xready-status { font-size: 12px; font-weight: 600; color: var(--ink2); }
+.bnf-xready-ok { color: var(--green); }
+.bnf-xready-gap { color: var(--rose); }
+.bnf-lens-gaps { margin-top: 12px; }
+.bnf-lens-gaps .rr-queue { max-height: 420px; }
+
+/* The RFP grid's pills (D-143). */
+.bnf-rfp-pill {
+  display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px;
+  border-radius: 999px; margin-right: 6px; white-space: nowrap;
+}
+.bnf-rfp-pill-ok { background: var(--green-bg); color: var(--green); }
+.bnf-rfp-pill-warn { background: var(--amber-bg); color: var(--amber); }
+
+/* Questionnaire ▸ Review (D-145, R7): the queue, and the filled form beside
+   what is wrong with it. */
+.bnf-q-review .bnf-client-review-bar { flex-wrap: wrap; }
+.bnf-q-review-actions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+.bnf-q-review-actions .btn { flex: 0 0 auto; }
+.bnf-qcheck { border: 1px solid var(--border); border-radius: 10px; background: var(--card); margin: 12px 0; overflow: hidden; }
+.bnf-qcheck-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.bnf-qcheck-head .btn { flex: 0 0 auto; margin-left: auto; }
+.bnf-qcheck-body { display: grid; grid-template-columns: minmax(0, 3fr) minmax(220px, 2fr); min-height: 420px; }
+.bnf-qcheck-pdf { min-width: 0; height: 640px; overflow: auto; border-right: 1px solid var(--border); }
+.bnf-qcheck-list { padding: 10px 14px; min-width: 0; }
+.bnf-qcheck-ok { color: var(--green); }
+@media (max-width: 760px) {
+  .bnf-qcheck-body { grid-template-columns: minmax(0, 1fr); }
+  .bnf-qcheck-pdf { height: 460px; border-right: 0; border-bottom: 1px solid var(--border); }
+}
+.bnf-q-signauth { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: var(--ink2); margin-top: 8px; }
+.bnf-q-signauth input { margin-top: 2px; }
+.bnf-q-origin { font-size: 11px; color: var(--ink3); margin-left: 6px; white-space: nowrap; }
+
+/* Review & requests, the deal board (D-146, R8): three lanes and Next. */
+.bb-nav-badges { display: inline-flex; gap: 3px; margin-left: auto; }
+.bb-nav-badges .bb-nav-badge { margin-left: 0; }
+.bb-nav-badge-violet { background: var(--violet); }
+/* U2 (review-requests-one-way.md §6a): a section whose client answers or
+   questions wait to be reviewed wears a violet ↩ beside its own badge. */
+.bb-nav-return { color: var(--violet); font-weight: 700; font-size: 12px; line-height: 1; align-self: center; }
+.bnf-board-head { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; margin-bottom: 12px; }
+.bnf-board-head .btn { flex: 0 0 auto; }
+/* The deal's readiness in the board's head (U3d2): the Overview's own. */
+.bnf-board-ready {
+  display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0;
+  margin-left: auto; font-size: 12.5px;
+}
+.bnf-board-ready-bar {
+  display: inline-block; width: 120px; max-width: 30vw; height: 6px; border-radius: 3px;
+  background: var(--page); overflow: hidden;
+}
+.bnf-board-ready-bar i { display: block; height: 100%; background: var(--green); }
+.bnf-board-ready-pct { color: var(--ink); }
+.bnf-board-next { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px 14px; border: 1px solid var(--violet); background: var(--violet-bg); border-radius: 10px; margin-bottom: 14px; font-size: 13px; color: var(--ink); }
+.bnf-board-next-clear { border-color: var(--border); background: var(--card); color: var(--green); }
+.bnf-board-next-label { font-weight: 700; color: var(--violet); }
+.bnf-board-next-kind { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink3); }
+.bnf-board-next-text { flex: 1 1 260px; min-width: 0; overflow-wrap: anywhere; }
+.bnf-board-next-actions { display: flex; gap: 6px; }
+.bnf-board-next-actions .btn { flex: 0 0 auto; }
+.bnf-board-next-blocks_carrier { border-color: var(--rose); background: var(--rose-bg); }
+.bnf-board-next-link_expiring { border-color: var(--amber); background: var(--amber-bg); }
+.bnf-board-lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+@media (max-width: 980px) { .bnf-board-lanes { grid-template-columns: minmax(0, 1fr); } }
+.bnf-board-lane { border: 1px solid var(--border); border-radius: 10px; background: var(--page); padding: 10px; min-width: 0; }
+.bnf-board-lane-head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 13px; }
+.bnf-board-lane-head .bb-nav-badge { margin-left: 0; }
+.bnf-board-lane-action { margin-left: auto; font-size: 12px; font-weight: 400; }
+.bnf-views-all { margin-left: auto; }
+.bnf-board-empty { padding: 4px 2px; }
+.bnf-board-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; min-width: 0; }
+.bnf-board-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.bnf-board-section { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink3); }
+.bnf-board-card-text { font-size: 13px; color: var(--ink); margin: 4px 0; overflow-wrap: anywhere; }
+.bnf-board-card-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.bnf-board-lane .rr-request { margin-bottom: 8px; }
+.bnf-board-lane .rr-request-actions { flex-wrap: wrap; }
+.bnf-board-lane .rr-request-actions .btn { flex: 0 0 auto; }
+.bnf-board-reqfoot { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.bnf-board-chip { font-size: 11.5px; color: var(--violet); background: var(--violet-bg); border-radius: 10px; padding: 1px 8px; }
+.bnf-board-chip-warn { color: var(--amber); background: var(--amber-bg); }
+/* The tab's View row (D-171): Review greys out while nothing is left. */
+.bnf-board-views .bnf-viewtab:disabled { opacity: 0.5; cursor: default; border-color: var(--border); color: var(--ink3); }
+.bnf-board-queuehead { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.bnf-board-sections { flex-wrap: wrap; }
+/* The client's open questions (D-159, client-responses-dashboard.md §2.3):
+   rose wherever one waits on our answer -- the nav's "?", a card's "? N",
+   Next's question, and the list above the lanes. */
+.bb-nav-question {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 50%; align-self: center;
+  background: var(--rose); color: #fff; font-size: 11px; font-weight: 800; line-height: 1;
+}
+.bnf-board-next-question { border-color: var(--rose); background: var(--rose-bg); }
+.bnf-board-next-question .bnf-board-next-kind { color: var(--rose); }
+.bnf-q-chip {
+  display: inline-flex; align-items: center; padding: 0 7px; border-radius: 999px;
+  background: var(--rose); color: #fff; font-size: 11px; font-weight: 800; line-height: 18px;
+  white-space: nowrap;
+}
+/* Beside the count, on the right of the card's head. */
+.bnf-board-card-head .bnf-q-chip { margin-left: auto; }
+.bnf-board-sections .bnf-q-chip { margin-left: 4px; }
+.bnf-board-card-q { border-left: 3px solid var(--rose); }
+.bnf-board-chip-q { color: #fff; background: var(--rose); font-weight: 700; }
+.bnf-board-questions {
+  border: 1px solid var(--rose); background: var(--rose-bg); border-radius: 10px;
+  padding: 10px 12px; margin-bottom: 14px;
+}
+.bnf-board-questions-head {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  margin-bottom: 8px; font-size: 13.5px; color: var(--ink);
+}
+.bnf-q-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--rose); color: #fff; font-size: 14px; font-weight: 800;
+}
+.bnf-board-question {
+  display: flex; gap: 12px; align-items: center; justify-content: space-between;
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 10px; margin-bottom: 6px; min-width: 0;
+}
+.bnf-board-question-body { flex: 1 1 auto; min-width: 0; }
+.bnf-board-question-where {
+  display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap;
+  font-size: 13px; overflow-wrap: anywhere;
+}
+.bnf-board-question-text { font-size: 13px; color: var(--ink); margin: 3px 0; overflow-wrap: anywhere; }
+.bnf-board-question .btn { flex: 0 0 auto; }
+@media (max-width: 640px) {
+  .bnf-board-question { flex-direction: column; align-items: stretch; }
+}
+
+/* Documents opened from a review queue (U3d, review-requests-one-way.md
+   §2 E): the way back to the item it left. */
+.bnf-back-review {
+  display: inline-flex; align-items: center; gap: 4px; margin: 0 0 8px;
+  padding: 3px 10px; border: 1px solid var(--violet); border-radius: 999px;
+  background: var(--violet-bg); color: var(--violet);
+  font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.bnf-back-review:hover { background: #fff; }
+/* The Advisor's Pages layout (D-221): .bb-grid-card has no padding of its own. */
+.bnf-advisor-pages { padding: 10px 14px 14px; }

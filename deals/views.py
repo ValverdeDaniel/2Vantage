@@ -1,6 +1,7 @@
 """Clients and deals API (plan.md §7.3). Thin: parse → service or selector → respond."""
 
 from django.contrib.auth import get_user_model
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.dateparse import parse_date
 from rest_framework import status
@@ -9,9 +10,11 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from . import selectors, services
+from . import activity, lifecycle, selectors, services
 from .downloads import file_response
-from .models import AgencySettings, Client, Deal
+from .models import Activity, AgencySettings, Client, Deal
+
+MAX_ID = 2**63 - 1  # a bigger id is not a row: 404, never a database error
 
 
 class Pages(PageNumberPagination):
@@ -56,7 +59,7 @@ class ClientListView(APIView):
         client, deal = services.create_client(
             request.user,
             name=data.get('name', ''),
-            relationship=data.get('relationship') or 'new',
+            relationship=data.get('relationship') or lifecycle.PROSPECT,
             effective_date=_date(data.get('effective_date'), 'effective_date'),
             requested_lines=data.get('requested_lines') or [],
             owner=_user(data.get('owner_id'), 'owner_id'),
@@ -73,7 +76,9 @@ class ClientDetailView(APIView):
 
     def patch(self, request, pk):
         get_object_or_404(Client, pk=pk)
-        changes = {key: request.data[key] for key in ('name', 'relationship', 'notes') if key in request.data}
+        if 'relationship' in request.data:  # the status has its own door (§7.3)
+            raise ValidationError({'relationship': [f'Change the status through clients/{pk}/status/.']})
+        changes = {key: request.data[key] for key in ('name', 'notes') if key in request.data}
         if 'owner_id' in request.data:
             changes['owner'] = _user(request.data['owner_id'], 'owner_id')
         client = services.update_client(request.user, pk, **changes)
@@ -84,6 +89,21 @@ class ClientDetailView(APIView):
             return Response({'detail': 'Only an admin can delete a client.'}, status=status.HTTP_403_FORBIDDEN)
         services.delete_client(request.user, pk)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ClientStatusView(APIView):
+    """POST clients/{id}/status/ {to}: Convert to client, Back to prospect, or a classification fix (§5.1, §7.3).
+    Answers the client detail; a refused move is a 409 with its sentence."""
+
+    def post(self, request, pk):
+        if pk > MAX_ID:
+            raise Http404
+        get_object_or_404(Client, pk=pk)
+        to = request.data.get('to')
+        if not isinstance(to, str) or not to:
+            raise ValidationError({'to': ['Choose the status to move to.']})
+        services.set_status(request.user, pk, to)
+        return Response(selectors.client_detail(Client.objects.select_related('owner').get(pk=pk)))
 
 
 class DealView(APIView):
@@ -126,8 +146,29 @@ class DealActivityView(APIView):
     def get(self, request, pk):
         deal = get_object_or_404(Deal, pk=pk)
         pager = Pages()
-        page = pager.paginate_queryset(deal.activity.select_related('actor').all(), request, view=self)
+        page = pager.paginate_queryset(selectors.activity_feed(deal), request, view=self)
         return pager.get_paginated_response([selectors.activity_row(row) for row in page])
+
+
+class ActivityRevertView(APIView):
+    """POST activity/{id}/revert/: puts back the row's earlier values, once (§3.7, O.3.2). Refusals answer 409."""
+
+    def post(self, request, pk):
+        if pk > MAX_ID:
+            raise Http404
+        try:
+            row = activity.revert(pk, request.user)
+        except Activity.DoesNotExist as exc:
+            raise Http404 from exc
+        return Response(
+            {
+                'activity_id': row.id,
+                'reverted_id': row.reverts_id,
+                'deal_id': row.deal_id,
+                'summary': row.summary,
+                'changes': row.changes,
+            }
+        )
 
 
 class UserListView(APIView):

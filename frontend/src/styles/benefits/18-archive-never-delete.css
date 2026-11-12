@@ -1,0 +1,270 @@
+/* ===== Archive, never delete (2026-10-19) ===== */
+/* The Archive button and its ⓘ sit together; the ⓘ carries the same tooltip
+   (shared/archiveCopy.js) so hovering either explains it. */
+.bnf-archive-ctl { display: inline-flex; align-items: center; gap: 4px; }
+.bnf-archive-hint {
+  font-size: 12px;
+  color: var(--ink3);
+  cursor: help;
+  user-select: none;
+}
+/* The confirm and the banner read neutral, not rose: archiving is not a loss. */
+.bnf-archive-confirm,
+.bnf-archive-banner {
+  background: var(--page);
+  color: var(--ink);
+  border-color: var(--input-border);
+}
+.bnf-archive-banner .btn { flex: 0 0 auto; white-space: nowrap; }
+.bnf-archive-confirm-text { flex: 1; line-height: 1.4; }
+/* Dashboard rows: a quiet text button that never opens the row. */
+.bnf-th-archive { display: flex; justify-content: flex-end; align-items: center; }
+.bnf-row-archive {
+  padding: 2px 8px;
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink3);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.bnf-row-archive:hover { color: var(--ink); border-color: var(--ink3); }
+.bnf-row-archive:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+.bnf-archived-link {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--blue);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.bnf-archived-link:hover { text-decoration: underline; }
+.bnf-clients-headbtns { display: flex; align-items: center; gap: 14px; }
+/* Benefits ▸ Archived */
+.bnf-archived-section { margin: 18px 0 26px; }
+.bnf-archived-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bnf-archived-table th {
+  text-align: left; font-weight: 600; color: var(--ink3);
+  padding: 8px 10px; border-bottom: 1px solid var(--border);
+}
+.bnf-archived-table td { padding: 9px 10px; border-bottom: 1px solid var(--border-softer); vertical-align: top; }
+.bnf-archived-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+.bnf-archived-act { text-align: right; white-space: nowrap; }
+.bnf-archived-badge { margin-left: 8px; }
+@media (max-width: 640px) {
+  .bnf-archived-table th:nth-child(3), .bnf-archived-table td:nth-child(3) { display: none; }
+}
+
+/* ===== CONCESSIONS & BUNDLING (D-040) ===== */
+/* The variant chips. Violet = "we negotiated this"; superseded is muted —
+   the original is still reachable, just no longer the live offer. */
+.bnf-chip-concession { background: var(--violet); color: #fff; }
+/* B5/R7: the grid's re-read chips (their consumer is phase 16). Unseen = the
+   latest full read did not return this plan; stale = its source was re-read
+   since this priced version or copy was made. */
+.bnf-chip-unseen { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber); }
+.bnf-chip-stale { background: var(--rose-bg); color: var(--rose); border: 1px solid var(--rose); }
+/* D-051: the carrier says this plan fails minimum value or Medicare
+   Part D creditable coverage. Rose because it is the one chip on a plan
+   header that means STOP, not "note this". */
+.bnf-chip-noncompliant { background: var(--rose); color: #fff; }
+/* Phase 10e: some of this plan's design was read from its SBC. */
+.bnf-chip-sbc { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); }
+.bnf-chip-superseded {
+  background: var(--card);
+  color: #8b95a3;
+  border: 1px solid var(--border, #e6e8ec);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+/* The meeting's literal ask: an italic "updated 9/8" beside the rates —
+   internal only, never rendered on a client surface. */
+.bnf-conc-updated {
+  font-size: 10.5px;
+  font-style: italic;
+  color: var(--violet);
+  margin-top: 2px;
+}
+.bnf-conc-actions { display: inline-flex; gap: 4px; white-space: nowrap; }
+.bnf-conc-remove { color: var(--rose); }
+.bnf-conc-editing-note {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--violet);
+  margin-right: 6px;
+}
+/* Twin cells are click-to-edit in edit mode (originals stay read-only). */
+.bnf-conc-cell-editable {
+  cursor: pointer;
+  border-bottom: 1px dashed var(--violet);
+  display: inline-block;
+  min-width: 24px;
+}
+.bnf-conc-cell-input {
+  width: 90px;
+  font: inherit;
+  padding: 2px 4px;
+  border: 1px solid var(--violet);
+  border-radius: 4px;
+}
+/* Transposed advisor table: plans as columns. */
+.bnf-transpose-btn { margin-left: auto; }
+.bnf-advisor-transposed th { min-width: 130px; vertical-align: top; }
+.bnf-advisor-transposed .bnf-transposed-label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* Shared bits of the priced-version editors (the modal these started in is
+   long gone — see PRICED-VERSION DRAFTS & COMPOSER below). */
+.bnf-conc-verify {
+  font-size: 12px;
+  color: var(--amber);
+  background: var(--amber-bg);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.bnf-conc-was { color: #8b95a3; font-size: 12px; }
+.bnf-conc-or { font-size: 12px; color: #8b95a3; text-align: center; }
+.bnf-conc-tplrow { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.bnf-conc-total { font-size: 13px; }
+/* The client proposal's premium-holiday credit line (/p/). */
+.bnf-share-card-credit {
+  font-size: 12.5px;
+  color: var(--green);
+  margin: 2px 0 6px;
+}
+
+/* ===== PRICED-VERSION DRAFTS & COMPOSER (D-040 resurfaced 2026-09-08) =====
+   The modal is gone: a draft is a live row/column IN the table, and the
+   composer is a strip docked ABOVE it — the numbers being priced stay
+   visible while they are being priced. */
+.bnf-chip-draft {
+  background: var(--violet-bg);
+  color: var(--violet);
+  border: 1px dashed var(--violet);
+}
+.bnf-chip-bundled {
+  background: var(--green-bg);
+  color: var(--green);
+}
+.bnf-pv-add { padding: 2px 8px; }
+.bnf-pv-credit {
+  display: block;
+  font-size: 11.5px;
+  color: var(--green);
+}
+/* The draft row/column — dashed violet, visibly not-yet-real. */
+.bnf-advisor-table tr.bnf-pv-draftrow td {
+  background: var(--violet-bg);
+  border-top: 1px dashed var(--violet);
+  border-bottom: 1px dashed var(--violet);
+}
+.bnf-advisor-transposed th.bnf-pv-draftcol,
+.bnf-advisor-transposed td.bnf-pv-draftcol {
+  background: var(--violet-bg);
+  border-left: 1px dashed var(--violet);
+  border-right: 1px dashed var(--violet);
+}
+/* The Excel stack (2026-09-08 evening): the SOURCE plan goes pink while a
+   draft is open on it, the FORMULA layer between them is its own blue —
+   deliberately not the current-plan blue — and the draft stays violet.
+   "Red and blue makes purple": original × formulas = draft. */
+.bnf-advisor-table tr.bnf-pv-source td,
+.bnf-advisor-transposed th.bnf-pv-source,
+.bnf-advisor-transposed td.bnf-pv-source {
+  background: var(--rose-bg) !important;
+}
+.bnf-advisor-table tr.bnf-pv-formularow td,
+.bnf-advisor-transposed th.bnf-pv-formulacol,
+.bnf-advisor-transposed td.bnf-pv-formulacol {
+  background: #dceafc;
+  border-top: 1px dashed var(--blue);
+  border-bottom: 1px dashed var(--blue);
+}
+.bnf-advisor-transposed th.bnf-pv-formulacol,
+.bnf-advisor-transposed td.bnf-pv-formulacol {
+  border-top: none;
+  border-bottom: none;
+  border-left: 1px dashed var(--blue);
+  border-right: 1px dashed var(--blue);
+  min-width: 150px;
+}
+.bnf-pv-formula-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: var(--blue);
+}
+.bnf-pv-formula { display: inline-flex; align-items: center; gap: 3px; }
+.bnf-pv-formula-op {
+  font-size: 11.5px;
+  padding: 2px 3px;
+  border: 1px solid #b9d2f0;
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ink);
+  max-width: 92px;
+}
+.bnf-pv-formula-val {
+  width: 64px;
+  font-size: 12px;
+  padding: 2px 4px;
+  border: 1px solid var(--blue);
+  border-radius: 4px;
+}
+.bnf-pv-formula-na { font-size: 11px; color: #9db4d2; font-style: italic; }
+/* Rung 1 — the inline editor living in the draft's plan cell. */
+.bnf-pv-inline { margin-top: 4px; }
+.bnf-pv-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.bnf-pv-inline-label { font-size: 12px; color: var(--violet); }
+.bnf-pv-inline-btn {
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.bnf-pv-inline-btn:hover { border-color: var(--violet); }
+.bnf-pv-inline-ok { color: var(--green); font-weight: 600; }
+.bnf-pv-inline-note {
+  margin-top: 4px;
+  width: 100%;
+  min-width: 220px;
+  font-size: 12px;
+  padding: 3px 6px;
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+}
+/* The editing note's "fix it in Documents" link. */
+.bnf-pv-doclink {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--blue);
+  cursor: pointer;
+  text-decoration: underline;
+}
+/* Rung 2/3 — the docked composer strip (the bnf-addplan-bar posture). */
+.bnf-pv-composer {
+  border: 1px solid var(--violet);
+  border-radius: 10px;
+  background: #fff;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bnf-pv-composer .btn { flex: 0 0 auto; }

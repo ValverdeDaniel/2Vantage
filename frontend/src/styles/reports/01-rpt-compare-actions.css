@@ -1,0 +1,82 @@
+.rpt-compare-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.rpt-close {
+  border: 0;
+  background: transparent;
+  color: var(--ink3);
+  font-size: 22px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+}
+
+.rpt-close:hover { color: var(--ink); }
+.rpt-pane {
+  display: flex;
+  flex-direction: column;
+  /* min-WIDTH as well as min-height: a grid item defaults to min-width:auto,
+     so a wide sheet would blow its column out and push the second pane off
+     screen entirely. Both panes must stay exactly half. */
+  min-height: 0;
+  min-width: 0;
+  background: var(--card);
+  padding: 10px 12px;
+}
+
+.rpt-pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 8px;
+  flex: none;
+}
+
+.rpt-pane-head select {
+  font: inherit;
+  font-size: 11.5px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.rpt-pane-scroll {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Dense and monospaced: it is being read against another sheet, not browsed.
+   The census report's own table styling would be far too airy here. */
+.rpt-sheettable {
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+
+.rpt-sheettable td {
+  border: 1px solid var(--border-softer);
+  padding: 2px 6px;
+  white-space: nowrap;
+  color: var(--ink);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rpt-sheetrownum {
+  position: sticky;
+  left: 0;
+  background: var(--page);
+  color: var(--ink3);
+  text-align: right;
+  min-width: 28px;
+}

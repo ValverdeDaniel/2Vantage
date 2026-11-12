@@ -25,11 +25,19 @@ A. the order on the side navbar should be the same as the existing vantage repos
 - **OQ10 Undefined colours.** Undefined tokens (`--muted`, `--accent` and others) rendered as their fallback or inherited colour. Keep that, or use the intended colours? *Default:* keep what rendered. [A.5, F.5 #25, H.6, K.6, L.6, M.5 B27]
 A. keep what rendered
 
+**Slice 6 (FND-2)** (OQ101–OQ110 were added by plan.md v2.0, §16, from OQ2's answer and the check against v1.1)
+- **OQ101 Prospect to client.** (a) A prospect becomes a New client automatically when a plan on its deal is marked sold, or by hand with Convert to client; un-selling undoes only a conversion the sale made; Back to prospect is refused while a plan is sold. (b) New client → Existing client waits with renewals (when the first plan year ends or the first renewal starts); until then a client is Existing only when created as one, for a group the firm already serves, or set by hand while nothing is sold. (c) The old "New clients" view is labelled "Prospects"; won clients list under Clients, with chips New clients and Existing clients. *Default:* yes to all three (CL1–CL12). [OQ2; plan.md §5.1, §13.11]
+- **OQ108 Old constants.** Do the old constants modules import on their own, so plan.md §4's data modules can be generated? *Default:* parse their literals with `ast`; mostly moot from slice 3, when the old app runs in its own Compose project (Q.5). Answered by the developer. [v1.1 §16 #2]
+
 **Slice 7 (ADV-1)**
 - **OQ11 Renewal stars.** Once a line has stars, must its renewal have its own star to print? *Default:* yes, the old rule. [F-Q8]
 - **OQ12 Several sold plans.** May a line have several sold plans? The old app un-sold the other. *Default:* allowed. [J-Q9]
 - **OQ13 Stop-loss order.** May stop-loss plans be reordered with arrows and slot picks? *Default:* no, the old rule (F49). [J-Q5]
 A. yes
+- **OQ103 Rate-basis examples.** The rate bases with no golden deal (`volume_1000`, `weekly_10`, `payroll_100`) need one worked example each, as v1.1's R2.4 asked. May Stephanie sign them before slice 27, which prints them, while slice 7 pins provisional examples? This adds a gate on Stephanie beyond V.4's GD1 and GD2 keys. *Default:* yes. Answered by Stephanie. [v1.1 R2.4; plan.md §12.6]
+
+**Slice 8 (ADV-2)**
+- **OQ110 Copying a plan design.** Copy a plan design from an earlier deal (v1.1's R2.1)? No porting part lists it. *Default:* not in this build; carrying last year's plans waits with renewals (OQ1). [v1.1 R2.1]
 
 **Slice 10 (ADV-4)**
 - **OQ14 Carrier nicknames.** Should "UHC" find UnitedHealthcare in the finder and in Find on Documents? *Default:* yes. [E-Q8]
@@ -55,15 +63,19 @@ A. no; they ask what they replace
 - **OQ22 Member-data screen.** Your D-225 turned the old app's screen off for Claude reads, with a switch to bring it back; D52 here always screened. *Default:* follow D-225: the screen still runs at upload, but reads leave flagged pages out only while `AI_MEMBER_DATA_SCREEN` is on. [D52, D49, D-225]
 - **OQ23 Remove.** Should Remove archive a file (restorable, values stay linked)? Is a true purge ever needed (a client asking for its PHI to be deleted)? *Default:* archive, plus an admin-only purge. [E-Q1]
 - **OQ24 File size.** Do files over 30 MB arrive? *Default:* a 30 MB cap. [E-Q10]
+A. no 30 MB cap
 - **OQ25 Hidden rows.** Should the sheet viewer show hidden rows and columns greyed? *Default:* yes. [E-Q5]
 - **OQ26 File types.** Do wrap, POP and sold-paperwork types wait for close-out and implementation? *Default:* yes. [E-Q6]
-- **OQ27 Invoices.** Are invoices PHI, since list bills name members? *Default:* no. [E-Q4]
+- **OQ27 Invoices.** Are invoices PHI, since list bills name members? *Default:* no. [E-Q4]A. no
 
 **Slice 17 (DOC-3)**
 - **OQ28 What needs approval.** Only values Claude doubted or the locator could not find (the old app), or every value Claude read (2V's plan)? And Claude never confirms a value itself (D-119)? *Default:* the old meaning; a person always applies. [E-Q2, D-Q6]
+A. only the values claude doubted need approval, but even unapproved values shouldn't stop the user from continuing. just give a little flag saying X number of things should be reviewed
 
 **Slice 18 (AI-1)**
 - **OQ29 The BAA and the key.** Use only the Foobalabs org's key, with real files only after Anthropic confirms in writing that tools, inline files, effort and caching are covered? Statements too, after that? *Default:* synthetic files until then; statements follow OQ6. [D-Q2, H-Q13]
+A. ignore this we are good to test with live data in this version, all prerequisites have been met.
+
 - **OQ30 Printed tier counts.** With no census, should Claude propose a quote's printed tier counts, unticked: as the line's figure, or per current plan when printed per plan? *Default:* yes. [D-Q7]
 
 **Slice 20 (AI-3)**
@@ -78,10 +90,16 @@ A. no; they ask what they replace
 **Slice 24 (AI-6)**
 - **OQ34 AI budget.** Should only admins change a deal's AI budget? *Default:* yes. [D-Q12]
 
+**Slice 69 (STG-1)**
+- **OQ105 Staging.** v1.1's M2, staging, was never built and Part P has no slice for it, though V.2 runs Gates B and C on staging. Add slice 69 STG-1 after slice 16, with slice 47 and Milestone 1 waiting on it? *Default:* yes (plan.md §11.1, §13.2). [v1.1 M2]
+
 **Slice 25 (PRO-1)**
+- **OQ102 "+ Plan" and "+ Package".** v1.1's "+ Plan" prompt (is a second alternate for the same current plan an option, or bought together?) and its member-built "+ Package" dialog have no porting row; F134 leaves them to the Proposal section. *Default:* keep both as 2V built them; slice 25 places them (F134). [v1.1; F134]
 - **OQ35 Drafts.** Files not yet issued carry Draft, option numbers are stamped only at Issue, and an issue stores all three files? *Default:* yes. [J-Q3]
 - **OQ36 Option numbers.** Keep the old per-line "Option n" (renewals numbered; current plans and priced versions not) instead of C/R/P labels? *Default:* yes. [J-Q8]
 - **OQ37 Recommending a current plan.** Keep your 2026-11-10 rule ("keep" means recommend the renewal; kept lines need no pick), or allow it as the old app did? *Default:* your rule. [J-Q4]
+
+A. allow it as as the old app did
 
 **Slice 26 (PRO-2)**
 - **OQ38 Renewal letter figures.** Show the carrier's renewal offer ($/yr, % change) in the renewal blocks (J65) and on the Overview chip (M20)? *Default:* yes. [M-Q8]
@@ -89,6 +107,7 @@ A. no; they ask what they replace
 **Slice 27 (PRO-3)**
 - **OQ39 Hidden carriers.** Does a carrier hidden on Markets checked also leave Compare and All Plans, labelled on screen? *Default:* yes. [J-Q11]
 - **OQ40 Stephanie's Excel review.** Her marked-up rows and colours, the disclaimer wording, and whether plan notes, telehealth and Rx mail order print. *Default:* the old formats. [plan.md §16 #3–#5, J.6.11]
+- **OQ104 Lasers on client files.** Print laser liability as amounts and list lasers by position, never the claimant ids or initials in `sl_lasers`, which the old stop-loss sheet printed? *Default:* yes (plan.md §3.8, §4.3, §9.13). Also changes slice 36. [v1.1; J.4]
 - **OQ41 Firm pages and "Prepared by".** Logo, colour and contact in Django admin; About, figures, calendar and team in an in-app drawer; "Prepared by" from the agent-name rule? *Default:* yes. [J-Q7]
 
 **Slice 33 (PRO-9)**
@@ -106,6 +125,7 @@ A. no; they ask what they replace
 - **OQ47 Client deletion.** Never (405), or admin-only with no sale and no ledger row? *Default:* never; archive instead. [M-Q7]
 - **OQ48 Lost reason.** Optional, as on the old screen, or required (plan.md §5.1)? *Default:* optional. [M-Q3]
 - **OQ49 Deal size.** A typed "Potential deal size" in the header? *Default:* yes. [I-Q11]
+- **OQ106 Contact roles.** Keep the old app's eight, or seven without `partner_agent`, whose split partner is marked on the commission split instead (H13, M81)? B13 keeps eight. *Default:* seven (plan.md §4.6). Also changes slice 40. [B13, H13, M81]
 
 **Slice 39 (INT-2)**
 - **OQ50 Blocking errors.** Should error-level checks (bad FEIN, eligible above total) block "Ready to market"? *Default:* no; they warn. [B-Q2]
@@ -133,6 +153,7 @@ A. no; they ask what they replace
 - **OQ62 Nature of Business.** Should Warner's cell print the SIC code, or a new intake description? *Default:* the SIC code. [K-Q8]
 - **OQ63 Readiness cards and lens chips.** Keep both, or merge them (X-163)? *Default:* both. [K-Q9]
 - **OQ64 Universal census.** It leaves the packet when every picked carrier has its own format and "Other carriers" is empty (reversing D-063 #6)? *Default:* yes. [K-Q13]
+- **OQ109 `emp_class` on Warner.** Does `emp_class` fill both Warner columns S and X? *Default:* checked against the workbook when K's data modules are generated. Answered by the developer. [v1.1 §16 #11]
 
 **Slice 46 (RFP-3)**
 - **OQ65 Returns inbox.** Which address? *Default:* the deal owner's email until one is set. [K-Q4]
@@ -140,6 +161,9 @@ A. no; they ask what they replace
 - **OQ67 Channel and cover.** Benefit Central or email only? Can you supply Mark's cover sample? More funding boxes than fully insured, level-funded and ASO? *Default:* email drafts and the built cover. [K-Q10]
 - **OQ68 RFP outputs.** The RFP page stops offering five files (reversing D-063 #5): the comparison workbook and client proposal come from the Proposal, the stop-loss workbook from the Advisor, and the benefit guide and contribution model are not built (J99, J168). Agreed? Do carriers ever get the proposal? *Default:* agreed; an off-by-default card attaches the latest issued one. [K-Q12, J-Q15]
 - **OQ69 SBCs with no role.** Sent by default? *Default:* listed, unticked, "Role not set". [K-Q15]
+
+**Slice 47 (PHI)**
+- **OQ107 Sign-in lifetime.** How long does a sign-in last (plan.md §3.5)? *Default:* 12 hours (`SESSION_COOKIE_AGE`, built). Settled before the PHI gate. [v1.1 §16 #1]
 
 **Slice 48 (COM-1)**
 - **OQ70 Who saves a split?** *Default:* all-tier users and the deal's owner. [H-Q6]
@@ -179,13 +203,13 @@ A. no; they ask what they replace
 
 **Slice 60 (AGD-1)**
 - **OQ90 Quote-first steps.** Once quotes are in, do intake, questionnaire and RFP steps stop leading, and do typed counts stop "Import the census" leading? *Default:* yes. [I-Q2, I-Q3]
-- **OQ91 Sold deals.** A sold deal shows the commission step and stays on New clients until its effective date. What ends a deal for you? *Default:* as stated. [I-Q4]
+- **OQ91 Sold deals.** A sold deal shows the commission step and stays on New clients until its effective date. What ends a deal for you? *Default (changed by OQ101 c):* the sold deal shows its commission step, or "Sold", and the sale moves its client from Prospects to Clients at once, where its row shows that step (I122 as changed; plan.md §13.11). [I-Q4]
 - **OQ92 Firm-wide marks.** Do Later and Done anyway apply to everyone? *Default:* yes. [I-Q5]
 - **OQ93 Deleting tasks.** May the creator or an admin delete a hand-added task (restorable)? *Default:* yes. [I-Q12]
 
 **Slice 61 (AGD-2)**
 - **OQ94 New meanings.** Progress counts the milestones that apply; "Actions completed" adds ticked tasks; sparklines show real figures; sales compare the same days of last month. *Default:* accept. [I-Q9]
-- **OQ95 Landing page.** New clients first, with the client list under the Clients pill? *Default:* yes. [I-Q10]
+- **OQ95 Landing page.** New clients first, with the client list under the Clients pill? *Default (reworded by OQ101 c):* yes, with the old New clients view labelled Prospects. Prospects lists clients whose status is Prospect, with I86's rows and cards; Clients lists new and existing clients, with chips. Also changes slice 4. [I-Q10]
 
 **Slice 62 (OVW-1)**
 - **OQ96 Waiting banner.** Move "Waiting on" above the facts (X-84)? *Default:* move it; all else keeps the old order. [M-Q9]

@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { formErrorText } from '../../lib/errors';
 import Button from '../../ui/Button';
+import ChipToggles from '../../ui/ChipToggles';
+import Field from '../../ui/Field';
 import Modal from '../../ui/Modal';
-import MultiSelect from '../../ui/MultiSelect';
 import { useToast } from '../../ui/useToast';
 import { enrollmentKeys } from './display';
-import styles from './AdvisorTab.module.css';
 
 const LABELS = { EE: 'EE', ES: 'ES', EC: 'EC', FAM: 'FAM', volume: 'Volume ($)', lives: 'Lives' };
 
 /**
- * Typed enrollment for the line's plans (plan.md §5.5, §8.11). Inputs follow the line's rate basis. Plans bought
- * together in place of one plan each get their share of its people here. Saves all rows at once.
+ * Typed enrollment for the line's plans (plan.md §5.5, §8.14; F85–F92 until slice 13). Inputs follow the line's rate
+ * basis. Plans bought together in place of one plan each get their share of its people here. Saves all rows at once.
  */
 export default function EnrollmentCard({ open, onClose, comparison, preselect, save }) {
   return open ? <Card onClose={onClose} comparison={comparison} preselect={preselect} save={save} /> : null;
@@ -78,32 +78,31 @@ function Card({ onClose, comparison, preselect, save }) {
       open
       size="lg"
       title="Enrollment"
+      sub="Renewals and alternates use the enrollment of the plan they replace unless they have their own. Plans bought together in place of one plan: give each its share of that plan's people."
       onClose={onClose}
       onSubmit={() => submit().catch(() => {})}
       footer={
         <>
-          <Button onClick={copyFirst} disabled={chosen.length < 2}>
+          <Button size="sm" onClick={copyFirst} disabled={chosen.length < 2}>
             Copy first row to all
           </Button>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={save.isPending} disabled={!chosen.length}>
+          <Button size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="sm" type="submit" variant="primary" busy={save.isPending} disabled={!chosen.length}>
             Save
           </Button>
         </>
       }
     >
-      <MultiSelect
-        label="Plans"
-        value={selected}
-        onChange={setSelected}
-        options={plans.map((plan) => ({ value: String(plan.id), label: `${plan.carrier} ${plan.name}` }))}
-        placeholder="Add a plan…"
-      />
-      <p className={styles.hint}>
-        Renewals and alternates use the enrollment of the plan they replace unless they have their own. Plans bought
-        together in place of one plan: give each its share of that plan&apos;s people.
-      </p>
-      <table className={styles.enrollment}>
+      <Field label="Plans" group>
+        <ChipToggles
+          value={selected}
+          onChange={setSelected}
+          options={plans.map((plan) => ({ value: String(plan.id), label: `${plan.carrier} ${plan.name}` }))}
+        />
+      </Field>
+      <table className="bnf-archived-table">
         <thead>
           <tr>
             <th scope="col">Plan</th>
@@ -124,7 +123,7 @@ function Card({ onClose, comparison, preselect, save }) {
               {keys.map((key) => (
                 <td key={key}>
                   <input
-                    className={styles.count}
+                    className="bnf-pk-input bb-mono"
                     inputMode="numeric"
                     aria-label={`${plan.name} ${LABELS[key]}`}
                     value={rowOf(plan).values[key]}
@@ -146,7 +145,11 @@ function Card({ onClose, comparison, preselect, save }) {
           ))}
         </tbody>
       </table>
-      {save.error && <p role="alert">{formErrorText(save.error)}</p>}
+      {save.error && (
+        <div role="alert" className="error-message bb-mt">
+          {formErrorText(save.error)}
+        </div>
+      )}
     </Modal>
   );
 }

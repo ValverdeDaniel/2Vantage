@@ -9,7 +9,7 @@ export async function getMeta() {
   return data;
 }
 
-/** {lines, tiers, stages, funding, document_kinds, document_roles, plans:{groups, fields, line_groups}} */
+/** {lines, tiers, stages, relationships, funding, document_kinds, document_roles, plans, carriers} */
 export function useMeta() {
   return useQuery({ queryKey: META_KEY, queryFn: getMeta, staleTime: Infinity, gcTime: Infinity });
 }
@@ -17,6 +17,9 @@ export function useMeta() {
 // Stage keys with their own behaviour (plan.md §5.1): lost is off the ladder; sold is reached only by a sale.
 export const LOST = 'lost';
 export const SOLD = 'sold';
+
+// The status with its own home view (Prospects); every other status lists under Clients (OQ101 c).
+export const PROSPECT = 'prospect';
 
 /** Label of `key` in a [{key, label}] vocabulary, or the key itself. */
 export function labelOf(list, key, field = 'label') {
@@ -41,14 +44,19 @@ export function manualStages(meta) {
   return stageLadder(meta).filter((stage) => stage.key !== SOLD);
 }
 
-// /api/meta/ has no client-relationship vocabulary yet; use it as soon as it does.
-const RELATIONSHIPS = [
-  { key: 'new', label: 'New' },
-  { key: 'existing', label: 'Existing' },
-];
-
+/** The client statuses (plan.md §5.1), [{key, label, create}]; screens say "Status". */
 export function relationships(meta) {
-  return meta?.relationships || RELATIONSHIPS;
+  return meta?.relationships || [];
+}
+
+/** The statuses a new client may start with (Prospect, Existing client): the server's `create` flag. */
+export function creatableStatuses(meta) {
+  return relationships(meta).filter((status) => status.create);
+}
+
+/** The statuses the Clients view lists (New client, Existing client): every status but Prospect, in meta order. */
+export function clientStatuses(meta) {
+  return relationships(meta).filter((status) => status.key !== PROSPECT);
 }
 
 export function relationshipLabel(meta, key) {

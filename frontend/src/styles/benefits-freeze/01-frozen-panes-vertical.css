@@ -1,0 +1,104 @@
+/* Frozen panes on the vertical plan grids (D-154,
+   PlanningDocs/Benefits/form-keys-and-frozen-grids.md §3): the Proposal grid
+   always, the Advisor's board while it is transposed, and the Documents
+   quotes grid (D-166). The plan header row and the label column stay put
+   while the plans scroll under them.
+
+   The bounded height is what makes any of this work: `position: sticky`
+   resolves against the nearest SCROLLING ancestor, and `.bb-grid-scroll`
+   is one (overflow-x: auto), so without a cap it never scrolls vertically and
+   a sticky header means nothing (the coverage card's .bnf-cvg-scroll recipe).
+   A short line never reaches the cap. Kept out of benefits-grid.css, whose
+   windowing block must set no `position` (WindowingSourceTests). */
+.bb-grid-scroll.bnf-freeze {
+  max-height: calc(100vh - var(--chrome-top) - 32px);
+  overflow: auto;
+  /* useFreezePanes measures both; the keyboard's `nearest` scroll then keeps
+     the cursor cell clear of the frozen header and label column. */
+  scroll-padding-top: var(--freeze-head-h, 0px);
+  scroll-padding-left: var(--freeze-label-w, 0px);
+}
+/* The scroll-padding above already keeps a find hit clear of the frozen
+   label column; the 224px margin Documents gave its hits for that column
+   (benefits-grid.css) would double it here. */
+.bnf-freeze .bnf-cell[data-sf] { scroll-margin-left: 0; }
+/* Documents' focus mode: the grid takes the data panel's leftover height
+   (benefits.css), so the panel never scrolls a second bar around it. */
+.bnf-docs-expanded .bnf-scan-grid > .bb-grid-scroll.bnf-freeze {
+  max-height: none;
+  flex: 0 1 auto;
+  min-height: 0;
+}
+
+/* Sticky cells need their OWN opaque background (the row's does not travel
+   with them), and a collapsed table's borders do not paint on a sticky cell,
+   so the freeze lines are pseudo-elements: a box-shadow line would vanish
+   under the find flash, the Claude flash and the keyboard cursor, which all
+   repaint box-shadow. z-order: value cells (the cursor is 1) < label column 2
+   < header 3 < the corner 4. */
+.bnf-freeze .bnf-compare-table thead th,
+.bnf-freeze .bnf-advisor-transposed thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+/* The label column. `.bnf-compare-table th, td { position: relative }`
+   outranks the plain `.bnf-benefit-col { position: sticky }`, which is why
+   the Benefit column never froze; this outranks both, on frozen scrollers
+   only (the staged review shares the class and is unchanged). */
+.bnf-freeze .bnf-compare-table .bnf-benefit-col,
+.bnf-freeze .bnf-advisor-transposed .bnf-transposed-label,
+.bnf-freeze .bnf-advisor-transposed thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  box-shadow: none;
+}
+.bnf-freeze .bnf-compare-table thead .bnf-benefit-col,
+.bnf-freeze .bnf-advisor-transposed thead th:first-child {
+  z-index: 4;
+}
+.bnf-freeze .bnf-advisor-transposed .bnf-transposed-label { background: var(--card); }
+/* The board tints a hovered row; the frozen label restates it, or the tint
+   stops dead at the freeze line. */
+.bnf-freeze .bnf-advisor-transposed tbody tr:hover .bnf-transposed-label {
+  background: var(--page);
+}
+
+/* The freeze lines: under the header, right of the label column, with a
+   soft shadow over whatever has scrolled beneath. */
+.bnf-freeze .bnf-compare-table thead th::after,
+.bnf-freeze .bnf-advisor-transposed thead th::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--border);
+  box-shadow: 0 2px 4px rgba(15, 29, 45, 0.08);
+  pointer-events: none;
+}
+.bnf-freeze .bnf-compare-table .bnf-benefit-col::before,
+.bnf-freeze .bnf-advisor-transposed .bnf-transposed-label::before,
+.bnf-freeze .bnf-advisor-transposed thead th:first-child::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -1px;
+  width: 1px;
+  background: var(--border);
+  box-shadow: 2px 0 4px rgba(15, 29, 45, 0.08);
+  pointer-events: none;
+}
+
+/* A group heading scrolls with the rows (only the plan header freezes); its
+   label rides the left edge, so "Deductibles & Maximums" stays readable after
+   scrolling right across a wide carrier. */
+.bnf-freeze .bnf-group-label {
+  display: inline-block;
+  position: sticky;
+  left: 10px;
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { errorText, fieldErrors } from '../../lib/errors';
 import { formatMoney } from '../../lib/format';
 import Button from '../../ui/Button';
@@ -6,7 +6,6 @@ import Field from '../../ui/Field';
 import Modal from '../../ui/Modal';
 import TextInput from '../../ui/TextInput';
 import { useToast } from '../../ui/useToast';
-import styles from './AdvisorTab.module.css';
 import { changeText } from './display';
 
 function PackageDialog({ onClose, comparison, existing, create, update }) {
@@ -14,6 +13,7 @@ function PackageDialog({ onClose, comparison, existing, create, update }) {
   const [ids, setIds] = useState(new Set(existing?.plan_ids ?? []));
   const mutation = existing ? update : create;
   const errors = fieldErrors(mutation.error);
+  const groupId = useId();
 
   function toggle(id) {
     setIds((prev) => {
@@ -39,8 +39,10 @@ function PackageDialog({ onClose, comparison, existing, create, update }) {
       onSubmit={() => submit().catch(() => {})}
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={mutation.isPending}>
+          <Button size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="sm" type="submit" variant="primary" busy={mutation.isPending}>
             Save package
           </Button>
         </>
@@ -49,21 +51,30 @@ function PackageDialog({ onClose, comparison, existing, create, update }) {
       <Field label="Name" required error={errors.name} help="e.g. UHC — consolidated, Cigna with HDHP">
         <TextInput value={name} onChange={(event) => setName(event.target.value)} />
       </Field>
-      <fieldset className={styles.planChecks}>
-        <legend>Plans the client would buy together</legend>
+      <div role="group" aria-labelledby={groupId} className="bnf-build-panel">
+        <div id={groupId} className="bnf-packet-group">
+          Plans the client would buy together
+        </div>
         {comparison.plans.map((plan) => (
-          <label key={plan.id}>
+          <label key={plan.id} className="bnf-output-check">
             <input type="checkbox" checked={ids.has(plan.id)} onChange={() => toggle(plan.id)} /> {plan.carrier}{' '}
-            {plan.name} <span className={styles.muted}>({plan.role})</span>
+            {plan.name} <span className="bb-account-sub">({plan.role})</span>
           </label>
         ))}
-      </fieldset>
-      {errors.plan_ids && <p role="alert">{errors.plan_ids}</p>}
+      </div>
+      {errors.plan_ids && (
+        <em role="alert" className="bnf-saved-error">
+          {errors.plan_ids}
+        </em>
+      )}
     </Modal>
   );
 }
 
-/** Packages below the grid (plan.md §5.5): a total and change, or the reason in words. */
+/**
+ * Packages below the grid (plan.md §5.5): a total and change, or the reason in words. 2V's ＋ Package has no old
+ * twin (§8.15's gap); it sits in an old panel with the builder's packet rows.
+ */
 export default function PackagesPanel({ comparison, create, update, remove }) {
   const toast = useToast();
   const [editing, setEditing] = useState(null);
@@ -80,56 +91,53 @@ export default function PackagesPanel({ comparison, create, update, remove }) {
   }
 
   return (
-    <section className={styles.packages} aria-labelledby="packages-title">
-      <div className={styles.packagesHead}>
-        <h3 id="packages-title">Packages</h3>
-        <Button size="sm" onClick={() => setEditing('new')}>
-          + Package
-        </Button>
+    <section className="bb-panel bnf-build-panel" aria-labelledby="packages-title">
+      <div className="bnf-bcard-head">
+        <h3 id="packages-title" className="bb-panel-title">
+          Packages
+        </h3>
+        <span className="bnf-bcard-mark">
+          <Button size="sm" onClick={() => setEditing('new')}>
+            ＋ Package
+          </Button>
+        </span>
       </div>
       {!comparison.packages.length && (
-        <p className={styles.muted}>No packages yet. Current plans make the first one.</p>
+        <div className="bnf-packet-note">No packages yet. Current plans make the first one.</div>
       )}
-      <ul className={styles.packageList}>
+      <div>
         {comparison.packages.map((pkg) => {
           const member = members[pkg.key];
           return (
-            <li key={pkg.key}>
-              <div>
-                <strong>{pkg.label}</strong>{' '}
-                <span className={styles.muted}>
-                  {pkg.plan_ids.map((id) => byId[id]?.name).filter(Boolean).join(' + ') || 'no plans'}
-                </span>
-              </div>
-              <div className={styles.packageFigures}>
-                {pkg.annual != null && <span>{formatMoney(pkg.annual)}/yr</span>}
+            <div key={pkg.key} className="bnf-packet-row">
+              <span className="bnf-packet-tick bnf-packet-label">{pkg.label}</span>
+              <span className="bnf-packet-hint">
+                {pkg.plan_ids.map((id) => byId[id]?.name).filter(Boolean).join(' + ') || 'no plans'}
+              </span>
+              <span className="bnf-pk-figures">
+                {pkg.annual != null && <span className="bb-mono">{formatMoney(pkg.annual)}/yr</span>}
                 {pkg.change && (
-                  <span>
+                  <span className="bnf-delta">
                     {changeText(pkg.change)}
                     {pkg.key === 'renewal' ? ' average' : ''}
                   </span>
                 )}
-                {pkg.reason && (
-                  <span className={styles.reason}>
-                    <span aria-hidden="true">⚠ </span>
-                    {pkg.reason}
-                  </span>
-                )}
-                {member && (
-                  <>
-                    <Button size="sm" variant="ghost" onClick={() => setEditing(member)}>
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => onDelete(member)}>
-                      Delete
-                    </Button>
-                  </>
-                )}
-              </div>
-            </li>
+                {pkg.reason && <span className="bnf-pk-why">⚠ {pkg.reason}</span>}
+              </span>
+              {member && (
+                <>
+                  <Button size="sm" onClick={() => setEditing(member)}>
+                    Edit
+                  </Button>
+                  <Button size="sm" onClick={() => onDelete(member)}>
+                    Delete
+                  </Button>
+                </>
+              )}
+            </div>
           );
         })}
-      </ul>
+      </div>
       {editing && (
         <PackageDialog
           onClose={() => setEditing(null)}

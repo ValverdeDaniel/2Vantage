@@ -44,7 +44,7 @@ export async function listClients(params) {
   return data;
 }
 
-/** {name, relationship?, effective_date?, requested_lines?, owner_id?} → {client, deal} */
+/** {name, relationship? (prospect, the default, or existing_client), effective_date?, requested_lines?, owner_id?} → {client, deal} */
 export async function createClient(body) {
   const { data } = await api.post('clients/', body);
   return data;
@@ -55,9 +55,16 @@ export async function getClient(clientId) {
   return data;
 }
 
-/** {name, relationship, owner_id, notes} (any subset) → client */
+/** {name, owner_id, notes} (any subset) → client. The status has its own door: setClientStatus. */
 export async function updateClient(clientId, changes) {
   const { data } = await api.patch(`clients/${clientId}/`, changes);
+  return data;
+}
+
+/** {to: 'new_client' | 'prospect' | 'existing_client'} → client detail. A refused move is a 409 whose `detail` is
+ *  its sentence ("A plan is marked sold — un-sell it first."). */
+export async function setClientStatus(clientId, to) {
+  const { data } = await api.post(`clients/${clientId}/status/`, { to });
   return data;
 }
 
@@ -84,6 +91,13 @@ export async function reopenDeal(dealId) {
 
 export async function listActivity(dealId, page = 1) {
   const { data } = await api.get(`deals/${dealId}/activity/`, { params: { page } });
+  return data;
+}
+
+/** Puts back the earlier values of one Activity row → {activity_id, reverted_id, deal_id, summary, changes}.
+ *  A refusal is a 409 whose `detail` is the sentence to show (already undone, a later write, a sold plan…). */
+export async function revertActivity(activityId) {
+  const { data } = await api.post(`activity/${activityId}/revert/`);
   return data;
 }
 
@@ -122,6 +136,16 @@ export function useDealActivity(dealId, { enabled = true } = {}) {
     queryFn: ({ pageParam }) => listActivity(dealId, pageParam),
     initialPageParam: 1,
     getNextPageParam: (last, pages) => (last.next ? pages.length + 1 : undefined),
+    staleTime: 0,
+    enabled,
+  });
+}
+
+/** The deal's client in full, with the status moves its dialog offers (each allowed or refused, with its sentence). */
+export function useDealClient(deal, { enabled = true } = {}) {
+  return useQuery({
+    queryKey: dealKey(deal.id, 'client'),
+    queryFn: () => getClient(deal.client.id),
     staleTime: 0,
     enabled,
   });
@@ -182,6 +206,18 @@ export function useUpdateDeal(dealId) {
   return useHeaderMutation(dealId, (changes) => updateDeal(dealId, changes), { optimistic: true });
 }
 
+/**
+ * mutate(activityId) — Revert in the Activity drawer (A34) and, later, the Undo toasts (E54). Afterwards every
+ * query of the deal refetches, the header included: a revert can touch any tab. Refusals reach `error` (409).
+ */
+export function useRevertActivity(dealId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: revertActivity,
+    onSettled: () => invalidateDeal(queryClient, dealId, { header: true }),
+  });
+}
+
 /** mutate(reason) */
 export function useMarkLost(dealId) {
   return useHeaderMutation(dealId, (reason) => markLost(dealId, reason));
@@ -192,22 +228,47 @@ export function useReopenDeal(dealId) {
   return useHeaderMutation(dealId, () => reopenDeal(dealId));
 }
 
-/** mutate({name, relationship, owner_id, notes}) for the deal's client; updates the header's client. */
+// The header's copy of the client follows a client write at once.
+function setHeaderClient(queryClient, deal, client) {
+  queryClient.setQueryData(dealKey(deal.id, HEADER), (header) =>
+    header
+      ? {
+          ...header,
+          client: {
+            ...header.client,
+            name: client.name,
+            relationship: client.relationship,
+            client_since: client.client_since,
+          },
+        }
+      : header,
+  );
+}
+
+/** mutate({name, owner_id, notes}) for the deal's client; updates the header's client. */
 export function useUpdateClient(deal) {
   const queryClient = useQueryClient();
-  const key = dealKey(deal.id, HEADER);
   return useMutation({
     mutationFn: (changes) => updateClient(deal.client.id, changes),
+    onSuccess: (client) => setHeaderClient(queryClient, deal, client),
+    onSettled: () => invalidateDeal(queryClient, deal.id),
+  });
+}
+
+/** mutate(to) — Convert to client, Back to prospect, or a status fix (plan.md §5.1). A 409 reaches `error`. */
+export function useSetClientStatus(deal) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (to) => setClientStatus(deal.client.id, to),
     onSuccess: (client) => {
-      queryClient.setQueryData(key, (header) =>
-        header ? { ...header, client: { ...header.client, name: client.name, relationship: client.relationship } } : header,
-      );
+      queryClient.setQueryData(dealKey(deal.id, 'client'), client);
+      setHeaderClient(queryClient, deal, client);
     },
     onSettled: () => invalidateDeal(queryClient, deal.id),
   });
 }
 
-/** mutate({name, relationship, effective_date, requested_lines, owner_id}) → {client, deal}; seeds the header. */
+/** mutate({name, relationship (prospect | existing_client), effective_date, requested_lines, owner_id}) → {client, deal}. */
 export function useCreateClient() {
   const queryClient = useQueryClient();
   return useMutation({

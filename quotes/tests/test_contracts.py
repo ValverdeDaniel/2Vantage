@@ -1,0 +1,210 @@
+"""The Q.3 contracts for quotes (plan.md §12.3): GETs that write nothing, the permission matrix, and the write path of
+every multi-plan door (one Activity row with before and after; the same call again changes nothing; Revert once, then
+refused after a later write). The write path of plan values, details and enrollment is in test_revert.py.
+"""
+
+import pytest
+
+from conftest import check_permissions, make_deal, sweep_gets, write_path_contract
+from quotes import services
+from quotes.selectors.state import replaced_ids
+
+
+@pytest.fixture
+def world(user):
+    deal = make_deal(user)
+    current = services.create_plan(user, deal, line='medical', role='current', carrier='Aetna', name='HMO 1500')
+    other = services.create_plan(user, deal, line='medical', role='current', carrier='Aetna', name='PPO 2000')
+    alternate = services.create_plan(
+        user, deal, line='medical', role='alternate', carrier='Cigna', name='Open Access', replaces_ids=[current.id]
+    )
+    second = services.create_plan(
+        user, deal, line='medical', role='alternate', carrier='UHC', name='Choice', replaces_ids=[current.id]
+    )
+    package = services.create_package(user, deal, 'medical', 'Keep', [current.id])
+    return {
+        'deal': deal,
+        'current': current,
+        'other': other,
+        'alternate': alternate,
+        'second': second,
+        'package': package,
+    }
+
+
+def samples(world):
+    deal, line = {'pk': world['deal'].id}, {'query': {'line': 'medical'}}
+    return {
+        'api/deals/<int:pk>/plans/lines/': deal,
+        'api/deals/<int:pk>/plans/': {**deal, **line},
+        'api/deals/<int:pk>/plans/star/': deal,
+        'api/deals/<int:pk>/plans/shortlist/clear/': deal,
+        'api/deals/<int:pk>/plans/role/': deal,
+        'api/deals/<int:pk>/plans/links/': deal,
+        'api/deals/<int:pk>/plans/order/': deal,
+        'api/deals/<int:pk>/plans/slot/': deal,
+        'api/deals/<int:pk>/plans/enrollment/': deal,
+        'api/deals/<int:pk>/plans/packages/': {**deal, **line},
+        'api/deals/<int:pk>/plans/template/': deal,
+        'api/deals/<int:pk>/plans/import/': deal,
+        'api/plans/<int:plan_id>/': {'plan_id': world['alternate'].id},
+        'api/plans/<int:plan_id>/renewal/': {'plan_id': world['current'].id},
+        'api/plans/<int:plan_id>/copy/': {'plan_id': world['current'].id},
+        'api/plans/<int:plan_id>/sold/': {'plan_id': world['alternate'].id},
+        'api/plans/<int:plan_id>/recommend/': {'plan_id': world['alternate'].id},
+        'api/packages/<int:package_id>/': {'package_id': world['package'].id},
+    }
+
+
+def ok(code=200):
+    return {'signed_out': 401, 'producer': code, 'admin': code}
+
+
+def matrix(world):
+    current, alternate, second = world['current'], world['alternate'], world['second']
+    medical = {'line': 'medical'}
+    return [
+        ('GET', 'api/deals/<int:pk>/plans/lines/', ok()),
+        ('GET', 'api/deals/<int:pk>/plans/', ok()),
+        (
+            'POST',
+            'api/deals/<int:pk>/plans/',
+            ok(201),
+            {'line': 'medical', 'role': 'current', 'carrier': 'UHC', 'name': 'Choice'},
+        ),
+        ('POST', 'api/deals/<int:pk>/plans/star/', ok(), {'plan_ids': [alternate.id], 'starred': True}),
+        ('POST', 'api/deals/<int:pk>/plans/shortlist/clear/', ok(), medical),
+        ('POST', 'api/deals/<int:pk>/plans/role/', ok(), {'plan_ids': [alternate.id], 'role': 'current'}),
+        ('POST', 'api/deals/<int:pk>/plans/links/', ok(), {'plan_id': alternate.id, 'replaces_ids': []}),
+        ('POST', 'api/deals/<int:pk>/plans/order/', ok(), {**medical, 'move': {'plan_id': second.id, 'step': -1}}),
+        ('POST', 'api/deals/<int:pk>/plans/slot/', ok(), {**medical, 'plan_id': second.id, 'at': alternate.id}),
+        (
+            'POST',
+            'api/deals/<int:pk>/plans/enrollment/',
+            ok(),
+            {'plans': [{'id': current.id, 'enrollment': {'EE': 4}, 'on': True}]},
+        ),
+        ('GET', 'api/deals/<int:pk>/plans/packages/', ok()),
+        ('POST', 'api/deals/<int:pk>/plans/packages/', ok(201), {'name': 'Switch', 'plan_ids': []}),
+        ('GET', 'api/deals/<int:pk>/plans/template/', ok()),
+        ('POST', 'api/deals/<int:pk>/plans/import/', ok(400)),  # no file: refused after the permission check
+        ('PATCH', 'api/plans/<int:plan_id>/', ok(), {'values': {'rate_ee': '500'}}),
+        ('DELETE', 'api/plans/<int:plan_id>/', ok(204)),
+        ('POST', 'api/plans/<int:plan_id>/renewal/', ok(201)),
+        ('POST', 'api/plans/<int:plan_id>/copy/', ok(201)),
+        ('POST', 'api/plans/<int:plan_id>/sold/', ok(), {'sold': True}),
+        ('POST', 'api/plans/<int:plan_id>/recommend/', ok(), {'recommended': True}),
+        ('PATCH', 'api/packages/<int:package_id>/', ok(), {'name': 'Keep all'}),
+        ('DELETE', 'api/packages/<int:package_id>/', ok(204)),
+    ]
+
+
+def test_Q3_quotes_gets_write_nothing(admin_api, world):
+    sweep_gets(admin_api, ('quotes',), samples(world))
+
+
+def test_Q3_quotes_permission_matrix(actors, no_csrf_api, world):
+    check_permissions(actors, ('quotes',), matrix(world), samples(world), no_csrf_api)
+
+
+def stars(plan):
+    return (plan.starred, plan.star_reason, plan.starred_by_id)
+
+
+def links(plan):
+    return (plan.role, plan.renews_id, sorted(replaced_ids(from_plan_id=plan.id).get(plan.id, [])))
+
+
+def test_F50_Q3_star_write_path(user, world):
+    deal, plan = world['deal'], world['alternate']
+    write_path_contract(
+        user,
+        plan,
+        call=lambda: services.star(user, deal, [plan.id], True),
+        read=stars,
+        later=lambda: services.star(user, deal, [plan.id], False),
+    )
+
+
+def test_F55_Q3_clear_shortlist_write_path(user, world):
+    deal, plan = world['deal'], world['alternate']
+    services.star(user, deal, [plan.id, world['second'].id], True)
+    write_path_contract(
+        user,
+        plan,
+        call=lambda: services.clear_shortlist(user, deal, 'medical'),
+        read=stars,
+        later=lambda: services.star(user, deal, [plan.id], True),
+    )
+
+
+def test_OQ37_Q3_recommend_write_path(user, world):
+    plan = world['alternate']
+    write_path_contract(
+        user,
+        plan,
+        call=lambda: services.set_recommended(user, plan.id, True),
+        read=lambda p: p.recommended,
+        later=lambda: services.set_recommended(user, plan.id, False),
+    )
+
+
+def test_F53_Q3_role_write_path(user, world):
+    deal, plan = world['deal'], world['alternate']
+    services.star(user, deal, [plan.id], True)
+    write_path_contract(
+        user,
+        plan,
+        call=lambda: services.set_role(user, deal, [plan.id], 'current'),
+        read=lambda p: (links(p), stars(p)),
+        later=lambda: services.set_role(user, deal, [plan.id], 'alternate', replaces_ids=[world['other'].id]),
+    )
+
+
+def test_F52_Q3_links_write_path(user, world):
+    deal, plan = world['deal'], world['alternate']
+    write_path_contract(
+        user,
+        plan,
+        call=lambda: services.set_links(user, deal, plan.id, [world['current'].id, world['other'].id]),
+        read=links,
+        later=lambda: services.set_links(user, deal, plan.id, []),
+    )
+
+
+def test_F48_Q3_order_write_path(user, world):
+    """A move is a step, so the contract's door is "Back to the default order": the same call again changes nothing."""
+    deal, plan = world['deal'], world['second']
+    services.arrange(user, deal, 'medical', ('move', plan.id, -1, None))
+    write_path_contract(
+        user,
+        plan,
+        call=lambda: services.arrange(user, deal, 'medical', ('reset',)),
+        read=lambda p: p.sort_order,
+        later=lambda: services.arrange(user, deal, 'medical', ('move', plan.id, -1, None)),
+    )
+
+
+def test_F46_Q3_slot_write_path(user, world):
+    """ "＋ Add a plan" beside a current plan: on the proposal, linked to that plan, last among its quotes."""
+    deal, picked = world['deal'], world['second']
+    services.star(user, deal, [world['alternate'].id], True)
+
+    def state(plan):
+        return (stars(plan), links(plan), plan.sort_order)
+
+    write_path_contract(
+        user,
+        picked,
+        call=lambda: services.put_in_slot(user, deal, 'medical', picked.id, beside=world['other'].id),
+        read=state,
+        later=lambda: services.star(user, deal, [picked.id], False),
+    )
+
+
+def test_Q3_order_rows_record_only_sort_order(user, world):
+    deal = world['deal']
+    _, row = services.arrange(user, deal, 'medical', ('move', world['second'].id, -1, None))
+    assert {key for entry in row.changes for key in entry['k']} == {'plan.sort_order'}
+    passed = {f'plan:{world["second"].id}', f'plan:{world["alternate"].id}'}
+    assert {entry['t'] for entry in row.changes} == passed  # the plan and the one it passed; nothing else

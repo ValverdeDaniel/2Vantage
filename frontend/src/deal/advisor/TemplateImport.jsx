@@ -4,9 +4,8 @@ import Button from '../../ui/Button';
 import Field from '../../ui/Field';
 import Modal from '../../ui/Modal';
 import { useToast } from '../../ui/useToast';
-import styles from './AdvisorTab.module.css';
 
-/** Import the filled plan template: file → dry run → Import (plan.md §8.11, §9.3). All or nothing. */
+/** Import the filled plan template: file → dry run → Import (plan.md §8.14, §9.3). All or nothing. */
 export default function TemplateImport({ open, onClose, importTemplate }) {
   return open ? <ImportForm onClose={onClose} importTemplate={importTemplate} /> : null;
 }
@@ -51,8 +50,10 @@ function ImportForm({ onClose, importTemplate }) {
       onClose={onClose}
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" disabled={!ready} busy={importTemplate.isPending} onClick={apply}>
+          <Button size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="sm" variant="primary" disabled={!ready} busy={importTemplate.isPending} onClick={apply}>
             Import
           </Button>
         </>
@@ -61,24 +62,31 @@ function ImportForm({ onClose, importTemplate }) {
       <Field label="Filled plan template (.xlsx)">
         <input type="file" accept=".xlsx" onChange={(event) => dryRun(event.target.files?.[0] ?? null)} />
       </Field>
-      {importTemplate.isPending && !check && <p>Checking…</p>}
-      {failure && <p role="alert">{failure}</p>}
+      {importTemplate.isPending && !check && <div className="bnf-packet-note">Checking…</div>}
+      {failure && (
+        <div role="alert" className="error-message">
+          {failure}
+        </div>
+      )}
       {check && !check.errors?.length && (
-        <p role="status">
+        <div role="status" className="bnf-packet-note">
           {check.create || check.update
             ? `${check.create} plans to create, ${check.update} to update (${check.cells_changed} cells change).`
             : 'Nothing in this file changes the plans.'}
-        </p>
+        </div>
       )}
       {check?.errors?.length > 0 && (
-        <div role="alert">
-          <p>Nothing was imported. Fix these cells and try again:</p>
-          <ul className={styles.errorList}>
+        <div role="alert" className="bnf-build-checks">
+          <div className="bnf-build-checks-head">
+            <b>Nothing was imported. Fix these cells and try again:</b>
+          </div>
+          <ul className="bnf-build-checks-list">
             {check.errors.map((error, index) => (
-              <li key={index}>
-                {[error.sheet, error.cell].filter(Boolean).join('!')}
-                {error.sheet || error.cell ? ': ' : ''}
-                {error.message}
+              <li key={index} className="bnf-build-check bnf-build-check-stop">
+                {(error.sheet || error.cell) && (
+                  <span className="bnf-build-check-level">{[error.sheet, error.cell].filter(Boolean).join('!')}</span>
+                )}
+                <span className="bnf-build-check-msg">{error.message}</span>
               </li>
             ))}
           </ul>

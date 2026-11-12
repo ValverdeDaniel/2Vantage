@@ -1,0 +1,97 @@
+/* The roster beside a To review queue (U3d, review-requests-one-way.md §2 B;
+   CensusGrid's `review`): read-only, each answer old (struck) → new in its
+   review state, the focused cell ringed and its row marked, the person
+   named in the frozen column. It scrolls inside its own pane, so the focus
+   can bring a cell to a third of the way down and to the centre. */
+.bnf-rv-roster { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.bnf-rv-roster-bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 6px 12px; min-width: 0;
+}
+.bnf-rv-roster-title { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.bnf-rv-roster-title b { font-size: 13.5px; color: var(--ink); }
+.bnf-rv-roster-title span { font-size: 12px; color: var(--ink3); }
+.bnf-rv-legend { flex-wrap: wrap; }
+.bnf-rv-swatch {
+  width: 11px; height: 11px; border-radius: 3px; display: inline-block;
+  border: 1px solid transparent; margin-right: 5px; position: relative;
+}
+.bnf-rv-swatch-pending { background: var(--violet-bg); border-color: #c9b8ee; }
+.bnf-rv-swatch-ok { background: var(--green-bg); border-color: #a7dcb8; }
+.bnf-rv-swatch-back { background: var(--rose-bg); border-color: #f3c1c8; }
+.bnf-rv-swatch-q { background: #fff; border-color: var(--border); }
+.bnf-rv-swatch-q::after {
+  content: ''; position: absolute; top: 1px; right: 1px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--violet);
+}
+.bnf-rv-card { margin-bottom: 0; }
+.bnf-rv-scroll {
+  max-height: max(320px, calc(100vh - var(--chrome-top, 56px) - 300px));
+  scroll-padding: 52px 0 0 150px;
+}
+.bnf-rv-roster .bb-cell { cursor: default; position: relative; }
+.bnf-person-col.bnf-rv-person {
+  flex: 0 0 150px !important; width: 150px; justify-content: flex-start;
+  padding: 0 8px; cursor: default;
+}
+.bb-loc-header.bnf-rv-person { justify-content: flex-start; padding: 9px 8px; }
+.bnf-rv-person.bnf-rv-click { cursor: pointer; }
+.bnf-rv-person-name {
+  font-size: 12px; font-weight: 600; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
+.bnf-rv-new {
+  margin-left: auto; flex: 0 0 auto; font-size: 10px; font-weight: 700;
+  padding: 1px 6px; border-radius: 6px; background: var(--blue-bg); color: var(--blue);
+}
+.bnf-rv-roster .bnf-rv-cell { cursor: pointer; font-weight: 600; }
+.bnf-rv-pending { background: var(--violet-bg); color: var(--violet); }
+.bnf-rv-ok { background: var(--green-bg); color: var(--green); }
+.bnf-rv-back { background: var(--rose-bg); color: var(--rose); }
+.bnf-rv-old { text-decoration: line-through; opacity: 0.55; font-weight: 400; margin-right: 6px; }
+.bnf-rv-q::after {
+  content: ''; position: absolute; top: 4px; right: 4px;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--violet);
+}
+.bnf-rv-row-on > .bnf-rv-person { box-shadow: inset 3px 0 0 var(--navy); background: #f3f7fd; }
+.bnf-rv-row-on > .bb-cell:not(.bnf-rv-cell) { background: #f6f9fe; }
+.bnf-rv-row-whole > .bnf-rv-cell { box-shadow: inset 0 0 0 1px rgba(23, 58, 99, 0.35); }
+.bnf-rv-roster .bnf-rv-focus {
+  box-shadow: inset 0 0 0 2px var(--navy) !important;
+  animation: bnf-rv-pulse 1.1s ease-out 1;
+}
+@keyframes bnf-rv-pulse {
+  0% { box-shadow: inset 0 0 0 2px var(--navy), 0 0 0 0 rgba(23, 58, 99, 0.45); }
+  100% { box-shadow: inset 0 0 0 2px var(--navy), 0 0 0 7px rgba(23, 58, 99, 0); }
+}
+
+/* The file beside a Read by AI queue (U3d): the Documents station's own
+   viewer (DocumentViewer), with the file's name, the page and the way out
+   to the whole Documents tab. */
+.bnf-rv-file {
+  display: flex; flex-direction: column; min-width: 0;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+}
+.bnf-rv-file-head {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  padding: 10px 14px; border-bottom: 1px solid var(--border); min-width: 0;
+}
+.bnf-rv-file-tab {
+  display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%;
+  padding: 4px 10px; border: 1px solid var(--blue); border-radius: 7px;
+  background: var(--blue-bg); color: var(--navy); font-size: 12px; font-weight: 600;
+}
+.bnf-rv-file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.bnf-rv-file-bucket {
+  flex: 0 0 auto; padding: 0 7px; border: 1px solid var(--border); border-radius: 999px;
+  background: #fff; color: var(--ink2); font-size: 10.5px; font-weight: 600;
+}
+.bnf-rv-file-meta { font-size: 11.5px; color: var(--ink3); }
+.bnf-rv-file-open { margin-left: auto; }
+.bnf-rv-file-note { padding: 8px 14px 0; }
+.bnf-rv-file-viewer { padding: 10px; min-width: 0; }
+.bnf-rv-file-viewer .bb-pdf-canvas-wrap { max-height: max(360px, calc(100vh - var(--chrome-top, 56px) - 300px)); }
+.bnf-rv-file-viewer .bnf-sheet-scroll { max-height: max(360px, calc(100vh - var(--chrome-top, 56px) - 340px)); }
+.bnf-rv-file-viewer .bb-pdf-toolbar { flex-wrap: wrap; }
+.bnf-rv-file-empty { padding: 28px 18px; font-size: 13px; color: var(--ink2); text-align: center; }
+.bnf-rv-mapping { margin: 8px 10px 0; }

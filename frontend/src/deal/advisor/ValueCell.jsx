@@ -3,12 +3,14 @@ import { errorText } from '../../lib/errors';
 import { formatWhen } from '../../lib/format';
 import cx from '../../ui/cx';
 import { displayValue, ORIGIN_ICON } from './display';
-import styles from './PlanTable.module.css';
+
+// The old cell colours (App.css): a required blank is `bb-cell-missing`, a value to check is `bb-cell-low`.
+const STATUS_CLASS = { missing: 'bb-cell-missing', to_check: 'bb-cell-low' };
 
 /**
- * One plan value, edited in place (plan.md §8.11). Shows the formatted value; on focus the stored text. Saves on
- * blur (choices save on change) when the text changed; the server cleans it and answers with the cleaned value or
- * a message, shown under the cell. A required blank cell has a red outline and says "Required" to screen readers.
+ * One plan value, edited in place (plan.md §8.14), in the old grid cell (`bnf-cell` with a `bb-cell-input`). Shows the
+ * formatted value; on focus the stored text. Saves on blur (choices save on change) when the text changed; the server
+ * cleans it and answers with the cleaned value or a message, shown under the cell.
  */
 export default function ValueCell({ plan, field, update, labelId }) {
   const raw = plan.values?.[field.key] ?? '';
@@ -38,7 +40,9 @@ export default function ValueCell({ plan, field, update, labelId }) {
   const common = {
     'aria-labelledby': labelId,
     'aria-invalid': status === 'missing' || error ? true : undefined,
-    className: cx(styles.input, status === 'missing' && styles.missing, error && styles.invalid),
+    'aria-required': field.required || undefined,
+    title: status === 'missing' ? 'Required' : undefined,
+    className: 'bb-cell-input',
     disabled: saving,
   };
 
@@ -84,21 +88,26 @@ export default function ValueCell({ plan, field, update, labelId }) {
     ? `${source.origin}${source.at ? ` · ${formatWhen(source.at)}` : ''}${source.cell ? ` · ${source.cell}` : ''}`
     : '';
   return (
-    <td className={cx(styles.cell, status === 'to_check' && styles.toCheck)}>
-      <div className={styles.cellInner}>
+    <td
+      className={cx(
+        'bnf-cell',
+        STATUS_CLASS[status],
+        plan.role === 'current' && 'bnf-plan-col-current',
+        error && 'bnf-cell-error',
+      )}
+    >
+      <div className="bnf-plan-head">
         {control}
         {source && source.origin !== 'typed' && (
-          <span className={styles.source} title={sourceTitle} aria-label={`Source: ${sourceTitle}`}>
+          <span className="bb-drop-meta" title={sourceTitle} aria-label={`Source: ${sourceTitle}`}>
             {ORIGIN_ICON[source.origin] ?? '•'}
           </span>
         )}
       </div>
-      {status === 'missing' && !error && <span className={styles.srOnly}>Required</span>}
       {error && (
-        <p className={styles.cellError} role="alert">
-          <span aria-hidden="true">⚠ </span>
-          {error}
-        </p>
+        <em className="bnf-saved-error" role="alert">
+          ⚠ {error}
+        </em>
       )}
     </td>
   );

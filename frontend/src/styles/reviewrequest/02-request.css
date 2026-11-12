@@ -1,0 +1,206 @@
+/* ---- One request (RequestCard) ------------------------------------------- */
+.rr-request {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 0 12px 10px;
+  background: #fff;
+}
+.rr-request-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.rr-request-asks { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.rr-request-meta { font-size: 11.5px; color: var(--ink2); margin-left: auto; }
+.rr-request-message {
+  margin: 8px 0 4px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--border);
+  font-size: 12.5px;
+  color: var(--ink2);
+  white-space: pre-wrap;
+}
+.rr-request-people { margin-top: 8px; }
+.rr-request-person { padding: 7px 0; border-top: 1px solid var(--border); }
+.rr-request-personhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+.rr-request-here { font-size: 11.5px; color: var(--green); margin-top: 2px; }
+.rr-request-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 4px; }
+.rr-request-actions .btn { flex: 0 0 auto; }
+.rr-request-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.rr-request-close { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rr-request-close .btn { flex: 0 0 auto; }
+.rr-request-closenote { font-size: 11.5px; color: var(--rose); }
+.rr-progress { display: inline-flex; align-items: center; gap: 8px; margin-top: 6px; }
+.rr-progress-bar {
+  display: inline-block;
+  width: 120px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--page);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.rr-progress-fill { display: block; height: 100%; background: var(--green); }
+.rr-progress-text, .rr-progress-note { font-size: 11.5px; color: var(--ink2); }
+@media (max-width: 640px) {
+  .rr-request { margin: 0 0 10px; }
+  .rr-recipient-email { margin-left: 0; flex-basis: 100%; padding-left: 24px; }
+  .rr-request-meta { margin-left: 0; }
+}
+
+/* --- The review queue (D-140, review-hub.md; the handoff's `cr-*` queue) --- */
+.rr-queue {
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(16, 28, 46, 0.06);
+  min-height: 0;
+  max-height: calc(100vh - var(--chrome-top, 56px) - 120px);
+}
+.rr-queue-head { padding: 12px 14px 10px; border-bottom: 1px solid var(--border); }
+.rr-queue-title { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.rr-queue-title b { font-size: 14px; color: var(--ink); }
+.rr-queue-title span { font-size: 12px; color: var(--ink2); }
+.rr-queue-prog { height: 4px; border-radius: 2px; background: var(--page); margin-top: 8px; overflow: hidden; }
+.rr-queue-prog i { display: block; height: 100%; background: var(--green); transition: width 0.2s; }
+.rr-queue-list { overflow-y: auto; padding: 6px; flex: 1 1 auto; min-height: 120px; }
+.rr-queue-empty, .rr-queue-done { padding: 18px 12px; font-size: 13px; color: var(--ink2); text-align: center; }
+.rr-queue-done b { display: block; color: var(--green); margin-bottom: 4px; }
+.rr-qi {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  gap: 4px 8px;
+  align-items: start;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.rr-qi:hover { background: var(--page); }
+.rr-qi-on { border-color: var(--navy); background: var(--blue-bg); cursor: default; }
+.rr-qi-on:hover { background: var(--blue-bg); }
+.rr-qi-done { opacity: 0.55; }
+.rr-qi-ico { font-size: 12px; line-height: 18px; color: var(--ink3); text-align: center; }
+.rr-qi-ico-ok { color: var(--green); }
+.rr-qi-ico-later { color: var(--amber); }
+.rr-qi-main { min-width: 0; }
+.rr-qi-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+.rr-qi-sub { font-size: 12px; color: var(--ink2); margin-top: 2px; overflow-wrap: anywhere; }
+.rr-qi-badge { font-size: 11px; }
+.rr-qi-detail { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
+.rr-qi-decided { font-size: 12px; color: var(--green); }
+.rr-qi-field { display: flex; flex-direction: column; gap: 4px; }
+.rr-qi-field label { font-size: 12px; font-weight: 600; color: var(--ink2); }
+.rr-qi-field textarea { min-height: 64px; font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; }
+.rr-qi-hint { font-size: 11px; color: var(--ink3); }
+.rr-qi-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.rr-qi-act {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+.rr-qi-act:disabled { opacity: 0.5; cursor: default; }
+.rr-qi-act-ok { border-color: var(--green); color: var(--green); }
+.rr-qi-act-on { border-color: var(--violet); color: var(--violet); background: var(--violet-bg); }
+.rr-qi-act-later { color: var(--ink2); }
+.rr-kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  padding: 0 4px;
+  background: var(--card);
+  color: var(--ink2);
+}
+.rr-queue-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--ink2);
+}
+.rr-queue-keys span { display: inline-flex; gap: 3px; align-items: center; }
+/* U1 (review-requests-one-way.md §2 B): A · X · R · ↑↓ always shown, in the
+   focused item's words; "?" opens every other key that item takes. */
+.rr-queue-key-off { opacity: 0.5; text-decoration: line-through; }
+.rr-queue-keys-more {
+  font: inherit; font-size: 11px; font-weight: 700; line-height: 1;
+  width: 18px; height: 18px; padding: 0; margin-left: auto;
+  border: 1px solid var(--border); border-radius: 50%;
+  background: var(--card); color: var(--ink2); cursor: pointer;
+}
+.rr-queue-keys-more-on { border-color: var(--navy); color: var(--navy); background: var(--blue-bg); }
+.rr-queue-keys-all { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 10px; }
+.rr-qi-notice { color: var(--amber); }
+
+/* Old -> new (ValueChange) */
+.rr-change { display: flex; align-items: stretch; gap: 8px; flex-wrap: wrap; }
+.rr-change-side {
+  flex: 1 1 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  min-width: 0;
+}
+.rr-change-new { border-color: var(--violet); background: var(--violet-bg); }
+.rr-change-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink3); }
+.rr-change-value { font-size: 13px; color: var(--ink); overflow-wrap: anywhere; }
+.rr-change-old .rr-change-value { text-decoration: line-through; color: var(--ink2); }
+.rr-change-blank { font-size: 12px; color: var(--ink3); }
+.rr-change-arrow { align-self: center; color: var(--ink3); }
+
+/* Counts on view pills, and what a client answer did (D-140). */
+.rr-pill-count {
+  display: inline-block;
+  min-width: 18px;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  background: var(--page);
+  color: var(--ink2);
+}
+.rr-pill-count-client { background: var(--violet-bg); color: var(--violet); }
+.rr-change-chip {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 9px;
+  font-size: 11px;
+  white-space: nowrap;
+  background: var(--page);
+  color: var(--ink2);
+}
+.rr-change-changed, .rr-change-differs { background: var(--amber-bg); color: var(--amber); }
+.rr-change-added { background: var(--blue-bg); color: var(--blue); }
+.rr-change-filled { background: var(--violet-bg); color: var(--violet); }
+.rr-change-cleared { background: var(--rose-bg); color: var(--rose); }
+.rr-change-same { background: var(--green-bg); color: var(--green); }
+.rr-change-warn { background: var(--rose-bg); color: var(--rose); }
+.rr-hint { display: flex; gap: 6px; font-size: 12px; color: var(--ink2); }
+.rr-hint-warn { color: var(--rose); }
+.rr-pill-count-ai { background: var(--amber-bg); color: var(--amber); }

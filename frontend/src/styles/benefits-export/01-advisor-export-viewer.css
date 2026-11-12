@@ -1,0 +1,246 @@
+/* The Advisor's Export viewer (D-193, close/ExportViewer.jsx): a toolbar, the
+   plan sets to jump to, a rail of slide thumbnails and the slide on a stage.
+
+   Reused, not redefined: `.bnf-viewtab(-on)` for the format row (the Advisor's
+   view pills), `.bnf-refresh-retry` for the inline retry link. The root is the
+   one child `.bnf-advisor-tab-split` sizes (benefits.css). No class here is a
+   guide target; the anchors are `data-guide` attributes. */
+
+.bnf-xv {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  outline: none;
+}
+
+.bnf-xv-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.bnf-xv-toolbar .btn,
+.bnf-xv-nav .btn { flex: 0 0 auto; }
+.bnf-xv-toolbar .btn[aria-busy="true"] { opacity: 0.5; cursor: progress; }
+.bnf-xv-spacer { flex: 1 1 auto; }
+
+.bnf-xv-formats { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.bnf-xv-soon { opacity: 0.55; cursor: not-allowed; }
+.bnf-xv-soon-tag {
+  margin-left: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink3);
+}
+
+.bnf-xv-status { font-size: 12px; color: var(--ink2); }
+.bnf-xv-draft {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+
+.bnf-xv-jump {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.bnf-xv-jump-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-right: 2px;
+}
+.bnf-xv-chip {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.bnf-xv-chip:hover { border-color: var(--input-border); }
+.bnf-xv-chip-on {
+  border-color: var(--blue);
+  background: var(--blue-bg);
+  color: var(--navy);
+}
+
+/* The pages switched on that cannot print yet (D-189's ledger). */
+.bnf-xv-ledger {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.bnf-xv-ledger-why { color: var(--ink2); }
+
+.bnf-xv-notice {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--page);
+  font-size: 13px;
+  color: var(--ink);
+}
+.bnf-xv-notice-warn { background: var(--amber-bg); border-color: transparent; }
+
+/* Rail | stage. The rail sticks under the navbar and scrolls on its own. */
+.bnf-xv-body {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.bnf-xv-rail {
+  position: sticky;
+  top: calc(var(--chrome-top) + 8px);
+  max-height: calc(100vh - var(--chrome-top) - 24px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 4px 2px 2px;
+}
+.bnf-xv-thumb {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.bnf-xv-thumb:hover { border-color: var(--input-border); }
+.bnf-xv-thumb-on {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px var(--blue-bg);
+}
+/* A 16:9 box before the page is drawn, so the rail does not jump. */
+.bnf-xv-thumb canvas {
+  display: block;
+  width: 176px;
+  aspect-ratio: 16 / 9;
+  background: var(--page);
+}
+.bnf-xv-thumb-label { font-size: 11.5px; line-height: 1.3; color: var(--ink2); }
+.bnf-xv-thumb-n { font-weight: 700; color: var(--ink); margin-right: 5px; }
+
+.bnf-xv-stage { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+
+/* The fit report on a plan set's slide (D-193 slice 3), and its dot on the
+   thumbnail and the Jump chip. Green fits; amber moved notes, the smallest type
+   or tall rows; red ran on, or the rates and totals sit on another slide. */
+.bnf-xv-fit {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.bnf-xv-fit-ok { background: var(--green-bg); }
+.bnf-xv-fit-warn { background: var(--amber-bg); }
+.bnf-xv-fit-bad { background: var(--rose-bg); }
+.bnf-xv-fit-tall { margin-top: 3px; font-size: 12px; color: var(--ink2); }
+.bnf-xv-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: 1px;
+}
+.bnf-xv-dot-warn { background: var(--amber); }
+.bnf-xv-dot-bad { background: var(--rose); }
+/* Never taller than the window: the strip, the slide and its arrows fit on
+   screen together once the page header has scrolled away. */
+.bnf-xv-slide {
+  width: 100%;
+  max-width: calc((100vh - var(--chrome-top) - 110px) * 16 / 9);
+  aspect-ratio: 16 / 9;
+  background: var(--card);
+  box-shadow: 0 1px 4px rgba(15, 45, 79, 0.18);
+  overflow: hidden;
+}
+.bnf-xv-slide canvas { display: block; }
+/* Paper (D-196): a page on its US Letter landscape sheet, as the Letter PDF
+   prints it; the page sits at the share of the width the server's `paper.inner`
+   says, centred both ways. */
+.bnf-xv-slide.bnf-xv-paper {
+  aspect-ratio: 11 / 8.5;
+  max-width: calc((100vh - var(--chrome-top) - 110px) * 11 / 8.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(15, 45, 79, 0.25);
+}
+.bnf-xv-slide.bnf-xv-paper canvas { box-shadow: 0 0 0 1px var(--border-soft); }
+/* A Letter page (Classic's PDF), at its own shape. */
+.bnf-xv-slide.bnf-xv-page {
+  aspect-ratio: auto;
+  max-width: none;
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  justify-content: center;
+}
+.bnf-xv-slide.bnf-xv-page canvas { background: #fff; box-shadow: 0 1px 4px rgba(15, 45, 79, 0.18); }
+.bnf-xv-paperline {
+  padding: 6px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  background: var(--page);
+  font-size: 12.5px;
+  color: var(--ink2);
+}
+.bnf-xv-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--ink2);
+}
+.bnf-xv-notes {
+  padding: 10px 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: var(--page);
+  font-size: 13px;
+  color: var(--ink);
+}
+.bnf-xv-notes p { margin: 4px 0 0; }
+.bnf-xv-notes-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink3);
+}
+.bnf-xv-about { font-size: 11.5px; color: var(--ink3); }
+
+@media (max-width: 900px) {
+  .bnf-xv-body { grid-template-columns: 1fr; }
+  .bnf-xv-rail {
+    position: static;
+    flex-direction: row;
+    max-height: none;
+    overflow-x: auto;
+  }
+  .bnf-xv-thumb { flex: 0 0 auto; }
+}

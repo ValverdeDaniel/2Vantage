@@ -11,7 +11,7 @@
 
 | File | What it covers |
 |---|---|
-| [Decisions needed](decisions.md) | The 100 open questions, each with the default built until answered |
+| [Decisions needed](decisions.md) | The 110 open questions (OQ101–OQ110 added by plan.md v2.0, §16), each with the default built until answered |
 | [Part A — Platform foundation](A-foundation.md) | Sign-in, home, deal shell, stages, values and history, jobs, the look |
 | [Part B — Intake](B-intake.md) | The 56 questions, contacts, coverage intent, the marketing checklist, BOR, marketed |
 | [Part C — Census](C-census.md) | The roster, import and matching, validation, rollups that price plans |

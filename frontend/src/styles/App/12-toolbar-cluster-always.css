@@ -1,0 +1,280 @@
+/* A toolbar cluster is always the right-hand child of a space-between header,
+   so it sizes to its buttons — and two things follow that were both missing.
+   It has to WRAP: with ten buttons the proposal grid could only shrink them,
+   and a shrunken button wraps its label onto a second line, which is where the
+   four different button heights in one row came from. And .btn-primary's global
+   width:100% has to be scoped back — the form-button default that benefits.css
+   and pnc.css already scope back in ~19 other rows. justify-content only bites
+   on wrapped lines here, since the cluster is shrink-to-fit in every parent. */
+.bb-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.bb-toolbar-actions .btn,
+.bb-toolbar-actions .bb-btn-violet-outline {
+  width: auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.bb-select-bar {
+  background: var(--navy);
+  color: #fff;
+  border-radius: 10px;
+  padding: 11px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.bb-select-hint { color: #9db4cf; }
+.bb-select-bar-right { display: flex; align-items: center; gap: 13px; }
+.bb-select-bar-right .btn { flex: 0 0 auto; }
+.bb-select-count { font-size: 13px; font-weight: 600; }
+
+.bb-grid-card {
+  border: 1px solid #e1e4e9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  margin-bottom: 40px;
+}
+
+.bb-grid-scroll { overflow-x: auto; }
+
+.bb-group-band {
+  display: flex;
+  border-bottom: 1px solid var(--border-soft);
+  background: #fbfcfd;
+}
+
+.bb-loc-col {
+  flex: 0 0 46px;
+  border-right: 1px solid var(--border-soft);
+}
+
+.bb-group-cell {
+  padding: 8px 12px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border-right: 1px solid var(--border-soft);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.bb-group-loc { color: var(--ink2); }
+.bb-group-val { color: var(--blue); }
+.bb-group-cope { color: var(--navy); }
+.bb-group-added { color: var(--violet); }
+
+.bb-col-headers {
+  display: flex;
+  border-bottom: 1px solid #e1e4e9;
+  background: #f7f9fb;
+}
+
+.bb-loc-header {
+  padding: 9px 0;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #8b95a3;
+  position: sticky;
+  left: 0;
+  background: #f7f9fb;
+  z-index: 6;
+}
+
+/* A header label wraps to two lines instead of truncating; each grid widens
+   a column too narrow for two (utils/columnHeaders.js measures this type
+   and padding, so change them together). */
+.bb-col-header {
+  padding: 9px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink2);
+  border-right: 1px solid var(--border-softer);
+  white-space: normal;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.bb-ams-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 7px;
+}
+
+.bb-ams-mapped { background: var(--green); }
+.bb-ams-unmapped { background: var(--amber); }
+
+.bb-col-remove {
+  cursor: pointer;
+  color: #b9c0ca;
+  margin-left: auto;
+  font-size: 14px;
+  line-height: 1;
+  padding-left: 4px;
+}
+
+.bb-col-remove:hover { color: var(--rose); }
+
+.bb-grid-row {
+  display: flex;
+  border-bottom: 1px solid var(--border-softer);
+}
+
+.bb-grid-row:last-child { border-bottom: none; }
+
+.bb-loc-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8b95a3;
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 2;
+}
+
+.bb-cell {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 12.5px;
+  border-right: 1px solid var(--border-softer);
+  cursor: pointer;
+  background: #fff;
+  color: var(--ink);
+  overflow: hidden;
+}
+
+.bb-cell-na { color: var(--ink3); }
+.bb-cell-low { background: var(--amber-bg); color: var(--amber); font-weight: 600; }
+.bb-cell-missing { background: var(--rose-bg); color: var(--rose); font-weight: 600; }
+.bb-cell-client { background: var(--violet-bg); color: var(--violet); font-weight: 600; }
+
+.bb-cell-selectable:hover { box-shadow: inset 0 0 0 1px var(--blue); }
+.bb-cell-selected { background: var(--blue-bg) !important; box-shadow: inset 0 0 0 2px var(--blue); }
+
+.bb-cell-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bb-cell-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: inherit;
+  padding: 0;
+  outline: none;
+  color: var(--ink);
+}
+
+/* Original policy tab */
+.bb-policy-cols { display: flex; gap: 20px; align-items: flex-start; }
+
+.bb-policy-doc {
+  flex: 1;
+  min-width: 0;
+  min-height: 480px;
+  padding: 16px;
+}
+
+.bb-policy-mapping {
+  flex: 0 0 320px;
+  max-height: 82vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 1100px) {
+  .bb-policy-cols { flex-direction: column; }
+  .bb-policy-mapping { flex: 1 1 auto; width: 100%; max-height: 40vh; }
+}
+
+/* Schedule of Values embedded below the viewer (read-only provenance mode) */
+.bb-policy-sov { margin-top: 24px; }
+.bb-policy-sov .bb-panel-title { margin-bottom: 4px; }
+.bb-sov-embed .bb-grid-card { margin-bottom: 0; }
+
+.bb-cell-provenance { cursor: pointer; }
+.bb-cell-provenance .bb-cell-text {
+  text-decoration: underline dotted rgba(46, 111, 199, 0.55);
+  text-underline-offset: 3px;
+}
+.bb-cell-provenance:hover { box-shadow: inset 0 0 0 1px var(--blue); }
+.bb-cell-noprov { cursor: default; }
+.bb-cell-active {
+  box-shadow: inset 0 0 0 2px var(--blue);
+  background: var(--blue-bg);
+}
+
+.bb-pdf-link {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-family: var(--font-sans);
+}
+.bb-doc-pages { color: #8b95a3; font-weight: 400; }
+
+/* Document selector tabs above the viewer */
+.bb-doc-tabs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.bb-doc-tab {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.bb-doc-tab:hover { border-color: var(--blue); color: var(--ink); }
+.bb-doc-tab.active {
+  border-color: var(--blue);
+  background: var(--blue-bg);
+  color: var(--navy);
+  font-weight: 600;
+}
+
+/* Now a <button> (an anchor cannot carry the auth header) — keep the link look. */
+.bb-doc-open-link {
+  margin-left: auto; font-size: 11.5px; color: var(--blue);
+  text-decoration: none; background: none; border: none; padding: 0;
+  cursor: pointer; font-family: inherit;
+}
+.bb-doc-open-link:hover { text-decoration: underline; }
+
+/* Policy check */
+.bb-policycheck-controls { display: flex; gap: 8px; align-items: center; }
+.bb-policycheck-select {
+  font-size: 12.5px; padding: 5px 8px; border: 1px solid var(--border);
+  border-radius: 6px; background: #fff; color: var(--ink);
+  max-width: 240px;
+}
+.bb-policycheck-copy { margin: 6px 0 10px; }

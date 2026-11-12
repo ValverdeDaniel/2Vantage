@@ -74,6 +74,6 @@ class DocumentView(APIView):
 class DownloadView(APIView):
     def get(self, request, document_id):
         document = get_object_or_404(Document, pk=document_id)
-        services.record_download(request.user, document)
         inline = request.query_params.get('inline') == '1'
+        services.record_download(request.user, document, inline)
         return file_response(document.file.open('rb'), document.original_name, inline=inline)

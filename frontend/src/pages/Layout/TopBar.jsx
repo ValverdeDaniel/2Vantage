@@ -1,17 +1,20 @@
 import { Link, useLocation } from 'react-router';
+import { useAgency } from '../../api/deals';
 import { useAuth } from '../../auth/useAuth';
 import { errorText } from '../../lib/errors';
-import cx from '../../ui/cx';
-import Menu from '../../ui/Menu';
 import { useToast } from '../../ui/useToast';
-import styles from './TopBar.module.css';
+import AdminMenu from './AdminMenu';
 
-/** 2Vantage · Clients · (Admin) · user menu (plan.md §8.1). Admin and Change password are Django's own pages. */
+/**
+ * The old top bar (A6, plan.md §8.1; Navbar.jsx at 891f1b3): the agency's name, Benefits, Commissions (a commission
+ * tier other than none), Admin (admins), the username (Django's Change password page) and Logout. The old Calendar
+ * link waits with the Radar (I88); the other old links are modules out of scope.
+ */
 export default function TopBar() {
   const { user, signOut } = useAuth();
+  const agency = useAgency();
   const toast = useToast();
-  const { pathname } = useLocation();
-  const inClients = pathname === '/' || pathname.startsWith('/deals/');
+  const location = useLocation();
 
   async function onSignOut() {
     try {
@@ -22,36 +25,21 @@ export default function TopBar() {
   }
 
   return (
-    <header className={styles.bar}>
-      <Link to="/" className={styles.brand}>
-        2Vantage
+    <nav className="navbar" aria-label="Main">
+      <Link to="/" className="navbar-brand">
+        {agency.data?.name || '2Vantage'}
       </Link>
-      <nav aria-label="Main" className={styles.nav}>
-        <Link
-          to="/"
-          className={cx(styles.link, inClients && styles.current)}
-          aria-current={inClients ? 'page' : undefined}
-        >
-          Clients
-        </Link>
-      </nav>
-      <div className={styles.end}>
-        {user.is_admin && (
-          <a href="/admin/" className={styles.link}>
-            Admin
-          </a>
-        )}
-        <Menu
-          label={user.first_name || user.full_name || user.username}
-          ariaLabel={`Account menu for ${user.full_name || user.username}`}
-          align="end"
-          buttonClassName={styles.userButton}
-          items={[
-            { key: 'password', label: 'Change password', href: '/accounts/password_change/' },
-            { key: 'signout', label: 'Sign out', onSelect: onSignOut },
-          ]}
-        />
+      <div className="navbar-user">
+        <Link to="/">Benefits</Link>
+        {user.commissions_access !== 'none' && <Link to="/commissions">Commissions</Link>}
+        {user.is_admin && <AdminMenu key={`${location.pathname}${location.search}`} />}
+        <a href="/accounts/password_change/" title="Change password">
+          {user.username}
+        </a>
+        <button type="button" onClick={onSignOut} className="btn btn-danger">
+          Logout
+        </button>
       </div>
-    </header>
+    </nav>
   );
 }

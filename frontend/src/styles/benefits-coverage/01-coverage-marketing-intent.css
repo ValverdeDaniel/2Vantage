@@ -1,0 +1,286 @@
+/* ===== COVERAGE & MARKETING INTENT CARD =====================================
+ *
+ * The one card (2026-09-23, the 9/22 meeting): what they have today, and what
+ * we do with each line this year. Its own stylesheet rather than more of
+ * benefits.css, which is already 115KB — the pnc-review.css precedent.
+ *
+ * The base `.bnf-cvg`, `-head`, `-badge`, `-table`, `-line`, `-foot` and
+ * `-count` rules still live in benefits.css; everything the wide card added is
+ * here. Names are disjoint from that block on purpose, so the two files can
+ * never fight over one selector.
+ * ========================================================================= */
+
+/* The table grew from five narrow columns to five wide ones. */
+.bnf-cvg-wide { min-width: 900px; }
+.bnf-cvg-wide td { vertical-align: top; padding-top: 10px; padding-bottom: 10px; }
+.bnf-cvg-wide th:last-child, .bnf-cvg-wide td:last-child { width: 28px; }
+
+/* An unanswered line is a QUESTION, not a No — it gets the amber treatment
+ * the requirements board uses for "we still need this from you". */
+.bnf-cvg-table tr.is-unanswered { background: var(--amber-bg); }
+
+.bnf-cvg-badges { display: flex; align-items: center; gap: 8px; }
+.bnf-cvg-gapbadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: var(--rose-bg);
+  color: var(--rose);
+  white-space: nowrap;
+}
+
+/* --- the freeze pane ------------------------------------------------------
+ *
+ * 2026-09-24, D-053. Stephanie: "could we have the headers included for every
+ * card… just so we know which boxes correspond, because as you get down, if
+ * I've got 20 more lines." Daniel offered an Excel freeze pane instead and she
+ * took it.
+ *
+ * The bounded height is what makes any of this work — `position: sticky`
+ * resolves against the nearest SCROLLING ancestor, and benefits.css says in
+ * its own words (the .bnf-portal-grid note) that "with the default stretch…
+ * position:sticky inside it silently does nothing". This is the
+ * `.bnf-export-preview-scroll` recipe, which already ships.
+ *
+ * `.bb-grid-scroll` stays on the element for its overflow-x; this adds the
+ * cap. Twenty-two other tables share that class and none of them wants a
+ * height. A short deal never reaches the cap, so no scrollbar appears. */
+.bnf-cvg-scroll {
+  max-height: 62vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  /* Height of the "This year" band row. Row two of the head pins BELOW row
+     one, and CSS gives a sticky element no way to say "under my sibling". */
+  --cvg-band-h: 22px;
+}
+
+/* Sticky cells need their OWN opaque background — the row's does not travel
+   with them — and a collapsed table's borders do not paint on a sticky cell
+   at all, which is why every rule below draws its edges with box-shadow.
+   z-order: frozen column 1 < header 2 < the corner 3. */
+.bnf-cvg-scroll .bnf-cvg-table thead th {
+  position: sticky;
+  background: var(--card);
+  z-index: 2;
+}
+.bnf-cvg-scroll .bnf-cvg-table thead tr.bnf-cvg-band th { top: 0; height: var(--cvg-band-h); }
+.bnf-cvg-scroll .bnf-cvg-table thead tr.bnf-cvg-colhead th { top: var(--cvg-band-h); }
+
+/* The rule under the header belongs to the COLUMN row, not the band above it —
+   the two read as one block. Every edge here is a box-shadow because the
+   table is border-collapse:collapse and a collapsed border does not paint on
+   a sticky cell. */
+.bnf-cvg-scroll .bnf-cvg-table thead tr.bnf-cvg-colhead th {
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+.bnf-cvg-scroll .bnf-cvg-table .bnf-cvg-linecell {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--card);
+  box-shadow: inset -1px 0 0 var(--border);
+}
+.bnf-cvg-scroll .bnf-cvg-table thead .bnf-cvg-linecell { z-index: 3; }
+/* The corner carries both edges at once. */
+.bnf-cvg-scroll .bnf-cvg-table thead tr.bnf-cvg-colhead .bnf-cvg-linecell {
+  box-shadow: inset -1px 0 0 var(--border), inset 0 -1px 0 var(--border);
+}
+/* The corner and the frozen column both need the row tint restated, or the
+   amber stops dead at the freeze line. */
+.bnf-cvg-table tr.is-unanswered .bnf-cvg-linecell { background: var(--amber-bg); }
+.bnf-cvg-table tr.bnf-cvg-noterow > td { background: var(--card); }
+
+/* The band over the three decisions: they are one question, and saying so
+   costs a 22px row. */
+.bnf-cvg-band th { padding: 3px 10px 0; }
+.bnf-cvg-bandlabel {
+  text-align: center !important;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink3);
+}
+.bnf-cvg-colhead th { vertical-align: bottom; }
+/* The label and its select-all stack, centred, in every column but the first. */
+.bnf-cvg-colhead th:not(:first-child) {
+  display: table-cell;
+}
+.bnf-cvg-th { display: block; margin-bottom: 5px; }
+
+/* --- the checkbox --------------------------------------------------------
+ *
+ * Words on the header, a box on the row — the whole point of the 9/24 change.
+ * Stephanie: "instead of just having the words on the header, now there's just
+ * so many more words on each line… so it does make it busier."
+ *
+ * A button rather than <input type="checkbox"> because it has to draw a MIXED
+ * state (the select-all headers) and a QUESTION state (a line nobody has
+ * answered), and the native control can express neither without an imperative
+ * `indeterminate` write on every render. */
+.bnf-cvg-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid var(--ink3);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  flex: none;
+}
+.bnf-cvg-box.is-on,
+.bnf-cvg-box.is-mixed { background: var(--navy); border-color: var(--navy); }
+.bnf-cvg-box.is-on::after { content: "✓"; }
+.bnf-cvg-box.is-mixed::after { content: "–"; }
+.bnf-cvg-box:hover:not(:disabled) { border-color: var(--navy); }
+.bnf-cvg-box:disabled { opacity: 0.3; cursor: default; }
+
+/* Nothing answered yet: dashed amber, so the row reads as ASKING rather than
+   as a No somebody chose. `coverage.line_states` depends on that distinction
+   being real, and the screen should not be the one place it is blurred. */
+.bnf-cvg-box.is-asking { border-style: dashed; border-color: var(--amber); }
+
+/* The question the amber row is putting, and its one-click No. */
+.bnf-cvg-ask { color: var(--amber); }
+.bnf-cvg-nolink {
+  font: inherit;
+  font-weight: 700;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--amber);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.bnf-cvg-nolink:disabled { cursor: default; opacity: 0.6; }
+
+/* What the fixed headers can no longer say per row. A gap-sell line reads
+   "Shop it" as "Quote it" and "Keep as-is" as "Present it" — the flip that
+   confused the room on 9/24, kept as a quiet hint rather than in the buttons. */
+.bnf-cvg-vocab { font-style: italic; }
+
+/* Rates guaranteed through — the reason a line is kept rather than shopped,
+   sitting under the box it justifies. */
+input.bnf-cvg-guarantee {
+  margin-top: 6px;
+  font-size: 11px;
+  padding: 3px 5px;
+  max-width: 128px;
+}
+/* Hidden behind a link while empty: "keep them all as is" is the common
+   gesture, and twenty blank date pickers is the density the 9/24 meeting was
+   called about. */
+.bnf-cvg-guarbtn {
+  font: inherit;
+  font-size: 10.5px;
+  margin-top: 5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink3);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bnf-cvg-guarbtn:hover { color: var(--blue); text-decoration: underline; }
+
+/* --- the line label, and the medical line's two forms --------------------
+ *
+ * Stephanie, 9/24: "add two boxes between the medical and the in force… the
+ * same drop downs for the Florida Blue questionnaire and the stop-loss
+ * disclosure, but I would keep it in BOTH SPOTS." In this cell rather than as
+ * a ninth column, because nineteen empty cells is the "seven screens long" she
+ * warned about in the same breath.
+ *
+ * BESIDE the label since 2026-09-29, not under it (Daniel: "I would like it to
+ * be to the right of the word medical … just to save vertical space"). Stacked
+ * underneath, the pair cost the medical row ~50px on the one line whose other
+ * cells are already the tallest in the table. They keep their vertical stack
+ * and move as a block.
+ *
+ * It WRAPS rather than breaking at a width, and there is no @media in this
+ * file to start with: the panel mounts in two cards of different widths
+ * (Intake and the RFP tab), and this cell is sized by the table algorithm off
+ * whatever the other seven columns left behind — so the only honest question
+ * is how much room the cell GOT, which is exactly what flex-wrap answers and
+ * what a viewport breakpoint can only guess at. `row-gap` restores the margin
+ * the forms block used to carry, so the wrapped state is the spacing this had
+ * before.
+ *
+ * LOAD-BEARING, and the reason nothing below says `nowrap`, `flex: 0 0` or
+ * `min-width: 0`: under table-layout:auto a table overflows when the sum of
+ * column MIN-content widths does, never a max-content. Every level here wraps,
+ * so this cell's min-content stays the ~190px one select already cost and the
+ * frozen column cannot grow and shove the other seven right. Freezing the
+ * forms block at its own width instead would push the table's minimum past the
+ * 900px `min-width` and hand every card narrower than ~1030px a horizontal
+ * scrollbar it does not have today. A container query is the same trap wearing
+ * a nicer hat: `container-type: inline-size` applies size containment, so the
+ * wrapper would stop feeding min-content into column sizing at all. */
+.bnf-cvg-linehead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 16px;
+}
+/* No `background` here, ever: the frozen cell carries var(--card) and the
+   amber is-unanswered tint, and an opaque child would punch a card-coloured
+   rectangle through the amber. */
+.bnf-cvg-lineid { flex: 0 1 auto; }
+.bnf-cvg-forms {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* The dashed border-top that used to sit here divided a STACKED sub-block
+     from the label above it. Beside the label it would be a stub floating at
+     mid-height, and CSS has no way to know the block has wrapped back under.
+     The column gap and the two uppercase captions separate them already. */
+}
+.bnf-cvg-formpick {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Never below one readable select. Free: it is under the 190px cap the
+     select already carries, so it cannot raise this cell's min-content — it
+     only stops an engine with a cheap intrinsic <select> width from squashing
+     the pair instead of wrapping them. */
+  min-width: 150px;
+}
+.bnf-cvg-formpick > span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink3);
+}
+.bnf-cvg-formpick select.bnf-intake-input {
+  font-size: 11.5px;
+  padding: 3px 5px;
+  max-width: 190px;
+}
+
+/* --- current plan -------------------------------------------------------- */
+
+.bnf-cvg-plan {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: 460px;
+}
+.bnf-cvg-plan .bnf-intake-input { font-size: 12px; padding: 5px 7px; }
+/* "Level-funded" and "Fully insured" have to be readable — the shared input
+ * width truncates the select to about seven characters. */
+.bnf-cvg-plan select.bnf-intake-input { min-width: 120px; }
+.bnf-cvg-plan input[type="text"].bnf-intake-input,
+.bnf-cvg-plan input:not([type]).bnf-intake-input { min-width: 112px; flex: 1 1 112px; }
+.bnf-cvg-plan input[type="date"].bnf-intake-input { min-width: 128px; }

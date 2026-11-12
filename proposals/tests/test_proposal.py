@@ -1,6 +1,5 @@
 """Proposal selection and configuration (plan.md §7.9, §8.12)."""
 
-from quotes import marks
 from quotes import services as plans
 
 
@@ -30,7 +29,7 @@ def setup_line(user, deal):
         values={'rate_ee': '440'},
     )
     z = plans.create_plan(user, deal, line='medical', role='alternate', carrier='Cigna', name='Z', replaces_ids=[a.id])
-    marks.set_enrollment(user, deal, [{'id': a.id, 'enrollment': {'EE': 10}, 'on': True}])
+    plans.set_enrollment(user, deal, [{'id': a.id, 'enrollment': {'EE': 10}, 'on': True}])
     return a, renewal, x, y, z
 
 
@@ -40,17 +39,40 @@ def medical(api, deal):
     )
 
 
-def test_default_selection_and_carrier_grouping(api, user, deal):
+def test_F119_F120_the_proposal_presents_quotes_set_in_their_one_order(api, user, deal):
+    """Rewritten in slice 7 (Q.3 #10): 2V's carrier sort and its own membership list retired; the proposal reads
+    quotes' `presented()` and `order.layout()`."""
     a, renewal, x, y, z = setup_line(user, deal)
     line = medical(api, deal)
-    assert line['is_default'] and line['plan_ids'] == [a.id, renewal.id, x.id, z.id, y.id]  # Cigna, then UHC
-    marks.star(user, deal, [y.id], True)
+    assert line['is_default'] and line['plan_ids'] == [a.id, renewal.id, x.id, y.id, z.id]  # as added, not by carrier
+    plans.star(user, deal, [y.id], True)
+    assert medical(api, deal)['plan_ids'] == [a.id, y.id]  # OQ11: a starred line prints its renewal only when picked
+    plans.set_recommended(user, renewal.id, True)
     assert medical(api, deal)['plan_ids'] == [a.id, renewal.id, y.id]
+
+
+def test_J13_taking_a_plan_off_an_unstarred_line_stars_every_other_quote(api, user, deal):
+    a, renewal, x, y, z = setup_line(user, deal)
+    response = api.put(
+        f'/api/deals/{deal.id}/proposal/', {'lines': {'medical': [a.id, renewal.id, x.id, z.id]}}, format='json'
+    )
+    assert response.status_code == 200
+    line = medical(api, deal)
+    assert line['plan_ids'] == [a.id, renewal.id, x.id, z.id] and line['is_default'] is False
+    assert api.put(f'/api/deals/{deal.id}/proposal/', {'lines': {'medical': []}}, format='json').status_code == 200
+    assert medical(api, deal)['is_default'] is True  # an empty list clears the line's shortlist (F55)
+
+
+def test_F43_the_proposal_arrows_move_a_plan_with_the_order_door(api, user, deal):
+    a, renewal, x, y, z = setup_line(user, deal)
+    swapped = [a.id, renewal.id, y.id, x.id, z.id]
+    assert api.put(f'/api/deals/{deal.id}/proposal/', {'lines': {'medical': swapped}}, format='json').status_code == 200
+    assert medical(api, deal)['plan_ids'] == swapped
 
 
 def test_current_and_recommended_plans_cannot_be_dropped(api, user, deal):
     a, renewal, x, y, z = setup_line(user, deal)
-    marks.set_recommended(user, x.id, True)
+    plans.set_recommended(user, x.id, True)
     response = api.put(f'/api/deals/{deal.id}/proposal/', {'lines': {'medical': [y.id]}}, format='json')
     assert response.status_code == 200
     line = medical(api, deal)

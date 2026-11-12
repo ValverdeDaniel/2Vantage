@@ -1,0 +1,275 @@
+/* --- The cards (D-153 C3b, C4; `RequestCards.jsx`): one per question on
+   their form, the open one with its thread and composer; the strip (value
+   · origin · reason · Review ▸), the live line on a link's tab, the draft
+   in the cart. Text wraps everywhere: a phone keeps the page's width. --- */
+.rr-cards-head { margin: 0 0 2px; }
+.rr-rcard {
+  display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 0 0 auto;
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--card); cursor: pointer;
+}
+.rr-rcard-on { cursor: default; border-color: var(--violet); box-shadow: inset 3px 0 0 var(--violet); }
+.rr-rcard-new:not(.rr-rcard-on) { border-color: var(--violet); }
+.rr-rcard-inline { margin: 4px 0 6px; }
+.rr-rcard-head { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.rr-rcard-label { font-size: 12.5px; color: var(--ink); overflow-wrap: anywhere; min-width: 0; }
+.rr-rcard-count { margin-left: auto; font-size: 11px; color: var(--ink3); white-space: nowrap; }
+.rr-rcard-strip {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 8px; min-width: 0; font-size: 12px;
+}
+.rr-rcard-value { font-weight: 600; color: var(--ink); overflow-wrap: anywhere; min-width: 0; }
+.rr-rcard-blank { font-weight: 400; font-style: italic; color: var(--ink3); }
+.rr-rcard-reason { font-size: 11px; font-weight: 600; color: var(--amber); }
+.rr-rcard-strip .rr-origin-chip-wrap { min-width: 0; }
+.rr-rcard-live {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0;
+  padding: 4px 8px; border-radius: 6px; background: var(--page);
+  font-size: 12px; color: var(--ink2); overflow-wrap: anywhere;
+}
+.rr-rcard-draft {
+  display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 6px 8px;
+  border: 1px dashed var(--violet); border-radius: 8px; background: var(--violet-bg); font-size: 12px;
+}
+.rr-rcard-draft-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.rr-rcard-draft-h b { font-size: 11.5px; color: var(--violet); }
+.rr-rcard-draft-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-left: auto; }
+.rr-rcard-draft-actions .btn { flex: 0 0 auto; }
+.rr-rcard-draft textarea {
+  width: 100%; min-height: 54px; resize: vertical; font: inherit; font-size: 12.5px;
+  padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--card);
+}
+.rr-rcard-draft-text { color: var(--ink); overflow-wrap: anywhere; white-space: pre-wrap; }
+.rr-rcard-recent { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.rr-rcard-earlier { font-size: 11px; color: var(--ink3); }
+.rr-rcard-last { font-size: 12px; color: var(--ink2); overflow-wrap: anywhere; }
+.rr-rcard-last b { color: var(--ink); font-weight: 600; }
+.rr-rcard-close { margin-left: auto; font-size: 15px; line-height: 1; color: var(--ink3); }
+.rr-rcard-count + .rr-rcard-close { margin-left: 6px; }
+.rr-cards-none { font-size: 12px; color: var(--ink3); }
+.rr-rcard-thread { cursor: default; min-width: 0; }
+.rr-rcard-none { font-size: 12px; color: var(--ink3); }
+/* The mark beside an item in their form whose card holds something. */
+.rr-card-pin {
+  display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; max-width: 100%;
+  margin: 2px 0; padding: 0 8px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--card); color: var(--navy); font: inherit; font-size: 11px; font-weight: 600;
+  line-height: 18px; white-space: nowrap; cursor: pointer;
+}
+.rr-card-pin-new { border-color: var(--violet); color: var(--violet); }
+/* "N new since your last look" over the page. */
+.rr-reqpage-new {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; width: 100%;
+  padding: 8px 12px; text-align: left; cursor: pointer; font: inherit; font-size: 13px;
+  color: var(--ink); border: 1px solid var(--violet); border-radius: 10px; background: var(--violet-bg);
+}
+.rr-reqpage-new b { color: var(--violet); }
+.rr-reqpage-new span { color: var(--ink2); }
+/* Why an answer is ready (C4): submitted, or idle with Nudge; the bulk
+   approve's tick for the idle ones. */
+.rr-ready-why { font-weight: 600; color: var(--ink2); }
+.rr-ready-idle { color: var(--amber); }
+.rr-ready-nudge { margin-left: 6px; }
+.rr-idle-tick {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink2);
+  white-space: nowrap; cursor: pointer;
+}
+.rr-idle-tick input { margin: 0; }
+
+/* The header: where the cart goes. */
+.rr-reqhead {
+  display: flex; flex-direction: column; gap: 10px; min-width: 0;
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card);
+}
+/* The who bar (D-163, §4.9): everyone, each person on the open links with
+   Copy link and View, a whole request's head when it holds several, and a
+   new link. */
+.rr-who { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px 8px; min-width: 0; }
+.rr-who-h {
+  align-self: center; font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--ink3);
+}
+.rr-who-all, .rr-who-new, .rr-who-group-h, .rr-who-pick {
+  display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; max-width: 100%;
+  padding: 0; border: none; background: none; cursor: pointer;
+  font: inherit; font-size: 12.5px; text-align: left; overflow-wrap: anywhere; color: var(--ink2);
+}
+.rr-who-all, .rr-who-new {
+  padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--card);
+}
+.rr-who-new { border-style: dashed; color: var(--violet); }
+.rr-who-new:disabled { opacity: 0.5; cursor: default; }
+.rr-who-group {
+  display: flex; flex-wrap: wrap; align-items: stretch; gap: 4px; min-width: 0;
+  padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--page);
+}
+.rr-who-group-on { border-color: var(--violet); }
+.rr-who-group-h { padding: 3px 8px; border: 1px solid transparent; border-radius: 7px; }
+.rr-who-person {
+  display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; min-width: 0;
+  padding: 4px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--card);
+}
+.rr-who-lit { border-color: var(--violet); }
+.rr-who-on { border-color: var(--violet); background: var(--violet-bg); color: var(--ink); }
+.rr-who-pick b, .rr-who-all b { color: var(--ink); font-weight: 600; }
+.rr-who-meta { font-size: 11.5px; color: var(--ink3); }
+.rr-who-q {
+  min-width: 18px; padding: 0 6px; border-radius: 9px; line-height: 18px; text-align: center;
+  font-size: 11px; font-weight: 700; background: var(--rose); color: #fff;
+}
+.rr-who-copy, .rr-who-view {
+  padding: 0; border: none; background: none; cursor: pointer; white-space: nowrap;
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--violet);
+}
+.rr-who-view { color: var(--navy); }
+.rr-who-waiting { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: var(--violet, #6b4fbb); }
+.rr-who-copy:hover:not(:disabled), .rr-who-view:hover { text-decoration: underline; }
+.rr-who-copy:disabled { color: var(--ink3); cursor: not-allowed; }
+.rr-dest-tab-count {
+  min-width: 18px; padding: 0 6px; border-radius: 9px; line-height: 18px; text-align: center;
+  font-size: 11px; font-weight: 600; background: var(--page); color: var(--ink2);
+}
+.rr-who-on .rr-dest-tab-count { background: var(--card); color: var(--violet); }
+.rr-dest-tabs-none { align-self: center; font-size: 12.5px; color: var(--ink3); }
+
+/* The four filters (D-163): what the rail, their form and the cards keep. */
+.rr-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; margin-top: -6px; }
+.rr-filter {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--card); color: var(--ink2); font: inherit; font-size: 12.5px;
+}
+.rr-filter:hover { color: var(--ink); }
+.rr-filter-on { border-color: var(--violet); background: var(--violet); color: #fff; font-weight: 600; }
+.rr-filter-n {
+  min-width: 18px; padding: 0 6px; border-radius: 9px; line-height: 18px; text-align: center;
+  font-size: 11px; font-weight: 600; background: var(--page); color: var(--ink2);
+}
+.rr-filter-on .rr-filter-n { background: #fff; color: var(--violet); }
+.rr-filter-q:not(.rr-filter-on) .rr-filter-n { background: var(--rose); color: #fff; }
+
+/* The client's open questions over the cart (D-163), the board's block. */
+.rr-questions { margin-bottom: 12px; }
+.rr-questions-head {
+  width: 100%; padding: 0; border: none; background: none; cursor: pointer;
+  font: inherit; text-align: left;
+}
+.rr-questions-head .rr-cartbox-caret { margin-left: auto; }
+.rr-questions .bnf-override-link { font-size: 12.5px; }
+
+/* Ours under each item in their form (D-163), where the client's own
+   "Ask a question" would stand greyed. */
+.rr-form-ask {
+  padding: 0; border: none; background: none; cursor: pointer;
+  font: inherit; font-size: 12.5px; font-weight: 600; color: var(--violet);
+}
+.rr-form-ask:hover { text-decoration: underline; }
+
+/* The filter in their form (D-163): what it leaves out stays on the page,
+   flagged; here it is hidden, and a card, section, block, row or group of
+   fields left with nothing showing folds away. */
+.rr-preview-frame [data-rr-hidden] { display: none !important; }
+.rr-preview-filtered :is(.bb-portal-card, .bnf-q-section, .bnf-q-block, .bnf-q-row, .bb-portal-fields):not(:has([data-ask-ref]:not([data-rr-hidden]))) {
+  display: none;
+}
+.rr-preview-filtered .bnf-portal-group-title:has(+ .bb-portal-fields:not(:has([data-ask-ref]:not([data-rr-hidden])))) {
+  display: none;
+}
+.rr-cards-elsewhere { font-size: 12px; color: var(--ink2); }
+.rr-reqhead-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px 16px; min-width: 0; }
+.rr-reqhead-message { flex: 1 1 320px; min-width: 0; margin-top: 0; }
+.rr-reqhead-none { font-size: 12.5px; color: var(--ink2); }
+.rr-reqhead-actions {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 6px; margin-left: auto;
+}
+.rr-reqhead-actions .btn { flex: 0 0 auto; }
+.rr-reqhead-actions .rr-sheet-openlinks { margin-right: 0; }
+.rr-dest-on { border-color: var(--violet); box-shadow: inset 3px 0 0 var(--violet); }
+@media (max-width: 600px) {
+  .rr-reqhead-actions { align-items: stretch; margin-left: 0; width: 100%; }
+}
+
+/* The cart: each ask the way the client will get it. */
+.rr-cart { display: flex; flex-direction: column; min-width: 0; }
+.rr-cart-sub {
+  margin-top: 4px; font-size: 11px; font-weight: 600; color: var(--violet);
+  overflow-wrap: anywhere;
+}
+.rr-cart-item b { overflow-wrap: anywhere; }
+.rr-cart-req { font-style: normal; color: var(--rose); margin-left: 2px; }
+.rr-sheet-item .rr-cart-fmt {
+  display: flex; flex-wrap: wrap; gap: 1px 8px; margin: 1px 0 2px; font-size: 12px;
+}
+.rr-cart-fmt i { font-style: normal; color: var(--ink2); overflow-wrap: anywhere; }
+.rr-cart-fmt .rr-cart-kind { font-weight: 600; color: var(--navy); }
+.rr-cart-fmt .rr-cart-help { color: var(--ink3); }
+.rr-cart-result {
+  display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; padding: 10px 12px;
+  border: 1px solid var(--green); border-radius: 10px; background: var(--card);
+}
+.rr-cart-result-foot { display: flex; justify-content: flex-end; }
+.rr-cart-result-foot .btn { flex: 0 0 auto; }
+.rr-cart-empty {
+  padding: 24px 16px; border: 1px dashed var(--border); border-radius: 10px;
+  font-size: 13px; color: var(--ink2); text-align: center;
+}
+
+/* --- The client's form, previewed (D-153 C2, review-request-page.md §4.1
+   "Centre"): the header's message on one line until opened, the cart folded
+   into "In the cart (N)", and under it the portal itself in its `preview`
+   mode (`bnf-portal-embed`): its frame shrunk, one column when the centre
+   is narrow (a container query: the cards column of C3b narrows it), each
+   ask the cart adds tagged "New · not sent". --- */
+.rr-reqhead-msgline {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; width: 100%; min-width: 0;
+  font: inherit; text-align: left; padding: 0; background: none; border: none; cursor: pointer;
+}
+.rr-reqhead-msgto { font-size: 12.5px; font-weight: 600; color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
+.rr-reqhead-msgline:hover .rr-reqhead-msgto { text-decoration: underline; }
+.rr-reqhead-msgcaret { font-size: 11px; color: var(--ink3); }
+.rr-reqhead-none .bnf-override-link { font-size: 12.5px; }
+.rr-reqpage-cart { display: flex; flex-direction: column; gap: 14px; }
+.rr-cartbox { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.rr-cartbox-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; width: 100%; min-width: 0;
+  font: inherit; text-align: left; padding: 0; background: none; border: none; cursor: pointer;
+}
+.rr-cartbox-head b { font-size: 14px; color: var(--ink); }
+.rr-cartbox-head span { font-size: 12px; color: var(--ink3); }
+.rr-cartbox-head .rr-cartbox-caret { margin-left: auto; font-size: 11px; }
+.rr-preview { display: flex; flex-direction: column; min-width: 0; }
+.rr-preview > .rr-reqpage-colhead { margin-bottom: 8px; }
+.rr-preview-stale .rr-preview-frame { opacity: 0.55; transition: opacity 0.15s; }
+.rr-preview-why {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-bottom: 8px;
+  padding: 8px 12px; border-radius: 8px; font-size: 13px; color: var(--ink);
+  background: var(--amber-bg); border: 1px solid var(--amber);
+}
+.rr-preview-why > span { flex: 1 1 260px; min-width: 0; overflow-wrap: anywhere; }
+.rr-preview-why b { color: var(--amber); }
+.rr-preview-why .btn { flex: 0 0 auto; }
+.rr-preview-frame { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; min-width: 0; }
+/* A browser delivers no click from a disabled input, and the answer box is most
+   of a question: let the click through, so it picks the question's card. */
+.rr-preview-frame :is(input, select, textarea):disabled { pointer-events: none; }
+.bnf-portal-embed { min-height: 0; container-type: inline-size; }
+.bnf-portal-embed .bb-portal-topbar { height: 38px; padding: 0 14px; gap: 8px; }
+.bnf-portal-embed .bb-portal-logo { width: 20px; height: 20px; font-size: 11px; }
+.bnf-portal-embed .bb-portal-brand { font-size: 13px; }
+.bnf-portal-embed .bb-portal-body { max-width: none; padding: 14px 14px 18px; }
+/* Its frame clips, so nothing sticks inside it: the rail stays in place. */
+.bnf-portal-embed .bnf-portal-rail { position: static; }
+@container (max-width: 760px) {
+  .bnf-portal-embed .bnf-portal-grid { grid-template-columns: minmax(0, 1fr); }
+}
+.bnf-ask-new {
+  display: inline-flex; align-items: center; gap: 2px; align-self: flex-start; max-width: 100%;
+  margin: 2px 0; padding: 0 3px 0 8px; border: 1px dashed var(--violet); border-radius: 999px;
+  background: var(--violet-bg); color: var(--violet);
+  font-size: 11px; font-weight: 600; line-height: 18px; white-space: nowrap;
+}
+.bnf-ask-new-x {
+  border: none; background: none; padding: 0 4px; font-size: 13px; line-height: 1;
+  color: inherit; cursor: pointer;
+}
+.bnf-ask-new-x:hover { color: var(--rose); }
+.bnf-portal-embed [data-ask-ref]:has(> .bnf-ask-new) { outline: 2px dashed var(--violet); outline-offset: 3px; }

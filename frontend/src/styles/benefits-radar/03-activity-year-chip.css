@@ -1,0 +1,5 @@
+/* activity: the year chip on a multi-year feed */
+.bnf-ov-event-year { margin-left: 6px; font-size: 10px; vertical-align: middle; }
+@media (max-width: 900px) {
+  .bnf-cw-py-grid { grid-template-columns: 1fr; }
+}

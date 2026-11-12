@@ -1,22 +1,67 @@
-import { useState } from 'react';
-import { useUpdateClient } from '../../api/deals';
-import { relationships } from '../../api/meta';
-import { fieldErrors, formErrorText } from '../../lib/errors';
+import { useId, useState } from 'react';
+import { useDealClient, useSetClientStatus, useUpdateClient } from '../../api/deals';
+import { relationshipLabel } from '../../api/meta';
+import { statusBadgeClass } from '../../lib/dealLook';
+import { errorText, fieldErrors, formErrorText } from '../../lib/errors';
+import { formatDate } from '../../lib/format';
 import Button from '../../ui/Button';
 import Field from '../../ui/Field';
 import Modal from '../../ui/Modal';
-import Select from '../../ui/Select';
 import TextInput from '../../ui/TextInput';
-import styles from './Dialogs.module.css';
 
-/** Edit the client's name and type (PATCH clients/{id}/). */
+// Each move the server offers (plan.md §5.1): allowed ones act at once; refused ones are greyed, with their sentence
+// as the tooltip. A move that is refused after all (a 409) shows its sentence below.
+function StatusMoves({ deal, meta }) {
+  const client = useDealClient(deal);
+  const setStatus = useSetClientStatus(deal);
+  const shown = client.data || deal.client; // the header's copy until the full client arrives
+  const moves = client.data?.moves || [];
+  const titleId = useId();
+
+  return (
+    <div role="group" aria-labelledby={titleId} className="form-group">
+      <label id={titleId}>Status</label>
+      <div className="bnf-ov-chips">
+        <span className={statusBadgeClass(shown.relationship)}>{relationshipLabel(meta, shown.relationship)}</span>
+        {shown.client_since && <span className="bb-drop-meta">since {formatDate(shown.client_since)}</span>}
+      </div>
+      {client.isError && (
+        <div role="alert" className="error-message bb-mt">
+          {errorText(client.error)}
+        </div>
+      )}
+      <div className="bnf-ov-chips">
+        {moves.map((move) => (
+          // A disabled button takes no pointer events, so the tooltip comes from the span around it.
+          <span key={move.to} title={move.allowed ? undefined : move.sentence}>
+            <Button
+              size="sm"
+              disabled={!move.allowed}
+              busy={setStatus.isPending && setStatus.variables === move.to}
+              aria-label={move.allowed ? undefined : `${move.label} — ${move.sentence}`}
+              onClick={() => setStatus.mutate(move.to)}
+            >
+              {move.label}
+            </Button>
+          </span>
+        ))}
+      </div>
+      {setStatus.isError && (
+        <div role="alert" className="error-message bb-mt">
+          {errorText(setStatus.error)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Edit the client's name (PATCH clients/{id}/) and move its status (POST clients/{id}/status/). */
 export default function ClientDialog({ deal, meta, onClose }) {
   const update = useUpdateClient(deal);
   const [name, setName] = useState(deal.client.name);
-  const [relationship, setRelationship] = useState(deal.client.relationship);
   const [missing, setMissing] = useState(false);
   const errors = fieldErrors(update.error);
-  const formError = formErrorText(update.error, ['name', 'relationship']);
+  const formError = formErrorText(update.error, ['name']);
 
   function onSubmit(event) {
     event.preventDefault();
@@ -24,7 +69,7 @@ export default function ClientDialog({ deal, meta, onClose }) {
       setMissing(true);
       return;
     }
-    update.mutate({ name: name.trim(), relationship }, { onSuccess: onClose });
+    update.mutate({ name: name.trim() }, { onSuccess: onClose });
   }
 
   return (
@@ -36,8 +81,10 @@ export default function ClientDialog({ deal, meta, onClose }) {
       size="sm"
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" busy={update.isPending}>
+          <Button size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="sm" type="submit" variant="primary" busy={update.isPending}>
             Save
           </Button>
         </>
@@ -46,18 +93,11 @@ export default function ClientDialog({ deal, meta, onClose }) {
       <Field label="Client name" required error={missing && !name.trim() ? 'Enter the client name.' : errors.name}>
         <TextInput value={name} maxLength={200} onChange={(event) => setName(event.target.value)} />
       </Field>
-      <Field label="Type" error={errors.relationship}>
-        <Select
-          value={relationship}
-          onChange={(event) => setRelationship(event.target.value)}
-          options={relationships(meta).map((type) => ({ value: type.key, label: type.label }))}
-        />
-      </Field>
+      <StatusMoves deal={deal} meta={meta} />
       {formError && (
-        <p role="alert" className={styles.error}>
-          <span aria-hidden="true">⚠ </span>
+        <div role="alert" className="error-message">
           {formError}
-        </p>
+        </div>
       )}
     </Modal>
   );
