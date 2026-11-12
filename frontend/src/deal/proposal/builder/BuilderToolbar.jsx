@@ -2,6 +2,9 @@ import { useParams } from 'react-router';
 import { useDeal } from '../../../api/deals';
 import { RENEWAL } from '../../../api/meta';
 import cx from '../../../ui/cx';
+import ClientPdfButton from './ClientPdfButton';
+import ClientSpreadsheetButton from './ClientSpreadsheetButton';
+import PowerPointButton from './PowerPointButton';
 
 const LEVELS = { stop: 'Stops', warn: 'Check', info: 'Note' };
 
@@ -9,10 +12,11 @@ const LEVELS = { stop: 'Stops', warn: 'Check', info: 'Note' };
  * The builder's toolbar and its Before-you-export list (plan.md §8.14; J18, J23, J27, J28; the old ProposalBuilder.jsx
  * toolbar at 891f1b3): "✓ n of N completed" with Expand/Collapse all, "⚠ n to check" opening the checks (Stops first,
  * each with Fix ▸), "Open proposal ▸", and the readiness banner — what Issue would say, before the click. The checks
- * and the sentence are the server's (proposals/checks.py, ready.py). The three file buttons arrive with the files
- * (J24; slices 27–31); "Open proposal ▸" opens the Export viewer once it exists (J27; slice 28). RENEWAL leads the
- * toolbar on a deal opened for an Existing client (J22; slice 38): the header's `deal_type`, read from the deal page's
- * cached header (the builder lives only there), never the client's status.
+ * and the sentence are the server's (proposals/checks.py, ready.py). "⬇ Client PDF" (J24; slice 29), "⬇ PowerPoint"
+ * (J141; slice 31), "⬇ Client spreadsheet" (J24; slice 27); "Open proposal ▸" opens the Export viewer
+ * once it exists (J27; slice 28). RENEWAL leads the toolbar on a deal opened for an Existing client (J22; slice 38): the
+ * header's `deal_type`, read from the deal page's cached header (the builder lives only there), never the client's
+ * status.
  */
 export default function BuilderToolbar({ progress, allOpen, onAllOpen, checks, showChecks, onShowChecks, ready, onFix }) {
   const { dealId } = useParams();
@@ -47,6 +51,9 @@ export default function BuilderToolbar({ progress, allOpen, onAllOpen, checks, s
         >
           {checks.length ? `⚠ ${checks.length} to check` : '✓ Nothing to fix'}
         </button>
+        <ClientPdfButton dealId={dealId} />
+        <PowerPointButton dealId={dealId} />
+        <ClientSpreadsheetButton dealId={dealId} />
         <button
           type="button"
           className="btn btn-primary btn-sm"

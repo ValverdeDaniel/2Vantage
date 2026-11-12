@@ -10,7 +10,8 @@ const QUOTED = { true: 'Yes', false: 'No', null: '–' };
  * The carriers come from the emails marked sent on the RFP tab (`rfp.asked_by_line`) and the quotes on this deal; with
  * no RFP sent, only the carriers that quoted are listed and the table waits. Show it (deal-wide: true, false, or Back to
  * automatic), a note per carrier (≤120 characters, saved on blur) and a Show tick per carrier, each one path of
- * `markets` (J20). The rows, their order and the unmatched names are the server's (`markets`).
+ * `markets` (J20). The rows, their order and the unmatched names are the server's (`markets`). A hidden carrier also
+ * leaves the client spreadsheet's Compare and All Plans lists, and the card says so (J154; OQ39; slice 27).
  */
 export default function MarketsCard({ markets, line, settings, meta, card, busy, onSet }) {
   const [notes, setNotes] = useState({});
@@ -111,6 +112,12 @@ export default function MarketsCard({ markets, line, settings, meta, card, busy,
         </table>
       ) : (
         <div className="bb-empty">No carriers asked or quoted on this line yet.</div>
+      )}
+      {entry && hidden.length > 0 && (
+        <div className="bb-drop-meta">
+          A carrier hidden here also leaves the client spreadsheet&rsquo;s Compare and All Plans tabs: its quotes that are
+          not on the proposal are not listed there.
+        </div>
       )}
     </BuilderCard>
   );

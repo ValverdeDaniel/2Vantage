@@ -1,7 +1,8 @@
 """All money math (plan.md §5.5, OQ9 b), one module per idea: `rounding` (round_decimal, the only rounding of money),
 `enrollment` (which enrollment prices a plan; `by_plan`, the census by plan name) and `premium` (the monthly premium
-by rate basis and what derives from it). `pricing.py` (priced versions, slice 35) and `stop_loss.py` (slice 36) join
-here. Pure functions over `quotes.shapes`; every figure is a Decimal until `rounding.plain` makes it the API's number.
+by rate basis and what derives from it). `pricing.py` (priced versions, slice 35), `contribution.py` (the employer's
+share on the client spreadsheet's Compare tab, slice 27) and `stop_loss.py` (slice 36) join here. Pure functions
+over `quotes.shapes`; every figure is a Decimal until `rounding.plain` makes it the API's number.
 """
 
 from .enrollment import SOURCES, TIERS, enrollment_for, enrollment_keys, gave_way, people, same_people, total, typed
@@ -10,6 +11,7 @@ from .premium import (
     TIER_CONTRIB,
     TIER_RATE,
     add,
+    annual,
     change,
     employee_cost,
     monthly_change,
@@ -26,6 +28,7 @@ __all__ = [
     'TIER_CONTRIB',
     'TIER_RATE',
     'add',
+    'annual',
     'change',
     'decimal',
     'employee_cost',

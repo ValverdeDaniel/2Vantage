@@ -40,8 +40,22 @@ Every command names `-p vantage-parity -f tools/parity/docker-compose.yml`; none
   `PARITY_USER` / `PARITY_PASSWORD`). The Look lane signs in with it through the old token API.
 - **The tools image** (`Dockerfile`): headless LibreOffice, poppler-utils, openpyxl, pypdf, python-pptx 1.0.2,
   XlsxWriter 3.3.0 and reportlab 4.2.5 (the old writers' versions, V.4 #6). It runs with no network and the
-  repository mounted read-only at `/work`. Recalc (slice 27) and Fidelity (`files.py`, slice 28) arrive later.
+  repository mounted read-only at `/work`. Recalc runs in it (below); Fidelity (`files.py`, slice 28) arrives later.
 - **Intended differences** in client files go in `intended.yaml`; screen differences in `browser/look/accepted.json`.
+
+## The Recalc lane (slice 27; plan.md §12.1, §12.6)
+
+```bash
+bash tools/parity/recalc.sh            # TEST_DB_NAME=… to pick the backend's test database (default test_recalc)
+```
+
+`pytest -m recalc` (proposals/tests/test_workbook_recalc.py) builds the client spreadsheets in the running backend
+(GD1, one plan per rate basis with its worked example, the what-if on an unrated tier), holds every stored result to
+the test-only evaluator, and writes the files to `/tmp/recalc-out`; the backend has no LibreOffice, so that step skips
+there. The script copies the files to `%LOCALAPPDATA%/2vantage-recalc/<time>/` and runs `recalc.py` in the tools image:
+each file's cached results are stripped, LibreOffice recalculates it (a throw-away profile set to always recalculate),
+and every formula cell must equal the result the app stored (numbers within 1e-9, blank ≡ ""). It exits 1 on any
+mismatch. `python tools/parity/recalc.py <folder>` runs the second half alone on any folder of .xlsx files.
 
 ## The screens (browser/)
 

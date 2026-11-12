@@ -22,8 +22,9 @@ def _market_settings(stored, keys):
     return {'on': config.get(stored, 'markets.on'), 'lines': lines}
 
 
-def cards(stored, entries, *, asked, ages, renewal_offer, new_business, ready_ok):
-    """`entries`: [(line, state, laid, intent state, intent row)] for the lines on the proposal, in order."""
+def cards(stored, entries, *, asked, ages, renewal_offer, new_business, ready_ok, firm=None):
+    """`entries`: [(line, state, laid, intent state, intent row)] for the lines on the proposal, in order; `firm`: the
+    firm's pages for the ledger (`story.firm_read.ledger`, slice 29)."""
     keys = [entry[0] for entry in entries]
     market_lines = [read.market_line(line, state, laid, row) for line, state, laid, _s, row in entries]
     found = markets.marketing(market_lines, asked, _market_settings(stored, keys))
@@ -48,5 +49,6 @@ def cards(stored, entries, *, asked, ages, renewal_offer, new_business, ready_ok
         negotiated=any(read.negotiated(state, laid) for _line, state, laid, _s, _r in entries),
         experience=config.experience(stored),
         next_steps=config.get(stored, 'next_steps'),
+        firm=firm,
     )
     return {'summary': summary, 'markets': found, 'ledger': pages, 'facts': facts}

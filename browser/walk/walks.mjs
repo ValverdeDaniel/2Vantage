@@ -13,6 +13,8 @@ import { documents23 } from './documents23.mjs';
 import { documents65 } from './documents65.mjs';
 import { intake39 } from './intake39.mjs';
 import { pages14 } from './pages14.mjs';
+import { pdf29 } from './pdf29.mjs';
+import { pptx31 } from './pptx31.mjs';
 import { quoteDoor20 } from './quoteDoor20.mjs';
 import { quoteFirst13 } from './quoteFirst13.mjs';
 import { scanQuotes19 } from './scanQuotes19.mjs';
@@ -227,5 +229,7 @@ export const WALKS = {
   s65: { ...documents65, run: (ctx) => documents65.run(ctx, { signIn, openDeal }) }, // slice 65's done-when
   s25: { ...builder25, run: (ctx) => builder25.run(ctx, { signIn, openDeal }) }, // slice 25's done-when
   s26: { ...builder26, run: (ctx) => builder26.run(ctx, { signIn, openDeal }) }, // slice 26's done-when
+  s29: { ...pdf29, run: (ctx) => pdf29.run(ctx, { signIn, openDeal }) }, // slice 29's done-when
+  s31: { ...pptx31, run: (ctx) => pptx31.run(ctx, { signIn, openDeal }) }, // slice 31's done-when
   s38: { ...archive38, run: (ctx) => archive38.run(ctx, { signIn, openDeal }) }, // slice 38's done-when
 };

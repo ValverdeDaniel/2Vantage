@@ -11,7 +11,8 @@ recommendation, J47), in the producer's order (`config.order`, J31), each laid o
 (`line_layout`, so its option numbers are the ones Pages shows and Issue stamps). A line the intent keeps off stays in
 the list with its notice (J30) and prints nowhere. The deal cards (`deal_cards`) read the lines on the proposal.
 Reads only, in a fixed number of queries whatever the plan count (Q.3 #2, #4): `deal_state`, the intent, the config
-row, the option-number tops, the census's ages and who the RFP asked. The issues list arrives with Issue (slice 32).
+row, the option-number tops, the census's ages, who the RFP asked and the firm's pages (the ledger, slice 29). The
+issues list arrives with Issue (slice 32).
 """
 
 from deals import rules
@@ -25,6 +26,7 @@ from rfp.selectors import asked_by_line
 from . import checks, config, deal_cards, line_block, line_layout, marks, ready
 from . import summary_read as read
 from .models import ProposalConfig
+from .story import firm_read
 
 
 def best_only(sheets):
@@ -82,6 +84,7 @@ def payload(deal):
         renewal_offer=read.renewal_offer(deal),
         new_business=rules.deal_type(deal) == rules.NEW_BUSINESS,
         ready_ok=gate['ok'],
+        firm=firm_read.ledger(stored),
     )
     deal_items = checks.deal_checks(
         next_steps=config.get(stored, 'next_steps'),

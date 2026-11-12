@@ -60,6 +60,26 @@ PAGES = (
 )
 PAGE_KEYS = tuple(key for key, _label in PAGES)
 
+# The stock pictures the deck's dark pages wear (J35, D-190; old `stock_images.LIBRARY` at 891f1b3), cropped once to
+# the boxes they fill (J.5 B12): `assets/images/stock_images/<key>.jpg` for a dark page's frame, `<key>-agenda.jpg` for
+# the agenda's panel. A place the deal never touched reads its default; slice 34's Pictures card picks per place.
+STOCK_PICTURES = (
+    ('blue_light', 'Blue light'),
+    ('at_the_table', 'At the table'),
+    ('reaching_hands', 'Reaching hands'),
+    ('hand_and_sun', 'Hand and sun'),
+    ('light_bulb', 'Light bulb'),
+    ('gold_lights', 'Gold lights'),
+    ('circuit_brain', 'Circuit brain'),
+)
+PICTURE_PLACES = (
+    ('cover', 'Cover'),
+    ('agenda', 'Agenda'),
+    ('sections', 'Section pages'),
+    ('closing', 'Thank-you page'),
+)
+DEFAULT_PICTURES = {'cover': 'blue_light', 'closing': 'at_the_table'}
+
 # A line section's parts, in print order (not configurable: a cost table before the plans it prices helps nobody).
 PARTS = (('comparison', 'Plan comparison'), ('cost', 'Cost summary'), ('recommendation', 'Recommendation'))
 PART_KEYS = tuple(key for key, _label in PARTS)
@@ -208,6 +228,20 @@ def row_preset(line):
         if preset['line'] == line:
             return {**preset, 'rows': _known(preset['rows'], line)}
     return None
+
+
+def default_pictures():
+    """{place: stock key or None} for every place."""
+    return {place: DEFAULT_PICTURES.get(place) for place, _label in PICTURE_PLACES}
+
+
+def picture_sources(picks):
+    """{place: the image src a page draws, or None}: the agenda's panel has its own crop."""
+    keys = dict(STOCK_PICTURES)
+    return {
+        place: (f'stock:{key}-agenda' if place == 'agenda' else f'stock:{key}') if key in keys else None
+        for place, key in picks.items()
+    }
 
 
 def meta():

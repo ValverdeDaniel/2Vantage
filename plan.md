@@ -4147,7 +4147,12 @@ Slice 26 adds to the builder payload `output` (with defaults), `experience`, `ne
 standard, blocks: the live preview, each block {key, label, scope, line, available, reason, value_label, sub,
 delta_label, delta_dir}, medicare}, `markets` {has_asks, auto, override, on, lines}, `ledger` (the Presentation pages,
 J42) and `best_only` (why "The recommendation only" waits); an intent or coverage edit takes the Coverage & marketing
-intent card's mark off (intake's `coverage_changed`, J46).
+intent card's mark off (intake's `coverage_changed`, J46). Slice 29: `GET …/proposal/files/pdf/` (the client PDF, a
+draft built on each request; like every download it writes only its `downloaded` row, §3.8), and the `ledger` reads
+the firm's pages (`FirmPages`, `TeamMember`). Slice 31: `GET …/proposal/files/pptx/` (the client PowerPoint, the same
+recorded pages replayed as slides; it too writes only its `downloaded` row). Slice 27: `GET …/proposal/files/xlsx/`
+(the client spreadsheet, a draft built on each request, `<Client> - <year> Benefits Proposal-DRAFT.xlsx`; it carries no
+member data, so it writes nothing at all, J97; `409 {detail}` when no line has a tab).
 
 | Method | Path | What it does |
 |---|---|---|
@@ -4908,6 +4913,16 @@ totals whether it calculates or not.
 - **Correctness requirement**, for every plan and every printed package: the stored result of each formula, the result
   of evaluating the written formulas on the written cell values, and a LibreOffice recalculation of the file all equal
   the app's figure exactly (§12.6).
+- **Built (slice 27):** `workbook/facts.py` reads the deal once through an allow-list (client fields only, quotes'
+  results, the layout Pages and Issue share); `layout.py` names the tabs; `tabs/` draws Cover, Markets Checked, the
+  rates tabs (`rates.py`, `rates_cost.py`), the generic and in-force tabs, Dynamic Compare, Composite Rates, All Plans
+  (`bank.py`, `bank_map.py`, `compare*.py`, `slots.py`, `composite.py`, `all_plans.py`) and Disclaimers on the pure
+  model (`model.py`, `cells.py`, `styles.py`, `grammar.py`, `formulas.py`, `print_plan.py`); `write.py` writes it.
+  Every stored result is quotes' figure (`quotes/math/contribution.py` and `premium.annual` were added for the Compare
+  tab's contribution and the year); a test-only evaluator (`proposals/tests/sheet_eval.py`) and the Recalc lane
+  (`bash tools/parity/recalc.sh`: `pytest -m recalc` writes the files, `tools/parity/recalc.py` recalculates them in
+  the parity tools image) hold every formula to it. Not printed yet: the cover banner (covers, slice 34), bundle
+  caveats (priced bundles, slice 35); 2V has no read state, so no "unread" plan is left off All Plans.
 
 ### 9.5 Client PDF and PowerPoint: one layout (`proposals/story/`, `proposals/layout/`)
 
@@ -4927,13 +4942,31 @@ disclaimer can never differ between the PDF and the PowerPoint (J122; slice 29).
   page number (J139); table type from 12 down to 8 pt, rows of at most two lines, "(continued)" pages, long values moved
   to notes (J140).
 - Firm pages print nothing until they are written (J125, J155; OQ41).
+- **Built (slice 29):** `story/facts.py` (+ `line_facts.py`, `firm_read.py`) reads the client Facts; `story/sequence.py`
+  orders the pages (`opening`, `firm`, `coverage`, `answer`, `glance`, `line_pages`, `exhibit`, `exhibit_rows`,
+  `recommend`, `closing`); `layout/record.lay_out` runs the one pass into recorded pages {n, kind, title, continued,
+  line, fit, notes, frames, chrome}, each frame plain JSON (`layout/items.py`); `story/build.deck(deal)` gives them
+  with the pictures' bytes. The plan sets' rows are the client spreadsheet's house maps (`workbook/rows.py`,
+  `workbook/design.py`, J133). Stock pictures are cropped once under `assets/images/stock_images/` (B12).
 
 ### 9.6 PowerPoint (`proposals/paint/pptx/`)
 
 `paint/pptx/` replays the recorded frames with python-pptx 1.0.2 (J141; slice 31): a slide master with the band, the
 footer and the stamp; four layouts; title placeholders; native charts, only with two or more rows; speaker notes with
 the producer's reasons; live slide numbers without "of M". Text is Arial, which has Helvetica's metrics, so PowerPoint
-wraps where the layout did (J142). Each text box equals its recorded frame (J.6.10).
+wraps where the layout did (J142). Each text box equals its recorded frame (J.6.10); a wrapping box or table cell gets
+1 pt more room on the side its words never reach, for a renderer's rounding.
+- **Built (slice 31):** `paint/pptx/deck.draw(pages, title, sources)` replays `story.build.deck(deal)`'s pages, no second
+  layout pass. The master is the old app's, dressed in code from python-pptx's own template as old Vantage did (it
+  shipped no .pptx): "Proposal content" (the master holds the content pages' shared chrome, lifted once; the title
+  placeholder in the title zone, 26 pt bold in the brand's navy), "Proposal dark page" (the recorded dark ground and
+  the mark), "Proposal photo page" (the ground alone) and "Proposal plain page"; the brand is the theme's accent 1.
+  A content slide's title fills its placeholder (its own size only when the layout stepped it down); a whole page's
+  title frame fills the placeholder at its recorded place. Runs are written unkerned (`kern="0"`), as the layout
+  measured them. Tables are native ("No Style, No Grid"), the premium chart a native clustered column chart. One
+  known difference from the PDF: PowerPoint and LibreOffice put a line's extra leading above its baseline, the PDF
+  below it, so text whose leading is not 1.2× its size sits a few points off on the slide (13/19 body text ~3 pt
+  lower, the cover's 44/48 name ~3 pt higher); tables, at 1.2×, agree.
 
 ### 9.7 PDF, Paper and the Letter PDF (`proposals/paint/`)
 
@@ -6367,7 +6400,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | OQ11 | Once a line has stars, must its renewal have its own star to print? | Open. Default: yes, the old rule | Open (blank) | 7 |
 | OQ12 | May a line have several sold plans? (The old app un-sold the other.) | Open. Default: allowed | Open (blank) | 7 |
 | OQ13 | May stop-loss plans be reordered with the arrows and slot picks? | "yes." Stop-loss follows the one order rule (`order.layout`) and takes arrows, slot picks and reset like every line. **This reverses the old app**, which kept stop-loss in the order added (F49) and refused arrows and picks (J7) | Answered, changes default | 7; 9, 14, 36 |
-| OQ103 | The rate bases with no golden deal (`volume_1000`, `weekly_10`, `payroll_100`) need one worked example each, as v1.1's R2.4 asked. May Stephanie sign them before slice 27, which prints them, while slice 7 pins provisional examples? This adds a gate on Stephanie beyond V.4's GD1 and GD2 keys | Open. Default: yes | Open (Stephanie) | 7; 27 |
+| OQ103 | The rate bases with no golden deal (`volume_1000`, `weekly_10`, `payroll_100`) need one worked example each, as v1.1's R2.4 asked. May Stephanie sign them before slice 27, which prints them, while slice 7 pins provisional examples? This adds a gate on Stephanie beyond V.4's GD1 and GD2 keys | Open. Default: yes. Slice 27 found no signed examples (decisions.md says "answered by Stephanie", but no example is filed): the workbook's tests print §5.5's and slice 7's provisional examples for every basis until hers are filed | Open (Stephanie) | 7; 27 |
 | **Slice 8: ADV-2** | | | | |
 | OQ110 | Copy a plan design from an earlier deal (v1.1's R2.1)? No porting part lists it | Open. Default: not in this build; carrying last year's plans waits with renewals (OQ1) | Open | 8 (only if yes) |
 | **Slice 10: ADV-4** | | | | |
@@ -6412,9 +6445,9 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | **Slice 26: PRO-2** | | | | |
 | OQ38 | Show the carrier's renewal offer ($/yr, % change) in the renewal blocks (J65) and on the Overview chip (M20)? | Open. Default: yes. Slice 26 built the blocks with the default; they refuse ("No renewal letter's figures on this deal") until the letter's four facts are stored on intake's CurrentCoverage, which no slice has added yet | Open | 26; 62 |
 | **Slice 27: PRO-3** | | | | |
-| OQ39 | Does a carrier hidden on Markets checked also leave Compare and All Plans, labelled on screen? | Open. Default: yes | Open | 27 |
-| OQ40 | Stephanie's Excel review: her marked-up rows and colours, the disclaimer wording, and whether plan notes, telehealth and Rx mail order print (v1.1 §16 #3–#5) | Open. Default: the old formats | Open (Stephanie) | 27 |
-| OQ41 | Firm pages: logo, colour and contact in Django admin; About, figures, calendar and team in an in-app drawer; "Prepared by" from the agent-name rule? | Open. Default: yes | Open | 27; 29, 34 |
+| OQ39 | Does a carrier hidden on Markets checked also leave Compare and All Plans, labelled on screen? | Open. Default: yes. Built in slice 27: its unpresented quotes leave All Plans and the drop-downs, counted in an All Plans note; the Markets card says so | Open | 27 |
+| OQ40 | Stephanie's Excel review: her marked-up rows and colours, the disclaimer wording, and whether plan notes, telehealth and Rx mail order print (v1.1 §16 #3–#5) | Open. Default: the old formats. Built in slice 27 as the old app printed them: the old rows (telehealth, mail order and the worksite Notes rows print), colours and the old disclaimer paragraphs | Open (Stephanie) | 27 |
+| OQ41 | Firm pages: logo, colour and contact in Django admin; About, figures, calendar and team in an in-app drawer; "Prepared by" from the agent-name rule? | Open. Default: yes. Slice 27's Cover prints the agency's logo, name, phone and email from Django admin, with `deals.rules.agent_name` on the contact line | Open | 27; 29, 34 |
 | OQ104 | Lasers on client files: print laser liability as amounts and list lasers by position, never the claimant ids or initials in `sl_lasers`, which the old stop-loss sheet printed? | Open. Default: yes (§3.8, §4.3, §9.13) | Open | 27; 36 |
 | **Slice 33: PRO-9** | | | | |
 | OQ42 | Florida Blue 5182 and 5183 under D-219: should the in-network single deductible print "EE $2,500 / PP $5,000" or "$2,500"? | Open. Default: both figures | Open | 33 |

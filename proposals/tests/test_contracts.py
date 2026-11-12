@@ -27,6 +27,9 @@ def samples(world):
         'api/deals/<int:pk>/proposal/': {'pk': deal.id},
         'api/deals/<int:pk>/proposal/marks/': {'pk': deal.id},
         'api/deals/<int:pk>/proposal/pages/': {'pk': deal.id, 'query': {'line': 'medical', 'preset': 'all'}},
+        'api/deals/<int:pk>/proposal/files/pdf/': {'pk': deal.id},
+        'api/deals/<int:pk>/proposal/files/pptx/': {'pk': deal.id},
+        'api/deals/<int:pk>/proposal/files/xlsx/': {'pk': deal.id},
     }
 
 
@@ -36,6 +39,9 @@ MATRIX = [
     ('PATCH', 'api/deals/<int:pk>/proposal/', ALL, {'title': 'Plan comparison'}),
     ('POST', 'api/deals/<int:pk>/proposal/marks/', ALL, {'card': 'quotes', 'line': 'medical', 'done': True}),
     ('GET', 'api/deals/<int:pk>/proposal/pages/', ALL),
+    ('GET', 'api/deals/<int:pk>/proposal/files/pdf/', ALL),
+    ('GET', 'api/deals/<int:pk>/proposal/files/pptx/', ALL),
+    ('GET', 'api/deals/<int:pk>/proposal/files/xlsx/', ALL),
 ]
 
 

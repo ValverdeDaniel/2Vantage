@@ -7,9 +7,9 @@ tell), `why` what is missing when it has not, and `fix` where to put it right, i
 ({card} or {tab}; None while that place does not exist). The switches are the card's own (`output.pages`); the
 ledger never reads them, so a toggle needs no re-read.
 
-The firm's pages (About, the team, the calendar, bios) have no home yet: FirmPages and the team arrive with the PDF
-(slice 29, in Django admin) and the Firm pages drawer (slice 34, J155), so until then they read as not written, with
-no Fix ▸. Renewal history waits with past plan years (J44, deferred).
+The firm's pages (About, the team, the calendar, bios) read from FirmPages and the team (`firm_read.ledger`), edited
+in Django admin since slice 29 until the Firm pages drawer (slice 34, J155) gives them a Fix ▸; until then a page not
+written has none. Renewal history waits with past plan years (J44, deferred).
 """
 
 
@@ -28,7 +28,7 @@ def rows(*, renewal, recommended, negotiated, experience, next_steps, firm=None)
     """The ledger in the story's order. `renewal`: the deal is a renewal (`deals.rules.deal_type`); `recommended`:
     every line has its recommendation (`ready.ok`), which the at-a-glance page needs; `negotiated`: a first offer is
     on the proposal (a priced version of a quote); `experience`: config.experience; `next_steps`: config.next_steps;
-    `firm`: {about, calendar, team: [{bio}]} once the firm's pages exist (None until slice 29)."""
+    `firm`: {about, calendar, team: [{bio}]} (`firm_read.ledger`; None reads as nothing written)."""
     firm = firm or {}
     team = firm.get('team') or []
     told = bool((experience.get('summary') or '').strip() or experience.get('rows'))

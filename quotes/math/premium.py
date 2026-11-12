@@ -59,6 +59,12 @@ def monthly_premium(plan, line, enrollment):
     return round_decimal(size * unit / UNIT_DIVISOR[basis]), None, False
 
 
+def annual(monthly):
+    """Twelve times a monthly premium (already rounded), or None: the year every file prints beside the month."""
+    monthly = decimal(monthly)
+    return None if monthly is None else monthly * 12
+
+
 def change(annual, base_annual):
     """{delta, pct} against the base's annual premium, or None; `pct` is None when the base is 0."""
     annual, base_annual = decimal(annual), decimal(base_annual)

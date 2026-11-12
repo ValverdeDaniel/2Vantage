@@ -2021,7 +2021,7 @@
       "check": "pixels",
       "selector": null,
       "item": "J24",
-      "why": "The toolbar's ⬇ Client PDF, the orientation chip, ⬇ PowerPoint and ⬇ Client spreadsheet arrive with the files (J24, J25; slices 27–31) and 🔗 Share with client is deferred (J26); \"Open proposal ▸\" shows disabled until it can open the Export viewer (J27, slice 28).",
+      "why": "The toolbar has ⬇ Client PDF (J24, slice 29) and ⬇ PowerPoint (J24, J141; slice 31); ⬇ Client spreadsheet arrives with its file (J24; slice 27), the orientation chip waits with Classic (J25) and 🔗 Share with client is deferred (J26); \"Open proposal ▸\" shows disabled until it can open the Export viewer (J27, slice 28).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
