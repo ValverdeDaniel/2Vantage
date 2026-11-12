@@ -11,7 +11,7 @@ The plan table is `table.Table`.
 
 from reportlab.platypus import Flowable
 
-from . import items
+from . import items, tokens
 from . import text as words
 
 
@@ -57,6 +57,7 @@ class Text(Flowable):
 
     def draw(self):
         frame = {'t': 'text', 'x': 0, 'y': 0, 'w': self.width, 'h': self.height, 'title': False, 'wrap': True}
+        frame['drop'] = tokens.PARAGRAPH_DROP
         self.canv.put(dict(frame, paragraphs=[self.para]), self.height)
 
 

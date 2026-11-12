@@ -1,13 +1,18 @@
 # Intended differences between old Vantage and 2Vantage in client FILES (plan.md §12.7; Q.5 "Judging").
-# Screens have their own register: browser/look/accepted.json. Empty until the Fidelity lane arrives (slice 28).
+# Screens have their own register: browser/look/accepted.json. Read by the Fidelity lane (tools/parity/files.py,
+# slice 28; fidelity/intended.py documents the YAML subset it reads).
 #
 # One entry per difference the plan causes on purpose. Anything that differs and is not listed here (or within
-# Q.5's tolerances) fails the lane. Daniel signs each entry once; a changed file is judged again.
+# Q.5's tolerances, or masked: dates, version and Draft stamps, ids, authors) fails the lane. Daniel signs each entry
+# once; a changed file is judged again. The first entry that covers a difference labels it.
 #
 #   - item: J25                  # the plan item that causes it (an X.3 row ID or an OQ)
-#     deal: GD1                  # the golden deal it shows on
-#     file: proposal-pdf         # workbook | proposal-pdf | deck | paper | carrier:<name> | questionnaire | stop-loss
-#     where: "page 2, plan table header"   # sheet!cell, page and block, or slide and shape
+#     deal: GD1                  # the golden deal it shows on: GD1, a list "GD1, GD3", or all
+#     file: proposal-pdf         # workbook | proposal-pdf | deck (paper, carrier:<name>, … when the lane compares them)
+#     where: "page * «Dental*"   # a glob over the difference's place: "Medical!B12", "Cover!row 8", "page 6 «…»",
+#                                #   "slide 3 «…»", "file name"; or all
+#     kind: words                # optional: a glob or a list over its kind (value, formula, row-added, words, …)
+#     match: "→ Dev$"            # optional: a regular expression searched in "<old> → <new>"
 #     old: "what the old app prints"
 #     new: "what 2Vantage prints"
 #     why: "one sentence, in the plan's words"
@@ -15,4 +20,608 @@
 #     signed_on: null            # YYYY-MM-DD
 #
 # A whole class of difference (a renamed sheet, a dropped page) may be one entry with `where: all`.
-intended: []
+intended:
+  # ---- Every file -------------------------------------------------------------------------------------------------
+  - item: J104
+    deal: all
+    file: workbook
+    where: "file name"
+    kind: file-name
+    match: "\\(synthetic\\) - .* → .* synthetic - "
+    old: "Golden Manufacturing (synthetic) - 2027 Benefits Proposal.xlsx"
+    new: "Golden Manufacturing synthetic - 2027 Benefits Proposal-DRAFT.xlsx"
+    why: "J104: the old name through safe_filename, which keeps letters, digits, spaces and ._- only, so a client name's parentheses go (-DRAFT is masked)."
+    signed_by: null
+    signed_on: null
+  - item: J104
+    deal: all
+    file: proposal-pdf
+    where: "file name"
+    kind: file-name
+    match: "\\(synthetic\\) - .* → .* synthetic - "
+    old: "Golden Manufacturing (synthetic) - 2027 Benefits Proposal.pdf"
+    new: "Golden Manufacturing synthetic - 2027 Benefits Proposal-DRAFT.pdf"
+    why: "J104: the old name through safe_filename, which drops the parentheses (-DRAFT is masked)."
+    signed_by: null
+    signed_on: null
+  - item: J104
+    deal: all
+    file: deck
+    where: "file name"
+    kind: file-name
+    match: "\\(synthetic\\) - .* → .* synthetic - "
+    old: "Golden Manufacturing (synthetic) - 2027 Benefits Proposal.pptx"
+    new: "Golden Manufacturing synthetic - 2027 Benefits Proposal-DRAFT.pptx"
+    why: "J104: the old name through safe_filename, which drops the parentheses (-DRAFT is masked)."
+    signed_by: null
+    signed_on: null
+
+  # ---- "Prepared by" is the deal's agent (OQ41) --------------------------------------------------------------------
+  - item: OQ41
+    deal: all
+    file: workbook
+    where: "Cover!row *"
+    kind: row-added
+    match: "^None → Dev$"
+    old: "Prepared by Vantage Risk Solutions, and no contact line"
+    new: "the contact line under it: the deal's agent (Dev) · agency phone · email"
+    why: "OQ41 and J145: \"Prepared by\" names the agency with the deal's agent (deals.rules.agent_name) on the contact line; the old producer was blank."
+    signed_by: null
+    signed_on: null
+  - item: OQ41
+    deal: all
+    file: workbook
+    where: "Dynamic * Compare!A2"
+    kind: value
+    match: "→ Prepared by .* · Dev$"
+    old: "Prepared by Vantage Risk Solutions"
+    new: "Prepared by Vantage Risk Solutions · Dev"
+    why: "OQ41: the Compare tab's subtitle names the deal's agent after the agency."
+    signed_by: null
+    signed_on: null
+  - item: OQ41
+    deal: all
+    file: proposal-pdf
+    where: "page *"
+    kind: words
+    match: "^(Vantage Risk Solutions|None) → Dev$"
+    old: "Prepared <date> by Vantage Risk Solutions; no name on Thank you"
+    new: "Prepared <date> by Dev; the agent's name on Thank you"
+    why: "OQ41 and J123: \"Prepared by\" is the deal owner (deals.rules.agent_name), else the firm."
+    signed_by: null
+    signed_on: null
+  - item: OQ41
+    deal: all
+    file: deck
+    where: "slide *"
+    kind: "text, shapes-added, shapes-removed"
+    match: "(by Vantage Risk Solutions|None) → (Prepared <date> by Dev|Dev|TEXT_BOX \\(17\\)\\|(Prepared <date> by )?Dev)$|^TEXT_BOX \\(17\\)\\|Prepared <date> by Vantage Risk Solutions → None$"
+    old: "Prepared <date> by Vantage Risk Solutions"
+    new: "Prepared <date> by Dev; the agent's name on Thank you"
+    why: "OQ41 and J123: \"Prepared by\" is the deal owner (deals.rules.agent_name), else the firm."
+    signed_by: null
+    signed_on: null
+
+  # ---- The PDF's pages are the slides (J122) -------------------------------------------------------------------------
+  - item: J122
+    deal: all
+    file: proposal-pdf
+    where: "page * «Thank you»"
+    kind: words
+    match: "Prepared <date> VANTAGE RISK SOLUTIONS Rates as quoted .* → None$"
+    old: "the content footer (client · Prepared, firm, rates note) drawn over the dark Thank-you page"
+    new: "no content chrome on the Thank-you page, as on the old PowerPoint's dark slide"
+    why: "J122: one layout pass, so the PDF's pages are the slides; a full dark page carries no content chrome on either (the old PDF drew its footer there, its PowerPoint did not)."
+    signed_by: null
+    signed_on: null
+
+  # ---- Funding is a plan field (plan.md §4.3; F144), which the old app keeps on the coverage line --------------------
+  - item: F144
+    deal: all
+    file: workbook
+    where: "*"
+    kind: "row-added, column-added"
+    match: "Other Plan Details|Funding"
+    old: "no Funding row"
+    new: "\"Other Plan Details\" with a Funding row (and an All Plans column) on medical"
+    why: "plan.md §4.3: funding records what a medical plan is and prints as a design row; the old app keeps funding on the deal's coverage line, not on a plan (every parity profile's values_left_out)."
+    signed_by: null
+    signed_on: null
+  - item: F144
+    deal: "GD2, GD3, GD6"
+    file: workbook
+    where: "Medical!print scale"
+    kind: print
+    old: "79 (GD2), 89 (GD3), 82 (GD6)"
+    new: "76, 85, 79"
+    why: "plan.md §4.3: the two Funding rows make the medical tab taller, so its height fit (print_plan.height_fit_scale) is smaller."
+    signed_by: null
+    signed_on: null
+  - item: F144
+    deal: all
+    file: proposal-pdf
+    where: "page * «Medical*"
+    kind: words
+    match: "^None → Other Plan Details Funding( Fully insured)+$"
+    old: "no Funding row"
+    new: "Other Plan Details · Funding · Fully insured …"
+    why: "plan.md §4.3: funding prints as a design row on medical; the old app keeps it on the coverage line."
+    signed_by: null
+    signed_on: null
+  - item: F144
+    deal: all
+    file: deck
+    where: "slide * «Medical*"
+    kind: text
+    match: "^None → Other Plan Details / Funding( / Fully insured)+$"
+    old: "no Funding row"
+    new: "Other Plan Details / Funding / Fully insured …"
+    why: "plan.md §4.3: funding prints as a design row on medical; the old app keeps it on the coverage line."
+    signed_by: null
+    signed_on: null
+  - item: F144
+    deal: "GD2, GD3, GD4, GD6"
+    file: proposal-pdf
+    where: "page * «Medical — *»"
+    kind: word-position
+    match: "dx up to [+-]0\\.0 pt, dy up to \\+4[01]\\.[0-9] pt$"
+    old: "the rows below the design block"
+    new: "the same rows about 41 pt lower"
+    why: "plan.md §4.3: the Funding band and row (two rows of the table) push everything under them down."
+    signed_by: null
+    signed_on: null
+  - item: F144
+    deal: "GD2, GD3, GD4, GD6"
+    file: deck
+    where: "slide * «Medical*"
+    kind: shape-position
+    match: "(TABLE \\(19\\)\\| → h\\+4[01](\\.[0-9]+)? |Enrollment basis.* → y\\+4[01](\\.[0-9]+)? w-)"
+    old: "the medical table and the basis note under it"
+    new: "the table about 41 pt taller, the note 41 pt lower"
+    why: "plan.md §4.3: the Funding band and row are two more table rows."
+    signed_by: null
+    signed_on: null
+
+  # ---- Enrollment named by its source (F86, F88) ---------------------------------------------------------------------
+  - item: F86
+    deal: all
+    file: workbook
+    where: "*!A*"
+    kind: value
+    match: "^(Enrolled counts from the proposal settings|Enrolled counts from the census|Enter each|Totals appear once).* → (Enrolled counts|Percentage from current)"
+    old: "Enrolled counts from the proposal settings. Some plans use expected enrollment entered for that plan."
+    new: "Enrolled counts typed for this plan. / typed for the whole line. / every current plan's people together."
+    why: "F86 (C6): every enrollment source is named in words, from 2Vantage's sources (enrollment_for: typed, line, census by plan), where the old note named its proposal-settings store."
+    signed_by: null
+    signed_on: null
+  - item: F86
+    deal: all
+    file: workbook
+    where: "*!row *"
+    kind: row-height
+    match: "^(35|50|65)\\.0 → (20|35)\\.25$"
+    old: "a note row tall enough for the old two-line note"
+    new: "the row fitted to the shorter note"
+    why: "F86: the row holding the enrollment note follows its words (cells.row_height)."
+    signed_by: null
+    signed_on: null
+
+  # ---- The recommendation's words on the Cover, line by line (J57) ---------------------------------------------------
+  - item: J57
+    deal: all
+    file: workbook
+    where: "Cover!row *"
+    kind: row-added
+    old: "no \"Our recommendation\" section (the old file printed only the deal-wide words, B7)"
+    new: "Our recommendation, then each line's own words under its name"
+    why: "J57 (Keep, fixed): one why_for(line) for all files; the spreadsheet cover lists each line's reasons when the deal-wide words are blank (J.5 B7)."
+    signed_by: null
+    signed_on: null
+  - item: J57
+    deal: all
+    file: workbook
+    where: "Cover!print *"
+    kind: print
+    old: "the print area and Fit To of the shorter cover"
+    new: "the longer cover's print area; Fit To one page across, as tall as it needs once it is too tall to stay readable on one page"
+    why: "J57: the recommendation section makes the cover longer (print_plan.fitted best_fit)."
+    signed_by: null
+    signed_on: null
+
+  # ---- Composite Rates card inputs (J150) ----------------------------------------------------------------------------
+  - item: J150
+    deal: all
+    file: workbook
+    where: "* Composite Rates!B*"
+    kind: formula
+    match: "^='Dynamic .* Compare'!\\$B\\$[0-9]+ → =IF\\('Dynamic .* Compare'!\\$B\\$[0-9]+=\"\",\"\","
+    old: "='Dynamic Medical Compare'!$B$15"
+    new: "=IF('Dynamic Medical Compare'!$B$15=\"\",\"\",'Dynamic Medical Compare'!$B$15)"
+    why: "J150: a bare link to a blank dollar input reads 0 in Excel and would switch every card to dollars mode; the input link keeps a blank blank (an old bug fixed in slice 27)."
+    signed_by: null
+    signed_on: null
+
+  # ---- GD3: quote-first, typed counts only (checkpoint A) ------------------------------------------------------------
+  - item: F88
+    deal: GD3
+    file: workbook
+    where: "Medical!*"
+    kind: "value, row-height"
+    match: "^None → [0-9]+$|^50\\.0 → 35\\.25$"
+    old: "blank tier counts (the old app left them blank with two current plans)"
+    new: "the line's typed counts on every plan (30 / 8 / 6 / 8)"
+    why: "F88 (C5): one whole-line figure (LineEnrollment) prices the quotes; with two current plans the old asked for each plan's counts."
+    signed_by: null
+    signed_on: null
+  - item: F88
+    deal: GD3
+    file: workbook
+    where: "Medical!print scale"
+    kind: print
+    old: "89"
+    new: "85"
+    why: "F88 and plan.md §4.3: the counts' note row and the Funding rows change the medical tab's height fit."
+    signed_by: null
+    signed_on: null
+  - item: OQ19
+    deal: GD3
+    file: workbook
+    where: "Accident!*"
+    kind: "value, row-height, print"
+    old: "blank counts on Accident"
+    new: "counts borrowed from medical's typed counts (30 / 8 / 6 / 8), the note and the scale that follow"
+    why: "OQ19 (GD3's figures_left_out AC): a worksite tier-rated line borrows medical's typed counts; the old app borrowed only the medical census, and GD3 has none at checkpoint A."
+    signed_by: null
+    signed_on: null
+  - item: OQ19
+    deal: GD3
+    file: proposal-pdf
+    where: "page * «Accident*"
+    kind: "words, word-position"
+    old: "rates without counts, no premium"
+    new: "30 × … rates, Monthly premium $960, Annual premium $11,520"
+    why: "OQ19: Accident borrows medical's typed counts (GD3's figures_left_out AC)."
+    signed_by: null
+    signed_on: null
+  - item: OQ19
+    deal: GD3
+    file: deck
+    where: "slide * «Accident*"
+    kind: "text, shape-position"
+    old: "rates without counts, no premium"
+    new: "30 × … rates, Monthly premium $960, Annual premium $11,520"
+    why: "OQ19: Accident borrows medical's typed counts (GD3's figures_left_out AC)."
+    signed_by: null
+    signed_on: null
+  - item: F92
+    deal: GD3
+    file: workbook
+    where: "Telehealth!B11"
+    kind: value
+    old: "blank Estimated Monthly Premium"
+    new: "234 (52 typed lives × $4.50)"
+    why: "F92 (Keep, fixed): a PEPM line prices from typed lives; the old app priced PEPM lines only from the census (GD3's figures_left_out TH)."
+    signed_by: null
+    signed_on: null
+  - item: F92
+    deal: GD3
+    file: proposal-pdf
+    where: "page * «Telehealth*"
+    kind: "words, word-position"
+    old: "no premium"
+    new: "Monthly premium $234, Annual premium $2,808"
+    why: "F92: a PEPM line prices from typed lives (GD3's figures_left_out TH)."
+    signed_by: null
+    signed_on: null
+  - item: F92
+    deal: GD3
+    file: deck
+    where: "slide * «Telehealth*"
+    kind: "text, shape-position"
+    old: "no premium"
+    new: "Monthly premium $234, Annual premium $2,808"
+    why: "F92: a PEPM line prices from typed lives (GD3's figures_left_out TH)."
+    signed_by: null
+    signed_on: null
+  - item: J151
+    deal: GD3
+    file: workbook
+    where: "Telehealth!row *"
+    kind: "row-added, row-removed"
+    match: "Benefit Summary"
+    old: "Unit Rate, then Benefit Summary"
+    new: "Benefit Summary, then Unit Rate"
+    why: "J151 and plan.md §4.3: a generic tab keeps every field in the line's display order (groups info, gen_ben, rates), where the old followed its field table's sort order."
+    signed_by: null
+    signed_on: null
+
+  # ---- GD4: census by plan name (C41) --------------------------------------------------------------------------------
+  - item: C41
+    deal: GD4
+    file: proposal-pdf
+    where: "page * «Medical — plan comparison»"
+    kind: words
+    match: "^Monthly premium .* Enrollment basis: .* → None$"
+    old: "each current plan priced at the whole line's census (51 / 13 / 10 / 11), and that census as the basis"
+    new: "no premium rows: a current plan prices only from its own members"
+    why: "C41 (GD4's figures_left_out P1–P3): the old app priced a line with several current plans from one tally that is nobody's; 2Vantage prices each current plan from the census by plan name, and prints no figure it does not have."
+    signed_by: null
+    signed_on: null
+  - item: C41
+    deal: GD4
+    file: deck
+    where: "slide * «Medical — plan comparison»"
+    kind: "text, shapes-removed"
+    match: "Monthly premium|Enrollment basis"
+    old: "premiums at the whole line's census, and its basis note"
+    new: "no premium rows and no basis note"
+    why: "C41: a current plan prices only from its own members (census by plan name)."
+    signed_by: null
+    signed_on: null
+
+  # ---- The PowerPoint replays the recorded frames (J141, J142; S31) --------------------------------------------------
+  - item: J142
+    deal: all
+    file: deck
+    where: "slide *"
+    kind: run-font
+    match: "^kern None → kern '0' on [0-9]+ runs$"
+    old: "runs kerned by PowerPoint's default"
+    new: "kern=\"0\" on every run"
+    why: "J142: the layout measures unkerned Helvetica widths and the PDF draws unkerned, so the PowerPoint must not kern for its Arial to wrap where the layout did."
+    signed_by: null
+    signed_on: null
+  - item: J141
+    deal: all
+    file: deck
+    where: "slide *"
+    kind: shape-position
+    match: "\\|.* → (x-0\\.5 )?w[+-][0-9.]+ \\(box"
+    old: "text boxes 3% wider than their frame"
+    new: "each text box its recorded frame plus 1 pt on the free side"
+    why: "J141 and J.6.10 (plan.md §9.6): each text box equals its recorded frame and fits by the same measure; 1 pt of slack, not the old 3%, so PowerPoint never pulls up a word the PDF broke."
+    signed_by: null
+    signed_on: null
+  - item: J141
+    deal: all
+    file: deck
+    where: "slide *"
+    kind: shape-position
+    match: "^TEXT_BOX \\(17\\)\\|<page> → x\\+([0-9.]+) w-\\1 "
+    old: "the slide number in a 40 pt right-aligned box"
+    new: "the slide number box as recorded (its own width), ending at the same edge"
+    why: "J141 and J.6.10: the live slide-number field sits in its recorded frame."
+    signed_by: null
+    signed_on: null
+  - item: J141
+    deal: all
+    file: deck
+    where: "slide *"
+    kind: shadow
+    match: "effectLst.*2.*→.*effectLst.*0"
+    old: "effectRef idx=2 (LibreOffice draws the theme shadow)"
+    new: "effectRef idx=0: no shadow in PowerPoint or LibreOffice"
+    why: "J141 (S31): the old master's shapes carry no shadow in PowerPoint (empty effectLst); idx=0 makes LibreOffice agree."
+    signed_by: null
+    signed_on: null
+  - item: J141
+    deal: all
+    file: deck
+    where: master
+    kind: master
+    old: "the master's shapes from the old content chrome"
+    new: "the content chrome lifted once from the first content page's recorded chrome (title and number apart)"
+    why: "J141 (S31): the master and its four layouts are built from the recorded frames, so the PowerPoint shows what the PDF drew."
+    signed_by: null
+    signed_on: null
+
+  # ---- GD1: what the parity profile leaves out, and what 2Vantage presents -----------------------------------------
+  - item: F119
+    deal: GD1
+    file: workbook
+    where: "Vision*"
+    old: "Vision: the current plan and EyeMed Insight (Option 1); VSP Choice 10/25 listed under its carrier; a Vision Composite Rates tab"
+    new: "the VSP renewal Choice 10/25 presented (RECOMMENDED, Option 1), EyeMed Option 2; no unpresented plan, so no Composite Rates tab"
+    why: "F119 (C3): one presented(): current plans, recommended plans and the starred plans, so the recommended VSP renewal prints; the old printed only starred plans."
+    signed_by: null
+    signed_on: null
+  - item: F119
+    deal: GD1
+    file: workbook
+    where: "Dynamic Vision Compare!*"
+    old: "the list ranges over the old All Plans rows (a VSP carrier row)"
+    new: "ranges one row shorter, the presented VSP renewal first"
+    why: "F119: the recommended VSP renewal is presented, so All Plans lists it with the presented plans and needs no carrier row."
+    signed_by: null
+    signed_on: null
+  - item: J55
+    deal: GD1
+    file: workbook
+    where: "Medical![A-Z]3"
+    kind: "value, number-format, font"
+    match: "RECOMMENDED|General → @|Calibri"
+    old: "no RECOMMENDED marker: the old file marked one plan per line, and none with three current plans"
+    new: "RECOMMENDED over each current plan's pick"
+    why: "J55 and J147: a recommendation per current plan, each marked (old `_marker` read one id per line)."
+    signed_by: null
+    signed_on: null
+  - item: J55
+    deal: GD1
+    file: workbook
+    where: "*!row 3"
+    kind: row-height
+    match: "^9\\.75 → 18\\.0$"
+    old: "row 3 a 9.75 pt spacer (no marker)"
+    new: "row 3 holds the markers"
+    why: "J55 and J147: row 3 is the marker row; it is a spacer only when no plan is marked."
+    signed_by: null
+    signed_on: null
+  - item: F119
+    deal: GD1
+    file: workbook
+    where: "Medical!*"
+    kind: "column-added, value, print"
+    match: "HMO 1000|^\\|+$|→ \\|+$|Option 9 → Option 10|column breaks|print area"
+    old: "the Aetna HMO renewal not presented; Cigna LocalPlus 1000 is Option 9"
+    new: "the recommended Aetna HMO renewal presented (Option 9); Cigna LocalPlus 1000 is Option 10; the print area and breaks take its pair"
+    why: "F119 (C3): recommended plans are presented; option numbers follow the reading order (J159)."
+    signed_by: null
+    signed_on: null
+  - item: F52
+    deal: GD1
+    file: workbook
+    where: "Medical!V*"
+    kind: value
+    match: "^[0-9]+ → [0-9]+$"
+    old: "UHC Consolidated priced on B's counts (8 / 2 / 1 / 4)"
+    new: "priced on B and C together (14 / 3 / 3 / 6)"
+    why: "F52 (\"Several…\" makes a consolidation): U5 replaces B and C; the old option compares with one current plan (GD1's figures_left_out U5)."
+    signed_by: null
+    signed_on: null
+  - item: F88
+    deal: GD1
+    file: workbook
+    where: "Dynamic Medical Compare!B*"
+    kind: value
+    match: "^None → [0-9]+$"
+    old: "blank base counts with three current plans"
+    new: "the line's people (every current plan's typed counts together: 24 / 6 / 5 / 11)"
+    why: "F88 (C5) and rule 5: Compare prices at quotes' people(line), every current plan's people together, where the old left the counts blank."
+    signed_by: null
+    signed_on: null
+  - item: J149
+    deal: GD1
+    file: workbook
+    where: "Dynamic Medical Compare!*"
+    kind: "column-added, column-removed, formula, merge-added, merge-removed"
+    old: "the prefill: current → the line's one recommended plan → starred (UHC Choice Plus 1500 at slot 10)"
+    new: "current → every recommended plan → starred: the Aetna HMO renewal joins, so the starred plans move one slot right"
+    why: "J149 (prefill current → recommended → starred) with a pick per current plan (J55) and recommended plans presented (F119)."
+    signed_by: null
+    signed_on: null
+  - item: J149
+    deal: GD1
+    file: workbook
+    where: "Medical [CA]*"
+    kind: "value, row-added, row-removed"
+    old: "cards and All Plans in the old prefill and presented order; ★ PROPOSED on presented picks"
+    new: "the same plans in 2Vantage's order (the presented HMO renewal with the presented plans); RECOMMENDED on every pick"
+    why: "J149 status words and order with a pick per current plan (J55) and recommended plans presented (F119)."
+    signed_by: null
+    signed_on: null
+  - item: J55
+    deal: GD1
+    file: workbook
+    where: "Medical![A-Z]3:[A-Z]3"
+    kind: merge-added
+    old: "no marker"
+    new: "each RECOMMENDED marker merged over its plan's pair"
+    why: "J55 and J147: a recommendation per current plan, each marked."
+    signed_by: null
+    signed_on: null
+  - item: F119
+    deal: GD1
+    file: workbook
+    where: "Medical!print *"
+    kind: print
+    old: "the print area and breaks of the old presented set"
+    new: "one more pair (the presented Aetna HMO renewal), one more break"
+    why: "F119 (C3): recommended plans are presented, so the rates tab holds the HMO renewal's pair."
+    signed_by: null
+    signed_on: null
+  - item: F86
+    deal: GD1
+    file: workbook
+    where: "Dental!print scale"
+    kind: print
+    old: "84"
+    new: "86"
+    why: "F86: the one-line enrollment note makes the dental tab shorter, so its height fit is larger."
+    signed_by: null
+    signed_on: null
+  - item: F144
+    deal: GD1
+    file: workbook
+    where: "Medical Composite Rates!print scale"
+    kind: print
+    old: "67"
+    new: "64"
+    why: "plan.md §4.3: each card's Funding rows make the tallest card page taller (print_plan.card_print_scale)."
+    signed_by: null
+    signed_on: null
+
+  # ---- Lines wrap where PowerPoint can wrap them (J142) -------------------------------------------------------------
+  - item: J142
+    deal: all
+    file: proposal-pdf
+    where: "page * «Important information»"
+    kind: "word-offset, word-position"
+    match: "dy up to [+-]0\\.0 pt$|dx up to -[0-9.]+ pt, dy up to \\+1[89]\\.[0-9] pt$"
+    old: "\"…on each carrier's plan year begins\": reportlab's Paragraph shrank the line's spaces (up to 5%) to keep \"the\" on it"
+    new: "spaces at their full width, so \"the\" starts the next line and the words after a space sit up to 1.7 pt further right"
+    why: "J142 (and J.6.10): lines break by one measure PowerPoint can reproduce, Helvetica's widths with full spaces, so the PowerPoint wraps where the PDF did; PowerPoint cannot shrink spaces."
+    signed_by: null
+    signed_on: null
+
+  # ---- GD1's PDF and PowerPoint: the presented set (F119), picks per current plan (J165), U5 (F52), packages ----
+  - item: F119
+    deal: GD1
+    file: proposal-pdf
+    where: "page*"
+    kind: "page-count, page-added"
+    old: "14 pages"
+    new: "17: Vision — your options and Vision — VSP (the recommended VSP renewal presented), and the premium chart page"
+    why: "F119 (recommended plans are presented) and J128 (the chart prints with 2+ at-a-glance rows, which J165 gives medical)."
+    signed_by: null
+    signed_on: null
+  - item: F119
+    deal: GD1
+    file: deck
+    where: "slide*"
+    kind: "slide-count, slide-added"
+    old: "14 slides"
+    new: "17: Vision — your options and Vision — VSP, and the premium chart slide"
+    why: "F119 (recommended plans are presented) and J128 (the chart prints with 2+ at-a-glance rows, which J165 gives medical)."
+    signed_by: null
+    signed_on: null
+  - item: J165
+    deal: GD1
+    file: proposal-pdf
+    where: "page * «[MVOE]*»"
+    kind: "words, word-position"
+    old: "the old pages of GD1's medical and vision: one pick per current plan, the HMO renewal and VSP renewal not presented, U5 priced on B alone, each Cigna Dual half changed against the whole current plan"
+    new: "a row per answer under each current plan (J165), the recommended renewals presented (F119), U5 priced on B and C and listed under both (F52), no change on a package's half (rule 5: packages only from package()), the cards' Funding rows (§4.3), the basis note counting plans typed for themselves (F87)"
+    why: "J165, F119, F52 and F134 (GD1's parity profile leaves out CG1N, U5's second current plan and the packages); every figure is quotes' (rule 5)."
+    signed_by: null
+    signed_on: null
+  - item: J165
+    deal: GD1
+    file: deck
+    where: "slide * «[MVOE]*»"
+    kind: "text, notes, run-font, shape-position, shapes-added, shapes-removed"
+    match: "^(?!.*kern).*"
+    old: "the old slides of GD1's medical and vision (one pick per current plan, renewals not presented, U5 on B alone, package halves changed)"
+    new: "a row per answer (J165), recommended renewals presented (F119), U5 on B and C (F52), no change on a package's half, Funding rows, tables stepped down a size to hold them (J140)"
+    why: "J165, F119, F52 and F134, as on the PDF; J140 fits each table by stepping its type down."
+    signed_by: null
+    signed_on: null
+  - item: F144
+    deal: GD1
+    file: workbook
+    where: "Dynamic Medical Compare!print scale"
+    kind: print
+    old: "61 (the sheet's height fit, at or above 60, wins)"
+    new: "64 (the width's fit: with the Funding rows the height fit falls under 60 and is not used)"
+    why: "plan.md §4.3 and print_plan.columns_print_scale (the old rule): the two Funding rows make the Compare tab taller, so its height fit drops below HEIGHT_FIT_MIN and the width decides."
+    signed_by: null
+    signed_on: null
+  - item: J149
+    deal: GD1
+    file: workbook
+    where: "Dynamic Medical Compare!print column breaks"
+    kind: print
+    old: "[12, 22, 32] in the old file, read here through the column alignment as [12, 24, 34]"
+    new: "[12, 22, 32]: every five slots, as the old rule puts them"
+    why: "J149: both files break every five slots (2 + 10n); the old breaks read differently only because the prefill moved the starred plans one slot (J149 with J55 and F119), which the lane's column alignment follows."
+    signed_by: null
+    signed_on: null

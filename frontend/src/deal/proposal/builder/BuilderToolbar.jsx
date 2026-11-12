@@ -13,12 +13,22 @@ const LEVELS = { stop: 'Stops', warn: 'Check', info: 'Note' };
  * toolbar at 891f1b3): "✓ n of N completed" with Expand/Collapse all, "⚠ n to check" opening the checks (Stops first,
  * each with Fix ▸), "Open proposal ▸", and the readiness banner — what Issue would say, before the click. The checks
  * and the sentence are the server's (proposals/checks.py, ready.py). "⬇ Client PDF" (J24; slice 29), "⬇ PowerPoint"
- * (J141; slice 31), "⬇ Client spreadsheet" (J24; slice 27); "Open proposal ▸" opens the Export viewer
- * once it exists (J27; slice 28). RENEWAL leads the toolbar on a deal opened for an Existing client (J22; slice 38): the
+ * (J141; slice 31), "⬇ Client spreadsheet" (J24; slice 27); "Open proposal ▸" opens the Advisor's Export viewer
+ * (J27; slice 28). RENEWAL leads the toolbar on a deal opened for an Existing client (J22; slice 38): the
  * header's `deal_type`, read from the deal page's cached header (the builder lives only there), never the client's
  * status.
  */
-export default function BuilderToolbar({ progress, allOpen, onAllOpen, checks, showChecks, onShowChecks, ready, onFix }) {
+export default function BuilderToolbar({
+  progress,
+  allOpen,
+  onAllOpen,
+  checks,
+  showChecks,
+  onShowChecks,
+  ready,
+  onFix,
+  onOpenProposal,
+}) {
   const { dealId } = useParams();
   const renewal = useDeal(dealId).data?.deal_type === RENEWAL;
   return (
@@ -57,8 +67,9 @@ export default function BuilderToolbar({ progress, allOpen, onAllOpen, checks, s
         <button
           type="button"
           className="btn btn-primary btn-sm"
-          disabled
-          title="Opens the Export viewer, which arrives with the client files"
+          disabled={!onOpenProposal}
+          onClick={onOpenProposal}
+          title="The client files as they would download now, in the Export viewer"
         >
           Open proposal ▸
         </button>

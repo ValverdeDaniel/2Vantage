@@ -100,10 +100,12 @@ def option_index(line, colours, title):
 
 
 def _summary_table(current, options, colours, size):
-    rows = [look.heads(['Option', 'Plan', 'Monthly', 'Annual', 'Change', '% change'], colours, size, center_from=2)]
+    # Every cell left-aligned, as the old package summary's Paragraphs were (`proposal_pdf._package_summary`).
+    heads = ['Option', 'Plan', 'Monthly', 'Annual', 'Change', '% change']
+    rows = [look.heads(heads, colours, size, center_from=len(heads))]
     figures = [look.money(current['monthly']), look.money(current['annual']), '—', '—']
     texts = ['Current', f'{current["carrier"]} — {current["name"]}', *figures]
-    rows.append(look.row(texts, colours, size, center_from=2))
+    rows.append(look.row(texts, colours, size, center_from=len(heads), bold_first=False))  # old 'value' style
     rows[-1]['fill'] = colours['current']
     for plan in options:
         change = plan['change'] or {}
@@ -111,7 +113,7 @@ def _summary_table(current, options, colours, size):
         figures = [look.money(plan['monthly']), look.money(plan['annual'])]
         figures += [look.signed(change.get('delta')), look.pct(change.get('pct'))]
         texts = [label, f'{plan["carrier"]} — {plan["name"]}', *figures]
-        rows.append(look.row(texts, colours, size, center_from=2, bold_first=False))
+        rows.append(look.row(texts, colours, size, center_from=len(heads), bold_first=False))
     widths = [1.5 * 72, 4.4 * 72] + [(tokens.BODY_W - 5.9 * 72) / 4] * 4
     return look.grid(rows, widths, colours)
 

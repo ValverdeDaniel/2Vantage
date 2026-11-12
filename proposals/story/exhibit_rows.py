@@ -40,6 +40,7 @@ CLIENT_ROW_LABELS = {
     'Fam. OOP Max': 'Family out-of-pocket max',
     'Coinsurance — member pays': 'Coinsurance (you pay)',
     'PCP Copay': 'Primary care copay',
+    'PCP copay': 'Primary care copay',
     'Rx Deductible': 'Prescription deductible',
     'Rx Drug Card (T1 / T2 / T3)': 'Prescriptions (tier 1 / 2 / 3)',
     'Specialty Rx': 'Specialty prescriptions',
@@ -71,7 +72,12 @@ def _band(keys, label, picked, plans):
 def items(line):
     """The line's table rows on the client deck, as `workbook.design.items` gives them, labels in a client's words."""
     plans = list(line['plans'].values())
-    picked = line['rows'] if line['rows'] is not None else catalog.client_keys(line['key'])
+    picked = line['rows']
+    if picked is None:
+        # Every row kept: the fields the line holds a value for, so an in/out row whose out-of-network side no plan
+        # states prints as an in-network row, as the old documents did (`document_items` over the old payload).
+        valued = line.get('valued')
+        picked = [key for key in catalog.client_keys(line['key']) if valued is None or key in valued]
     allowed = set(catalog.client_keys(line['key']))
     picked = [key for key in picked if key in allowed]
     house_map = house.COMPARE_MEDICAL_ROWS if line['field_set'] == 'medical' else None

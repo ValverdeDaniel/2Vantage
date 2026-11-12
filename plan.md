@@ -4190,7 +4190,13 @@ draft built on each request; like every download it writes only its `downloaded`
 the firm's pages (`FirmPages`, `TeamMember`). Slice 31: `GET …/proposal/files/pptx/` (the client PowerPoint, the same
 recorded pages replayed as slides; it too writes only its `downloaded` row). Slice 27: `GET …/proposal/files/xlsx/`
 (the client spreadsheet, a draft built on each request, `<Client> - <year> Benefits Proposal-DRAFT.xlsx`; it carries no
-member data, so it writes nothing at all, J97; `409 {detail}` when no line has a tab).
+member data, so it writes nothing at all, J97; `409 {detail}` when no line has a tab). Slice 28: `GET
+…/proposal/preview/?file=workbook&tab=` (the Export viewer's Excel view, one tab a request: `{file, built_at, draft,
+opens_on, tabs: [{title, counts, capped}], tab: {title, rows, cols, col_px, row_px, merges, freeze, zoom, gridlines,
+styles, looks, cells: [[r, c, text, flags, extra]], dropdowns, images, checks, counts, print, cut}}`; `?file=deck` is
+slice 30's; any other file answers 400; `409 {detail}` in the download's words; no-store; writes nothing, not even a
+`downloaded` row), and the builder payload's `stamps {files, firm}` (`proposals/stamps.py`). The client PDF and
+PowerPoint take the spreadsheet's name rule, `<Client> - <year> Benefits Proposal-DRAFT.pdf` / `.pptx` (J104).
 
 | Method | Path | What it does |
 |---|---|---|
@@ -4657,6 +4663,18 @@ lowest first, the option table, the laser what-if (never saved) and the five-tab
 **Export viewer** (need 11; J105–J120; slices 28 and 30): chips Excel, PowerPoint, Paper and PDF; the deck viewer with
 its rail, jump chips, fit report and notes; the Paper frame; the workbook screen with frozen panes, printed pages and
 checks per tab; downloads and **Print…**. Previews build only while shown and write nothing (J107; O.3.6).
+- **Built (slice 28):** the "Export viewer" pill, last (F3); `?file=` and the file kept per browser as the old
+  `exportFile` (F136); the chips (J105: PowerPoint, Paper and PDF greyed "next" until slice 30's deck view); the
+  toolbar with the Draft badge, "Built 2:05 PM · 13 tabs", ↻ Refresh and ⬇ Download spreadsheet (J112; the "Not
+  printing" chips are the deck view's, as in the old app); the Excel view (J116–J118: Screen with frozen panes, zoom,
+  run-on text, ####, read-only drop-downs, rows windowed past 160, cell select; Printed pages; the checks per tab with
+  their cells, tab dots, Ctrl+PgUp/PgDn; capped tabs at 2,500 rows). Each preview is a React Query entry keyed on
+  file, tab and the builder's `stamps` settled 900 ms (J107): `files` moves with the deal's latest recorded write and
+  at midnight, never with a completed mark or a download; `firm` with the agency settings, firm pages and team. The
+  key sits outside `['deal', id]`, so a deal write rebuilds it only through its stamp; staleTime Infinity, no retry,
+  no refetch on focus or mount, the last copy kept while the next builds, enabled only while shown and nothing is
+  saving. "Open proposal ▸" on the builder opens it (J27). The grid lives in `deal/proposal/export/` (one screen uses
+  it), not `src/viewer/`.
 
 ### 8.15 Proposal (`proposal`)
 
@@ -4967,6 +4985,15 @@ totals whether it calculates or not.
   (`bash tools/parity/recalc.sh`: `pytest -m recalc` writes the files, `tools/parity/recalc.py` recalculates them in
   the parity tools image) hold every formula to it. Not printed yet: the cover banner (covers, slice 34), bundle
   caveats (priced bundles, slice 35); 2V has no read state, so no "unread" plan is left off All Plans.
+- **Built (slice 28):** a model width is the width the file stores, as the old writer stored it and as `print_plan`
+  plans with it: `write.py` sets each column in whole pixels (`int(width × 7 + 0.5)`; a stored 46 draws at 322 px),
+  since XlsxWriter's `set_column` would add Excel's 5 px padding and every column would print wider than planned.
+  The Export viewer (`proposals/viewer/`) shows the model one tab a request: the tab's look is `look(write(model))`,
+  documents' look reader over the tab as the download's writer writes it; each value is the model's (a formula's
+  stored result) drawn through its number format by `workbook/text.py` (the old `workbook_text`), with the format's
+  colour, the conditional fills that hold now (`viewer/fills.py`) and Excel's alignment for numbers; the checks
+  (`viewer/workbook_checks.py`: error, ####, cut off, tight) and the printed pages (`viewer/workbook_pages.py`, over
+  the tab's print setup with `print_plan.PRINT_WIDTH`) are read from the model too. No formula is evaluated (J119).
 
 ### 9.5 Client PDF and PowerPoint: one layout (`proposals/story/`, `proposals/layout/`)
 
@@ -5817,6 +5844,12 @@ tolerances and the list of screens.
   and GD2, and each slice that seeds a deal extends it.
 - **Fidelity (files).** The old app's proposal downloads (workbook, PDF, deck and Paper), carrier files, questionnaire
   PDFs and stop-loss workbook are compared with 2V's, with dates, stamps, ids and authors masked on both sides.
+  Built (slice 28): `python tools/parity/files.py --deals all` runs on the host: it fetches both apps' client
+  spreadsheet, PDF and PowerPoint for each golden deal over their own APIs (standard library only; Paper joins with
+  slice 30), then compares them in the parity tools image (`--compare`, no network) and judges each difference against
+  `tools/parity/intended.yaml`, exiting 1 while any is unexplained; `report.md` and `differences.json` go to
+  `%LOCALAPPDATA%/2vantage-fidelity/<time>/`. Each golden deal must be at its parity profile's checkpoint in both apps
+  (GD3 at A): a walk that moves one makes its comparison meaningless until `seed_golden` runs again.
 - **Look (screens).** `browser/` drives the installed Chrome through `playwright-core`, captures about 70 screen
   states in both apps, and compares them by pixels, class order and computed style. A harness-only sheet, generated
   from `browser/look/dropped.yaml` (one entry per Drop or Defer row with visible UI), hides on the old screens what

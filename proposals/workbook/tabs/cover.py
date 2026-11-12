@@ -25,6 +25,9 @@ LOGO_ROW_PT = 62
 PARA_LIMIT = 1200
 SNAPSHOT = 'Figures as of this download; they do not recalculate when counts or rates are edited.'
 _DASHES = frozenset('-–—')
+# The spreadsheet keeps its own wording of this tile (old `_SPREADSHEET_SUMMARY_LABELS`, D-173 at 891f1b3): Daniel
+# asked that its contents not change when the PDF and PowerPoint moved to "you".
+SPREADSHEET_LABELS = {'What you pay today': 'What they pay today'}
 
 
 def paragraph_rows(text, limit=PARA_LIMIT):
@@ -146,6 +149,7 @@ class _Cover:
 
     def summary_row(self, row, block, indented):
         label = str(block.get('label') or '').strip()
+        label = SPREADSHEET_LABELS.get(label, label)
         value = _shown(block.get('value_label'))
         detail = ' · '.join(part for part in (_shown(block.get('delta_label')), _shown(block.get('sub'))) if part)
         for first, last, text, align in (

@@ -28,6 +28,15 @@ def _client_values(values):
     return {key: raw for key, raw in (values or {}).items() if fields.BY_KEY.get(key, {}).get('client')}
 
 
+def _valued(rows):
+    """The client fields any plan of the line holds a value for (the RAW text, so a stored '0' counts): what the old
+    payload offered as the line's rows when the producer keeps every row (its any-value filter, 891f1b3)."""
+    found = set()
+    for row in rows:
+        found.update(key for key, raw in _client_values(row.values).items() if str('' if raw is None else raw).strip())
+    return sorted(found)
+
+
 def _sbc(values):
     """The SBC link a client file may carry: an http(s) address, one token, ≤255 characters; else ''."""
     found = str(values.get('sbc_url') or '').strip()
@@ -128,6 +137,7 @@ def line(key, state, laid, ctx):
         'several': len(data.current) >= 2,
         'parts': spec['parts'],
         'rows': spec['rows'],
+        'valued': _valued(rows.values()),
         'card_stats': spec['card_stats'],
         'table_note': spec['table_note'],
         'reasons': why_for(ctx['config'], key),

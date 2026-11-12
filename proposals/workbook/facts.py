@@ -12,6 +12,7 @@ Issue would stamp) and the people quotes' math prices it with. Reads only; a fix
 import io
 from collections import namedtuple
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from deals import carriers, lines, rules
 from deals.models import AgencySettings
@@ -25,6 +26,8 @@ from .. import builder, catalog, config, deal_cards, line_block, line_layout, re
 from .. import summary_read as read
 
 UNKNOWN_CARRIER = 'Unknown carrier'
+# The agency logo until one is uploaded (old `presentation_styles.LOGO_PATH`, `branding.logo_source` at 891f1b3).
+BUNDLED_LOGO = Path(__file__).resolve().parents[2] / 'assets' / 'images' / 'logos' / 'agency-logo.png'
 Plan = namedtuple(
     'Plan', 'id role carrier identity name plan_number values recommended sold starred priced result version_of'
 )
@@ -152,15 +155,18 @@ def _kept(key, stored, row, effective):
 
 
 def logo_png(agency):
-    """The agency's logo as a fresh PNG (the pixels re-encoded, no metadata), or None."""
-    if not agency.logo:
-        return None
+    """The agency's logo as a fresh PNG (the pixels re-encoded, no metadata): its upload, else the bundled logo the
+    old app used until one was uploaded (J145), or None when neither can be read."""
     try:
         from PIL import Image
 
-        with agency.logo.open('rb') as handle:
-            picture = Image.open(io.BytesIO(handle.read()))
-            picture.load()
+        if agency.logo:
+            with agency.logo.open('rb') as handle:
+                raw = handle.read()
+        else:
+            raw = BUNDLED_LOGO.read_bytes()
+        picture = Image.open(io.BytesIO(raw))
+        picture.load()
         out = io.BytesIO()
         picture.convert('RGBA').save(out, format='PNG')
         return out.getvalue()

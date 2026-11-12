@@ -24,13 +24,14 @@ def _row(line, base, plan, several):
         delta, pct = 0, 0.0
     elif plan and plan['change']:
         delta, pct = plan['change']['delta'], plan['change']['pct']
-    name = plan['name'] if plan else ''
+    # The summary's name for a plan, carrier first ("Aetna · HMO 1000"; old `exec_summary._plan_name`, D-175).
+    name = plan['words'] if plan else ''
     return {
         'line': line['key'],
         'label': line['label'],
         'plan_id': plan['id'] if plan else None,
         'name': f'Keep {name}' if kept else name,
-        'replacing': base['name'] if several and base else '',
+        'replacing': base['words'] if several and base else '',
         'today': today,
         'recommended': now,
         'delta': delta,

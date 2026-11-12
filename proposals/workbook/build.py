@@ -68,11 +68,12 @@ def book(deal):
     return from_facts(facts.read_deal(deal))
 
 
-def filename(deal, draft=True):
-    """`<Client> - <year> Benefits Proposal[-DRAFT].xlsx` (J104): the effective date's year."""
+def filename(deal, draft=True, extension='xlsx'):
+    """`<Client> - <year> Benefits Proposal[-DRAFT].<extension>` (J104): the effective date's year. The PDF and the
+    PowerPoint take the same name (`story.build.file_name`)."""
     year = deal.effective_date.year if deal.effective_date else ''
     stem = f'{deal.client.name} - {year} Benefits Proposal'.replace('  ', ' ')
-    return safe_filename(f'{stem}{"-DRAFT" if draft else ""}.xlsx')
+    return safe_filename(f'{stem}{"-DRAFT" if draft else ""}.{extension}')
 
 
 def workbook(deal):

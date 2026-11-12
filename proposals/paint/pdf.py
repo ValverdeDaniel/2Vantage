@@ -124,7 +124,7 @@ def _text(c, it, _pictures):
             if not segments:
                 continue
             size = max(seg['size'] for seg in segments)
-            baseline = top - used - number * leading - tokens.BASELINE_DROP * size
+            baseline = top - used - number * leading - it.get('drop', tokens.BASELINE_DROP) * size
             room, wide = it['w'], line_width(segments)
             x = it['x'] + {'c': (room - wide) / 2, 'r': room - wide}.get(para['align'], 0)
             for seg in segments:

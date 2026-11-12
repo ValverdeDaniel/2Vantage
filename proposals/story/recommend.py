@@ -12,7 +12,7 @@ The words are `why_for`'s (J57): the line's own, else the deal-wide ones only wh
 from .. import catalog, formatting
 from ..layout import items, tokens
 from ..layout import table as tb
-from . import look
+from . import exhibit_rows, look
 
 KEEP_CURRENT_WORDS = 'We recommend keeping your current plan.'
 BODY_W = tokens.BODY_W
@@ -72,7 +72,9 @@ def _facts(plan, line):
     found = []
     for key in highlights(line):
         value = formatting.value(key, plan['values'].get(key)) if key in plan['values'] else ''
-        found.append((HIGHLIGHT_LABELS.get(key) or catalog.stat_label(key), value or '—'))
+        # In a client's words, as the tables say it (old `presentation_model.client_stats`): "Primary care copay".
+        label = HIGHLIGHT_LABELS.get(key) or exhibit_rows.client_label(catalog.stat_label(key))
+        found.append((label, value or '—'))
     if plan['monthly'] is not None:
         found.append(('Monthly premium', look.money(plan['monthly'])))
     if plan['annual'] is not None:

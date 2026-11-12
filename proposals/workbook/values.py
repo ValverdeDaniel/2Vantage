@@ -7,7 +7,7 @@ it looks like. Text prints as `proposals.formatting.value` prints it on every cl
 never a benefit row: `sbc_link` is the one rule for which addresses may print.
 """
 
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from quotes import fields
 from quotes import math as m
@@ -16,22 +16,10 @@ from .. import formatting
 from . import styles as s
 from .cells import clean
 
-# Every money key that is a RATE (old CENTS_KEYS): the tier rates, the employer contributions beside them, the unit
-# rate, the stop-loss premium parts and factor, and the TPA fee. Group totals and design amounts are whole dollars.
-CENTS_KEYS = frozenset(
-    {
-        *fields.TIER_RATE_KEYS,
-        *fields.CONTRIB_KEYS,
-        'unit_rate',
-        'sl_spec_rate',
-        'sl_agg_rate',
-        'sl_other_load',
-        'sl_agg_factor',
-        'tpa_admin_fee',
-    }
-)
+# The money rule is the client documents' own (`formatting`, old `value_format`): one rule for every file (J.5 B6).
+CENTS_KEYS = formatting.CENTS_KEYS
 MONEY_TYPES = ('amount', 'rate', 'rate4')
-MIN_PLACES, MAX_PLACES = 2, 4
+MIN_PLACES, MAX_PLACES = formatting.MIN_PLACES, formatting.MAX_PLACES
 SBC_KEY = 'sbc_url'
 SBC_URL_MAX = 255
 _HUGE = Decimal('1e15')
@@ -46,21 +34,12 @@ def number(raw):
 
 
 def _stored_places(raw):
-    found = number(raw)
-    if found is None:
-        return 0
-    try:
-        exponent = found.normalize().as_tuple().exponent
-    except InvalidOperation:
-        return 0
-    return -exponent if isinstance(exponent, int) and exponent < 0 else 0
+    return formatting.stored_places(raw) if number(raw) is not None else 0
 
 
 def money_places(raw, key):
     """Decimal places a money value prints with: 0 outside CENTS_KEYS; a rate's stored places, within 2..4."""
-    if key not in CENTS_KEYS:
-        return 0
-    return min(MAX_PLACES, max(MIN_PLACES, _stored_places(raw)))
+    return formatting.money_places(raw, key)
 
 
 def rate_format(raw, key):

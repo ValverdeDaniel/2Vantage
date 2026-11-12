@@ -7,6 +7,7 @@ that are not bundled (the firm's logo, the team's photos), by the names the fram
 """
 
 from ..layout import record, tokens
+from ..workbook import build as workbook_build
 from . import facts as client_facts
 from . import look, sequence
 
@@ -41,5 +42,7 @@ def deck(deal):
     }
 
 
-def file_name(deal):
-    return f'{deal.client.name} - Proposal.pdf'
+def file_name(deal, extension='pdf'):
+    """`<Client> - <year> Benefits Proposal-DRAFT.pdf` (J104), the client spreadsheet's own name rule: a draft until
+    Issue stores the issued copy (OQ35)."""
+    return workbook_build.filename(deal, extension=extension)

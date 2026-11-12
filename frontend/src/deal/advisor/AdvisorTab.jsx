@@ -6,7 +6,7 @@ import * as q from '../../api/quotes';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import RefreshChip from '../../ui/RefreshChip';
-import { PagesView, ProposalBuilder } from '../proposal';
+import { ExportViewer, PagesView, ProposalBuilder } from '../proposal';
 import AsQuotedView from './AsQuotedView';
 import BoardDialogs from './BoardDialogs';
 import EnrollmentPanel from './enrollment/EnrollmentPanel';
@@ -26,7 +26,9 @@ import { AddQuotesButton } from '../claude'; // Work with Claude's door on the b
  * (slice 13) sit between the board's header and its table. ▦ Pages mounts the proposal folder's PagesView in the
  * table's place (slice 14; F37), kept per browser. The Proposal builder view mounts the proposal folder's builder
  * (slice 25; J17), on the line the Advisor shows. "As quoted" shows one scanned quote as printed (F42; slice 21),
- * offered once a read has landed a printed table.
+ * offered once a read has landed a printed table. The Export viewer, last, mounts the proposal folder's viewer (slice
+ * 28; F3, F136): its file is kept with the view and line, and where it stands in each file (`exportPlace`) is held
+ * here, so a switch to the builder and back finds the same tab; "Open proposal ▸" on the builder opens it (J27).
  */
 
 function EmptyPanel({ title, children, actions }) {
@@ -54,6 +56,7 @@ export default function AdvisorTab({ deal }) {
   const prefs = useAdvisorPrefs(lines.data ?? [], quoted.data);
   const comparison = q.useComparison(deal.id, prefs.line);
   const [dialog, setDialog] = useState(null);
+  const [exportPlace, setExportPlace] = useState({});
   const packages = {
     create: q.useCreatePackage(deal.id),
     update: q.useUpdatePackage(deal.id),
@@ -99,6 +102,19 @@ export default function AdvisorTab({ deal }) {
           onLine={prefs.pickLine}
           onQuotes={() => prefs.pickView('quotes')}
           onGoTab={(tab) => navigate(`/deals/${deal.id}/${tab}`)}
+          onExport={() => prefs.pickView('export')}
+        />
+      </div>
+    );
+  } else if (prefs.view === 'export') {
+    body = (
+      <div className="bnf-advisor-tab-split">
+        <ExportViewer
+          dealId={deal.id}
+          file={prefs.file}
+          onFile={prefs.pickFile}
+          place={exportPlace}
+          onPlace={setExportPlace}
         />
       </div>
     );

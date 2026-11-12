@@ -4,7 +4,7 @@ J47–J67; J.6.5).
 {config, marks: {done, total, stored}, lines: [line block], ready: {ok, missing, sentence, draft}, checks: [item],
  output: {layout, package_summary, compare_tabs, disclaimers, compare_slots, pages: {page: bool}}, experience:
  {summary, rows}, next_steps, summary: {on, picked, standard, blocks, medicare}, markets: {has_asks, auto, override,
- on, lines}, ledger: [page], best_only: sentence | null, issues: []}
+ on, lines}, ledger: [page], best_only: sentence | null, issues: [], stamps: {files, firm}}
 
 The builder's lines are the lines holding plans plus the lines the intent keeps as-is (their incumbent stands as the
 recommendation, J47), in the producer's order (`config.order`, J31), each laid out as the files print it
@@ -12,7 +12,7 @@ recommendation, J47), in the producer's order (`config.order`, J31), each laid o
 the list with its notice (J30) and prints nowhere. The deal cards (`deal_cards`) read the lines on the proposal.
 Reads only, in a fixed number of queries whatever the plan count (Q.3 #2, #4): `deal_state`, the intent, the config
 row, the option-number tops, the census's ages, who the RFP asked and the firm's pages (the ledger, slice 29). The
-issues list arrives with Issue (slice 32).
+issues list arrives with Issue (slice 32). `stamps` keys the Export viewer's previews (slice 28; `stamps.py`).
 """
 
 from deals import rules
@@ -23,7 +23,7 @@ from quotes import selectors as quotes
 from quotes.selectors.state import empty
 from rfp.selectors import asked_by_line
 
-from . import checks, config, deal_cards, line_block, line_layout, marks, ready
+from . import checks, config, deal_cards, line_block, line_layout, marks, ready, stamps
 from . import summary_read as read
 from .models import ProposalConfig
 from .story import firm_read
@@ -111,4 +111,5 @@ def payload(deal):
         'ledger': cards['ledger'],
         'best_only': best_only(sheets),
         'issues': [],
+        'stamps': stamps.stamps(deal),
     }

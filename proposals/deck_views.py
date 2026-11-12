@@ -37,4 +37,4 @@ class ClientPptxView(APIView):
         found = build.deck(deal)
         data = pptx.draw(found['pages'], found['title'], found['sources'])
         activity.log_access(deal, request.user, 'downloaded', 'the client PowerPoint (draft)', None, area=AREA)
-        return file_response(io.BytesIO(data), f'{deal.client.name} - Proposal.pptx')
+        return file_response(io.BytesIO(data), build.file_name(deal, 'pptx'))

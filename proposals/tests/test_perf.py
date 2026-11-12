@@ -48,3 +48,17 @@ def test_Q7_J17_the_builder_of_600_plans_stays_within_3_MB_and_2_5_s(api, gd_big
     assert response.status_code == 200
     print(f'\nbuilder, 600 plans, nothing starred {nothing_starred}: {len(response.content) / MB:.2f} MB, {best:.2f} s')
     assert len(response.content) <= 3 * MB and best <= 2.5
+
+
+@pytest.mark.parametrize('tab', ['', 'Medical All Plans', 'Medical Composite Rates'])
+def test_Q7_J116_one_workbook_tab_of_600_plans_builds_within_the_budget(api, gd_big, tab):
+    """Q.7: one workbook tab ≤1.5 s on 236 plans (old: about 7 s); GD-Big has 600, the bank tabs grow with them."""
+    best, response = None, None
+    for _ in range(3):
+        start = time.perf_counter()
+        response = api.get(f'/api/deals/{gd_big.id}/proposal/preview/', {'file': 'workbook', 'tab': tab})
+        took = time.perf_counter() - start
+        best = took if best is None else min(best, took)
+    assert response.status_code == 200
+    print(f'\nworkbook preview, 600 plans, {tab or "opening tab"}: {len(response.content) / MB:.2f} MB, {best:.2f} s')
+    assert best <= 1.5 * 600 / 236

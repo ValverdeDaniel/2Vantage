@@ -1,5 +1,6 @@
 // The proposal builder and its pages (plan.md §7.12). Query keys: ['deal', id, 'proposal'] (the builder) and
-// ['deal', id, 'proposal', 'pages', line, preset].
+// ['deal', id, 'proposal', 'pages', line, preset]; the Export viewer's previews ['proposal-preview', id, file, tab,
+// files stamp, firm stamp] (slice 28), outside ['deal', id] so a deal write does not rebuild them: their stamps do.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from './client';
 import { dealKey, invalidateDeal } from './deals';
@@ -58,4 +59,49 @@ export function usePages(dealId, line, preset) {
     staleTime: 0,
     placeholderData: (previous) => (previous?.line === line ? previous : undefined),
   });
+}
+
+export const previewKey = (dealId, file, tab, stamps) => [
+  'proposal-preview',
+  Number(dealId),
+  file,
+  tab || '',
+  stamps?.files ?? '',
+  stamps?.firm ?? '',
+];
+
+/**
+ * The Export viewer's copy of one file (plan.md §7.12; J107, F3): `GET deals/{id}/proposal/preview/?file=&tab=`,
+ * built by the server from the downloads' own builders and never stored. Keyed on the file, the tab and the builder's
+ * `stamps` (the caller settles them first), so it builds only when something a client file prints may have changed:
+ * staleTime Infinity, no retry, no refetch on focus or mount; a superseded build is aborted (the signal). Enabled only
+ * while its file is on screen and nothing is saving (the caller's `enabled`). Until a copy for this key arrives, the
+ * last copy of the same file stays on screen (`isPlaceholderData`), from this view or an earlier visit.
+ * → workbook: {file, built_at, draft, opens_on, tabs: [{title, counts, capped}], tab: {…}} · 409 {detail}.
+ */
+export function usePreview(dealId, { file, tab, stamps, enabled }) {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: previewKey(dealId, file, tab, stamps),
+    queryFn: async ({ signal }) =>
+      (await api.get(`deals/${dealId}/proposal/preview/`, { params: { file, tab: tab || undefined }, signal })).data,
+    enabled: Boolean(enabled && stamps),
+    staleTime: Infinity,
+    gcTime: 5 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    placeholderData: (previous) => previous ?? lastPreview(queryClient, dealId, file),
+  });
+}
+
+/** The newest copy of `file` built for this deal under any key, or undefined (a failed build keeps it on screen). */
+export function lastPreview(queryClient, dealId, file) {
+  const found = queryClient
+    .getQueryCache()
+    .findAll({ queryKey: ['proposal-preview', Number(dealId), file] })
+    .filter((query) => query.state.data)
+    .sort((a, b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt);
+  return found[0]?.state.data;
 }

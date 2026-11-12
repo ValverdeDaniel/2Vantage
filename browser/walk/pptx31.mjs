@@ -33,7 +33,9 @@ export const pptx31 = {
       const download = page.waitForEvent('download', { timeout: 60000 });
       await page.getByRole('button', { name: '⬇ PowerPoint' }).click();
       const got = await download;
-      const safe = `${spec.client} - Proposal.pptx`.replace(/[^A-Za-z0-9 ._-]/g, ''); // deals.downloads.safe_filename
+      // J104: the client spreadsheet's name rule (slice 28), the effective date's year, Draft until issued.
+      const year = spec.effective_date.slice(0, 4);
+      const safe = `${spec.client} - ${year} Benefits Proposal-DRAFT.pptx`.replace(/[^A-Za-z0-9 ._-]/g, '');
       if (got.suggestedFilename() !== safe) throw new Error(got.suggestedFilename());
       file = path.join(os.tmpdir(), `walk-s31-${Date.now()}.pptx`);
       await got.saveAs(file);

@@ -6,6 +6,11 @@ written with its stored result (`write_formula(…, value)`), so a viewer that d
 preview, Outlook's preview pane, Excel's Protected View) shows the app's figures. File settings (J152): the agency as
 author, recalculation when the file opens (XlsxWriter's fullCalcOnLoad), the zoom each tab asks for, and the file
 opens on the tab the model names, the only one selected.
+
+A model width is the width the file stores, as the old writer (openpyxl) stored it and as `print_plan` measures it
+(Excel draws a stored 46 at 322 pixels). XlsxWriter's `set_column` would add Excel's 5-pixel padding on top (46 → 46.71
+stored, 327 pixels), so every column would draw and print wider than the print plan reckons; the width is written in
+pixels instead (`_pixels`), which stores the model's number.
 """
 
 import io
@@ -31,6 +36,11 @@ class _Formats:
         if key not in self.cache:
             self.cache[key] = self.workbook.add_format(dict(style))
         return self.cache[key]
+
+
+def _pixels(width):
+    """The pixels Excel draws a column of this stored width at (print_plan's measure)."""
+    return int(float(width) * 7 + 0.5)
 
 
 def _cell(ws, row, col, cell, look):
@@ -76,7 +86,7 @@ def _print(ws, setup):
 
 def _sheet(ws, sheet, formats):
     for col, width in sorted(sheet.widths.items()):
-        ws.set_column(col - 1, col - 1, width)
+        ws.set_column_pixels(col - 1, col - 1, _pixels(width))
     for row, height in sorted(sheet.heights.items()):
         ws.set_row(row - 1, height)
     for r1, c1, r2, c2 in sheet.merges:

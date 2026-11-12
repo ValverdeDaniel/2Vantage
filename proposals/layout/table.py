@@ -138,6 +138,7 @@ class Table(Flowable):
                     'title': False,
                     'wrap': True,
                     'paragraphs': [para],
+                    'drop': tokens.PARAGRAPH_DROP,
                 }
                 fill = self._fill(number, row, col)
                 cells.append(

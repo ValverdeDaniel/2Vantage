@@ -4,8 +4,10 @@
  * falls back rather than drawing nothing. `?view=` and `?line=` win over the kept choice. Pure.
  *
  * Views (F1): Quote comparison, "As quoted" (one scanned quote as printed, F42; slice 21: offered only once a read
- * has landed a printed table) and the Proposal builder (slice 25; J17) are built. The Stop-loss analysis pill (only
- * with a stop-loss line, F2) and the Export viewer join this list with their slices (36, 28); Unleashed waits (F4).
+ * has landed a printed table), the Proposal builder (slice 25; J17) and the Export viewer, last, as the old app put it
+ * (slice 28; F3). The Stop-loss analysis pill (only with a stop-loss line, F2) joins with slice 36; Unleashed waits
+ * (F4). The Export viewer's file is kept here too, as the old `exportFile`, and `?file=` wins (F136); the viewer
+ * decides which files it can show.
  */
 
 export const PREFS_KEY = 'vantage.bnf.advisor';
@@ -21,6 +23,11 @@ export const VIEWS = [
     key: 'build',
     label: 'Proposal builder',
     hint: 'Which quote from each carrier, what the client sees, and the executive summary',
+  },
+  {
+    key: 'export',
+    label: 'Export viewer',
+    hint: 'The client spreadsheet and PowerPoint as they will export, before you download them',
   },
 ];
 export const DEFAULT_VIEW = 'quotes';
@@ -72,4 +79,9 @@ export function chooseOrientation(kept) {
 /** 'grid' (the board) or 'pages' (▦ Pages, "What the client will see"; slice 14), as the old app kept it. */
 export function chooseLayout(kept) {
   return kept === 'pages' ? 'pages' : 'grid';
+}
+
+/** The Export viewer's file as asked for: the URL's, else the one kept (F136); the viewer resolves what it shows. */
+export function chooseFileWanted(param, kept) {
+  return param || kept || '';
 }

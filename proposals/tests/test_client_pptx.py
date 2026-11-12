@@ -38,7 +38,8 @@ def _download(api, deal):
     response = api.get(f'/api/deals/{deal.id}/proposal/files/pptx/')
     assert response.status_code == 200
     assert response['Content-Type'] == 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-    name = safe_filename(f'{deal.client.name} - Proposal.pptx')
+    year = deal.effective_date.year
+    name = safe_filename(f'{deal.client.name} - {year} Benefits Proposal-DRAFT.pptx')  # J104
     assert response['Content-Disposition'] == f'attachment; filename="{name}"'
     return Presentation(io.BytesIO(b''.join(response.streaming_content)))
 

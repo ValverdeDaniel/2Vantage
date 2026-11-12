@@ -24,7 +24,9 @@ export const pdf29 = {
       const download = page.waitForEvent('download', { timeout: 60000 });
       await page.getByRole('button', { name: '⬇ Client PDF' }).click();
       const got = await download;
-      const safe = `${spec.client} - Proposal.pdf`.replace(/[^A-Za-z0-9 ._-]/g, ''); // deals.downloads.safe_filename
+      // J104: the client spreadsheet's name rule (slice 28), the effective date's year, Draft until issued.
+      const year = spec.effective_date.slice(0, 4);
+      const safe = `${spec.client} - ${year} Benefits Proposal-DRAFT.pdf`.replace(/[^A-Za-z0-9 ._-]/g, '');
       if (got.suggestedFilename() !== safe) throw new Error(got.suggestedFilename());
       file = path.join(os.tmpdir(), `walk-s29-${Date.now()}.pdf`);
       await got.saveAs(file);

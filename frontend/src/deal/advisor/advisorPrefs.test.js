@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   PREFS_KEY,
+  chooseFileWanted,
   chooseLayout,
   chooseLine,
   chooseOrientation,
@@ -62,5 +63,15 @@ describe('F42 "As quoted" is offered once a read has landed a printed table', ()
     expect(keys([{ document: 7, line: 'medical' }])).toContain('quoted');
     expect(chooseView('quoted', null, offeredViews(lines, []))).toBe('quotes');
     expect(chooseView('quoted', null, offeredViews(lines, [{ document: 7, line: 'medical' }]))).toBe('quoted');
+  });
+});
+
+describe('F3 F136 the Export viewer is the last view and keeps its file', () => {
+  it('offers the Export viewer last, and ?file= wins over the kept file', () => {
+    expect(offeredViews(lines, []).at(-1).key).toBe('export');
+    expect(chooseView('export', 'quotes')).toBe('export');
+    expect(chooseFileWanted('excel', 'powerpoint')).toBe('excel');
+    expect(chooseFileWanted(null, 'powerpoint')).toBe('powerpoint');
+    expect(chooseFileWanted(null, undefined)).toBe('');
   });
 });

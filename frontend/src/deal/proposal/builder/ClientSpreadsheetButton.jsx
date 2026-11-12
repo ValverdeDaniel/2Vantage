@@ -7,9 +7,10 @@ import { useToast } from '../../../ui/useToast';
  * "⬇ Client spreadsheet" on the builder's toolbar (plan.md §8.14, §9.4; J24; the old ProposalBuilder.jsx button at
  * 891f1b3): the live workbook as the deal stands, built by the server and saved under its own name
  * (`<Client> - <year> Benefits Proposal-DRAFT.xlsx`, J104). One build per click: a click while the first is still
- * building is answered with a toast. A proposal with nothing to present answers with the server's sentence.
+ * building is answered with a toast. A proposal with nothing to present answers with the server's sentence. The
+ * Export viewer's Excel view shows the same button as "⬇ Download spreadsheet" (slice 28; `label`, `title`).
  */
-export default function ClientSpreadsheetButton({ dealId }) {
+export default function ClientSpreadsheetButton({ dealId, label = '⬇ Client spreadsheet', title }) {
   const toast = useToast();
   const working = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -37,9 +38,9 @@ export default function ClientSpreadsheetButton({ dealId }) {
       className="btn btn-secondary btn-sm"
       onClick={download}
       aria-busy={busy || undefined}
-      title={busy ? 'Preparing the client spreadsheet…' : undefined}
+      title={busy ? 'Preparing the client spreadsheet…' : title}
     >
-      ⬇ Client spreadsheet
+      {label}
     </button>
   );
 }

@@ -26,8 +26,11 @@ BODY_H = PAGE_H - BODY_TOP - FOOTER_BAR - 8 - BODY_BOTTOM_SLACK
 # --- Type -----------------------------------------------------------------------------------------------------------
 # Helvetica in the PDF, Arial in the PowerPoint: the same metrics, so PowerPoint wraps where the layout did (J142).
 FONTS = {'regular': 'Helvetica', 'bold': 'Helvetica-Bold', 'italic': 'Helvetica-Oblique', 'family': 'Arial'}
-# A line's baseline sits this many sizes below its top.
+# A line's baseline sits this many sizes below its top: the furniture's, as the old canvas drew it. A paragraph's
+# text (a Text flowable, a table cell) sits one size below, as reportlab's Paragraph placed its first line in the old
+# files (`height - fontSize` at 891f1b3); its frames carry `drop`.
 BASELINE_DROP = 0.96
+PARAGRAPH_DROP = 1.0
 # A content page's title steps down from the largest to the smallest until it fits one line (J139).
 TITLE_TYPE = (26, 16)
 # One table per plan set on one page: it shrinks to the floor before it runs on (Daniel, 2026-11-02; J140).

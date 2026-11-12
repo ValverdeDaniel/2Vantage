@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import {
   VIEWS,
+  chooseFileWanted,
   chooseLayout,
   chooseLine,
   chooseOrientation,
@@ -17,7 +18,8 @@ const storage = () => (typeof window === 'undefined' ? null : window.localStorag
  * The Advisor's view, line and layout (plan.md §8.14; F1, F5, F34; `advisorPrefs.js` holds the rules). `?view=` and
  * `?line=` win; a pick is kept in this browser and written to the URL (in-tab state lives in the query string,
  * §3.9), replacing the entry so Back leaves the tab. `quoted` is the deal's printed tables (undefined while they load,
- * when "As quoted" stays chosen rather than falling back for a moment).
+ * when "As quoted" stays chosen rather than falling back for a moment). The Export viewer's file works the same way
+ * through `?file=` (F136; slice 28).
  */
 export default function useAdvisorPrefs(lines, quoted) {
   const [params, setParams] = useSearchParams();
@@ -27,15 +29,16 @@ export default function useAdvisorPrefs(lines, quoted) {
   const line = chooseLine(params.get('line'), kept.line, lines);
   const orientation = chooseOrientation(kept.orientation);
   const layout = chooseLayout(kept.layout);
+  const file = chooseFileWanted(params.get('file'), kept.exportFile);
 
-  const remember = (patch, urlKey) => {
+  const remember = (patch, urlKey, urlValue = patch[urlKey]) => {
     writePrefs(storage(), patch);
     setKept((now) => ({ ...now, ...patch }));
     if (urlKey) {
       setParams(
         (now) => {
           const next = new URLSearchParams(now);
-          next.set(urlKey, patch[urlKey]);
+          next.set(urlKey, urlValue);
           return next;
         },
         { replace: true },
@@ -49,7 +52,9 @@ export default function useAdvisorPrefs(lines, quoted) {
     line,
     orientation,
     layout,
+    file,
     pickView: (next) => remember({ view: next }, 'view'),
+    pickFile: (next) => remember({ exportFile: next }, 'file', next),
     pickLine: (next) => remember({ line: next }, 'line'),
     pickOrientation: (next) => remember({ orientation: next }),
     pickLayout: (next) => remember({ layout: next }),
