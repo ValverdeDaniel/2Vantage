@@ -59,11 +59,7 @@ export default function FieldCell({ plan, col, ui, r, c, clip = false, className
       ) : (
         value
       )}
-      {doc && (
-        <span {...KEEP_EDITOR}>
-          <SourcePin docId={doc.id} valueRef={`plan:${plan.id}:${col.key}`} fileName={doc.name} />
-        </span>
-      )}
+      {doc && <SourcePin docId={doc.id} valueRef={`plan:${plan.id}:${col.key}`} fileName={doc.name} {...KEEP_EDITOR} />}
       {error && (
         <em className="bnf-saved-error" role="alert">
           ⚠ {error}

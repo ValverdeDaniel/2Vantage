@@ -1,10 +1,13 @@
 """Per-line counts for the Advisor's line tabs (plan.md §7.8; F.5 #37, J81): `GET deals/{id}/plans/lines/`.
 
 Two light queries at any plan count: the deal's plans without their JSON columns, and their links. Coverage of the
-recommendation reads links only, so nothing is priced here.
+recommendation reads links only, so nothing is priced here. `off` is intake's word for a line kept off the proposal
+(F13): its rule (`intake.selectors.line_facts`) reads the coverage intent in two more queries.
 """
 
 from deals import lines
+from intake import coverage as intake_coverage
+from intake.selectors import line_facts
 
 from .. import packages as pk
 from .. import presented
@@ -24,6 +27,7 @@ def lines_summary(deal):
         by_line.setdefault(row['line'], []).append(row)
     keys = [key for key in lines.LINE_KEYS if key in deal.requested_lines or key in by_line]
     keys += [key for key in by_line if key not in keys]
+    _states, off = line_facts(deal, {key: {'sold': any(row['sold'] for row in rows)} for key, rows in by_line.items()})
     summary = []
     for key in keys:
         plans = [
@@ -55,6 +59,8 @@ def lines_summary(deal):
                 'columns': len(presented.presented(data)),
                 'room': presented.room(data),
                 'sold_plans': [p.words for p in sorted(plans, key=lambda p: (p.sort_order, p.id)) if p.sold],
+                'off': off.get(key),  # 'left_off' | 'not_in_intent' | None: the "Off the proposal" chip (F13)
+                'off_reason': intake_coverage.OFF_LABELS.get(off.get(key), ''),
             }
         )
     return summary

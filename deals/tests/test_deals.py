@@ -7,23 +7,22 @@ from deals.models import Activity, Deal
 
 
 def test_create_client_makes_the_client_and_its_first_deal(api):
-    response = api.post(
-        '/api/clients/',
-        {'name': ' Example Co. ', 'effective_date': '2027-01-01', 'requested_lines': ['vision', 'medical']},
-        format='json',
-    )
+    response = api.post('/api/clients/', {'name': ' Example Co. ', 'effective_date': '2027-01-01'}, format='json')
     assert response.status_code == 201
     deal = Deal.objects.get(pk=response.json()['deal']['id'])
     assert deal.client.name == 'Example Co.'
-    assert deal.requested_lines == ['medical', 'vision']  # §4.1 order
+    assert deal.requested_lines == []  # the lines to quote come through intake's intent door (B17)
     assert deal.stage == 'intake'
     assert deal.activity.filter(action='created').exists()
 
 
-def test_unknown_line_is_refused(api):
-    response = api.post('/api/clients/', {'name': 'X', 'requested_lines': ['medical', 'teeth']}, format='json')
+def test_B17_lines_are_refused_here_and_named_to_their_door(api, deal):
+    response = api.post('/api/clients/', {'name': 'X', 'requested_lines': ['medical']}, format='json')
     assert response.status_code == 400
-    assert 'teeth' in response.json()['requested_lines'][0]
+    assert response.json() == {'requested_lines': ['Change the lines to quote through deals/<id>/intake/intent/.']}
+    response = api.patch(f'/api/deals/{deal.id}/', {'requested_lines': ['medical']}, format='json')
+    door = f'Change the lines to quote through deals/{deal.id}/intake/intent/.'
+    assert response.status_code == 400 and response.json() == {'requested_lines': [door]}
 
 
 def test_search_type_filter_and_pagination(api, user):
@@ -59,8 +58,8 @@ def test_lost_and_reopen_and_a_lost_deal_stays_editable(api, deal):
     assert api.post(f'/api/deals/{deal.id}/lost/', {'reason': ''}, format='json').status_code == 400
     lost = api.post(f'/api/deals/{deal.id}/lost/', {'reason': 'Went with another broker'}, format='json').json()
     assert lost['stage'] == 'lost'
-    edited = api.patch(f'/api/deals/{deal.id}/', {'requested_lines': ['medical']}, format='json')
-    assert edited.status_code == 200 and edited.json()['requested_lines'] == ['medical']
+    edited = api.patch(f'/api/deals/{deal.id}/', {'effective_date': '2027-02-01'}, format='json')
+    assert edited.status_code == 200 and edited.json()['effective_date'] == '2027-02-01'
     reopened = api.post(f'/api/deals/{deal.id}/reopen/').json()
     assert reopened['stage'] == 'intake' and reopened['lost_reason'] == ''
 
@@ -90,7 +89,7 @@ def test_consecutive_writes_coalesce_within_ten_minutes_and_not_after(deal, user
 
 def test_activity_list_is_paginated(api, deal):
     body = api.get(f'/api/deals/{deal.id}/activity/').json()
-    assert body['count'] == 1 and body['results'][0]['summary'] == 'Created Example Co.'
+    assert body['results'][-1]['summary'] == 'Created Example Co.' and 'next' in body
 
 
 def test_only_an_admin_deletes_a_client(api, admin_api, deal):

@@ -60,7 +60,7 @@ export default function RowsTable({ board, drawn, ui, win, bodyRef }) {
           </tr>
         ))}
         {pad(win.after, 'pad-after')}
-        {board.sorted.length === 0 && (
+        {ui.emptyNote && (
           <tr>
             <td colSpan={cols.length} className="bb-empty bnf-nofilter-row">
               {ui.emptyNote}

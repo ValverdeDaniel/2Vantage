@@ -1,15 +1,19 @@
 """The Proposal tab's payload (plan.md §7.9, §8.12)."""
 
 from deals import lines
+from intake import coverage as intent
+from intake.selectors import line_facts
 from quotes import selectors as quotes
 
 from . import preview, selection
 from .models import ProposalConfig
 
 
-def proposal_lines(deal, states):
-    """Requested lines that have plans, in §4.1 order."""
-    return [key for key in lines.LINE_KEYS if key in deal.requested_lines and key in states]
+def proposal_lines(states, off):
+    """Lines that have plans and that the coverage intent does not keep off the proposal (J2, B24), in §4.1 order:
+    a line kept as-is is presented though it is not shopped, and a line the intent never names, once recorded, stays
+    off (the old app's `lines_off_proposal`)."""
+    return [key for key in lines.LINE_KEYS if key in states and key not in off]
 
 
 def line_payload(line, state, config):
@@ -72,11 +76,13 @@ def line_payload(line, state, config):
 def payload(deal):
     config = ProposalConfig.for_deal(deal)
     states = quotes.deal_state(deal)  # every line in one grouped read (Q.7)
-    line_payloads = [line_payload(line, states[line], config) for line in proposal_lines(deal, states)]
-    blockers = [
+    held = {line: {'sold': any(p.sold for p in state.plans)} for line, state in states.items()}
+    line_states, off = line_facts(deal, held)
+    line_payloads = [line_payload(line, states[line], config) for line in proposal_lines(states, off)]
+    blockers = [  # a line the intent keeps as-is needs no pick and never blocks Issue (§5.4, J52)
         f'{p["label"]}: Nothing recommended for {", ".join(p["recommendation"]["missing"])}'
         for p in line_payloads
-        if not p['recommendation']['covered']
+        if not p['recommendation']['covered'] and line_states.get(p['line']) != intent.PRESENTED
     ]
     return {
         'title': config.title,

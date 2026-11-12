@@ -12,6 +12,7 @@ import random
 from deals import clock
 from deals.services import create_client, delete_client
 from documents.models import Document
+from intake.services import set_intent
 from quotes.models import Package, Plan
 
 NAME = 'GD-Big (synthetic)'
@@ -75,7 +76,9 @@ def build(user, plans=600, name=NAME, seed=7):
     """The deal, with `plans` medical plans: CURRENTS current plans, each with a renewal, and the rest alternates;
     about a third of the alternates replace a current plan, a tenth are starred, a few are recommended."""
     rng = random.Random(seed)
-    _, deal = create_client(user, name=name, requested_lines=['medical', 'dental', 'vision'])
+    _, deal = create_client(user, name=name)
+    set_intent(user, deal.id, lines=['medical', 'dental', 'vision'], shop=True)
+    deal.refresh_from_db()
     files = [Document(deal=deal, original_name=f'quote-{n}.pdf', kind='quote', uploaded_by=user) for n in range(20)]
     documents = [doc.id for doc in Document.objects.bulk_create(files)]
     at = clock.now().isoformat()

@@ -44,6 +44,118 @@ export const WALKS = {
       });
     },
   },
+  4: {
+    title: 'Search plans by name: "UHC" finds the UnitedHealthcare quotes on every line (F14–F17, OQ14)',
+    deal: 'GD1',
+    async run(ctx) {
+      const { page, step, spec } = ctx;
+      const quotes = spec.plans.filter((p) => p.line === 'medical' && p.role !== 'current');
+      const uhc = quotes.filter((p) => /^UnitedHealthcare/.test(p.carrier));
+      const medical = spec.plans.filter((p) => p.line === 'medical');
+      const unique = (p) => !medical.some((q) => q !== p && (q.name.includes(p.name) || p.name.includes(q.name)));
+      const others = quotes.filter((p) => !/^UnitedHealthcare/.test(p.carrier) && unique(p));
+      const finder = page.getByRole('textbox', { name: /Find a plan/ });
+      const count = page.getByText(/^Showing \d+ of \d+ quoted plans/);
+      await signIn(ctx);
+      await openDeal(ctx);
+      await step('the Advisor opens on the medical board with its finder', async () => {
+        await page.getByRole('link', { name: 'Advisor', exact: true }).click();
+        await page.getByRole('button', { name: /^Medical/ }).click();
+        await finder.waitFor();
+      });
+      await step(`"UHC" leaves the ${uhc.length} UnitedHealthcare quotes, by their carrier's nickname`, async () => {
+        await finder.fill('UHC');
+        await page.getByText(new RegExp(`^Showing ${uhc.length} of ${quotes.length} quoted plans`)).waitFor();
+        for (const plan of uhc) await page.getByRole('row', { name: new RegExp(plan.name) }).first().waitFor();
+        const hidden = others[0];
+        if (await page.getByRole('row', { name: new RegExp(hidden.name) }).count()) {
+          throw new Error(`${hidden.carrier} ${hidden.name} still shows`);
+        }
+      });
+      await step('the words stay in the address, so a reload keeps the search', async () => {
+        await page.reload();
+        await page.getByText(new RegExp(`^Showing ${uhc.length} of`)).waitFor();
+        if ((await finder.inputValue()) !== 'UHC') throw new Error('the finder lost its words');
+      });
+      await step('on Dental nothing matches, and the board says where the matches are', async () => {
+        await page.getByRole('button', { name: /^Dental/ }).click();
+        await page.getByText(`Nothing on Dental matches “UHC”, but ${uhc.length} plans on Medical do.`, { exact: false }).waitFor();
+      });
+      await step(`"Also matches ${uhc.length} on Medical" switches back and keeps the words`, async () => {
+        await page.getByRole('button', { name: `${uhc.length} on Medical` }).click();
+        await page.getByText(new RegExp(`^Showing ${uhc.length} of ${quotes.length}`)).waitFor();
+        if ((await finder.inputValue()) !== 'UHC') throw new Error('the words were lost');
+      });
+      await step('Escape clears the finder and every quote shows again', async () => {
+        await finder.press('Escape');
+        await page.getByText(new RegExp(`^Showing ${quotes.length} of ${quotes.length}`)).waitFor();
+        await count.waitFor();
+      });
+    },
+  },
+  5: {
+    title: 'Filter by budget against the monthly total row: "Monthly total ≤ $" and the budget select (F18, F19, F140)',
+    deal: 'GD1',
+    async run(ctx) {
+      const { page, step, spec } = ctx;
+      const quotes = spec.plans.filter((p) => p.line === 'medical' && p.role !== 'current');
+      const cap = page.getByRole('spinbutton', { name: /Monthly total ≤ \$/ });
+      const showing = (n) => page.getByText(new RegExp(`^Showing ${n} of \\d+ quoted plans`)).waitFor();
+      const money = (text) => Number(String(text).replace(/[^0-9.-]/g, ''));
+      let totals = [];
+      await signIn(ctx);
+      await openDeal(ctx);
+      await step('the Advisor opens on the medical board', async () => {
+        await page.getByRole('link', { name: 'Advisor', exact: true }).click();
+        await page.getByRole('button', { name: /^Medical/ }).click();
+        await cap.waitFor();
+      });
+      await step("the board's Monthly total column gives every quote's total", async () => {
+        const heads = await page.getByRole('columnheader').allInnerTexts();
+        const at = heads.findIndex((text) => /Monthly total/i.test(text));
+        const rows = page.getByRole('row').filter({ hasNotText: /CURRENT/ }).filter({ has: page.getByRole('cell') });
+        totals = (await rows.evaluateAll((trs, i) => trs.map((tr) => tr.cells[i]?.innerText ?? ''), at)).map(money);
+        if (totals.length !== quotes.length) throw new Error(`${totals.length} quote rows, ${quotes.length} in the spec`);
+      });
+      await step('"Monthly total ≤ $45,000" keeps every quote at or under it', async () => {
+        await cap.fill('45000');
+        await showing(totals.filter((t) => t <= 45000).length);
+      });
+      await step('a lower cap hides the dearer plans and keeps the cheaper ones', async () => {
+        const sorted = [...totals].sort((a, b) => a - b);
+        const limit = sorted[Math.floor(sorted.length / 2)];
+        await cap.fill(String(limit));
+        await showing(totals.filter((t) => t <= limit).length);
+      });
+      await step('a quote with no total yet is named, never hidden silently', async () => {
+        await page.getByRole('button', { name: '✎ Edit' }).click();
+        await page.getByRole('button', { name: '＋ Add plan' }).click();
+        const dialog = page.getByRole('dialog', { name: 'Add a plan' });
+        await dialog.getByLabel('Carrier').fill('Walk Carrier (synthetic)');
+        await dialog.getByLabel('Plan name').fill('Walk 5 unpriced quote');
+        await dialog.getByRole('button', { name: 'Add plan' }).click();
+        await page.getByRole('button', { name: 'Done ✓' }).click();
+        await page.getByText(/1 has no price yet — .*: Walk Carrier \(synthetic\) Walk 5 unpriced quote/).waitFor();
+      });
+      await step('the quote added for the walk is removed again', async () => {
+        await page.getByRole('button', { name: 'Clear', exact: true }).click();
+        await page.getByRole('button', { name: /Actions for Walk Carrier \(synthetic\)/ }).click();
+        await page.getByRole('menuitem', { name: 'Delete…' }).click();
+        await page.getByRole('alertdialog').or(page.getByRole('dialog')).getByRole('button', { name: 'Remove', exact: true }).click();
+        await showing(quotes.length);
+      });
+      await step('"Within 5% of current" keeps the quotes at most 5% above what they replace', async () => {
+        await page.getByRole('combobox', { name: 'Budget' }).selectOption({ label: 'Within 5% of current' });
+        const heads = await page.getByRole('columnheader').allInnerTexts();
+        const at = heads.findIndex((text) => /Δ vs current/i.test(text));
+        await page.waitForTimeout(300);
+        const rows = page.getByRole('row').filter({ hasNotText: /CURRENT/ }).filter({ has: page.getByRole('cell') });
+        const deltas = await rows.evaluateAll((trs, i) => trs.map((tr) => tr.cells[i]?.innerText ?? ''), at);
+        const over = deltas.filter((text) => Number(text.replace('−', '-').replace(/[^0-9.-]/g, '')) > 5);
+        if (!deltas.length || over.length) throw new Error(`Δ shown: ${deltas.join(', ')}`);
+      });
+    },
+  },
   10: {
     title: "Transpose the table: GD1's medical board as plans-as-columns, header frozen, kept per browser (F34, F35)",
     deal: 'GD1',

@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 from . import activity, lifecycle, selectors, services
 from .downloads import file_response
 from .models import Activity, AgencySettings, Client, Deal
+from .services.lines import refuse_lines
 
 MAX_ID = 2**63 - 1  # a bigger id is not a row: 404, never a database error
 
@@ -56,12 +57,13 @@ class ClientListView(APIView):
 
     def post(self, request):
         data = request.data
+        if 'requested_lines' in data:  # the lines to quote have one writer, intake's intent door (B17; slice 11)
+            refuse_lines(None)
         client, deal = services.create_client(
             request.user,
             name=data.get('name', ''),
             relationship=data.get('relationship') or lifecycle.PROSPECT,
             effective_date=_date(data.get('effective_date'), 'effective_date'),
-            requested_lines=data.get('requested_lines') or [],
             owner=_user(data.get('owner_id'), 'owner_id'),
         )
         return Response(
@@ -113,14 +115,15 @@ class DealView(APIView):
     def patch(self, request, pk):
         get_object_or_404(Deal, pk=pk)
         data = request.data
+        if 'requested_lines' in data:  # the lines to quote have one writer, intake's intent door (B17; slice 11)
+            refuse_lines(pk)
         changes = {}
         if 'effective_date' in data:
             changes['effective_date'] = _date(data['effective_date'], 'effective_date')
         if 'owner_id' in data:
             changes['owner'] = _user(data['owner_id'], 'owner_id')
-        for key in ('stage', 'requested_lines'):
-            if key in data:
-                changes[key] = data[key]
+        if 'stage' in data:
+            changes['stage'] = data['stage']
         deal = services.update_deal(request.user, pk, **changes)
         return Response(selectors.deal_header(deal))
 

@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import { useUpdateDeal } from '../../api/deals';
+import { useSetIntent } from '../../api/intake';
 import { lineLabel } from '../../api/meta';
 import ConfirmDialog from '../../ui/ConfirmDialog';
 import Menu from '../../ui/Menu';
@@ -7,23 +7,23 @@ import SaveStatus from '../../ui/SaveStatus';
 
 /**
  * Lines: [Medical ✕] [Dental ✕] [+ Line ▾] — the lines to quote, in meta order (plan.md §8.4; B32), on the old line
- * chips (`bnf-line-chips`, `bb-chip active`). Adding saves at once; removing asks first, because the line's plans
- * disappear from view (they are kept).
+ * chips (`bnf-line-chips`, `bb-chip active`), written through intake's intent door, their one writer (B17; slice 11).
+ * Adding saves at once; removing asks first, because the line stops being shopped (a line in force stays on the
+ * proposal, kept as-is, until the coverage card says Leave off).
  */
 export default function LinesPicker({ deal, meta }) {
   const labelId = useId();
-  const update = useUpdateDeal(deal.id);
+  const update = useSetIntent(deal.id);
   const [removing, setRemoving] = useState(null);
   const chosen = meta.lines.filter((line) => deal.requested_lines.includes(line.key));
   const others = meta.lines.filter((line) => !deal.requested_lines.includes(line.key));
 
   function add(key) {
-    const keys = new Set([...deal.requested_lines, key]);
-    update.mutate({ requested_lines: meta.lines.map((line) => line.key).filter((k) => keys.has(k)) });
+    update.mutate({ line: key, shop: true });
   }
 
   function confirmRemove() {
-    update.mutate({ requested_lines: deal.requested_lines.filter((key) => key !== removing) });
+    update.mutate({ line: removing, shop: false });
     setRemoving(null);
   }
 
@@ -56,7 +56,7 @@ export default function LinesPicker({ deal, meta }) {
       <ConfirmDialog
         open={removing !== null}
         title={`Remove ${lineLabel(meta, removing)}?`}
-        message="Plans on this line are kept and show again if you add the line back."
+        message="It stops being shopped. Plans on this line are kept."
         confirmLabel="Remove line"
         tone="danger"
         onConfirm={confirmRemove}

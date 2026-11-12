@@ -151,7 +151,7 @@ def test_A34_the_feed_says_what_can_be_reverted_and_what_was(api, user, deal, no
     row = edit_notes(user, deal, 'Text')
     feed = {r['id']: r for r in api.get(f'/api/deals/{deal.id}/activity/').json()['results']}
     assert feed[row.id]['can_revert'] is True and feed[row.id]['reverted'] is None
-    assert not any(r['can_revert'] for r in feed.values() if r['id'] != row.id)
+    assert not any(r['can_revert'] for r in feed.values() if r['action'] == 'created')
     api.post(f'/api/activity/{row.id}/revert/')
     feed = {r['id']: r for r in api.get(f'/api/deals/{deal.id}/activity/').json()['results']}
     assert feed[row.id]['can_revert'] is False and feed[row.id]['reverted']['by']['name'] == 'Dana'
@@ -179,5 +179,6 @@ def test_E99_access_rows_never_move_last_updated_nor_show_in_the_feed(api, user)
     rows = api.get('/api/clients/').json()['results']
     assert [row['name'] for row in rows][:2] == ['New', 'Old']
     feed = api.get(f'/api/deals/{old.id}/activity/').json()['results']
-    assert {row['action'] for row in feed} == {'created'}
+    actions = {row['action'] for row in feed}
+    assert 'created' in actions and actions.isdisjoint(activity.ACCESS)
     del new

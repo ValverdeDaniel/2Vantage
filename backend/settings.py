@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'deals',
     'documents',
     'ai',  # jobs and the worker (slice 16); Claude from slice 18
+    'intake',  # coverage, intent and the lines to quote (slice 11); the form from slice 39
     'quotes',
     'proposals',
     'golden',  # seed only, last in the chain (§3.3)
@@ -169,6 +170,9 @@ LOGGING = {
     'root': {'handlers': ['console'], 'level': 'WARNING'},
     'loggers': {
         **{name: {'level': 'WARNING'} for name in ('anthropic', 'httpx', 'httpcore')},
-        **{name: {'level': 'INFO'} for name in ('accounts', 'deals', 'documents', 'ai', 'quotes', 'proposals')},
+        **{
+            name: {'level': 'INFO'}
+            for name in ('accounts', 'deals', 'documents', 'ai', 'intake', 'quotes', 'proposals')
+        },
     },
 }

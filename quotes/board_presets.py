@@ -9,7 +9,8 @@ field a line does not have is dropped from that line's columns, as the old board
 - `DERIVED`: the columns the board works out on the server (`premium`, `change`, `facts`; F41). `PINNED`: ★ and Plan.
 - `SORTS`: the sort select (F32): the client's order (the default; values never move a plan), a column's own sort,
   and closeness to the nearest current plan (F121).
-- `SLIDERS` and `BUDGET` (F18, F20) are slice 10's filters; their lists live here with the presets (§7.1).
+- `SLIDERS`, `BUDGET`, `CAPS`, `HIDES` and `RULE_OPS` (F18–F24) are slice 10's filters; `board.clean_config` checks a
+  saved setup or Claude's patch against them, and `/api/meta/` serves them to the filter card.
 - `COMPLIANCE`: the two tests a carrier can say a plan fails, with the chip's short words (F62, D-051).
 """
 
@@ -125,6 +126,64 @@ BUDGET = [
     {'value': -15, 'label': 'At least 15% cheaper'},
 ]
 
+# Slice 10's dollar caps (F21): the employee-only monthly rate (a tier-rated line's EE rate, else its unit rate) and the
+# PCP copay. A cap shows only on a line that has its field; a blank or a printed range fails an active cap, because an
+# unknowable number cannot be shown as meeting a ceiling (the old AdvisorTab's caps).
+CAPS = [
+    {
+        'key': 'ee_rate_max',
+        'fields': ['rate_ee', 'unit_rate'],
+        'label': 'EE-only rate ≤ $',
+        'title': 'Absolute employee-only monthly rate cap — the one trigger that works with no current plan on the '
+        'line',
+    },
+    {
+        'key': 'copay_max',
+        'fields': ['pcp_copay'],
+        'label': 'PCP copay ≤ $',
+        'title': 'PCP copay ceiling — a plan printing a range or text is excluded under any cap, never parsed as a '
+        'number',
+    },
+]
+
+# Slice 10's hides (F22): what each hides is the server's `facts` (incomplete: a key field blank or to check, never a
+# missing total; non-compliant: a carrier's "No" on minimum value or Part D, never a blank).
+HIDES = [
+    {'key': 'incomplete', 'label': 'Hide incomplete data', 'title': ''},
+    {
+        'key': 'noncompliant',
+        'label': 'Hide non-compliant',
+        'title': 'Hide plans the carrier says fail minimum value or Medicare Part D creditable coverage. A plan nobody '
+        'has answered for stays visible.',
+    },
+]
+
+# Column rules (F19, F24; D-095): "a column, an operator, a value". A number column compares; a text column matches a
+# phrase. `total` is the monthly total (the server's premium). At most MAX_RULES; a blank never meets a rule.
+RULE_OPS = [
+    {'key': '<', 'words': '<', 'kind': 'number'},
+    {'key': '<=', 'words': '≤', 'kind': 'number'},
+    {'key': '>', 'words': '>', 'kind': 'number'},
+    {'key': '>=', 'words': '≥', 'kind': 'number'},
+    {'key': '=', 'words': '=', 'kind': 'number'},
+    {'key': 'contains', 'words': 'contains', 'kind': 'text'},
+    {'key': 'excludes', 'words': "doesn't contain", 'kind': 'text'},
+]
+RULE_OP_ALIASES = {'≤': '<=', '≥': '>=', '==': '='}
+# Which field types a rule compares as numbers and which it matches as text (url fields take no rule).
+RULE_KINDS = {
+    'amount': 'number',
+    'rate': 'number',
+    'rate4': 'number',
+    'number': 'number',
+    'percent': 'number',
+    'text': 'text',
+    'yesno': 'text',
+    'choice': 'text',
+}
+TOTAL = 'total'  # the rule key of the monthly total, and of the "Monthly total ≤ $" input (F19)
+MAX_RULES = 8
+
 # The compliance tests a plan can fail (D-051): a carrier's "No" only; a blank is never a failure (`facts`).
 COMPLIANCE = [
     {
@@ -158,6 +217,17 @@ def columns(preset, line_key):
     return [key for key in wanted if key in DERIVED_KEYS or key in has]
 
 
+def caps(line_key):
+    """The dollar caps a line offers: [{key, field, label, title}], each on the first of its fields the line has."""
+    own = set(fields.keys_for(line_key))
+    out = []
+    for cap in CAPS:
+        field = next((key for key in cap['fields'] if key in own), None)
+        if field:
+            out.append({'key': cap['key'], 'field': field, 'label': cap['label'], 'title': cap['title']})
+    return out
+
+
 def meta():
     return {
         'presets': [{'key': key, 'label': label} for key, label in PRESETS],
@@ -172,5 +242,9 @@ def meta():
         'sliders': SLIDERS,
         'slider_step': SLIDER_STEP,
         'budget': BUDGET,
+        'caps': {line['key']: caps(line['key']) for line in lines.LINES},
+        'hides': HIDES,
+        'rule_ops': RULE_OPS,
+        'max_rules': MAX_RULES,
         'compliance': COMPLIANCE,
     }

@@ -106,3 +106,37 @@ class Package(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class SavedView(models.Model):
+    """A saved board setup, Mine and Shared (plan.md §6.7; F28, F29, OQ7; the old AdvisorFilterSet): the board's whole
+    config, named, offered on one line or any line ('' = any). Not attached to a deal: the point is reuse across deals.
+    Private to its owner until `shared`; anyone may use a shared one, only its owner or an admin changes it, and
+    another person's private setup does not exist for anyone else (404). `config` is written only through
+    `board.clean_config` for its `view`; the stop-loss board's setups (F29; slice 36) use the same row."""
+
+    QUOTES = 'quotes'
+    STOP_LOSS = 'stop-loss'
+    VIEWS = [(QUOTES, 'Quote comparison'), (STOP_LOSS, 'Stop-loss analysis')]
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='saved_views'
+    )
+    shared = models.BooleanField(default=False)
+    view = models.CharField(max_length=20, choices=VIEWS, default=QUOTES)
+    line = models.CharField(max_length=20, blank=True)  # '' = any line
+    name = models.CharField(max_length=80)
+    description = models.CharField(max_length=200, blank=True)
+    config = models.JSONField(default=dict, blank=True)
+    sort_order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['owner', 'view', 'name'], name='saved_view_name_unique_per_owner'),
+        ]
+        ordering = ['sort_order', 'name', 'id']
+
+    def __str__(self):
+        return f'{self.name} ({self.view})'

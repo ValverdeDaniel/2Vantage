@@ -6,10 +6,9 @@ from rest_framework.exceptions import ValidationError
 from .. import activity, clock, stages
 from ..models import Deal
 from ..values import locked
-from .clients import clean_lines
 from .snapshots import diff, snapshot
 
-DEAL_FIELDS = ('stage', 'requested_lines', 'effective_date', 'owner_id')
+DEAL_FIELDS = ('stage', 'effective_date', 'owner_id')  # the lines to quote have their own door: lines.set_lines
 LOST_FIELDS = ('stage', 'lost_reason', 'lost_at', 'lost_from_stage')
 
 
@@ -33,11 +32,6 @@ def update_deal(user, deal_id, **changes):
         if stage != deal.stage:
             deal.stage = stage
             notes.append(('stage', f'Moved to {stages.label(stage)}'))
-    if 'requested_lines' in changes:
-        new_lines = clean_lines(changes['requested_lines'])
-        if new_lines != deal.requested_lines:
-            deal.requested_lines = new_lines
-            notes.append(('requested_lines', 'Changed the lines to quote'))
     if 'effective_date' in changes and changes['effective_date'] != deal.effective_date:
         deal.effective_date = changes['effective_date']
         notes.append(('effective_date', 'Changed the effective date'))

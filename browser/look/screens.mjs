@@ -45,7 +45,7 @@ export const SCREENS = [
   { key: 'gd1.overview', title: 'GD1 Overview', deal: 'GD1', widths: 'workspace', old: { tab: 'overview' }, new: { pending: 62, why: 'the Overview' }, styles: WORKSPACE },
   { key: 'gd1.agenda', title: 'GD1 Agenda', deal: 'GD1', old: { tab: 'agenda' }, new: { pending: 60, why: 'the Agenda tab' }, styles: WORKSPACE },
   { key: 'gd1.review', title: 'GD1 Review & requests', deal: 'GD1', old: { tab: 'review' }, new: { pending: 53, why: 'Review & requests' }, styles: WORKSPACE },
-  { key: 'gd1.intake', title: 'GD1 Intake', deal: 'GD1', old: { tab: 'intake' }, new: { pending: 11, why: 'the coverage card; the form in 39' }, styles: WORKSPACE },
+  { key: 'gd1.intake', title: 'GD1 Intake (slice 11: the coverage card, current coverage, lines to quote; the form in 39)', deal: 'GD1', widths: 'workspace', old: { tab: 'intake' }, new: { tab: 'intake' }, ready: '.bnf-cvg', styles: [...WORKSPACE, '.bnf-cvg-head', '.bnf-cvg-badge', '.bnf-cvg-table th', '.bnf-cvg-box', '.bnf-cvg-foot', '.bnf-subcard', '.bnf-chip'] },
   { key: 'gd1.census', title: 'GD1 Census', deal: 'GD1', old: { tab: 'census' }, new: { pending: 12, why: 'the census tab' }, styles: WORKSPACE },
   { key: 'gd1.rfp', title: 'GD1 RFP', deal: 'GD1', old: { tab: 'carriers' }, new: { pending: 44, why: 'the RFP tab' }, styles: WORKSPACE },
   { key: 'gd1.commission', title: 'GD1 Commission', deal: 'GD1', old: { tab: 'commission' }, new: { pending: 48, why: 'the Commission tab' }, styles: WORKSPACE },

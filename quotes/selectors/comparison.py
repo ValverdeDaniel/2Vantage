@@ -53,7 +53,7 @@ def comparison(deal, line):
                 'cells': cells(plan, status, documents),
                 **_priced(plan, result, data),
                 'presented': plan.id in on,
-                'facts': facts.plan_facts(line, plan.values, status, result['monthly']),
+                'facts': facts.plan_facts(line, plan.values, status),
                 'closeness': closeness.closest(data.by_id[plan.id], data.current, field_set),
             }
         )

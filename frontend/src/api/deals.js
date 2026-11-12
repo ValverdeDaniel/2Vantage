@@ -44,10 +44,16 @@ export async function listClients(params) {
   return data;
 }
 
-/** {name, relationship? (prospect, the default, or existing_client), effective_date?, requested_lines?, owner_id?} → {client, deal} */
+/** {name, relationship? (prospect, the default, or existing_client), effective_date?, owner_id?} → {client, deal} */
 export async function createClient(body) {
   const { data } = await api.post('clients/', body);
   return data;
+}
+
+/** A new deal's lines to quote, through intake's intent door, their one writer (B17; slice 11) → requested_lines. */
+async function shopLines(dealId, lines) {
+  const { data } = await api.post(`deals/${dealId}/intake/intent/`, { lines, shop: true });
+  return data.requested_lines;
 }
 
 export async function getClient(clientId) {
@@ -73,7 +79,8 @@ export async function getDeal(dealId) {
   return data;
 }
 
-/** {effective_date, stage (intake|quoting|proposal), requested_lines, owner_id} (any subset) → deal header */
+/** {effective_date, stage (intake|quoting|proposal), owner_id} (any subset) → deal header. The lines to quote have
+ *  their own door: api/intake.js useSetIntent. */
 export async function updateDeal(dealId, changes) {
   const { data } = await api.patch(`deals/${dealId}/`, changes);
   return data;
@@ -162,7 +169,7 @@ export function useAgency() {
 
 // ---- mutations -------------------------------------------------------------------------------------------------
 
-const OPTIMISTIC_FIELDS = ['effective_date', 'stage', 'requested_lines'];
+const OPTIMISTIC_FIELDS = ['effective_date', 'stage'];
 
 function optimisticHeader(queryClient, previous, changes) {
   const next = { ...previous };
@@ -201,7 +208,7 @@ function useHeaderMutation(dealId, mutationFn, { optimistic = false } = {}) {
   });
 }
 
-/** mutate({effective_date | stage | requested_lines | owner_id}) — optimistic. */
+/** mutate({effective_date | stage | owner_id}) — optimistic. */
 export function useUpdateDeal(dealId) {
   return useHeaderMutation(dealId, (changes) => updateDeal(dealId, changes), { optimistic: true });
 }
@@ -268,11 +275,16 @@ export function useSetClientStatus(deal) {
   });
 }
 
-/** mutate({name, relationship (prospect | existing_client), effective_date, requested_lines, owner_id}) → {client, deal}. */
+/** mutate({name, relationship (prospect | existing_client), effective_date, requested_lines, owner_id}) → {client, deal}.
+ *  The client and its deal first, then its lines to quote through intake's intent door (§8.3; B17). */
 export function useCreateClient() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createClient,
+    mutationFn: async ({ requested_lines: lines = [], ...body }) => {
+      const created = await createClient(body);
+      if (!lines.length) return created;
+      return { ...created, deal: { ...created.deal, requested_lines: await shopLines(created.deal.id, lines) } };
+    },
     onSuccess: ({ deal }) => {
       queryClient.setQueryData(dealKey(deal.id, HEADER), deal);
       queryClient.invalidateQueries({ queryKey: CLIENTS_KEY });

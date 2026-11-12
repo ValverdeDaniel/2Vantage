@@ -20,5 +20,6 @@ urlpatterns = [
     path('api/', include('documents.urls')),
     path('api/', include('ai.urls')),
     path('api/', include('quotes.urls')),
+    path('api/', include('intake.urls')),
     path('api/', include('proposals.urls')),
 ]

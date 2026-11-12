@@ -679,7 +679,7 @@ A fact read by an app MUST live in that app or one to its left. So the firm's re
 
 | Seam (owner) | Filled by | Used for |
 |---|---|---|
-| `intake.providers`: `headcount`, `census_state`, `questionnaire_items`, `quote_lines` | quotes, census, questionnaire | the checklist tier, "Census OK", form rows, line states |
+| `intake.providers`: `headcount`, `census_state`, `questionnaire_items`, `quote_lines` | quotes, census, questionnaire | the checklist tier, "Census OK", form rows, line states and the lines off the proposal; `quote_lines` also gives each line's current carrier and funding (`current`), which a coverage row shows read-only (§6.5; slice 11) |
 | `census.providers.carrier_required` | rfp | carrier-required census columns |
 | `quotes.providers.disclosure_state` | questionnaire | the stop-loss workbook's Binding Notes (G117) |
 | `quotes.signals.sold_changed`, `plans_changed` | commission, proposals | booking a sale; clearing the Plans card marks |
@@ -1146,7 +1146,8 @@ Rules:
 
 - **Routing:** `BrowserRouter`; every page component is lazy-loaded (`React.lazy`), so each tab is its own bundle.
   Tabs live in the path (`/deals/:id/:tab`); in-tab state lives in the query string (`?view=`, `?line=`, `?file=`,
-  `?doc=&ref=&page=&back=`, `?focus=`, `?form=`, `?claude=read&docs=…`). §8.1 lists the routes (O.4).
+  `?doc=&ref=&page=&back=`, `?focus=`, `?form=`, `?claude=read&docs=…`, and the Advisor board's config:
+  `?find=&budget=&rule=&slider=&preset=&sort=…`, slice 10). §8.1 lists the routes (O.4).
 - **API client** (`src/api/client.js`): one axios instance with `baseURL: '/api'` and `withCredentials: true`, using
   axios's built-in `xsrfCookieName: 'csrftoken'` / `xsrfHeaderName: 'X-CSRFToken'`. The app calls `GET auth/csrf/`
   once at start-up so the cookie exists. A response interceptor, on 401 from any endpoint except `auth/login/`,
@@ -3240,7 +3241,7 @@ Not built (slices 11, 39 and 40). B.6 and O.2.
 | `client` | JSON `{key: entry}` | Client answers waiting for review (O.3.1) |
 | `rules` | JSON `{key: rule}` | Per-deal Auto, Required or Waived per question (B37, OQ17) |
 | `checklist` | JSON `{item: {checked, by, at, note, requirement, client_note, form_key}}` | The marketing checklist, COBRA included (B26, B27, O.6 #2). `form_key` is the questionnaire choice (B22) |
-| `intent_confirmed` | JSON | The confirmed coverage-and-intent decisions, kept readable; "confirmed" means they still equal today's (B20) |
+| `intent_confirmed` | JSON | The confirmed coverage-and-intent decisions, kept readable: `{decisions: {line: {in_force (null when unanswered), this_year, rate_guarantee_through}}, by, by_name, at}`, `{}` when never confirmed; "confirmed" means they still equal today's (B20) |
 | `bor_name` | Char(200), blank | Typed signature |
 | `bor_signed_at` | DateTime, null | |
 | `bor_signed_by` | FK User, null, SET_NULL | Who recorded it |
@@ -3391,7 +3392,9 @@ the builder's EnrollmentStrip write it through one service (J48, O.6 #10).
 `view` (`quotes` or `stop-loss`), `line` (blank = any), `name`, `description`, `config`, `sort_order`; unique per
 owner, view and name. The quotes `config` holds `find`, `budget_pct`, `rules` (`[{key, op, value, line?}]`),
 `sliders`, `ee_rate_max`, `copay_max`, `hide`, `starred_only`, `needs_check`, `to_review`, `carriers`, `preset`,
-`sort` and `layout`, cleaned by `board.clean_config`. Census filter sets wait (OQ7).
+`sort` and `layout`, cleaned by `board.clean_config`, which refuses any other key (slice 10). A setup is a firm row:
+its writes record Activity with no deal (subject `saved_view:<id>`, area `saved_views`), and an Update reverts.
+Census filter sets wait (OQ7).
 
 **QuoteLayout** — one printed table of a scanned quote (O.3.5; slice 21): `deal`, `document`, `line`, `where`
 (`{"page": 3}` or `{"sheet": "Medical"}`), `columns` (`[{"col": 0, "plan": 41, "head": "Gold PPO 1500"}]`), `rows`
@@ -3685,11 +3688,12 @@ moves to the firm's Microsoft 365 accounts (§3.8; slice 47), so no more passwor
 | GET | `agency/` | user | — | settings + `has_logo` (edited in Django admin) |
 | GET | `agency/logo/` | user | — | PNG |
 
-Today 2Vantage differs in five ways, each retired in the slice named: `POST clients/` and `PATCH deals/{id}/` also
-take `requested_lines`, until intake's `set_intent` becomes its only writer (B17; slice 11); an admin's
-`DELETE clients/{id}/` removes everything (slice 38); `lost/` requires a reason and re-stamps a lost deal (M.5 B33;
-slice 38); `relationship` is `new` or `existing`, and `PATCH clients/{id}/` still takes it (slice 6); and the payloads
-lack `client_since` (slice 6), `contacts` (slice 38), `deal_size` and `agent_of_record` (slice 38).
+Since slice 11, `POST clients/` and `PATCH deals/{id}/` answer `400 {"requested_lines": ["Change the lines to quote
+through deals/{id}/intake/intent/."]}`: intake's `set_intent` is the only writer of the lines (B17), and the New client
+dialog sends its Lines to quote there after the create. Today 2Vantage differs in four more ways, each retired in the
+slice named: an admin's `DELETE clients/{id}/` removes everything (slice 38); `lost/` requires a reason and re-stamps a
+lost deal (M.5 B33; slice 38); `relationship` is `new` or `existing`, and `PATCH clients/{id}/` still takes it (slice
+6); and the payloads lack `client_since` (slice 6), `contacts` (slice 38), `deal_size` and `agent_of_record` (slice 38).
 
 **Client row** (dashboard):
 
@@ -3785,8 +3789,8 @@ Writes the later slices add. Their paths sit under `deals/{id}/intake/`, and the
 
 | Service | What it does | Items | Slice |
 |---|---|---|---|
-| `set_intent` | Per line: in force, Shop it / Keep as-is / Leave off, and on the proposal; bulk or single, all or nothing. The only writer of `requested_lines`, through `deals.services.set_lines` | B16–B19, B32 | 11 |
-| `confirm_intent`, `reopen_intent` | Confirm coverage and intent; reopen | B20 | 11 |
+| `set_intent` | Per line: in force, Shop it / Keep as-is / Leave off, and on the proposal; bulk or single, all or nothing. The only writer of `requested_lines`, through `deals.services.set_lines`. `POST deals/{id}/intake/intent/` `{line \| lines, has_today?, this_year? (market, keep, off), shop?, remove?}` → `{intent, coverage, requested_lines, activity_id}`; `shop` is the Lines-to-quote chips' and the header picker's control (it never answers a line); `remove` takes one line | B16–B19, B32 | 11 |
+| `confirm_intent`, `reopen_intent` | Confirm coverage and intent; reopen. `POST deals/{id}/intake/intent/confirm/` and `…/reopen/`, answered like the intent door; an unchanged confirmation writes nothing | B20 | 11 |
 | `set_checklist_item` | One checklist item's controls | B26, B27 | 40 |
 | `mark_marketed`, `unmark` | Mark as marketed; a 409 lists the gaps until confirmed; the skipped items are recorded; Undo | B34 | 40 |
 | rules | Per-question Auto, Required or Waived, from Review's board | B37, OQ17 | 57 |
@@ -3871,8 +3875,8 @@ the design; a path with no plan id sits under `deals/{id}/`.
 | `plans/shortlist/clear/` | Clear the stars on one line | F55 | 7 |
 | `plans/move-line/`, `plans/delete/`, `plans/clear/` | Move to another line keeping the id, `{plan_ids, line}` → `{line, plans, activity_id}`; soft delete, `{plan_ids}`, and clear a line, `{line}`, each → `{removed, kept, note, plans, activity_id}` (Restore is Revert of `activity_id`). `plans/{id}/` takes no DELETE | F59–F61 | built; 8 |
 | `plans/board-export/` | GET `?line=&plans=<ids in the order drawn>&columns=<keys>&orientation=rows\|cols`: the board as Excel, equal to the screen; every figure from the comparison payload; current plans ride along; unknown ids and keys dropped; written with XlsxWriter through `xlsx_safe`; printing `sl_lasers` writes a `downloaded` row | F93, J167 | built; 9 |
-| `plans/find/` | The finder: names, numbers, carriers, codes and aliases | F14–F17, OQ14 | 10 |
-| `saved-views/`, `saved-views/{id}/` | Saved board and stop-loss setups, Mine and Shared; others' private views answer 404 | F28, F29 | 10, 36 |
+| `plans/find/` | GET: the finder's index, every line in one query: `{plans: [{id, line, current, carrier, texts}]}` (texts: name, plan number, carrier, network, plan type, codes; `carrier` is the key `deals.carriers.match` gives). The browser's pure `finder` matches the words and folds the carrier aliases `/api/meta/` serves ("UHC"), so typing never waits on the server and "Also matches N on Dental" needs no second read | F14–F17, OQ14 | built; 10 |
+| `saved-views/`, `saved-views/{id}/` | Saved board and stop-loss setups, Mine and Shared. GET `?view=&line=`: mine and the shared ones offered on that line; POST `{name, description, view, line, shared, config}` → 201; GET/PATCH/DELETE `{id}`: others' private views answer 404, Update and Delete are for the owner or an admin (403 with the sentence). The config goes through `board.clean_config` (an unknown key or value is a 400 naming it) | F28, F29 | built (quotes view); 10, 36 |
 | `plans/sources/`, `plans/marks/` | The station's values and marks (F.6's `plans/review/`) | E.6, F63–F67 | 17 |
 | `plans/{id}/source/?key=` | One value's full source, for ↗: `{plan_id, key, label, value, hint, what, source: {origin, doc, page, cell, line, loc, low, mark, confirmed}}`; read only | F.6, E18 | built; 15 |
 | `plans/as-quoted/?document=&line=` | "As quoted", from `QuoteLayout` | F42, E42 | 21 |
@@ -3885,7 +3889,9 @@ There is no merge endpoint: the reader's `combine` and Claude's `merge_plans` ca
 Rank starts at `deals/{id}/ai/rank/` (§7.5); the page split is proposals' `deals/{id}/proposal/pages/` (§7.12).
 
 The comparison is compact (F.6): cells carry flags (status, mark, origin, document index), documents are listed once,
-and a value's full source comes on ↗. Budget: 600 plans in ≤ 3 MB raw and ≤ 2.5 s (Q.7). Plans come in
+and a value's full source comes on ↗. Each plan's `facts` are `incomplete` (a key field blank or to check; a missing
+total is not incomplete, F22, the filter card names it instead, F140), `flags`, `compliance` and `numbers` (its
+numeric values read once, strictly, for the board's sliders, caps and rules; F21; slice 10). Budget: 600 plans in ≤ 3 MB raw and ≤ 2.5 s (Q.7). Plans come in
 `order.layout`'s order (F120).
 Only the fields of the line's groups (§4.3) are
 included. `base_ids` are the plan's comparison base (§5.5); `part_of` names the base when the plan carries only part
@@ -5826,8 +5832,8 @@ An app imports only from apps to its left (lint-imports); a fact read by an app 
 To reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
 AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client,
 never business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far: accounts,
-deals, documents, ai, quotes, proposals, golden. The chain orders imports, not screens: the deal sidebar keeps old
-Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review & requests, Intake, Census,
+deals, documents, ai, intake, quotes, proposals, golden. The chain orders imports, not screens: the deal sidebar keeps
+old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review & requests, Intake, Census,
 Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close: Advisor, Proposal · Shared: Documents.
 Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry the Advisor and Proposal.
 Tab folders take the app's name except advisor/ (quotes) and proposal/ (proposals); from slice 4 a tab folder's

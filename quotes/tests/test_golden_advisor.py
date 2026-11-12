@@ -123,3 +123,28 @@ def test_F93_GD1_the_board_export_equals_the_board(gd1, admin_api):
     assert [row[: len(header)] for row in cells[1:]] == rows
     total = [key for _label, key, _kind in header].index('total')
     assert [row[total] for row in cells[1:]] == [plan['premium']['monthly'] for plan in payload['plans']]
+
+
+def test_F14_OQ14_GD1_the_finder_index_knows_every_UnitedHealthcare_plan(gd1, admin_api):
+    """Slice 10's done-when, server half: "UHC" finds UnitedHealthcare plans on every line. The index lists every line
+    at once and names each plan's carrier by the one matcher, so the browser's finder folds the alias "UHC" (from
+    /api/meta/ carriers) into U1, U2, U3 and U5 ("UnitedHealthcare Consolidated"), and into nothing on dental or
+    vision."""
+    response = admin_api.get(f'/api/deals/{gd1.deal.id}/plans/find/')
+    entries = response.json()['plans']
+    assert {entry['line'] for entry in entries} == {'medical', 'dental', 'vision'}
+    uhc = {entry['id'] for entry in entries if entry['carrier'] == 'unitedhealthcare'}
+    assert uhc == {gd1.refs[ref] for ref in ('U1', 'U2', 'U3', 'U5')}
+    carriers = admin_api.get('/api/meta/').json()['carriers']
+    assert 'UHC' in next(c for c in carriers if c['key'] == 'unitedhealthcare')['aliases']
+
+
+def test_F19_F140_GD1_every_plan_carries_its_total_and_its_numbers(gd1, admin_api):
+    """Slice 10's done-when, server half: "Monthly total ≤ $45,000" compares the server's monthly total; the sliders
+    and caps the server's numbers (F21)."""
+    plans = admin_api.get(f'/api/deals/{gd1.deal.id}/plans/', {'line': 'medical'}).json()['plans']
+    by_id = {plan['id']: plan for plan in plans}
+    a = by_id[gd1.refs['A']]
+    assert a['facts']['numbers']['deductible_single'] == 3300 and a['facts']['numbers']['rate_ee'] == 512.34
+    assert 'pcp_copay' not in a['facts']['numbers']  # "Deductible, then 20%" is no number
+    assert all(plan['premium']['monthly'] is not None for plan in plans)

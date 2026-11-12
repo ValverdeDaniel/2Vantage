@@ -9,6 +9,7 @@ root_packages =
     deals
     documents
     ai
+    intake
     quotes
     proposals
     golden
@@ -20,6 +21,7 @@ layers =
     golden
     proposals
     quotes
+    intake
     ai
     documents
     deals

@@ -23,6 +23,7 @@ def world(user):
         user, deal, line='medical', role='alternate', carrier='UHC', name='Choice', replaces_ids=[current.id]
     )
     package = services.create_package(user, deal, 'medical', 'Keep', [current.id])
+    saved = services.saved_views.create(user, {'name': 'Shared setup', 'shared': True, 'config': {}})  # slice 10
     return {
         'deal': deal,
         'current': current,
@@ -30,6 +31,7 @@ def world(user):
         'alternate': alternate,
         'second': second,
         'package': package,
+        'saved': saved,
     }
 
 
@@ -59,6 +61,8 @@ def samples(world):
         'api/plans/<int:plan_id>/sold/': {'plan_id': world['alternate'].id},
         'api/plans/<int:plan_id>/recommend/': {'plan_id': world['alternate'].id},
         'api/packages/<int:package_id>/': {'package_id': world['package'].id},
+        'api/deals/<int:pk>/plans/find/': deal,  # slice 10: the finder's index (F14)
+        'api/saved-views/<int:view_id>/': {'view_id': world['saved'].id},  # slice 10: saved setups (F28)
     }
 
 
@@ -106,6 +110,14 @@ def matrix(world):
         ('POST', 'api/plans/<int:plan_id>/recommend/', ok(), {'recommended': True}),
         ('PATCH', 'api/packages/<int:package_id>/', ok(), {'name': 'Keep all'}),
         ('DELETE', 'api/packages/<int:package_id>/', ok(204)),
+        # slice 10: the finder's index and saved setups; the producer owns the shared setup, an admin may change it
+        # (another person's private setup is 404 and a shared one 403: test_saved_views.py)
+        ('GET', 'api/deals/<int:pk>/plans/find/', ok()),
+        ('GET', 'api/saved-views/', ok()),
+        ('POST', 'api/saved-views/', ok(201), {'name': 'New setup', 'config': {'find': 'UHC'}}),
+        ('GET', 'api/saved-views/<int:view_id>/', ok()),
+        ('PATCH', 'api/saved-views/<int:view_id>/', ok(), {'name': 'Renamed setup'}),
+        ('DELETE', 'api/saved-views/<int:view_id>/', ok(204)),
     ]
 
 

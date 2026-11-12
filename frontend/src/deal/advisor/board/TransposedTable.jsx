@@ -108,7 +108,7 @@ export default function TransposedTable({ board, drawn, sections, ui, sizes, cli
               );
             }),
         ])}
-        {board.sorted.length === 0 && (
+        {ui.emptyNote && (
           <tr>
             <td colSpan={span} className="bb-empty bnf-nofilter-row">
               {ui.emptyNote}

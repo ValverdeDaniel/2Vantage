@@ -5,15 +5,17 @@ import { useNavigate, useParams } from 'react-router';
  * `bnf-has-src`); the cell's own click stays the grid's. It opens Documents on the value's file with `ref` naming the
  * value ("plan:41:rate_ee"), never the value itself; the station asks the value's owner for its page or cell.
  * Shared (src/viewer/): mounted by other tabs (the Advisor today; Intake and Census with their slices) without loading
- * the station or pdf.js.
+ * the station or pdf.js. The pin must be a direct child of the cell (`.bnf-has-src:hover > .bnf-src-pin`), so a grid
+ * passes its own props (a grid's KEEP_EDITOR) to the button rather than wrapping it.
  */
-export default function SourcePin({ docId, valueRef, fileName = '' }) {
+export default function SourcePin({ docId, valueRef, fileName = '', ...rest }) {
   const navigate = useNavigate();
   const { dealId } = useParams();
   if (!docId || !dealId) return null;
   return (
     <button
       type="button"
+      {...rest}
       className="bnf-src-pin"
       title={`Open ${fileName || 'the document'} where this was read`}
       aria-label="View in document"

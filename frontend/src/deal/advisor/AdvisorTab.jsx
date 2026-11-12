@@ -16,7 +16,7 @@ import ViewPills from './ViewPills';
  * its subtitle, the view pills, and the view on screen — today the Quote comparison (board/QuoteBoard). The first
  * load shows the old load panel with how many plans are coming; a refetch keeps the board on screen with the
  * Refreshing chip (§8.22). Queries are ['deal', id, 'advisor', …] with staleTime 0. The finder, filters and saved
- * setups (slice 10) sit above the board header when they land.
+ * setups (slice 10) are the board's filter card, above its header.
  */
 
 function EmptyPanel({ title, children, actions }) {
@@ -55,8 +55,8 @@ export default function AdvisorTab({ deal }) {
           />
         </div>
         <div className="bb-subtitle">
-          Star the quoted plans to present and put them in the order the client will see. Shortlisted plans drive the
-          client proposal.
+          Narrow the quoted plans with the triggers below, star the ones to present and put them in the order the
+          client will see. Shortlisted plans drive the client proposal.
         </div>
       </div>
     </div>

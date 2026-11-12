@@ -32,6 +32,20 @@ export function useComparison(dealId, line) {
   });
 }
 
+/**
+ * The finder's index (F14, F15): {plans: [{id, line, current, carrier, texts}]} for every line of the deal, so the
+ * board's finder matches as the person types and counts the other lines' hits without another read. Kept on screen
+ * while it refetches after a write.
+ */
+export function useFindIndex(dealId) {
+  return useQuery({
+    queryKey: advisorKey(dealId, 'find'),
+    queryFn: async () => (await api.get(`deals/${dealId}/plans/find/`)).data,
+    staleTime: 0,
+    placeholderData: (previous) => previous,
+  });
+}
+
 /** Refetch the Advisor's own queries (the board after a burst of cell writes; F71). */
 export function refreshAdvisor(queryClient, dealId) {
   return queryClient.invalidateQueries({ queryKey: advisorKey(dealId) });

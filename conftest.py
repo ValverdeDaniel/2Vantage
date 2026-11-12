@@ -54,11 +54,16 @@ def no_csrf_api(user):
     return client
 
 
-def make_client(user, name='Example Co.', **deal_kwargs):
+def make_client(user, name='Example Co.', requested_lines=('medical', 'dental', 'vision'), **deal_kwargs):
+    """A client and its deal; its lines to quote go through their one writer, intake's `set_intent` (B17)."""
     from deals.services import create_client
+    from intake.services import set_intent
 
-    deal_kwargs.setdefault('requested_lines', ['medical', 'dental', 'vision'])
-    return create_client(user, name=name, **deal_kwargs)
+    client, deal = create_client(user, name=name, **deal_kwargs)
+    if requested_lines:
+        set_intent(user, deal.id, lines=list(requested_lines), shop=True)
+        deal.refresh_from_db()
+    return client, deal
 
 
 def make_deal(user, **kwargs):

@@ -11,6 +11,8 @@ import ConfirmDialog from '../../../ui/ConfirmDialog';
 import cx from '../../../ui/cx';
 import { useToast } from '../../../ui/useToast';
 import BoardHead from './BoardHead';
+import FilterCard from './FilterCard';
+import { emptyNote, hitsOn } from './finder';
 import { exportKeys, sections, shownKeys } from './boardColumns';
 import { buildBoard, countLine, transposeState } from './boardModel';
 import { drawnOrder } from './boardOrder';
@@ -20,21 +22,27 @@ import SelectBar from './SelectBar';
 import TableBar from './TableBar';
 import TransposedTable from './TransposedTable';
 import useBoardActions from './useBoardActions';
+import useBoardConfig from './useBoardConfig';
+import useBoardFilters from './useBoardFilters';
 import useBoardGrid from './useBoardGrid';
 import useCellWrites from './useCellWrites';
+import useFindFlash from './useFindFlash';
 import useTicks from './useTicks';
 
 /*
  * The quote board (plan.md §8.14; F5, F9, F31–F36, F40, F57–F62, F68–F73, F93): one line's comparison as the old
  * Advisor drew it — the board header, the ticked rows' bar, then the table card with its presets, sort and ⇄
- * Transpose. The preset, the sort and ✎ Edit carry across line switches; ticks do not. While ✎ Edit is on and a
- * column sort is set, the rows hold their order until the person changes the sort (F33).
+ * Transpose. Above them the filter card (slice 10): the finder, the filters and the saved setups, one config kept in
+ * the URL (useBoardConfig) that narrows the quotes before they are drawn. The config and ✎ Edit carry across line
+ * switches; ticks do not. While ✎ Edit is on and a column sort is set, the rows hold their order until the person
+ * changes the sort or a filter (F33).
  */
 export default function QuoteBoard({ deal, meta, lines, line, onLine, data, prefs, onDialog }) {
   const toast = useToast();
   const boardMeta = meta.board;
-  const [preset, setPreset] = useState(boardMeta.default_preset);
-  const [sort, setSort] = useState({ key: boardMeta.default_sort, dir: 1 });
+  const view = useBoardConfig(boardMeta, prefs);
+  const { config, set } = view;
+  const { preset, sort } = config;
   const [editing, setEditing] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [held, setHeld] = useState(null);
@@ -44,9 +52,11 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
   const lineLabel = (key) => meta.lines.find((row) => row.key === key)?.label ?? key;
 
   const board = useMemo(() => buildBoard({ comparison: data, meta, line, preset, sort }), [data, meta, line, preset, sort]);
-  let quotes = board.sorted;
+  const filters = useBoardFilters({ dealId: deal.id, meta, lines, line, config, quotes: board.quotes, sorted: board.sorted });
+  let quotes = filters.shown;
   if (editing && !board.inProposal) {
-    const kept = holdOrder(held, JSON.stringify([line, sort]), board.sorted.map((p) => p.id), new Set(board.quotes.map((p) => p.id)));
+    const key = JSON.stringify([line, { ...config, layout: null, preset: null }]);
+    const kept = holdOrder(held, key, quotes.map((p) => p.id), new Set(board.quotes.map((p) => p.id)));
     if (kept.held !== held) setHeld(kept.held);
     quotes = kept.ids.map((id) => board.order.byId.get(id)).filter(Boolean);
   } else if (held) setHeld(null);
@@ -84,6 +94,9 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
   const clipTip = useClipTip();
   const ticks = useTicks(line, editing, drawn, quotes, board.plans);
   const target = moveTo.line === line ? moveTo.key : '';
+  const finderRef = useRef(null);
+  const here = hitsOn(filters.finder, line);
+  const showPlan = useFindFlash({ drawn, rowsLayout: shown === 'rows', win, scrollRef, soleHit: here.length === 1 ? here[0] : null });
 
   const runOnTicks = (promise) =>
     promise.then((answer) => {
@@ -122,11 +135,12 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
     linking: actions.busy.links,
     starring: actions.busy.star,
     sort,
-    sortBy: (key) => setSort((now) => nextSort(now, key)),
+    sortBy: (key) => set((now) => ({ sort: nextSort(now.sort, key) })),
     ticks,
-    emptyNote: board.quotes.length
-      ? 'No plans match the current filters.'
-      : `No quoted plans on ${lineLabel(line)} yet — only the current plans.`,
+    // Drawn only when no quote is (F17): why nothing shows.
+    emptyNote: quotes.length
+      ? null
+      : emptyNote({ finder: filters.finder, line, lineLabel: lineLabel(line), others: filters.others, quoteCount: board.quotes.length }),
     actions: {
       ...actions,
       remove: (ids) => setConfirm({ kind: 'delete', ids }),
@@ -137,12 +151,24 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
   return (
     <div className="bnf-advisor-tab-split">
       <div>
+        <FilterCard
+          meta={meta}
+          line={line}
+          lineLabel={lineLabel(line)}
+          view={view}
+          filters={filters}
+          currents={board.currents.length}
+          finderRef={finderRef}
+          onFind={() => (filters.finder.active && quotes.length ? showPlan(quotes[0].id) : null)}
+          onPickLine={onLine}
+          onCounts={data.rate_basis === 'composite' ? () => onDialog({ kind: 'counts' }) : null}
+        />
         <BoardHead
           dealId={deal.id}
           lines={lines}
           line={line}
           onLine={onLine}
-          count={countLine({ shown: board.sorted.length, quotes: board.quotes, currents: board.currents, packages: data.packages })}
+          count={countLine({ shown: quotes.length, quotes: board.quotes, currents: board.currents, packages: data.packages })}
           editing={editing}
           starred={board.quotes.filter((p) => p.starred).length}
           ui={{
@@ -185,9 +211,9 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
           <TableBar
             board={boardMeta}
             preset={preset}
-            onPreset={setPreset}
+            onPreset={(next) => set({ preset: next })}
             sort={sort}
-            onSort={setSort}
+            onSort={(next) => set({ sort: next })}
             currents={board.currents.length}
             sizes={sizes}
             transpose={{ shown, blocked, max, count: drawn.length, pick: prefs.pickOrientation }}

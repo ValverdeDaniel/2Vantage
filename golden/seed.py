@@ -11,6 +11,7 @@ from django.db import transaction
 from deals.lifecycle import NEW_CLIENT, PROSPECT
 from deals.models import Client
 from deals.services import create_client, delete_client, set_status
+from intake.services import set_intent
 from proposals import services as proposals
 from quotes import services as plans
 
@@ -79,8 +80,9 @@ def build(spec, user):
         name=spec['client'],
         relationship=PROSPECT if status == NEW_CLIENT else status,
         effective_date=spec['effective_date'],
-        requested_lines=spec['lines'],
     )
+    if spec['lines']:  # the lines to quote, through their one writer (B17)
+        set_intent(user, deal.id, lines=list(spec['lines']), shop=True)
     if status == NEW_CLIENT:  # a New client is made only by a sale or Convert to client (CL6)
         set_status(user, deal.client_id, NEW_CLIENT)
     printed = files.attach(user, deal, spec)

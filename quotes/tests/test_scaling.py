@@ -10,7 +10,7 @@ from quotes.selectors import deal_state
 
 pytestmark = pytest.mark.django_db
 
-READS = ['plans/?line=medical', 'plans/lines/', 'plans/packages/?line=medical']
+READS = ['plans/?line=medical', 'plans/lines/', 'plans/packages/?line=medical', 'plans/find/']
 
 
 def queries(call):

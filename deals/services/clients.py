@@ -3,7 +3,7 @@
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
-from .. import activity, lifecycle, lines
+from .. import activity, lifecycle
 from ..models import Client, Deal
 from ..values import locked
 from .snapshots import diff, snapshot
@@ -11,21 +11,11 @@ from .snapshots import diff, snapshot
 CLIENT_FIELDS = ('name', 'owner_id', 'notes')
 
 
-def clean_lines(raw):
-    if not isinstance(raw, list) or not all(isinstance(item, str) for item in raw):
-        raise ValidationError({'requested_lines': ['Lines must be a list of line keys.']})
-    unknown = [key for key in raw if key not in lines.BY_KEY]
-    if unknown:
-        raise ValidationError({'requested_lines': [f'Unknown line: {", ".join(unknown)}']})
-    return [key for key in lines.LINE_KEYS if key in raw]  # §4.1 order, de-duplicated
-
-
 @transaction.atomic
-def create_client(
-    user, *, name, relationship=lifecycle.PROSPECT, effective_date=None, requested_lines=None, owner=None
-):
+def create_client(user, *, name, relationship=lifecycle.PROSPECT, effective_date=None, owner=None):
     """The client and its first deal. A client starts as a Prospect or an Existing client (CL6); its deal opens as
-    that status, so a deal for an Existing client is a Renewal (`rules.deal_type`)."""
+    that status, so a deal for an Existing client is a Renewal (`rules.deal_type`). Its lines to quote are written
+    afterwards through intake's `set_intent`, their only writer (B17; slice 11)."""
     name = (name or '').strip()
     if not name:
         raise ValidationError({'name': ['Client name is required.']})
@@ -37,7 +27,6 @@ def create_client(
     deal = Deal.objects.create(
         client=client,
         effective_date=effective_date,
-        requested_lines=clean_lines(requested_lines or []),
         opened_as=relationship,
         owner=owner,
         created_by=user,

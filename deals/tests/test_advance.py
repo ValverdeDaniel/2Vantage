@@ -10,7 +10,7 @@ from deals.models import Activity, Deal
 
 
 def stage_rows(deal):
-    return Activity.objects.filter(deal=deal, changes__contains=[{'t': f'deal:{deal.id}'}])
+    return Activity.objects.filter(deal=deal, area='deal', changes__contains=[{'t': f'deal:{deal.id}'}])
 
 
 def test_A30_advance_reloads_and_locks_the_deal_row(user, deal):
