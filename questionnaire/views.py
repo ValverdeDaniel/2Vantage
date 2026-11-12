@@ -15,7 +15,7 @@ from rest_framework.views import APIView
 from deals.models import Deal
 
 from . import services
-from .selectors import payload, sources
+from .selectors import payload, reads, sources
 from .services.common import form_or_404
 from .spec_payload import spec
 
@@ -160,3 +160,13 @@ class MarksView(APIView):
         data = _body(request)
         marked = services.mark_answers(request.user, pk, form, data.get('action'), refs=data.get('refs'))
         return Response(_answer(pk, form, marked.activity, marked=marked.slots))
+
+
+class ReadView(APIView):
+    """GET deals/{id}/questionnaires/reads/{read_id}/ — a staged Claude read against the form as it stands (G99): the
+    drawer's card. Use and Discard go through the read's job (`ai/jobs/{id}/apply|discard/`)."""
+
+    def get(self, request, pk, read_id):
+        if read_id > MAX_ID:
+            raise Http404
+        return Response(reads.read_payload(_deal(pk), read_id))

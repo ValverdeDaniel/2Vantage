@@ -26,6 +26,7 @@ import { pdf29 } from './pdf29.mjs';
 import { portal54 } from './portal54.mjs';
 import { questionnaire42 } from './questionnaire42.mjs';
 import { questionnaire43 } from './questionnaire43.mjs';
+import { questionnaireRead52 } from './questionnaireRead52.mjs';
 import { rfp44 } from './rfp44.mjs';
 import { rfp45 } from './rfp45.mjs';
 import { rfp46 } from './rfp46.mjs';
@@ -247,6 +248,7 @@ export const WALKS = {
   s23: { ...documents23, run: (ctx) => documents23.run(ctx, { signIn, openDeal }) }, // slice 23's done-when
   s41: { ...census41, run: (ctx) => census41.run(ctx, { signIn, openDeal }) }, // slice 41's done-when
   s51: { ...claudeReads51, run: (ctx) => claudeReads51.run(ctx, { signIn }) }, // slice 51's done-when (2 real reads)
+  s52: { ...questionnaireRead52, run: (ctx) => questionnaireRead52.run(ctx, { signIn }) }, // slice 52's done-when (1 real read)
   s65: { ...documents65, run: (ctx) => documents65.run(ctx, { signIn, openDeal }) }, // slice 65's done-when
   s25: { ...builder25, run: (ctx) => builder25.run(ctx, { signIn, openDeal }) }, // slice 25's done-when
   s26: { ...builder26, run: (ctx) => builder26.run(ctx, { signIn, openDeal }) }, // slice 26's done-when

@@ -3601,6 +3601,14 @@ stores the choice (`intake.services.set_form_choice`) and reads the forms throug
 Each slot's status is worked out on read: missing, blank, prefill, client, to_check or ok (G.6). The forms are data
 modules under `questionnaire/forms/`, and the bundled blanks sit in `assets/questionnaires/`.
 
+**StagedRead** — a Claude read of a filled form waiting for a person (slice 52; G99, D74, D113): `deal`, `form`, `job`
+(FK ai.Job, null), `document` (FK, null), `status` (waiting, applied, discarded, undone; constants, not choices),
+`read` (JSON: `{answers: {field: {value, page, low}}, rows: {block: [{values, page, low: [fields]}]}, documents,
+counts}`, cleaned by the form's own cleaner; emptied once used or discarded), `landed` (JSON: each slot the landing
+wrote with its value and source before and after, the rows it added, the Activity ids; what ↶ Undo this run puts back,
+sensitive answers included, without Activity holding a value; emptied by the Undo), `created_by`, `created_at`,
+`resolved_by`, `resolved_at`. The read job's change set only points at it (§10.5).
+
 ### 6.9 commission
 
 H.6. v1.1's `Commission` (rates and a split list totalling 100) is replaced. The ledger models (`Statement`,
@@ -4197,7 +4205,7 @@ Full list: Part F, F.6, with D.6 for Attach SBC and O.3.5 for "As quoted".
 
 ### 7.9 Questionnaire — `questionnaire/`
 
-Built in slices 42 and 43 (`check/`, `pdf/` and `blank/`). The deal paths sit under
+Built in slices 42 and 43 (`check/`, `pdf/` and `blank/`), and 52 (`reads/`). The deal paths sit under
 `deals/{id}/questionnaires/`; marks name answers `questionnaire:<form>:<slot>` (E103).
 
 | Method | Path | What it does |
@@ -4211,6 +4219,7 @@ Built in slices 42 and 43 (`check/`, `pdf/` and `blank/`). The deal paths sit un
 | POST | `…/{form}/sign/`, `…/{form}/reopen/` | Sign `{who, name, authorized, sign_anyway}`; reopen `{reason}` |
 | GET | `…/{form}/check/`, `…/{form}/pdf/?ack=`, `…/{form}/blank/` | The check `{problems, ack}`; the filled PDF, or the filed copy once signed (logged; a stale `ack` answers 409); the bundled blank |
 | GET / POST | `…/sources/`, `…/marks/` | The station's rows and marks (E103) |
+| GET | `deals/{id}/questionnaires/reads/{read_id}/` | A staged Claude read against the form as it stands: `{id, form, label, job, document, status, signed, entries: [{ref, kind answer\|row, label, new, old, page, low, sensitive, state fill\|replace\|conflict, tick, why, opens?, block?, block_label?, number?, target_number?, values?}], counts}`; a used, discarded or undone read lists no entries; 404 for another deal's. Use and Discard are the read job's (`ai/jobs/{id}/apply\|discard\|undo/`; `select` refs `"<form>:<field>"`, `"<form>:row:<block>:<n>"`, `"form:<form>"`); never writes (slice 52) |
 
 Review's decisions go through review's endpoints, which call these services; the portal's questionnaire doors are
 review's (§7.14). Full list: Part G, G.6.
@@ -4760,6 +4769,9 @@ Florida Blue 51+, Warner large group and the SIIA disclosure (G1; OQ5).
   (G42); the band notice "Group size now says …" with Keep or Switch (G133).
 - The signature card, **Reopen the form** with a reason, and the filed signed copy (G49–G55, G135).
 - The ⬇ menu and the check modal (G56, G65–G67); the files are §9.12.
+- **Built in slice 52:** a filled form read by Claude (D113, G99–G102) waits in the Work with Claude drawer's card, never
+  on the tab; once used, its answers show on the form as Claude's reads (origin `ai`, file and page, amber when Claude
+  doubted them) and the Claude strip over the tab offers ↶ Undo this run.
 
 ### 8.12 RFP (`rfp`)
 
@@ -4968,6 +4980,13 @@ Part D (D1–D45, D134; D.6). Slices 18–20, 24 and 66. Shown only when a key i
   read by its reader (E76); "✦ Ask Claude to re-check" on the review strips (the Advisor's, the station's strip and
   List, F66, E77) and "✦ Re-check N flags ▸" on the Claude strip past 20 open warnings (E80); the re-check's card
   (`deal/claude/RecheckCard`, the old flag re-check's words) in the drawer and under its file on Documents.
+- **Built in slice 52:** a filled form's read waits as its own card (`deal/claude/QuestionnaireReadCard`, the old
+  IntakeDiff's Question · New scan · Current table with ticks and ↗ to the page, then each row and where it goes — "Group
+  Medical Conditions 2 → a new row", "Current plan 1 → row 1 of the form" — then "Left alone" with why), read from
+  the questionnaire's `reads/` door; "Use this scan ▸" / "Apply N selected ▸", Discard, and "Open on the Questionnaire
+  tab ▸" (G108's words); a signed form turns Use off and says to reopen it. On the Questionnaire tab the "Reading"
+  picker names the deal's forms ("Florida Blue 51+", "SIIA disclosure"; G102), defaulting to the form on screen; the
+  questionnaire reader reads member pages (no "left out" chip) and its ↶ Undo this run asks in its own words.
 - Claude Unleashed, lessons and saved readers wait (D2, D10, D30, D33; OQ4).
 - **Built in slice 20** (`src/deal/claude/`): `WorkWithClaude` (the strip, the pill and the drawer, mounted once in the
   deal shell under the header; the shell's section is `bnf-claude-section`, where landed plans flash, and the workspace
@@ -5658,6 +5677,40 @@ finding, when allowed → landing (§10.5).
     made the API refuse every turn), so its whole input is checked in code before anything is staged: an unknown
     field, a part that is not a list of objects, an object's own extra fields, a missing key, an unknown line or
     funding are refused in a sentence Claude can act on.
+- **Built in slice 52** (D113, G99–G102, G106, G107, G109): **the questionnaire reader** (`questionnaire/reader/`,
+  target `questionnaire`, kinds `questionnaire` and `stop_loss`; always waits; behind the PHI-gate switch with its chat
+  context). A file's kind decides the form it fills: the deal's medical form (the one the checklist arms, else the one
+  most recently worked on) or its stop-loss disclosure (`reader/which.py`, `forms.FILE_KIND`). The `local` hook refuses
+  before any call when the deal has no form for the file or the form is signed (G99: "… is signed, so Claude reads
+  nothing into it"), and lets Claude see the pages whole (a filled form is member data by design, like a roster). One
+  cached prompt carries the three forms' questions (key, label, type, the options or where the dependent pickers' are
+  listed, the condition tables in the pickers' own labels) and one small schema for every form: `answers [{key, value,
+  page, unsure}]` and `rows [{block, page, values [{key, value, unsure}]}]`, the keys enums of every form's fields (one
+  property per field would not fit the grammar); the per-call note names the deal's form for the file, never the file.
+  `merge.py` (the old `_merge_qform`): files in upload order, the first reading of an answer wins and a different later
+  one is doubted, rows appended up to the section's maximum (more are counted), each answer's own page when it is in
+  its range. `clean.py` puts what was read through the form's own `clean_batch` (a picker's answer matched to its
+  option: case and punctuation aside, a printed name to its code, a SIC code to its digits; the SIC pair filled);
+  what the form will not take is counted, never named. `changes.py` stages it as a `StagedRead` per form (§6.8;
+  Activity "Claude read a filled Florida Blue 51+: 24 answers, 3 rows, waiting for review", counts only) and the change
+  set only points at it: `items [{id: 'form:<key>', op: questionnaire_read, read, form, label, tick, signed, answers,
+  rows, conflicts}]`; a read that finds nothing fails ("No questionnaire answers could be read from this file."), one
+  that matches the form waits for no one (D60), and a form signed while Claude read is staged saying so.
+  `reader/review.py` works the entries out against the form as it stands, on every look and again at Use: an answer
+  may fill a blank, replace the live prefill or an unconfirmed read; one a person stands behind (typed, relayed, the
+  client's waiting or approved, confirmed prefill, approved) is a listed conflict and never written; one Claude
+  doubted arrives unticked. A row updates the rows an earlier read of the same file left untouched (G100), else fills
+  the Advisor's started plan row that shares a value, else an empty row, else adds one; the answer that opens a section
+  (Q16 for the conditions) comes with its rows. "Use this scan ▸" / "Apply N selected ▸" (`services/reads.py`, Deal →
+  job → the form's row; a signed form refuses, 409) lands values as `ai` with file, page, `read_value` and `low`, rows
+  the read adds as its own (`origin ai`, `doc`), one before/after Activity row and one keys-only row for sensitive
+  answers (rule 4), neither revertible from Change history: ↶ Undo this run (`services/read_undo.py`) puts every
+  answer back from the staged read's `landed` (refused after a later edit, `can_force`; refused on a signed form) and
+  takes off the rows it added unless written into since. The `<questionnaire>` chat context (G106) gives each form's
+  progress, signature and answers with where they came from, sensitive slots only as answered or blank. G107: the job
+  log says "Finding the form each file fills", "Reading pages 1–3" and "Read Florida Blue 51+: 25 answers, 5 rows, ready
+  for review". G109: `manage.py questionnaire_sample` (dev) stamps a synthetic filled Florida Blue 51+ onto the bundled
+  blank with its key, and `--score` counts a waiting read against it.
 - **Built in slice 18:** `ai/reading.py` (the job), `ai/read_files.py` (files in upload order, `FileIn`, the plan per
   file), `ai/ranges.py` (header-only pages always out, screened pages out only with the switch, a range under a quarter
   of `max_tokens`, halving), `ai/content.py`, `ai/codes.py` (F143's parser, left of quotes), and the quote reader in

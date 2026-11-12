@@ -4,7 +4,7 @@ import { errorText } from '../../lib/errors';
 import ConfirmDialog from '../../ui/ConfirmDialog';
 import { useToast } from '../../ui/useToast';
 import { RANK_UNDO_ASK, RANK_UNDONE, rankLandedText } from './rankWords';
-import { landedText, retryAsk, UNDO_ASK, undoneToast } from './readWords';
+import { landedText, retryAsk, undoAsk, undoneToast } from './readWords';
 
 /*
  * A read used in the last minutes, by a person or by itself (plan.md §10.5; D23, D34, D71, D73, D76; the old
@@ -101,7 +101,7 @@ export default function LandedStrip({ dealId, news, onDismiss, retry = null }) {
               ? retryAsk(retry.label)
               : ranked
                 ? RANK_UNDO_ASK
-                : UNDO_ASK
+                : undoAsk(news)
         }
         confirmLabel={asking?.force ? 'Undo anyway' : asking?.retry ? `Try again with ${retry.label}` : 'Undo this run'}
         busy={busy}

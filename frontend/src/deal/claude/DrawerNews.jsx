@@ -6,6 +6,7 @@ import CensusReadCard from './CensusReadCard';
 import { claudeDoor } from './door';
 import LandedStrip from './LandedStrip';
 import OverBudget from './OverBudget';
+import QuestionnaireReadCard from './QuestionnaireReadCard';
 import { RENDERERS } from './renderers';
 import RecheckCard from './RecheckCard';
 import ReviewCard from './ReviewCard';
@@ -92,6 +93,15 @@ export default function DrawerNews({ dealId, state, meta, onDocuments, dismissed
             <RecheckCard key={row.job_id} dealId={dealId} jobId={row.job_id} nameOf={nameOf} onOpen={open} />
           ) : row.target === 'census' ? (
             <CensusReadCard key={row.job_id} dealId={dealId} jobId={row.job_id} nameOf={nameOf} />
+          ) : row.target === 'questionnaire' ? (
+            <QuestionnaireReadCard
+              key={row.job_id}
+              dealId={dealId}
+              jobId={row.job_id}
+              meta={meta}
+              nameOf={nameOf}
+              onOpen={open}
+            />
           ) : (
             <ReviewCard
               key={row.job_id}

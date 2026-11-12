@@ -22,7 +22,7 @@ const GUIDANCE_TABS = new Set(['advisor', 'proposal']); // the tabs that work th
  * it opened (the Documents zone, D16) are handed to it once it is here. Mounted only while open, so a closed drawer
  * fetches nothing.
  */
-export default function DealDrawer({ deal, tab, meta, state, door, kind, kinds, retryFor, onClose }) {
+export default function DealDrawer({ deal, tab, meta, state, door, kind, kinds, kindLabels, retryFor, onClose }) {
   const documents = useDocuments(deal.id);
   const attach = useAttach({ dealId: deal.id, kind, meta, model: door.model, tab });
   const chat = useChat({ dealId: deal.id, tab, model: door.model, state });
@@ -39,7 +39,14 @@ export default function DealDrawer({ deal, tab, meta, state, door, kind, kinds, 
   return (
     <ClaudeDrawer
       headerExtra={
-        <ReadingPicker kinds={kinds} kind={kind} meta={meta} onKind={claudeDoor.setKind} disabled={attach.busy} />
+        <ReadingPicker
+          kinds={kinds}
+          kind={kind}
+          meta={meta}
+          labels={kindLabels}
+          onKind={claudeDoor.setKind}
+          disabled={attach.busy}
+        />
       }
       onClose={onClose}
     >

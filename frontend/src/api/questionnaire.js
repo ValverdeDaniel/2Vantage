@@ -2,7 +2,7 @@
 // 'questionnaire', form] (one form), staleTime 0 (deal tabs); the spec ['questionnaire-spec', form] is cached per version
 // (the server answers it `private, max-age`). Every write answers the form as it now stands, so the form's cache takes
 // the answer and nothing re-reads; the deal's other reads (the checklist, the sidebar's chips) refetch.
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { downloadFile } from '../lib/download';
 import api from './client';
 import { dealKey, invalidateDeal } from './deals';
@@ -150,4 +150,21 @@ export function downloadBlank(dealId, form) {
 /** The filled form for the PDF pane (inline; logged as a view, G63). */
 export function previewUrl(dealId, form) {
   return `/api/${formPath(dealId, form)}pdf/?inline=1`;
+}
+
+// ---- Claude's reads of filled forms (plan.md §10.5; G99, slice 52) ----
+
+/** GET deals/{id}/questionnaires/reads/{readId}/ for each staged read → [{id, form, label, job, document, status,
+ * signed, entries: [{ref, kind, label, new, old, page, low, sensitive, state, tick, why, opens?, block?, block_label?,
+ * number?, target_number?, values?}], counts}], read fresh (the entries are worked out against the form as it stands).
+ * Use and Discard go through the read's job (api/ai.js). */
+export function useStagedReads(dealId, readIds) {
+  return useQueries({
+    queries: (readIds || []).map((readId) => ({
+      queryKey: dealKey(dealId, 'questionnaire-read', readId),
+      queryFn: async () => (await api.get(`deals/${dealId}/questionnaires/reads/${readId}/`)).data,
+      staleTime: 0,
+      enabled: Boolean(dealId && readId),
+    })),
+  });
 }

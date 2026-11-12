@@ -8,7 +8,8 @@ from django.db import connection
 
 from conftest import check_permissions, sweep_gets, write_path_contract
 from questionnaire import services
-from questionnaire.models import Questionnaire
+from questionnaire.models import Questionnaire, StagedRead
+from questionnaire.services import reads
 
 from .world import make_world
 
@@ -22,6 +23,8 @@ def world(user):
     deal = make_world(user)
     services.set_answers(user, deal.id, FL, {'txtAdd2': 'Suite 1'})
     services.add_row(user, deal.id, FL, 'conditions')
+    read = {'answers': {'txtAdd2': {'value': 'Suite 3', 'page': 1, 'low': ''}}, 'rows': {}, 'documents': []}
+    reads.stage(user, deal.id, None, FL, None, {**read, 'counts': {'answers': 1, 'rows': 0}})  # a read waits (s52)
     return deal
 
 
@@ -32,6 +35,7 @@ def samples(deal):
         'api/meta/questionnaires/<slug:form>/': {'form': FL},
         BASE: {'pk': deal.id},
         BASE + 'choice/': {'pk': deal.id},
+        BASE + 'reads/<int:read_id>/': {'pk': deal.id, 'read_id': StagedRead.objects.get(deal=deal).id},
         BASE + '<slug:form>/': one,
         BASE + '<slug:form>/answers/': one,
         BASE + '<slug:form>/rows/<slug:block>/': {**one, 'block': 'conditions'},
@@ -53,6 +57,7 @@ MATRIX = [
     ('GET', 'api/meta/questionnaires/<slug:form>/', ALL),
     ('GET', BASE, ALL),
     ('PATCH', BASE + 'choice/', ALL, {'item': 'stop_loss_disclosure', 'choice': 'stop_loss_siia'}),
+    ('GET', BASE + 'reads/<int:read_id>/', ALL),
     ('GET', BASE + '<slug:form>/', ALL),
     ('PATCH', BASE + '<slug:form>/answers/', ALL, {'answers': {'txtAdd2': 'Suite 2'}}),
     ('POST', BASE + '<slug:form>/rows/<slug:block>/', MADE),

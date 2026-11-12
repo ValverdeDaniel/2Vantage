@@ -3,12 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAiState } from '../../api/ai';
 import { useMeta } from '../../api/meta';
+import { useDealForms } from '../../api/questionnaire';
 import ErrorBoundary from '../../ui/ErrorBoundary';
 import { useToast } from '../../ui/useToast';
 import ClaudeStrip from './ClaudeStrip';
 import DealDrawer from './DealDrawer';
 import { claudeDoor, PILL_TABS, STRIP_TABS, useClaudeDoor } from './door';
-import { modelLabel, nextModel, tabKinds } from './drawerWords';
+import { formFileKind, formKinds, modelLabel, nextModel, tabKinds } from './drawerWords';
 import { afterTurn } from './afterTurn';
 import { flashWhenSettled } from './flashPlans';
 import { rankToast } from './rankWords';
@@ -63,6 +64,8 @@ function AroundTheTab({ deal, tab }) {
   );
   const ai = useAiState(deal.id, { onFinished });
   const state = ai.data;
+  // On the Questionnaire tab the "Reading" picker names the deal's forms (G102; slice 52)
+  const dealForms = useDealForms(deal.id, { enabled: tab === 'questionnaire' && Boolean(meta?.ai) });
 
   useEffect(() => claudeDoor.enter(deal.id), [deal.id]);
   useEffect(() => {
@@ -71,8 +74,10 @@ function AroundTheTab({ deal, tab }) {
   }, [asked]);
 
   if (!meta?.ai || !state?.claude) return null;
-  const kinds = tabKinds(meta, tab);
-  const kind = kinds.includes(door.kind) ? door.kind : kinds[0] || '';
+  const forms = tab === 'questionnaire' ? dealForms.data?.forms : null;
+  const { kinds, labels } = forms ? formKinds(meta, forms, tabKinds(meta, tab)) : { kinds: tabKinds(meta, tab), labels: {} };
+  const shown = forms ? formFileKind(meta, params.get('form') || forms[0]?.key) : ''; // the form on screen
+  const kind = kinds.includes(door.kind) ? door.kind : kinds.includes(shown) ? shown : kinds[0] || '';
   const retryFor = (news) => {
     const next = nextModel(meta, news.model, state.can?.opus);
     return next ? { model: next, label: modelLabel(meta, next) } : null;
@@ -114,6 +119,7 @@ function AroundTheTab({ deal, tab }) {
           door={door}
           kind={kind}
           kinds={kinds}
+          kindLabels={labels}
           retryFor={retryFor}
           onClose={close}
         />

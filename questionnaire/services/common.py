@@ -100,13 +100,16 @@ def restamp(row, facts_and_order):
 
 def split_diff(form_key, diff):
     """({slot: [before, after]} of ordinary slots, [sensitive slots]) — a medical answer's value never reaches
-    Activity (G23, §3.8)."""
+    Activity (G23, §3.8). A row of a sensitive block (`row:<block>.<id>`, a read's added row) goes with its keys only
+    too."""
     from .. import slots
 
     plain, hidden = {}, []
     for key, pair in diff.items():
-        slot = key.split(':', 1)[1] if key.startswith('cleared:') else key
-        found = slots.parse(slot)
+        if key.startswith('row:'):
+            found = (key.removeprefix('row:').partition('.')[0], 0, None)
+        else:
+            found = slots.parse(key.split(':', 1)[1] if key.startswith('cleared:') else key)
         if found and forms.is_sensitive(form_key, found[0], found[2]):
             hidden.append(key)
         else:
@@ -114,8 +117,10 @@ def split_diff(form_key, diff):
     return plain, hidden
 
 
-def record_values(deal, user, row, summary, diff, *, action='answers', coalesce=True, noun='answer'):
-    """Activity for a change of values: (plain row or None, keys-only row or None). Bursts coalesce per form."""
+def record_values(deal, user, row, summary, diff, *, action='answers', coalesce=True, noun='answer', revertible=True):
+    """Activity for a change of values: (plain row or None, keys-only row or None). Bursts coalesce per form.
+    `revertible=False`: a change Change history's ↶ Revert does not take back (a read's landing, whose own ↶ Undo this
+    run puts every answer back, sensitive ones too; slice 52)."""
     plain, hidden = split_diff(row.form, diff)
     label = forms.label(row.form)
     written = [None, None]
@@ -123,7 +128,7 @@ def record_values(deal, user, row, summary, diff, *, action='answers', coalesce=
         written[0] = activity.record(
             deal, user, AREA, action, f'{label}: {summary}', count=len(plain),
             coalesce_key=target(row) if coalesce else '', noun=noun,
-            changes=[activity.change(target(row), plain)],
+            changes=[activity.change(target(row), plain)], revertible=revertible,
         )  # fmt: skip
     if hidden:
         written[1] = activity.record(

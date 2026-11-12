@@ -9,6 +9,7 @@ urlpatterns = [
     path('meta/questionnaires/<slug:form>/', views.SpecView.as_view()),
     path(DEAL, views.DealFormsView.as_view()),
     path(DEAL + 'choice/', views.ChoiceView.as_view()),
+    path(DEAL + 'reads/<int:read_id>/', views.ReadView.as_view()),
     path(FORM, views.FormView.as_view()),
     path(FORM + 'answers/', views.AnswersView.as_view()),
     path(FORM + 'rows/<slug:block>/', views.RowsView.as_view()),

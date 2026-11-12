@@ -15,15 +15,35 @@ export function readKinds(meta) {
   return [...new Set((meta?.ai?.targets || []).flatMap((entry) => entry.kinds))];
 }
 
-// Where each reader puts what it reads, in the drawer's words (slice 51: the census and intake readers).
-const INTO = { census: 'the census', intake: 'Intake' };
+// Where each reader puts what it reads, in the drawer's words (slice 51: the census and intake readers; slice 52: the
+// questionnaire's, filled forms). The census and questionnaire readers read member pages by design.
+const INTO = { census: 'the census', intake: 'Intake', questionnaire: 'the questionnaire' };
+const READS_MEMBERS = new Set(['census', 'questionnaire']);
 
 /** {target, into, waits, members} for files of `kind`: the reader that reads them, where it puts them, whether its
  *  reads always wait for review (meta's `waits`, the reader's `must_review`) and whether it reads member pages. */
 export function readsInto(meta, kind) {
   const entry = (meta?.ai?.targets || []).find((target) => target.kinds.includes(kind));
   const target = entry?.key || '';
-  return { target, into: INTO[target] || 'the plans', waits: Boolean(entry?.waits), members: target === 'census' };
+  return { target, into: INTO[target] || 'the plans', waits: Boolean(entry?.waits), members: READS_MEMBERS.has(target) };
+}
+
+/** The Questionnaire tab's "Reading" picker (G102; the old one entry per armed form): {kinds, labels} — the file kinds
+ *  of the forms the deal uses, each named by its form ("Florida Blue 51+"), armed forms first; `kinds` as given when
+ *  the deal has none. `forms` is GET deals/{id}/questionnaires/'s list, each form's file kind from meta. */
+export function formKinds(meta, forms, kinds) {
+  const labels = {};
+  (forms || []).forEach((form) => {
+    const fileKind = meta?.questionnaires?.forms?.find((entry) => entry.key === form.key)?.file_kind;
+    if (fileKind && kinds.includes(fileKind) && !labels[fileKind]) labels[fileKind] = form.label;
+  });
+  const named = kinds.filter((kind) => labels[kind]);
+  return named.length ? { kinds: named, labels } : { kinds, labels: {} };
+}
+
+/** The file kind of the form a tab shows (`?form=`), or ''. */
+export function formFileKind(meta, form) {
+  return meta?.questionnaires?.forms?.find((entry) => entry.key === form)?.file_kind || '';
 }
 
 export function kindLabel(meta, key) {

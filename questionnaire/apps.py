@@ -9,7 +9,7 @@ class QuestionnaireConfig(AppConfig):
         from intake import providers
         from quotes import providers as quote_providers
 
-        from . import checks, flags, revert  # noqa: F401 (checks registers the start-up checks)
+        from . import checks, flags, reader, revert  # noqa: F401 (checks registers the start-up checks)
         from .selectors.disclosure import disclosure_state
         from .selectors.items import questionnaire_items
 
@@ -17,3 +17,4 @@ class QuestionnaireConfig(AppConfig):
         quote_providers.fill('disclosure_state', disclosure_state)  # the stop-loss Binding Notes (G117, O.6 #47)
         activity.reverters['questionnaire'] = revert.revert  # answers, rows and marks (G123, E88)
         stored_counts.register('questionnaire flags', flags.rebuild)  # Questionnaire.flags (O.3.7, Q.3 #9)
+        reader.register()  # Claude's reader of filled forms and its chat context, behind the PHI-gate switch (slice 52)

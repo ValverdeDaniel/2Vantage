@@ -29,6 +29,9 @@ ASSETS = Path(__file__).resolve().parents[2] / 'assets' / 'questionnaires'
 
 MEDICAL, STOP_LOSS_KIND = 'medical', 'stop_loss'
 ITEMS = {QUESTIONNAIRE: MEDICAL, STOP_LOSS: STOP_LOSS_KIND}  # checklist item → the kind of form it rides
+# A filled copy's document kind (documents/kinds.py), by the kind of form it is: what Claude's reader reads into the
+# form (slice 52; the old "a qform read's type follows its form").
+FILE_KIND = {MEDICAL: 'questionnaire', STOP_LOSS_KIND: 'stop_loss'}
 ITEM_OF_KIND = {kind: item for item, kind in ITEMS.items()}
 AUTO, UPLOAD, NOT_NEEDED, OLD_NONE = 'auto', 'upload', '', 'none'
 
@@ -138,6 +141,7 @@ def meta():
             {
                 'key': key,
                 'kind': form['kind'],
+                'file_kind': FILE_KIND[form['kind']],
                 'label': label(key),
                 'carrier': form['carrier'],
                 'title': form['title'],

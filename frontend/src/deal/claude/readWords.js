@@ -95,6 +95,17 @@ export const UNDO_ASK =
   'The plans this read added come off and the values it changed go back to what they were. A plan someone has ' +
   'starred, recommended, sold, packaged, linked or typed into since stays.';
 
+/** What ↶ Undo this run asks first, by what the read wrote: a filled form's answers and rows (slice 52), else plans. */
+export function undoAsk(news) {
+  if (news?.target === 'questionnaire') {
+    return (
+      'The answers this read put on the form go back to what they were, and the rows it added come off. A row ' +
+      'someone typed into since stays.'
+    );
+  }
+  return UNDO_ASK;
+}
+
 /** What ↻ Try again asks first (the old ScanChat's "Undo this run and send the same message again on Opus 5.5?"). */
 export function retryAsk(label) {
   return `Undo this run and read the same files again with ${label}? ${UNDO_ASK}`;

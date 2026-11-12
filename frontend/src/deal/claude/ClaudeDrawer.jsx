@@ -34,8 +34,9 @@ export default function ClaudeDrawer({ title = 'Work with Claude', headerExtra =
   );
 }
 
-/** The head's "Reading" picker (D5): what the files attached here are filed as and read as, for everyone. */
-export function ReadingPicker({ kinds, kind, meta, onKind, disabled = false }) {
+/** The head's "Reading" picker (D5): what the files attached here are filed as and read as, for everyone. `labels`
+ *  names a kind otherwise (the Questionnaire tab: each form's own name, G102). */
+export function ReadingPicker({ kinds, kind, meta, labels = {}, onKind, disabled = false }) {
   if (kinds.length < 2) return null;
   return (
     <label className="bnf-wwc-kinds" title="What the files you attach here are">
@@ -43,7 +44,7 @@ export function ReadingPicker({ kinds, kind, meta, onKind, disabled = false }) {
       <select value={kind} disabled={disabled} onChange={(event) => onKind(event.target.value)}>
         {kinds.map((key) => (
           <option key={key} value={key}>
-            {meta.document_kinds.find((entry) => entry.key === key)?.label || key}
+            {labels[key] || meta.document_kinds.find((entry) => entry.key === key)?.label || key}
           </option>
         ))}
       </select>
