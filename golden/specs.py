@@ -16,7 +16,12 @@ A spec (`specs/gdN.json`) is the one description of a golden deal. `seed.py` bui
         links       refs of current plans: a renewal's one current plan, or the plans an alternate replaces
         copy_of     optional: a Duplicate of that ref (`copy_plan`, rates kept), named `name`, then given `values`
         values      {field key: raw text}, as a person types them (quotes/fields.py)
-        enrollment  optional: typed counts by tier, e.g. {"EE": 10, "ES": 3, "EC": 2, "FAM": 5}, switched on
+        enrollment  optional: the plan's own typed counts, e.g. {"EE": 10, "ES": 3, "EC": 2, "FAM": 5}
+    line_enrollment optional: {line: the figure typed for the whole line}, e.g. {"telehealth": {"lives": 52}} (GD3)
+    arrivals        optional: plans that arrive after the seed (GD3's renewal packet), shaped as `plans`, each with the
+                    counts the packet prints; `links_after_split` {quote ref: [current refs]} (golden/quote_first.py)
+    census          optional (GD4, GD3): the census's people by groups (golden/census_roster.py); `arrives` names the
+                    checkpoint that brings it, and the seed leaves such a census out; `id_prefix` starts employee ids
     starred, recommended    refs
     packages        [{line, name, plans: [refs]}]: member-built packages
     reasons         {line: the proposal's reason}
@@ -29,6 +34,8 @@ The parity profile (Q.5) says what the old app (commit `old_app`) cannot express
     values_left_out     {field key: why}: keys the old plan has no row for
     intake_layer        "edited": intake answers land as the old form's hand edit does (CaseField.edited_value)
     intake_left_out     {question key: why}: answers the old form cannot hold
+    census_layer        "import": the census roster lands as the old import writes a file's people
+                        (tools/parity/old_census.py, slice 41); without it the old deal gets no roster
     links               {ref: current ref}: the one current plan an old option compares with (Plan.compares_to),
                         where the 2V links do not name exactly one; a renewal always maps to renewal_of
     copies              {ref: "duplicate"}: made with the old Duplicate (duplicate_of) and its values set
@@ -36,6 +43,7 @@ The parity profile (Q.5) says what the old app (commit `old_app`) cannot express
     recommended_by_line     {line: ref}: the pick on a line with one current plan
     line_counts         {line: ref}: on a line with one current plan, that plan's typed counts also become the old
                         line's counts (proposal_config.tier_counts_by_line), which price the line's unlinked options
+    line_figures        [lines]: the spec's `line_enrollment` figures for these lines become the old line counts too
     figures_left_out    {ref: why}: key figures the old app cannot reproduce because of what is left out
     left_out            [{what, why}]: everything else the old app cannot hold, in words
 

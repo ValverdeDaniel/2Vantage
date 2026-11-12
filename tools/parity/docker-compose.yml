@@ -62,6 +62,9 @@ services:
       # The same golden specs 2Vantage's seed reads, and the loader, read-only.
       - ../../golden/specs:/parity/specs:ro
       - ./old_loader.py:/parity/old_loader.py:ro
+      # A census roster (slice 41): the loader's census writer and the people code 2Vantage's seed uses.
+      - ./old_census.py:/parity/old_census.py:ro
+      - ../../golden/census_roster.py:/parity/census_roster.py:ro
     networks: [internal]
     depends_on:
       db: {condition: service_healthy}

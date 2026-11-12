@@ -61,6 +61,10 @@ def _values(rng):
     return values
 
 
+def _counts(rng):
+    return {'EE': rng.randrange(5, 40), 'ES': rng.randrange(0, 10), 'EC': 3, 'FAM': 4}
+
+
 def _sources(rng, values, documents, user, at):
     sources = {}
     for key, value in values.items():
@@ -85,16 +89,18 @@ def build(user, plans=600, name=NAME, seed=7):
 
     def row(index, role, **marks):
         values = _values(rng)
+        carrier = CARRIERS[0] if role != 'alternate' else rng.choice(CARRIERS)
+        sources = _sources(rng, values, documents, user, at)
+        counts = _counts(rng)  # drawn for every row, so the random sequence stays GD-Big's; current plans keep them
         return Plan(
             deal=deal,
             line='medical',
             role=role,
-            carrier=CARRIERS[0] if role != 'alternate' else rng.choice(CARRIERS),
+            carrier=carrier,
             name=f'{values["plan_type"]} {values["deductible_single"]} #{index}',
             values=values,
-            sources=_sources(rng, values, documents, user, at),
-            enrollment={'EE': rng.randrange(5, 40), 'ES': rng.randrange(0, 10), 'EC': 3, 'FAM': 4},
-            enrollment_on=role == 'current',
+            sources=sources,
+            enrollment=counts if role == 'current' else {},
             sort_order=index,
             **marks,
         )

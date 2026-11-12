@@ -679,7 +679,7 @@ A fact read by an app MUST live in that app or one to its left. So the firm's re
 
 | Seam (owner) | Filled by | Used for |
 |---|---|---|
-| `intake.providers`: `headcount`, `census_state`, `questionnaire_items`, `quote_lines` | quotes, census, questionnaire | the checklist tier, "Census OK", form rows, line states and the lines off the proposal; `quote_lines` also gives each line's current carrier and funding (`current`), which a coverage row shows read-only (§6.5; slice 11) |
+| `intake.providers`: `headcount`, `census_state`, `questionnaire_items`, `quote_lines` | quotes, census, questionnaire | the checklist tier, "Census OK", form rows, line states and the lines off the proposal; `quote_lines` also gives each line's current carrier and funding (`current`), which a coverage row shows read-only (§6.5; slice 11); `headcount` is quotes' `facts.headcount` (§5.7; slice 13) |
 | `census.providers.carrier_required` | rfp | carrier-required census columns |
 | `intake.signals.coverage_changed` | census | sent inside intake's write when the lines to quote or a coverage row changed; census rewrites `CensusFacts` in that transaction, because the required columns follow the lines and medical's in-force answer (§5.3.3; slice 12) |
 | `quotes.providers.disclosure_state` | questionnaire | the stop-loss workbook's Binding Notes (G117) |
@@ -2184,6 +2184,9 @@ N.1).
   self-funded, the intake answer included) and custom asks.
 - Each item's state lives in `Intake.checklist` (B27). The COBRA tick lives there too, and the Census tab shows the
   same tick (O.6 #2). One card serves Intake, the RFP tab and the Overview (B28).
+- Built in slice 41, the smallest part: `intake/checklist.py` (pure: `COBRA`, `ATTESTED`, `item_state`) and
+  `intake.services.set_checklist_item` with its revert, for the COBRA item only (who and when, Activity `checklist`);
+  the census page reads it through `intake.selectors.checklist_item`. Slice 40 adds the other items and the card.
 
 **Mark as marketed** (`intake.services.mark_marketed`; B34, K33). While the deal is not Ready to market it answers 409
 listing the gaps; "Market anyway" confirms and records the skipped items in Activity. It keeps the first
@@ -2622,11 +2625,13 @@ or a reason), for every basis. The first step that gives figures wins (O.6 #24):
 5. If the line has **two or more current plans**, stop → no price, reason `per_plan_counts_needed`. A line-wide figure
    would spread everyone across every plan. The Advisor names the plans that lost their price and opens the split,
    offering the quote's per-plan counts; unlinked quotes on the line ask what they replace (F88; OQ20, answered: no).
-6. The line figure (`LineEnrollment`) → `typed` (for the whole line).
+6. The line figure (`LineEnrollment`) → `line`, "Typed for the whole line" (built in slice 13: a key of its own, so
+   the words tell it from a plan's own `typed` counts).
 7. The census rollup for the line (§5.3.6): tier counts, volume, payroll or lives by basis → `census`. A worksite
    tier-rated line's census counts are the medical tier counts → `proxy`, shown as "Borrowed from medical".
    **Stop-loss** lives: the medical enrolled employees (the current medical plans' enrollment from any source, else
-   the medical line figure, else the census) → shown as "From medical enrollment" (F98).
+   the medical line figure, else the census) → `medical`, shown as "From medical enrollment" (F98); with no medical
+   people, the census's own stop-loss lives → `census`.
 8. A worksite tier-rated line with nothing above borrows medical's typed tier counts → `proxy`, "Borrowed from
    medical" (OQ19 default; F86, J48). Dental and vision never borrow.
 9. Nothing → no price, reason `no_enrollment`.
@@ -2637,7 +2642,9 @@ Every source is named in words on the screens that show a premium (F86, J83).
 census import give way to the census wherever the census can price the plan (steps 4 and 7): a typed figure whose
 `typed_at` is earlier than the census's last import yields to the census figure for the same plan. The counts card
 says "Priced from the census now · Keep my typed counts"; Keep stamps the typed counts as typed now, so they win
-again. Counts typed after the import win. Nothing changes silently: a booked deal shows "Out of date · Update" (H120),
+again. Counts typed after the import win. `typed_at` is the line's (`LineEnrollment`), so one save stamps the line's
+whole typed set, per-plan counts and line figure alike. Pricing compares it with `CensusFacts.last_import_at` on every
+read, so an import re-prices the Advisor with no signal between census and quotes (slice 13). Nothing changes silently: a booked deal shows "Out of date · Update" (H120),
 a started questionnaire shows its band notice (G133), and mapping becomes Agenda's lead step (N.2). v1.1's "typed
 enrollment always wins" goes.
 
@@ -2735,7 +2742,7 @@ says otherwise.
 
 | Case | Inputs | Expected |
 |---|---|---|
-| Quote-first line | no current plan; ten alternates; line figure 20/5/3/2 | every alternate prices 20/5/3/2 (`typed`, the line figure) |
+| Quote-first line | no current plan; ten alternates; line figure 20/5/3/2 | every alternate prices 20/5/3/2 (`line`, the line figure) |
 | A current plan arrives | as above, then current plan D | D and every alternate still price 20/5/3/2; no price vanishes |
 | A second current plan arrives | as above, then current plan F | D, F and the unlinked alternates have no price (`per_plan_counts_needed`); the Advisor names them and opens the split; each unlinked alternate asks what it replaces |
 | The split | D typed 12/3/2/1, F typed 8/2/1/1; alternate E linked to D | D and F price their own counts; E prices 12/3/2/1 (`from replaced plan`) |
@@ -3440,7 +3447,8 @@ Gone: `enrollment_on`, replaced by `LineEnrollment.on` (O.6 #10; slice 13), and 
 
 Totals and the same-people check are computed on read by `package()`, never stored.
 
-**LineEnrollment** — one per deal and line (F88; slice 13): `enrollment` (`{}` or the basis's figures:
+**LineEnrollment** — one per deal and line (F88; built in slice 13, quotes 0007; `Plan.enrollment_on` went in 0008):
+`enrollment` (`{}` or the basis's figures:
 `{EE, ES, EC, FAM}`, `{volume}` or `{lives}`), `on` (one switch per line) and `typed_at`. Counts typed before the
 latest census import give way to the census, with "Keep my typed counts" (F91, OQ18). The Advisor's counts card and
 the builder's EnrollmentStrip write it through one service (J48, O.6 #10).
@@ -3693,6 +3701,9 @@ Sections the later slices add, each served from its owner's constant:
 - `document_kinds` with their flags (E.6; slice 15);
 - `ai`: `{targets, models, ladder}`, only when an API key is set (D.6; slice 16);
 - the board presets, sliders and budget rungs of `quotes/board_presets.py` (F31; slice 9);
+- `enrollment`: `{sources: [{key, label, mark}], keys: {basis: [keys]}, labels: {EE: "Employee only", lives: "Lives",
+  volume: "Volume ($)"}}` from `quotes/math/enrollment.py`, the enrollment sources in words for every premium (F86, F92;
+  slice 13);
 - the questionnaire catalogue in `intake/form.py` (G1; slice 42); each form's spec is `meta/questionnaires/{form}/`;
 - `commission/vocab.py` (H.6; slice 48);
 - `rfp`: carriers, funding, forms, routes, and format keys and labels only. v1.1's `rfp_funding` moves here (K.6;
@@ -3850,7 +3861,7 @@ Writes the later slices add. Their paths sit under `deals/{id}/intake/`, and the
 |---|---|---|---|
 | `set_intent` | Per line: in force, Shop it / Keep as-is / Leave off, and on the proposal; bulk or single, all or nothing. The only writer of `requested_lines`, through `deals.services.set_lines`. `POST deals/{id}/intake/intent/` `{line \| lines, has_today?, this_year? (market, keep, off), shop?, remove?}` → `{intent, coverage, requested_lines, activity_id}`; `shop` is the Lines-to-quote chips' and the header picker's control (it never answers a line); `remove` takes one line | B16–B19, B32 | 11 |
 | `confirm_intent`, `reopen_intent` | Confirm coverage and intent; reopen. `POST deals/{id}/intake/intent/confirm/` and `…/reopen/`, answered like the intent door; an unchanged confirmation writes nothing | B20 | 11 |
-| `set_checklist_item` | One checklist item's controls | B26, B27 | 40 |
+| `set_checklist_item` | One checklist item's controls. Slice 41 built its door for the COBRA tick only (C25, O.6 #2): `PATCH deals/{id}/intake/checklist/` `{item: "cobra", checked}` → `{item: {key, label, checked, by, by_name, at, requirement}, activity_id}`; an unchanged tick writes nothing; Undo reverts it | B26, B27 | 40 (41: COBRA) |
 | `mark_marketed`, `unmark` | Mark as marketed; a 409 lists the gaps until confirmed; the skipped items are recorded; Undo | B34 | 40 |
 | rules | Per-question Auto, Required or Waived, from Review's board | B37, OQ17 | 57 |
 
@@ -3869,14 +3880,16 @@ Built in slice 12: the census page (GET, with `derived: {fte, aged_65, as_of, ho
 imports door, the import GET / PATCH (also `reformat: false`, "Use the original file instead"), apply with
 `?dry_run=1` and discard. The dry run answers `{added, changed, removed, kept, cells_changed, counts, masked_ssns}`,
 people as `{id?, name, kind, columns | why | restored}`; a real apply `{stats, summary, import, activity_id}`. Opening
-an import reads the file's samples, so it writes a `viewed` row. Members, clear, template, export, sources and marks:
-slice 41.
+an import reads the file's samples, so it writes a `viewed` row. Built in slice 41: members (add, edit, remove),
+clear, marks, missing, the template and the export; the page adds `members[].review`, `review {open, check,
+unflagged}` and `cobra` (intake's tick, C25). Not built yet: `census/sources/`, the station's census rows, which wait
+for the Documents station's census view.
 
 | Method | Path | Auth | Request | Response |
 |---|---|---|---|---|
 | GET | `deals/{id}/census/` | user | `?page=1&page_size=100&show=all\|issues\|missing&q=` | census page |
-| POST | `deals/{id}/census/members/` | user | `{kind, employee_id?, values}` | `201 {member, summary}` |
-| PATCH | `census/members/{id}/` | user | `{"values": {key: raw}}` | `200` the changed member and its issues only (C6) |
+| POST | `deals/{id}/census/members/` | user | `{kind, employee_id?, values?, relay?}` | `201 {member, summary, review, activity_id}`: an employee sorts last, a dependent under its employee (C7) |
+| PATCH | `census/members/{id}/` | user | `{"values": {key: raw}, "expect"?: {key: value seen}, "relay"?: bool}` | `200 {member, changed, summary, review, activity_id}`: the changed member and its issues only (C6) · `400 {"values": …}` (an unknown key, or a masked SSN whose last four match nothing on file) · `409 {detail, keys}` when an `expect`ed value changed since |
 | DELETE | `census/members/{id}/` | user | — | `204`: a soft removal, dependents too (C7, O.6 #13) |
 | POST | `deals/{id}/census/clear/` | user | `{confirm: true}` | `204` — soft-removes every member |
 | POST | `deals/{id}/census/imports/` | user | `{document_id}` — a file just uploaded, or a client upload already on the deal | `201 import` (proposed mapping, and the pivot recipe when the file has one row per benefit, C13; a file applied before starts from its last choices) · `400 {"detail": "Could not find a header row in this file."}` |
@@ -3885,7 +3898,8 @@ slice 41.
 | POST | `census/imports/{id}/discard/` | user | — | `204` |
 | GET | `deals/{id}/census/template/` | user | — | the census template, prefilled from the roster (§9.1, C38) |
 | GET | `deals/{id}/census/export/` | user | — | full census workbook (§9.2); logged through `log_access` |
-| GET / POST | `deals/{id}/census/sources/`, `deals/{id}/census/marks/` | user | as intake's | the station's rows / the changed marks (C8, E.6) |
+| GET / POST | `deals/{id}/census/sources/`, `deals/{id}/census/marks/` | user | as intake's | the station's rows / the changed marks (C8, E.6). Marks take `{action, refs?}` (`census:<member>:<key>`; none = every open warning) and answer `{action, changed, activity_id, cells [{ref, review}], review}`; sources are not built yet |
+| GET | `deals/{id}/census/missing/` | user | — | `{refs, count}`: the roster's required blanks, whatever page is shown, for "Select all missing" (C8, C24; slice 41) |
 
 Per-column Auto, Required or Waived (`CensusSettings.rules`; C27, OQ17) is written by census's `set_rules` from
 Review's board (slice 57). The census format lens moved to rfp (`deals/{id}/rfp/formats/`; C31).
@@ -3931,7 +3945,7 @@ the design; a path with no plan id sits under `deals/{id}/`.
 | `plans/{id}/sold/` | POST `{sold}` → `{plan, deal}`; refused on a lost deal; runs `sale_changed` (§5.1) | F123, H124 | built; 6, 7 |
 | `plans/star/` | POST: stars, with the 16-column cap, the reason, the auto-link and the lock | F50, F51 | built; 7 |
 | `plans/order/` | POST `{line, move}`, `{line, swap}` or `{line, reset}`; stop-loss included | F43–F47, OQ13 | built; 7 |
-| `plans/enrollment/` | POST the line's whole typed set `{line, plans, whole_line, on}` | F88, F91 | built; 13 |
+| `plans/enrollment/` | POST the line's whole typed set `{line, plans?: [{id, enrollment}], whole_line?, on?, census_names?: {plan id: [texts]}, keep?}`: a part left out stays; `plans` is the whole per-plan set (a plan left out loses its counts); `whole_line` `{}` or null clears the figure; `census_names` are a current plan's census texts matched by hand (a text given to one plan leaves the others); `keep` stamps counts typed before the latest import as typed now. Any change to typed figures stamps `typed_at`; an unchanged save writes nothing. → `{line_enrollment: {on, figure, typed_at} \| null, plans: [changed], activity_id}`; one Activity row, area `enrollment`, revertible. 400 naming the field (`line`, `plans`, `enrollment`, `on`, `census_names`) | F85, F88, F90, F91, F92 | built; 13 |
 | `plans/packages/`, `packages/{id}/` | Member-built packages, each with its `package()` result | §5.5 | built (today `{id, name, plan_ids}`; the results come only in the comparison) |
 | `plans/template/`, `plans/import/` | The plan template and its import (`?dry_run=1`), filed as `plan_template` | §9.3, E8 | built; 15 (kind `plan_template`; `other` today) |
 | `plans/role/`, `plans/links/` | Role and links; a plan made current loses its star and links (its recommendation means "Keep this plan", OQ37) | F52, F53 | 7 |
@@ -3959,7 +3973,11 @@ cached comparisons, every line with plans, so a Grid opened from the Advisor dra
 total is not incomplete, F22, the filter card names it instead, F140), `flags`, `compliance` and `numbers` (its
 numeric values read once, strictly, for the board's sliders, caps and rules; F21; slice 10). Budget: 600 plans in ≤ 3 MB raw and ≤ 2.5 s (Q.7). Plans come in
 `order.layout`'s order (F120).
-Only the fields of the line's groups (§4.3) are
+Each plan carries `enrollment_used` and `enrollment_source` (a key of `/api/meta/` `enrollment.sources`); the line's
+`enrollment` block is what the counts card, the census notice and the split read: `{keys, on, figure, offers_figure,
+typed_at, stale, typed_plans, census: {figures, source, imported_at} | null, texts: [{text, counts, enrolled, plan_id,
+how: name|number|hand|null}] | null, census_now: [plan ids], split: {lost, unlinked, figure} | null, medical}` (slice
+13). Only the fields of the line's groups (§4.3) are
 included. `base_ids` are the plan's comparison base (§5.5); `part_of` names the base when the plan carries only part
 of its people (its change is then null); `member_packages` lists the packages the member built. `packages` lists the
 packages of §5.5 in their order: a
@@ -5622,7 +5640,10 @@ and payroll_100 bases before slice 27 (OQ103). Q.4 lists what each key pins.
   whose client is a New client.
 - **GD2 Golden Small Shop** (built): a one-plan small group.
 - **GD3 Quote-first** (slice 13): no intake answers and no census. Medical starts with typed whole-line tier counts and
-  ten alternates; a PEPM line prices from typed lives (F92). From slice 18 it carries unread synthetic files: a renewal
+  ten alternates; a PEPM line prices from typed lives (F92) and an accident quote borrows medical's counts (OQ19). Its
+  spec also holds what arrives later, which the seed leaves out: the packet's two current plans with their printed
+  counts (`arrivals`, `links_after_split`) and the checkpoint-B census; `golden/quote_first.py` moves a test's copy
+  through the checkpoints (the root conftest's `quote_first`), and the Walk lane's need 6 walks them on screen. From slice 18 it carries unread synthetic files: a renewal
   packet that brings two current plans with renewals and printed per-plan counts, an alternate quote and an SBC. Its
   script has two checkpoints:
   - **A**: typed counts only; the packet lands and the counts are split; from slice 42 the Florida Blue 51+ form is

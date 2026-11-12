@@ -1,6 +1,7 @@
 import { formatMoney, formatPercent } from '../../../lib/format';
 import cx from '../../../ui/cx';
-import { displayValue, enrollmentText, SOURCE_WORDS } from '../display';
+import { displayValue } from '../display';
+import { countsText } from '../enrollment/countsModel';
 import { networkType } from './boardModel';
 import FlagsChip from './FlagsChip';
 
@@ -65,24 +66,21 @@ export function SelectAllBox({ ids, ticked, editing, onChange }) {
   );
 }
 
-function Total({ plan }) {
+/** The Monthly total and where its enrollment came from, in words (F86): the old "✎ counts" marker beside typed
+ *  counts, "borrowed" and "from medical" beside borrowed people; the census, the default, only in the title. */
+function Total({ plan, sources }) {
   const monthly = plan.premium?.monthly;
   if (monthly == null) {
     return <span title={plan.premium?.reason_words || undefined}>—</span>;
   }
-  const source = plan.enrollment_source;
+  const words = sources?.[plan.enrollment_source];
+  const used = plan.enrollment_used ?? {};
+  const title = words ? `${words.label}: ${countsText(used, Object.keys(used))}` : undefined;
   return (
-    <>
+    <span title={title}>
       {formatMoney(monthly)}
-      {source && SOURCE_WORDS[source] && (
-        <span
-          className="bnf-pc-mark"
-          title={`Priced on counts typed ${SOURCE_WORDS[source] === 'typed' ? 'for this plan' : `(${SOURCE_WORDS[source]})`}: ${enrollmentText(plan.enrollment_used, Object.keys(plan.enrollment_used ?? {}))}`}
-        >
-          ✎ counts
-        </span>
-      )}
-    </>
+      {words?.mark && <span className="bnf-pc-mark">{words.mark}</span>}
+    </span>
   );
 }
 
@@ -119,7 +117,7 @@ function Delta({ plan }) {
 export function DerivedValue({ col, plan, ui }) {
   switch (col.key) {
     case 'total':
-      return <Total plan={plan} />;
+      return <Total plan={plan} sources={ui.sources} />;
     case 'delta':
       return <Delta plan={plan} />;
     case 'network_type':

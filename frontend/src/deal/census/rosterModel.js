@@ -91,11 +91,11 @@ export function shownValue(field, value) {
   return field.type === 'date' && iso ? `${iso[2]}/${iso[3]}/${iso[1]}` : text;
 }
 
-/** The cell's words: '＋ Add' on a required blank while editing, '—' on any other blank. */
-export function cellText(member, field, editing) {
+/** The cell's words: '＋ Add' on a required blank (locked or not, as the old grid said it), '—' on any other blank. */
+export function cellText(member, field) {
   const value = member.values?.[field.key];
   if (value) return shownValue(field, value);
-  return editing && cellStatus(member, field.key) === 'missing' ? '＋ Add' : '—';
+  return cellStatus(member, field.key) === 'missing' ? '＋ Add' : '—';
 }
 
 /** "Avery Smith", from the person's own name cells. */

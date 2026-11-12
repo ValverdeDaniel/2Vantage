@@ -24,6 +24,8 @@ from .services import review
 from .services.batch import write_replaces
 
 ENROLLMENT = 'enrollment.'
+CENSUS_NAMES = 'census_names'
+LEGACY_SWITCH = 'enrollment_on'  # a plan's own switch, gone with slice 13 (LineEnrollment.on)
 DETAIL_WORDS = {
     'plan_number': 'Plan number',
     'replaces_ids': 'Replaces',
@@ -51,8 +53,8 @@ def _label(key):
         return fields.BY_KEY[key]['label']
     if key.startswith(ENROLLMENT):
         return f'{key.removeprefix(ENROLLMENT)} enrollment'
-    if key == 'enrollment_on':
-        return 'Typed enrollment'
+    if key == CENSUS_NAMES:
+        return 'Census plan names'
     column = key.removeprefix('plan.')
     return DETAIL_WORDS.get(column, column.replace('_', ' ').capitalize())
 
@@ -60,8 +62,8 @@ def _label(key):
 def _current(plan, key):
     if key.startswith(ENROLLMENT):
         return plan.enrollment.get(key.removeprefix(ENROLLMENT))
-    if key == 'enrollment_on':
-        return plan.enrollment_on
+    if key == CENSUS_NAMES:
+        return list(plan.census_names or [])
     if key in MANY or key in columns.COLUMNS:
         return columns.read(plan, key, plan.replaces_ids)
     return plan.values.get(key)
@@ -85,9 +87,9 @@ def _put_back(plan, keys, user):
                 enrollment.pop(tier, None)
             else:
                 enrollment[tier] = before
-        elif key == 'enrollment_on':
-            diff[key] = [plan.enrollment_on, before]
-            plan.enrollment_on = before
+        elif key == CENSUS_NAMES:
+            diff[key] = [list(plan.census_names or []), before or []]
+            plan.census_names = before or []
         elif key == columns.REPLACES:
             diff[key] = [sorted(plan.replaces_ids), sorted(before or [])]
             plan.replaces_ids = sorted(before or [])
@@ -206,6 +208,8 @@ def revert(row, user):
     keys = [(entry['t'], key) for entry in row.changes for key in entry['k']]
     if any(key.startswith('plan.') and key not in columns.COLUMNS and key not in MANY for _, key in keys):
         raise activity.Refused(LINKS)
+    if any(key == LEGACY_SWITCH for _, key in keys):
+        raise activity.Refused(activity.NO_REVERTER)
     _refuse_later(row, plans, keys)
     line_keys = {plan.line for plan in everything.values()}
     held = {key: len(presented.held(line_data(key, list(_live_on(everything, key).values())))) for key in line_keys}

@@ -30,7 +30,7 @@ def setup_line(user, deal):
         values={'rate_ee': '440'},
     )
     z = plans.create_plan(user, deal, line='medical', role='alternate', carrier='Cigna', name='Z', replaces_ids=[a.id])
-    plans.set_enrollment(user, deal, [{'id': a.id, 'enrollment': {'EE': 10}, 'on': True}])
+    plans.set_enrollment(user, deal, 'medical', plans=[{'id': a.id, 'enrollment': {'EE': 10}}])
     return a, renewal, x, y, z
 
 

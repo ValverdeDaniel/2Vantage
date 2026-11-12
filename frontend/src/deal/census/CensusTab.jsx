@@ -6,6 +6,7 @@ import Button from '../../ui/Button';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import { useToast } from '../../ui/useToast';
+import CobraCheck from './CobraCheck';
 import ImportDoor from './ImportDoor';
 import MappingDialog from './MappingDialog';
 import { waitingImport } from './mapping';
@@ -98,7 +99,8 @@ function FirstByHand({ dealId, onAdded }) {
  * counts the old tab showed above its roster: people, readiness, validation errors and a mapped file waiting. A waiting
  * mapping takes over the tab on an empty roster, as the old one did; with a roster it waits behind its banner. The
  * roster grid (Roster.jsx: ✎ Edit, Excel keys, marks, COBRA, the template and export) is slice 41's; its pills
- * (Roster · Board · Request · Review) are slices 53 and 57. An empty roster offers the import door and hand entry.
+ * (Roster · Board · Request · Review) are slices 53 and 57. An empty roster offers the COBRA tick, the import door and
+ * hand entry.
  */
 export default function CensusTab({ deal }) {
   const meta = useMeta().data;
@@ -138,10 +140,11 @@ export default function CensusTab({ deal }) {
         Bring in the client&apos;s census — any layout. Its columns are mapped to the canonical schema, validated, and
         made exportable to any carrier template.
       </div>
-      <ImportDoor dealId={deal.id} meta={meta} onStarted={(imp) => setReviewing(imp.id)} />
-      <div className="bnf-census-empty-actions">
+      {/* Worth saying before the roster arrives, which is when the client is still being asked for it (old app). */}
+      <CobraCheck dealId={deal.id} cobra={data.cobra} onChanged={() => census.refetch()} />
+      <ImportDoor dealId={deal.id} meta={meta} onStarted={(imp) => setReviewing(imp.id)}>
         <FirstByHand dealId={deal.id} onAdded={() => census.refetch()} />
-      </div>
+      </ImportDoor>
     </div>
   );
 }

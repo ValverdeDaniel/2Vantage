@@ -10,23 +10,3 @@ export function changeText(change) {
   const pct = change.pct === null || change.pct === undefined ? '' : ` (${formatPercent(change.pct)})`;
   return `${formatMoney(change.delta, { signed: true })}${pct}`;
 }
-
-/** '10·3·2·5' for tiers; '1,250,000' for a volume; '42' for lives. */
-export function enrollmentText(enrollment, keys) {
-  if (!enrollment) return '';
-  if (keys.length === 1) return Number(enrollment[keys[0]] ?? 0).toLocaleString('en-US');
-  return keys.map((key) => enrollment[key] ?? 0).join('·');
-}
-
-export const SOURCE_WORDS = {
-  typed: 'typed',
-  'from current plan': 'from current',
-  'from replaced plan': 'from replaced',
-  'from original plan': 'for the plan it was priced from', // a priced version prices its original's people (F87)
-};
-
-export function enrollmentKeys(rateBasis) {
-  if (rateBasis === 'composite') return ['EE', 'ES', 'EC', 'FAM'];
-  return rateBasis === 'pepm' || rateBasis === 'stop_loss' ? ['lives'] : ['volume'];
-}
-

@@ -109,6 +109,7 @@
     },
     "client_book": null,
     "values_layer": "edited",
+    "census_layer": "import",
     "values_left_out": {
       "funding": "The old app keeps funding on the deal's coverage line, not on a plan."
     },
@@ -128,8 +129,8 @@
         "why": "Not expressible in the old app (C41): it never matched census plan texts to plans."
       },
       {
-        "what": "The census roster and its two files",
-        "why": "The loader loads plans only; the roster's screens are compared from slice 41 (the roster grid)."
+        "what": "The census's two files (the client's export and Warner's template)",
+        "why": "The old roster is loaded person by person as the old import writes a file's people (tools/parity/old_census.py, slice 41), with no file: the old deal's Documents tab does not list them, and its cells carry no source pin."
       },
       {
         "what": "Funding on every plan",

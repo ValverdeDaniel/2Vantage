@@ -70,6 +70,21 @@ def _plan(user, deal, plan, refs, printed=None):
     return created.id
 
 
+def _enrollment(user, deal, spec, refs):
+    """Each line's typed set as the counts card saves it: the plans' own counts and the figure typed for the whole line
+    (`line_enrollment`; GD3, F88)."""
+    figures = spec.get('line_enrollment', {})
+    for line in dict.fromkeys([*(p['line'] for p in spec['plans'] if p.get('enrollment')), *figures]):
+        typed = [
+            {'id': refs[p['ref']], 'enrollment': p['enrollment']}
+            for p in spec['plans']
+            if p['line'] == line and p.get('enrollment')
+        ]
+        plans.set_enrollment(
+            user, deal, line, plans=typed, **({'whole_line': figures[line]} if line in figures else {})
+        )
+
+
 @transaction.atomic
 def build(spec, user):
     """Create one golden deal from its spec, replacing any earlier one. Returns Golden(deal, refs, spec)."""
@@ -92,12 +107,7 @@ def build(spec, user):
     for plan in spec['plans']:
         refs[plan['ref']] = _plan(user, deal, plan, refs, printed.get(plan['ref']))
     census_files.attach(user, deal, spec)  # GD4's census, imported, and its Warner-template copy (slice 12)
-    typed = [
-        {'id': refs[plan['ref']], 'enrollment': plan['enrollment'], 'on': True}
-        for plan in spec['plans']
-        if plan.get('enrollment')
-    ]
-    plans.set_enrollment(user, deal, typed)
+    _enrollment(user, deal, spec, refs)
     plans.star(user, deal, [refs[ref] for ref in spec['starred']], True)
     for ref in spec['recommended']:
         plans.set_recommended(user, refs[ref], True)

@@ -9,6 +9,7 @@ from documents import kinds, review_rules
 from intake import coverage as intake_coverage
 from intake import form as intake_form
 from quotes import board_presets, fields
+from quotes.math import enrollment as quote_enrollment
 
 
 def _pairs(choices):
@@ -29,6 +30,7 @@ class MetaView(APIView):
                 'plans': fields.meta(),
                 'carriers': carriers.meta(),
                 'board': board_presets.meta(),  # the Advisor's columns, sorts, sliders and budget rungs (F31)
+                'enrollment': quote_enrollment.meta(),  # enrollment sources in words, keys by basis (F86, F92)
                 'commission_types': comp.meta(),  # pct, flat, pepm (§4.6)
                 # the intake questions (§4.5) and the coverage card's words (B16–B21)
                 'intake': {'form': intake_form.meta(), 'coverage': intake_coverage.meta()},

@@ -46,7 +46,7 @@ def move(api, deal, plans, to):
 def test_F59_done_when_a_plan_moved_to_dental_keeps_its_id_and_what_dental_reads(api, user, deal, line):
     quote = line['quote']
     services.star(user, deal, [quote.id], True)
-    services.set_enrollment(user, deal, [{'id': quote.id, 'enrollment': {'EE': 4}, 'on': True}])
+    services.set_enrollment(user, deal, 'medical', plans=[{'id': quote.id, 'enrollment': {'EE': 4}}])
     services.create_package(user, deal, 'medical', 'Switch', [quote.id])
     response = move(api, deal, [quote], 'dental')
     assert response.status_code == 200
@@ -56,7 +56,7 @@ def test_F59_done_when_a_plan_moved_to_dental_keeps_its_id_and_what_dental_reads
     assert moved.id == quote.id and moved.line == 'dental'
     assert moved.values == {'network': 'Open Access', 'rate_ee': '489.15', 'rate_fam': '1508.92'}  # dental's fields
     assert moved.sources['rate_ee']['origin'] == 'typed'  # sources of the kept values stay
-    assert (moved.starred, moved.recommended, moved.enrollment, moved.enrollment_on) == (False, False, {}, False)
+    assert (moved.starred, moved.recommended, moved.enrollment) == (False, False, {})
     assert list(moved.replaces.all()) == [] and list(moved.packages.all()) == []
     dental_ids = [plan['id'] for plan in api.get(f'/api/deals/{deal.id}/plans/?line=dental').json()['plans']]
     assert dental_ids == [line['dental'].id, quote.id]

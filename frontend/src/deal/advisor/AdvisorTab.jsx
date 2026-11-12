@@ -5,6 +5,7 @@ import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import RefreshChip from '../../ui/RefreshChip';
 import BoardDialogs from './BoardDialogs';
+import EnrollmentPanel from './enrollment/EnrollmentPanel';
 import LineTabs from './LineTabs';
 import QuoteBoard from './board/QuoteBoard';
 import PackagesPanel from './PackagesPanel';
@@ -16,7 +17,8 @@ import ViewPills from './ViewPills';
  * its subtitle, the view pills, and the view on screen — today the Quote comparison (board/QuoteBoard). The first
  * load shows the old load panel with how many plans are coming; a refetch keeps the board on screen with the
  * Refreshing chip (§8.22). Queries are ['deal', id, 'advisor', …] with staleTime 0. The finder, filters and saved
- * setups (slice 10) are the board's filter card, above its header.
+ * setups (slice 10) are the board's filter card, above its header; the counts card and the enrollment notices
+ * (slice 13) sit between the board's header and its table.
  */
 
 function EmptyPanel({ title, children, actions }) {
@@ -111,6 +113,20 @@ export default function AdvisorTab({ deal }) {
       </>
     );
   } else {
+    const counts = dialog?.kind === 'counts';
+    const panel = (
+      <EnrollmentPanel
+        dealId={deal.id}
+        meta={meta}
+        line={prefs.line}
+        lineLabel={meta.lines.find((entry) => entry.key === prefs.line)?.label ?? prefs.line}
+        data={data}
+        open={counts}
+        preselect={dialog?.preselect}
+        onOpen={() => setDialog({ kind: 'counts' })}
+        onClose={() => setDialog(null)}
+      />
+    );
     body = (
       <>
         <QuoteBoard
@@ -122,6 +138,7 @@ export default function AdvisorTab({ deal }) {
           data={data}
           prefs={prefs}
           onDialog={setDialog}
+          enrollment={{ open: counts, panel }}
         />
         <PackagesPanel comparison={data} create={packages.create} update={packages.update} remove={packages.remove} />
       </>

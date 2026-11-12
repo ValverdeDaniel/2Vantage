@@ -5,6 +5,7 @@ Selectors build `PlanData` from model rows (`selectors.state`); the pure modules
 """
 
 from dataclasses import dataclass, field
+from datetime import datetime
 
 
 @dataclass
@@ -13,9 +14,10 @@ class PlanData:
     role: str
     carrier: str = ''
     name: str = ''
+    plan_number: str = ''
     values: dict = field(default_factory=dict)
-    enrollment: dict = field(default_factory=dict)
-    enrollment_on: bool = False
+    enrollment: dict = field(default_factory=dict)  # its own typed counts (§5.5 step 1), under the line's switch
+    census_names: tuple = ()  # a current plan's census plan texts matched by hand (step 4; F90)
     renews: int | None = None
     replaces: tuple = ()
     recommended: bool = False
@@ -39,10 +41,33 @@ class PlanData:
 
 
 @dataclass
+class People:
+    """What a line knows of its people beyond its plans' own typed counts (§5.5; F88, F91): the figure typed for the
+    whole line and the line's one switch, when its typed counts were saved, the census's figures for the line
+    (`census.rollup.for_line`) and when the census was last imported, and — for the lines that borrow them —
+    medical's people as `(figures, source)` (worksite tier-rated lines, OQ19; stop-loss lives, F98)."""
+
+    on: bool = True
+    figure: dict = field(default_factory=dict)
+    typed_at: datetime | None = None
+    census: dict | None = None
+    imported_at: datetime | None = None
+    medical: tuple | None = None
+
+    @property
+    def stale(self):
+        """Counts typed before the latest census import give way to the census (F91)."""
+        if self.imported_at is None:
+            return False
+        return self.typed_at is None or self.typed_at < self.imported_at
+
+
+@dataclass
 class LineData:
     rate_basis: str
     plans: list
     key: str = ''
+    people: People = field(default_factory=People)
 
     def __post_init__(self):
         self.by_id = {plan.id: plan for plan in self.plans}

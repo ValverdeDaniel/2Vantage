@@ -6,7 +6,8 @@ with the spec's dental and vision plan texts when enrolled. A group may also giv
 first employees, aged 65 or more at the effective date), `spouse_dobs` (its spouses' birth dates, '' for the made
 one), `hours` ({hours: how many of its last employees work them}; else 40), `waiver_reason`, and `canary` (its first
 employee and spouse carry the spec's PHI canaries, Q.8). Everything else is made from the employee's number, so the
-same spec always makes the same people, and the key counts them by hand from the groups.
+same spec always makes the same people, and the key counts them by hand from the groups. The census's `id_prefix`
+(default "G4") starts each employee id ("G3-001" on GD3, slice 13).
 """
 
 import datetime
@@ -48,7 +49,7 @@ def _employee(number, group, index, census):
     year = 1966 + (number * 7) % 30
     return {
         'kind': 'employee',
-        'ext_emp_id': f'G4-{number:03d}',
+        'ext_emp_id': f'{census.get("id_prefix", "G4")}-{number:03d}',
         'relationship': 'Employee',
         'first_name': FIRSTS[(number - 1) % len(FIRSTS)],
         'last_name': _last_name(number),
@@ -59,7 +60,7 @@ def _employee(number, group, index, census):
         'state': 'FL',
         'zip': f'33{100 + number % 100:03d}',
         'phone': f'555-01{number % 100:02d}',
-        'email': f'g4.employee{number:03d}@example.test',
+        'email': f'{census.get("id_prefix", "G4").lower()}.employee{number:03d}@example.test',
         'hire_date': _date(2010 + number % 15, 3, 1),
         'hours_per_week': hours,
         'annual_salary': 42000 + 750 * (number % 40),

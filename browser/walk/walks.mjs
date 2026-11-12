@@ -3,8 +3,10 @@
 // restyling slices. Each walk: { title, deal, run(ctx) }, where ctx = { page, step, base, user, spec }.
 // Needs 1–12 arrive with the slices that build them (Q.9); 0 is the example the lane started with.
 
+import { census41 } from './census41.mjs';
 import { documents23 } from './documents23.mjs';
 import { intake39 } from './intake39.mjs';
+import { quoteFirst13 } from './quoteFirst13.mjs';
 
 const signIn = async ({ page, step, base, user }) => {
   await step('the sign-in page asks for a username and password', async () => {
@@ -159,6 +161,7 @@ export const WALKS = {
       });
     },
   },
+  6: { ...quoteFirst13, run: (ctx) => quoteFirst13.run(ctx, { signIn, openDeal }) }, // quote-first; slice 13's done-when
   10: {
     title: "Transpose the table: GD1's medical board as plans-as-columns, header frozen, kept per browser (F34, F35)",
     deal: 'GD1',
@@ -205,4 +208,5 @@ export const WALKS = {
   },
   s39: { ...intake39, run: (ctx) => intake39.run(ctx, { signIn, openDeal }) }, // slice 39's done-when
   s23: { ...documents23, run: (ctx) => documents23.run(ctx, { signIn, openDeal }) }, // slice 23's done-when
+  s41: { ...census41, run: (ctx) => census41.run(ctx, { signIn, openDeal }) }, // slice 41's done-when
 };

@@ -96,8 +96,7 @@ def base(plan):
         'sold': plan.sold,
         'notes': plan.notes,
         'values': plan.values,
-        'enrollment': plan.enrollment,
-        'enrollment_on': plan.enrollment_on,
+        'enrollment': plan.enrollment,  # its own typed counts; the line's switch is the comparison's `enrollment.on`
         # A copy or priced version names its original; the board's chips and arrows read both (F62, F43).
         'derived_from': plan.derived_from_id,
         'derived': plan.derived or None,

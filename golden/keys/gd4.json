@@ -4,7 +4,7 @@
  "checked_by": null,
  "checked_on": null,
  "method": null,
- "note": "Counted by hand from the spec's census groups (golden/specs/gd4.json), never from the app's output: each group is n employees with one medical plan text and tier; ES adds a spouse, EC one child (two where the group says so), FAM a spouse and two children; dental and vision follow the medical tier unless the group says otherwise. Ages at the effective date 2027-01-01. Not yet signed: Stephanie signs it before slice 13 prices the deal, and a figure changes only with her agreement (plan.md §12.6). Slice 13 adds the per-plan prices.",
+ "note": "Counted by hand from the spec's census groups (golden/specs/gd4.json), never from the app's output: each group is n employees with one medical plan text and tier; ES adds a spouse, EC one child (two where the group says so), FAM a spouse and two children; dental and vision follow the medical tier unless the group says otherwise. Ages at the effective date 2027-01-01. Not yet signed: Stephanie signs it before slice 13 prices the deal, and a figure changes only with her agreement (plan.md §12.6). Slice 13's per-plan prices (`plans`) are worked by hand the same way: once the two texts in `census_names` are matched to their plans, each current plan's tier counts (its own texts summed) × its rates, rounded half up to the dollar; annual = monthly × 12.",
  "census": {
   "employees": 100,
   "dependents": 60,
@@ -42,5 +42,13 @@
   "warnings": 0,
   "readiness_pct": 99,
   "ok": false
+ },
+ "census_names": {"P1": ["Aetna POS 2000"], "P2": ["Open Access HDHP 3300 (2025 rates)"]},
+ "plans": {
+  "P1": {"enrollment": {"EE": 22, "ES": 7, "EC": 5, "FAM": 5}, "worked": "22×640.00 + 7×1344.00 + 5×1152.00 + 5×1920.00 = 38848.00", "monthly": 38848, "annual": 466176},
+  "P2": {"enrollment": {"EE": 17, "ES": 4, "EC": 3, "FAM": 3}, "worked": "17×520.00 + 4×1092.00 + 3×936.00 + 3×1560.00 = 20696.00", "monthly": 20696, "annual": 248352},
+  "P3": {"enrollment": {"EE": 12, "ES": 2, "EC": 2, "FAM": 3}, "worked": "12×455.00 + 2×955.50 + 2×819.00 + 3×1365.00 = 13104.00", "monthly": 13104, "annual": 157248},
+  "DN": {"enrollment": {"EE": 57, "ES": 13, "EC": 10, "FAM": 11}, "worked": "57×38.20 + 13×76.90 + 10×92.15 + 11×130.60 = 5535.20", "monthly": 5535, "annual": 66420},
+  "VS": {"enrollment": {"EE": 51, "ES": 13, "EC": 10, "FAM": 11}, "worked": "51×7.10 + 13×13.40 + 10×14.05 + 11×20.75 = 905.05", "monthly": 905, "annual": 10860}
  }
 }

@@ -10,7 +10,7 @@ from quotes.services import clean_values
 
 pytestmark = pytest.mark.django_db
 
-DEALS = ['GD1', 'GD2', 'GD4']
+DEALS = ['GD1', 'GD2', 'GD3', 'GD4']
 
 
 def _links(row, names):
@@ -37,12 +37,10 @@ def test_PAR1_one_spec_loads_the_deal_into_2vantage(golden, api, key):
             assert (row['role'], row['carrier'], row['name']) == (plan['role'], plan['carrier'], plan['name'])
             assert _links(row, names) == sorted(plan['links']), plan['ref']
             assert row['values'] == clean_values(line, plan['values']), plan['ref']
-            assert (row['enrollment'] or None, row['enrollment_on'] or None) == (
-                plan.get('enrollment'),
-                True if plan.get('enrollment') else None,
-            ), plan['ref']
+            assert (row['enrollment'] or None) == plan.get('enrollment'), plan['ref']
             assert row['starred'] == (plan['ref'] in spec['starred']), plan['ref']
             assert row['recommended'] == (plan['ref'] in spec['recommended']), plan['ref']
+        assert body['enrollment']['figure'] == spec.get('line_enrollment', {}).get(line)  # the whole-line figure
         built = {p['name']: sorted(names[pid] for pid in p['plan_ids']) for p in body['member_packages']}
         assert built == {p['name']: sorted(p['plans']) for p in spec['packages'] if p['line'] == line}
     assert api.get(f'/api/deals/{deal.id}/proposal/').json()['reasons'] == spec['reasons']

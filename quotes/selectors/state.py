@@ -1,20 +1,23 @@
 """`deal_state`: every line of a deal worked out in one grouped read (plan.md §5.4, §5.5; J.4, F.5 #37, Q.7).
 
 A fixed number of queries whatever the plan count: the deal's live plans (removed plans never count, F60), their
-`replaces` links (from the link table, never a prefetch of whole plans), and the member-built packages with their live
-plans. Each line becomes a `LineState`: its plans in `order.layout`'s order, the pure `LineData`, each plan's priced
-result, the packages of §5.5 and the recommendation. The comparison, the line counts, the proposal and (later) the
-client files all read it.
+`replaces` links (from the link table, never a prefetch of whole plans), the member-built packages with their live
+plans, and what each line knows of its people (`people.load`: typed line figures and the census). Each line becomes a
+`LineState`: its plans in `order.layout`'s order, the pure `LineData`, each plan's priced result, the packages of §5.5
+and the recommendation. Medical is priced first, because worksite lines borrow its people and stop-loss counts them
+(F98, OQ19). The comparison, the line counts, the proposal and (later) the client files all read it.
 """
 
 from collections import namedtuple
 
 from deals import lines
 
+from .. import math as m
 from .. import order
 from .. import packages as pk
 from ..models import Package, Plan
-from ..shapes import LineData, PlanData
+from ..shapes import LineData, People, PlanData
+from . import people as known
 
 LineState = namedtuple('LineState', 'plans data results packages recommendation')
 
@@ -41,9 +44,10 @@ def plan_data(plan):
         role=plan.role,
         carrier=plan.carrier,
         name=plan.name,
+        plan_number=plan.plan_number,
         values=plan.values,
         enrollment=plan.enrollment,
-        enrollment_on=plan.enrollment_on,
+        census_names=tuple(plan.census_names or ()),
         renews=plan.renews_id,
         replaces=tuple(plan.replaces_ids),
         recommended=plan.recommended,
@@ -55,10 +59,11 @@ def plan_data(plan):
     )
 
 
-def line_data(line, plans):
-    """`LineData` for one line's model rows, its plans in layout order."""
-    data = LineData(lines.BY_KEY[line]['rate_basis'], [plan_data(p) for p in plans], key=line)
-    return LineData(data.rate_basis, order.layout(data), key=line)
+def line_data(line, plans, people=None):
+    """`LineData` for one line's model rows, its plans in layout order; `people` (`people.load`) where it is priced."""
+    people = people or People()
+    data = LineData(lines.BY_KEY[line]['rate_basis'], [plan_data(p) for p in plans], key=line, people=people)
+    return LineData(data.rate_basis, order.layout(data), key=line, people=people)
 
 
 def member_packages(deal, line_keys=None):
@@ -98,32 +103,67 @@ def load(deal, line_keys=None, *, sources=False):
     return plans
 
 
+def _line_order(key):
+    return lines.LINE_KEYS.index(key) if key in lines.LINE_KEYS else 999
+
+
+def _state(line, rows, people, line_members):
+    rows = {plan.id: plan for plan in rows}
+    data = line_data(line, list(rows.values()), people)
+    results = pk.evaluate(data)
+    return LineState(
+        [rows[p.id] for p in data.plans],
+        data,
+        results,
+        pk.line_packages(data, results, line_members),
+        pk.recommendation(data, results, line_members),
+    )
+
+
 def deal_state(deal, line_keys=None, *, sources=False):
-    """{line: LineState} for every line with plans (or the lines asked for), in §4.1's line order."""
+    """{line: LineState} for every line with plans (or the lines asked for, with or without plans when `line_keys`
+    names them), in §4.1's line order."""
     plans = load(deal, line_keys, sources=sources)
     members = member_packages(deal, line_keys)
-    by_line = {}
+    by_line = {key: [] for key in line_keys or ()}
     for plan in plans:
         by_line.setdefault(plan.line, []).append(plan)
+    keys = sorted(by_line, key=_line_order)
+    people = known.load(deal.id, {*keys, known.MEDICAL})
     states = {}
-    for line in sorted(by_line, key=lambda key: lines.LINE_KEYS.index(key) if key in lines.LINE_KEYS else 999):
-        rows = {plan.id: plan for plan in by_line[line]}
-        data = line_data(line, list(rows.values()))
-        results = pk.evaluate(data)
-        line_members = members.get(line, [])
-        states[line] = LineState(
-            [rows[p.id] for p in data.plans],
-            data,
-            results,
-            pk.line_packages(data, results, line_members),
-            pk.recommendation(data, results, line_members),
-        )
-    return states
+    if any(known.borrows(key) for key in keys):
+        rows = by_line[known.MEDICAL] if known.MEDICAL in by_line else load(deal, [known.MEDICAL])
+        medical = _state(known.MEDICAL, rows, people[known.MEDICAL], members.get(known.MEDICAL, []))
+        if known.MEDICAL in by_line:
+            states[known.MEDICAL] = medical
+        found = m.people(medical.data, medical.results)
+        for key in keys:
+            if known.borrows(key):
+                people[key].medical = found
+    for line in keys:
+        if line not in states:
+            states[line] = _state(line, by_line[line], people[line], members.get(line, []))
+    return {key: states[key] for key in keys if by_line[key] or line_keys}
 
 
 def empty(line):
     data = LineData(lines.BY_KEY[line]['rate_basis'], [], key=line)
     return LineState([], data, {}, [], pk.recommendation(data, {}))
+
+
+def medical_people(deal):
+    """Medical's enrolled people as `(figures, source)`, or None (the headcount's first answer, §5.7)."""
+    state = deal_state(deal, [known.MEDICAL])[known.MEDICAL]
+    return m.people(state.data, state.results)
+
+
+def people_for(deal, line):
+    """One line's `People` as `deal_state` sets them, medical's people included where the line borrows them: what a
+    write that prices one line (a priced version's dry run) reads."""
+    found = known.load(deal.id, {line})[line]
+    if known.borrows(line):
+        found.medical = medical_people(deal)
+    return found
 
 
 def line_state(deal, line, *, sources=False):

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import useEditModePrompt from '../../grid/useEditModePrompt';
 import useGridKeys from '../../grid/useGridKeys';
 import { shownValue } from './rosterModel';
@@ -17,6 +17,7 @@ export default function useRosterGrid({ members, fields, editing, writes, enterE
   const byId = useMemo(() => new Map(members.map((member) => [String(member.id), member])), [members]);
   const fieldOf = useMemo(() => new Map(fields.map((field) => [field.key, field])), [fields]);
   const landing = useRef(null); // {id, key}: a person just added, waiting for their row
+  const [landed, setLanded] = useState(0); // bumped by landOn, so a row already drawn is landed on too
 
   const grid = useGridKeys({
     enabled: editing,
@@ -32,7 +33,8 @@ export default function useRosterGrid({ members, fields, editing, writes, enterE
     containerRef: scrollRef,
   });
 
-  // A person just added: once their row is drawn, the cursor waits in `key` (else their first cell).
+  // A person just added: once their row is drawn (before or after `landOn`), the cursor waits in `key` (else their
+  // first cell).
   const { select, focusGrid } = grid;
   useEffect(() => {
     const wanted = landing.current;
@@ -42,7 +44,7 @@ export default function useRosterGrid({ members, fields, editing, writes, enterE
     if (!key) return;
     select(String(wanted.id), key);
     focusGrid();
-  }, [editing, byId, cols, select, focusGrid]);
+  }, [landed, editing, byId, cols, select, focusGrid]);
 
   const prompt = useEditModePrompt({ on: !editing, enter: enterEdit, land: grid.editAt });
   return {
@@ -50,6 +52,7 @@ export default function useRosterGrid({ members, fields, editing, writes, enterE
     prompt,
     landOn: (id, key) => {
       landing.current = { id, key };
+      setLanded((n) => n + 1);
     },
   };
 }

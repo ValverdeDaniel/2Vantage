@@ -10,7 +10,7 @@ export default function PersonCell({ member, editing, picking, relationships, on
   const employee = member.kind === 'employee';
   const name = personName(member) || member.values?.ext_emp_id || 'this employee';
   return (
-    <div className="bb-loc-col bb-loc-cell bnf-person-col bnf-census-person">
+    <div className="bb-loc-col bb-loc-cell bnf-person-col bnf-census-person" role="rowheader">
       {employee ? (
         <span className="bb-mono bnf-census-empid" title={member.values?.ext_emp_id || undefined}>
           {member.values?.ext_emp_id || '—'}

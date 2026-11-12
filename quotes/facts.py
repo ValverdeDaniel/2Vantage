@@ -13,6 +13,8 @@
   percent field; a range ("$25 – $135"), a phrase or a blank is no number, and no number never meets a filter.
 - `incumbent` (F144): the carrier and funding in force on a line, the one read RFP, commission and the Overview call;
   it reads the database (`selectors/intake_facts.py`), unlike the rest of this module.
+- `enrolled_headcount`, `headcount` and `enrollment_check` (§5.7; O.6 #24, #25): the one headcount and its
+  cross-check, also database reads (`selectors/headcount.py`).
 """
 
 import re
@@ -109,3 +111,25 @@ def incumbent(deal, line):
     from .selectors.intake_facts import incumbent as read
 
     return read(deal, line)
+
+
+def enrolled_headcount(deal):
+    """{count, source, estimate, via}: the Advisor's medical enrollment, else intake's enrolled count, else its eligible
+    or total count as an estimate (§5.7, OQ21)."""
+    from .selectors.headcount import enrolled_headcount as read
+
+    return read(deal)
+
+
+def headcount(deal_id):
+    """`intake.providers.headcount`: {count, source, estimate}."""
+    from .selectors.headcount import headcount as read
+
+    return read(deal_id)
+
+
+def enrollment_check(deal):
+    """{intake, census, advisor, used, differ, warning}: the three answers to "how many are enrolled" (K19, M67)."""
+    from .selectors.headcount import enrollment_check as read
+
+    return read(deal)

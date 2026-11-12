@@ -28,6 +28,7 @@ function Cell({ member, field, ui }) {
   const keys = ui.editing ? ui.grid.cellProps(r, c) : {};
   return (
     <div
+      role="gridcell"
       className={cx(
         'bb-cell',
         cellClass(member, c),
@@ -52,7 +53,7 @@ function Cell({ member, field, ui }) {
           {...editor}
         />
       ) : (
-        <span className="bb-cell-text">{cellText(member, field, ui.editing)}</span>
+        <span className="bb-cell-text">{cellText(member, field)}</span>
       )}
       {pinned && <SourcePin docId={doc} valueRef={ref} {...KEEP_EDITOR} />}
     </div>
@@ -63,13 +64,22 @@ export default function RosterGrid({ members, fields, ui, relationships, onAddDe
   const minWidth = PERSON_PX + fields.reduce((sum, field) => sum + field.width, 0);
   return (
     <div className={cx('bb-grid-card', !ui.editing && 'bnf-locked')}>
-      <div className="bb-grid-scroll bnf-census-scroll gk-grid" {...ui.grid.containerProps}>
+      <div
+        className="bb-grid-scroll bnf-census-scroll gk-grid"
+        role="grid"
+        aria-label="Census roster"
+        aria-readonly={!ui.editing}
+        {...ui.grid.containerProps}
+      >
         <div style={{ minWidth: `${minWidth}px` }}>
-          <div className="bb-col-headers">
-            <div className="bb-loc-col bb-loc-header bnf-person-col bnf-census-person">Person</div>
+          <div className="bb-col-headers" role="row">
+            <div className="bb-loc-col bb-loc-header bnf-person-col bnf-census-person" role="columnheader">
+              Person
+            </div>
             {fields.map((field) => (
               <div
                 key={field.key}
+                role="columnheader"
                 className="bb-col-header"
                 style={{ flex: `0 0 ${field.width}px` }}
                 title={columnHint(field) || undefined}
@@ -84,7 +94,7 @@ export default function RosterGrid({ members, fields, ui, relationships, onAddDe
             ))}
           </div>
           {members.map((member) => (
-            <div key={member.id} className={cx('bb-grid-row', member.kind === 'dependent' && 'bnf-dep-row')}>
+            <div key={member.id} role="row" className={cx('bb-grid-row', member.kind === 'dependent' && 'bnf-dep-row')}>
               <PersonCell
                 member={member}
                 editing={ui.editing}

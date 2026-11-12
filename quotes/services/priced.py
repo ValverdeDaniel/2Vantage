@@ -32,7 +32,7 @@ from .. import priced_kinds as pk
 from ..math.pricing import BelowZero
 from ..models import Plan
 from ..selectors.priced import preview
-from ..selectors.state import line_data, load
+from ..selectors.state import line_data, load, people_for
 from . import locks
 from .copies import copied_source, new_plan, replaces_of
 from .plans import next_number
@@ -172,7 +172,7 @@ def _price(user, deal, ids, body, locked):
     ]
     versions = [plan for plan, _diff in built]
     warning = _star(data, line, versions, user, now, spec.label)
-    drafts = _drafts(versions, originals, preview(line, list(rows.values()), versions))
+    drafts = _drafts(versions, originals, preview(line, list(rows.values()), versions, people_for(deal, line)))
     if not locked:
         return Priced(versions, drafts, warning, None)
     changes = []
@@ -237,7 +237,7 @@ def _reprice(user, deal, plan_id, line, body, locked):
         raise activity.Refused(why)
     record = priced_spec.record(spec, getattr(user, 'id', None), clock.now().isoformat())
     diff = _rebuild(user, version, original, spec, record)
-    drafts = _drafts([version], [original], preview(line, list(rows.values()), [version]))
+    drafts = _drafts([version], [original], preview(line, list(rows.values()), [version], people_for(deal, line)))
     if not locked:
         return Priced([version], drafts, '', None)
     if not diff:  # the same request again: nothing to write

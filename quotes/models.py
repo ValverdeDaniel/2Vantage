@@ -39,8 +39,9 @@ class Plan(models.Model):
     codes = models.JSONField(default=list, blank=True)
     # The reader's match reference (D.6's `Plan.read`); never copied (O.6 #9; slice 18).
     read_ref = models.JSONField(default=dict, blank=True)
+    # The plan's own typed counts, shaped by the line's rate basis (§5.5); the line's switch is LineEnrollment.on.
     enrollment = models.JSONField(default=dict, blank=True)
-    enrollment_on = models.BooleanField(default=False)
+    # Current plans only: the census plan texts a person matched to this plan by hand (§5.5 step 4; F90, C41).
     census_names = models.JSONField(default=list, blank=True)
     # ★ = on the proposal, at most 16 columns a line through `presented.room()` (F50, F119).
     starred = models.BooleanField(default=False)
@@ -121,6 +122,26 @@ class Package(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class LineEnrollment(models.Model):
+    """A line's typed counts beyond its plans' own (plan.md §5.5, §6.7; F88, F91, O.6 #10): the figure typed for the
+    whole line, the one switch for every typed count on the line (`on`), and when the line's typed set was last saved
+    (`typed_at`), which a later census import overrides until someone keeps the typed counts. Written only through
+    `services.enrollment`; the Advisor's counts card and the builder's EnrollmentStrip are its two doors (J48)."""
+
+    deal = models.ForeignKey(Deal, on_delete=models.CASCADE, related_name='line_enrollments')
+    line = models.CharField(max_length=20)
+    enrollment = models.JSONField(default=dict, blank=True)  # {} or the basis's figures: {EE…FAM}, {volume}, {lives}
+    on = models.BooleanField(default=True)
+    typed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['deal', 'line'], name='one_line_enrollment_per_line')]
+
+    def __str__(self):
+        return f'{self.deal_id} {self.line}'
 
 
 class SavedView(models.Model):

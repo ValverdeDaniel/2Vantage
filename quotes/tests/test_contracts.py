@@ -102,7 +102,7 @@ def matrix(world):
             'POST',
             'api/deals/<int:pk>/plans/enrollment/',
             ok(),
-            {'plans': [{'id': current.id, 'enrollment': {'EE': 4}, 'on': True}]},
+            {**medical, 'plans': [{'id': current.id, 'enrollment': {'EE': 4}}]},
         ),
         ('GET', 'api/deals/<int:pk>/plans/packages/', ok()),
         ('POST', 'api/deals/<int:pk>/plans/packages/', ok(201), {'name': 'Switch', 'plan_ids': []}),

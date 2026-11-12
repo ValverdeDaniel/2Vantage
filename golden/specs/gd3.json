@@ -1,0 +1,460 @@
+{
+  "key": "GD3",
+  "about": "Quote-first (slice 13): quotes before intake, census or questionnaire. Checkpoint A: medical has no current plan, ten alternates and typed whole-line tier counts (52 enrolled, the large band); an accident quote borrows medical's counts and telehealth prices from typed lives. Then the renewal packet's two current plans arrive (`arrivals`; read from the packet from slice 18): the second stops the line figure, the counts are split with the packet's printed per-plan counts and the quotes say what they replace (`links_after_split`). Checkpoint B: a census of 48 enrolled employees naming both current plans arrives and prices them (F91).",
+  "client": "Golden Quote-First (synthetic)",
+  "status": "prospect",
+  "effective_date": "2027-03-01",
+  "lines": [
+    "medical",
+    "accident",
+    "telehealth"
+  ],
+  "plans": [
+    {
+      "ref": "QA1",
+      "line": "medical",
+      "role": "alternate",
+      "carrier": "Aetna",
+      "name": "Open Access PPO 2000",
+      "links": [],
+      "values": {
+        "plan_type": "PPO",
+        "network": "Open Access",
+        "metal_level": "Gold",
+        "funding": "fully_insured",
+        "deductible_single": "2000",
+        "oop_max_single": "6000",
+        "pcp_copay": "30",
+        "rate_ee": "688.20",
+        "rate_es": "1445.20",
+        "rate_ec": "1273.15",
+        "rate_fam": "2064.60"
+      }
+    },
+    {
+      "ref": "QA2",
+      "line": "medical",
+      "role": "alternate",
+      "carrier": "Aetna",
+      "name": "Choice POS II 3000",
+      "links": [],
+      "values": {
+        "plan_type": "POS",
+        "network": "Choice POS II",
+        "metal_level": "Gold",
+        "funding": "fully_insured",
+        "deductible_single": "3000",
+        "oop_max_single": "6500",
+        "pcp_copay": "35",
+        "rate_ee": "640.75",
+        "rate_es": "1345.60",
+        "rate_ec": "1185.40",
+        "rate_fam": "1922.25"
+      }
+    },
+    {
+      "ref": "QA3",
+      "line": "medical",
+      "role": "alternate",
+      "carrier": "Aetna",
+      "name": "HDHP 3500 HSA",
+      "links": [],
+      "values": {
+        "plan_type": "HDHP",
+        "network": "Open Access",
+        "metal_level": "Bronze",
+        "funding": "fully_insured",
+        "deductible_single": "3500",
+        "oop_max_single": "7000",
+        "pcp_copay": "Deductible, then 20%",
+        "rate_ee": "552.30",
+        "rate_es": "1159.85",
+        "rate_ec": "1021.75",
+        "rate_fam": "1656.90"
+      }
+    },
+    {
+      "ref": "QC1",
+      "line": "medical",
+      "role": "alternate",
+      "carrier": "Cigna",
+      "name": "Open Access Plus 2500",
+      "links": [],
+      "values": {
+        "plan_type": "PPO",
+        "network": "Open Access Plus",
+        "metal_level": "Gold",
+        "funding": "fully_insured",
+        "deductible_single": "2500",
+        "oop_max_single": "6000",
+        "pcp_copay": "30",
+        "rate_ee": "671.40",
+        "rate_es": "1409.95",
+        "rate_ec": "1242.10",
+        "rate_fam": "2014.20"
+      }
+    },
+    {
+      "ref": "QC2",
+      "line": "medical",
+      "role": "alternate",
+      "carrier": "Cigna",
+      "name": "LocalPlus 3000",
+      "links": [],
+      "values": {
+        "plan_type": "EPO",
+        "network": "LocalPlus",
+        "metal_level": "Silver",
+        "funding": "fully_insured",
+        "deductible_single": "3000",
+        "oop_max_single": "6500",
+        "pcp_copay": "35",
+        "rate_ee": "619.85",
+        "rate_es": "1301.70",
+        "rate_ec": "1146.75",
+        "rate_fam": "1859.55"
+      }
+    },
+    {
+      "ref": "QC3",
+      "line": "medical",
+      "role": "alternate",
+      "carrier": "Cigna",
+      "name": "HSA 4000",
+      "links": [],
+      "values": {
+        "plan_type": "HDHP",
+        "network": "Open Access Plus",
+        "metal_level": "Bronze",
+        "funding": "fully_insured",
+        "deductible_single": "4000",
+        "oop_max_single": "7000",
+        "pcp_copay": "Deductible, then 20%",
+        "rate_ee": "538.60",
+        "rate_es": "1131.05",
+        "rate_ec": "996.40",
+        "rate_fam": "1615.80"
+      }
+    },
+    {
+      "ref": "QU1",
+      "line": "medical",
+      "role": "alternate",
+      "carrier": "UnitedHealthcare",
+      "name": "Choice Plus 2000",
+      "links": [],
+      "values": {
+        "plan_type": "PPO",
+        "network": "Choice Plus",
+        "metal_level": "Gold",
+        "funding": "fully_insured",
+        "deductible_single": "2000",
+        "oop_max_single": "5500",
+        "pcp_copay": "25",
+        "rate_ee": "705.10",
+        "rate_es": "1480.70",
+        "rate_ec": "1304.45",
+        "rate_fam": "2115.30"
+      }
+    },
+    {
+      "ref": "QU2",
+      "line": "medical",
+      "role": "alternate",
+      "carrier": "UnitedHealthcare",
+      "name": "Navigate HMO 1500",
+      "links": [],
+      "values": {
+        "plan_type": "HMO",
+        "network": "Navigate",
+        "metal_level": "Gold",
+        "funding": "fully_insured",
+        "deductible_single": "1500",
+        "oop_max_single": "5000",
+        "pcp_copay": "20",
+        "rate_ee": "612.45",
+        "rate_es": "1286.15",
+        "rate_ec": "1133.05",
+        "rate_fam": "1837.35"
+      }
+    },
+    {
+      "ref": "QU3",
+      "line": "medical",
+      "role": "alternate",
+      "carrier": "UnitedHealthcare",
+      "name": "Core HSA 3500",
+      "links": [],
+      "values": {
+        "plan_type": "HDHP",
+        "network": "Choice Plus",
+        "metal_level": "Bronze",
+        "funding": "fully_insured",
+        "deductible_single": "3500",
+        "oop_max_single": "7000",
+        "pcp_copay": "Deductible, then 10%",
+        "rate_ee": "560.95",
+        "rate_es": "1178.00",
+        "rate_ec": "1037.75",
+        "rate_fam": "1682.85"
+      }
+    },
+    {
+      "ref": "QV1",
+      "line": "medical",
+      "role": "alternate",
+      "carrier": "AvMed",
+      "name": "Select 2500",
+      "links": [],
+      "values": {
+        "plan_type": "HMO",
+        "network": "AvMed Select",
+        "metal_level": "Silver",
+        "funding": "fully_insured",
+        "deductible_single": "2500",
+        "oop_max_single": "6000",
+        "pcp_copay": "30",
+        "rate_ee": "598.20",
+        "rate_es": "1256.20",
+        "rate_ec": "1106.65",
+        "rate_fam": "1794.60"
+      }
+    },
+    {
+      "ref": "AC",
+      "line": "accident",
+      "role": "alternate",
+      "carrier": "Unum",
+      "name": "Group Accident Plus",
+      "links": [],
+      "values": {
+        "plan_type": "Accident",
+        "benefit_summary": "Off-the-job accident benefits, $100 ER visit",
+        "rate_ee": "12.40",
+        "rate_es": "21.85",
+        "rate_ec": "24.10",
+        "rate_fam": "33.55"
+      }
+    },
+    {
+      "ref": "TH",
+      "line": "telehealth",
+      "role": "alternate",
+      "carrier": "Teladoc",
+      "name": "General Medical",
+      "links": [],
+      "values": {
+        "plan_type": "Telehealth",
+        "benefit_summary": "$0 visits, 24/7 general medical",
+        "unit_rate": "4.50"
+      }
+    }
+  ],
+  "line_enrollment": {
+    "medical": {
+      "EE": 30,
+      "ES": 8,
+      "EC": 6,
+      "FAM": 8
+    },
+    "telehealth": {
+      "lives": 52
+    }
+  },
+  "arrivals": [
+    {
+      "ref": "D",
+      "line": "medical",
+      "role": "current",
+      "carrier": "Florida Blue",
+      "name": "BlueOptions PPO 2500",
+      "links": [],
+      "values": {
+        "plan_type": "PPO",
+        "network": "BlueOptions",
+        "metal_level": "Gold",
+        "funding": "fully_insured",
+        "deductible_single": "2500",
+        "oop_max_single": "6350",
+        "pcp_copay": "30",
+        "rate_ee": "702.40",
+        "rate_es": "1474.95",
+        "rate_ec": "1299.45",
+        "rate_fam": "2107.20"
+      },
+      "enrollment": {
+        "EE": 18,
+        "ES": 5,
+        "EC": 4,
+        "FAM": 5
+      }
+    },
+    {
+      "ref": "F",
+      "line": "medical",
+      "role": "current",
+      "carrier": "Florida Blue",
+      "name": "BlueCare HMO 1500",
+      "links": [],
+      "values": {
+        "plan_type": "HMO",
+        "network": "BlueCare",
+        "metal_level": "Gold",
+        "funding": "fully_insured",
+        "deductible_single": "1500",
+        "oop_max_single": "5000",
+        "pcp_copay": "25",
+        "rate_ee": "655.10",
+        "rate_es": "1375.70",
+        "rate_ec": "1211.95",
+        "rate_fam": "1965.30"
+      },
+      "enrollment": {
+        "EE": 12,
+        "ES": 3,
+        "EC": 2,
+        "FAM": 3
+      }
+    }
+  ],
+  "links_after_split": {
+    "QA1": [
+      "D"
+    ],
+    "QA2": [
+      "D"
+    ],
+    "QA3": [
+      "D"
+    ],
+    "QC1": [
+      "D"
+    ],
+    "QC2": [
+      "D"
+    ],
+    "QC3": [
+      "D"
+    ],
+    "QU1": [
+      "F"
+    ],
+    "QU2": [
+      "F"
+    ],
+    "QU3": [
+      "F"
+    ],
+    "QV1": [
+      "F"
+    ]
+  },
+  "census": {
+    "arrives": "B",
+    "id_prefix": "G3",
+    "file": "Golden Quote-First census (synthetic).xlsx",
+    "warner_file": "Golden Quote-First census on the Warner template (synthetic).xlsx",
+    "medical_effective": "2027-03-01",
+    "dental_plan": "",
+    "vision_plan": "",
+    "groups": [
+      {
+        "n": 16,
+        "medical_plan": "BlueOptions PPO 2500",
+        "tier": "EE",
+        "dental": "",
+        "vision": ""
+      },
+      {
+        "n": 4,
+        "medical_plan": "BlueOptions PPO 2500",
+        "tier": "ES",
+        "dental": "",
+        "vision": ""
+      },
+      {
+        "n": 3,
+        "medical_plan": "BlueOptions PPO 2500",
+        "tier": "EC",
+        "dental": "",
+        "vision": ""
+      },
+      {
+        "n": 5,
+        "medical_plan": "BlueOptions PPO 2500",
+        "tier": "FAM",
+        "dental": "",
+        "vision": ""
+      },
+      {
+        "n": 11,
+        "medical_plan": "BlueCare HMO 1500",
+        "tier": "EE",
+        "dental": "",
+        "vision": ""
+      },
+      {
+        "n": 4,
+        "medical_plan": "BlueCare HMO 1500",
+        "tier": "ES",
+        "dental": "",
+        "vision": ""
+      },
+      {
+        "n": 2,
+        "medical_plan": "BlueCare HMO 1500",
+        "tier": "EC",
+        "dental": "",
+        "vision": ""
+      },
+      {
+        "n": 3,
+        "medical_plan": "BlueCare HMO 1500",
+        "tier": "FAM",
+        "dental": "",
+        "vision": ""
+      }
+    ]
+  },
+  "starred": [],
+  "recommended": [],
+  "packages": [],
+  "reasons": {},
+  "parity": {
+    "old_app": "891f1b3",
+    "case": {
+      "stage": "intake"
+    },
+    "client_book": null,
+    "values_layer": "edited",
+    "values_left_out": {
+      "funding": "The old app keeps funding on the deal's coverage line, not on a plan."
+    },
+    "links": {},
+    "copies": {},
+    "recommended_by_current": {},
+    "recommended_by_line": {},
+    "line_counts": {},
+    "line_figures": [
+      "medical"
+    ],
+    "figures_left_out": {
+      "AC": "Borrowed from medical's typed counts (OQ19): the old app borrowed only the medical census, and GD3 has none at checkpoint A.",
+      "TH": "Priced from typed lives (F92): the old app priced PEPM lines only from the census."
+    },
+    "left_out": [
+      {
+        "what": "Funding on every plan",
+        "why": "The old app keeps funding on the deal's coverage line (CoverageLine.funding)."
+      },
+      {
+        "what": "Telehealth's typed lives (52)",
+        "why": "The old app has no typed count for a PEPM line (F92); it reads the census."
+      },
+      {
+        "what": "The arrivals, the split and the census (checkpoint B)",
+        "why": "The parity profile loads checkpoint A, the screen the Look lane compares."
+      }
+    ]
+  }
+}

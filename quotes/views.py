@@ -73,11 +73,26 @@ class CopyView(APIView):
 
 
 class EnrollmentView(APIView):
+    PARTS = ('plans', 'whole_line', 'on', 'census_names')
+
     def post(self, request, pk):
+        """The line's typed set (F85, F88, F90, F91): `{line, plans?: [{id, enrollment}], whole_line?, on?,
+        census_names?: {plan id: [texts]}, keep?}`; a part left out stays as it is. → `{line_enrollment: {on, figure,
+        typed_at} | null, plans: [the plans it changed], activity_id}`."""
         deal = get_object_or_404(Deal, pk=pk)
-        plans = services.set_enrollment(request.user, deal, request.data.get('plans', []))
-        activity_id = plans[0].activity_id if plans else None
-        return Response({'plans': selectors.payloads(plans), 'activity_id': activity_id})
+        data = request.data
+        parts = {key: data[key] for key in self.PARTS if key in data}
+        saved = services.set_enrollment(request.user, deal, parse.line(request), **parts, keep=data.get('keep') is True)
+        row = saved.line
+        return Response(
+            {
+                'line_enrollment': (
+                    {'on': row.on, 'figure': row.enrollment, 'typed_at': row.typed_at} if row is not None else None
+                ),
+                'plans': selectors.payloads(saved.plans),
+                'activity_id': getattr(saved.activity, 'id', None),
+            }
+        )
 
 
 class PackagesView(APIView):

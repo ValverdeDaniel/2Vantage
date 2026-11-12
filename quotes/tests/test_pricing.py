@@ -86,7 +86,7 @@ def test_F80_net_after_credit(credit, monthly, annual, base, expected):
 
 
 def version_line(original_counts, version_counts=None, role='alternate'):
-    current = PlanData(id=1, role='current', values={'rate_ee': '500'}, enrollment={'EE': 10}, enrollment_on=True)
+    current = PlanData(id=1, role='current', values={'rate_ee': '500'}, enrollment={'EE': 10})
     quote = PlanData(
         id=2,
         role=role,
@@ -94,7 +94,6 @@ def version_line(original_counts, version_counts=None, role='alternate'):
         replaces=(1,) if role == 'alternate' else (),
         values={'rate_ee': '600'},
         enrollment=original_counts or {},
-        enrollment_on=bool(original_counts),
     )
     version = PlanData(
         id=3,
@@ -102,7 +101,6 @@ def version_line(original_counts, version_counts=None, role='alternate'):
         replaces=(1,),
         values={'rate_ee': '570'},
         enrollment=version_counts or {},
-        enrollment_on=bool(version_counts),
         version_of=2,
         credit={'months': 1},
     )

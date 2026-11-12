@@ -146,13 +146,13 @@ def test_enrollment_by_basis_and_comparison_prices(api, deal):
     a = add(api, deal, values={'rate_ee': '500', 'rate_es': '1000.50', 'rate_ec': '900.25', 'rate_fam': '1500.75'})
     response = api.post(
         f'/api/deals/{deal.id}/plans/enrollment/',
-        {'plans': [{'id': a['id'], 'enrollment': {'EE': 10, 'ES': 3, 'EC': 2, 'FAM': 5}, 'on': True}]},
+        {'line': 'medical', 'plans': [{'id': a['id'], 'enrollment': {'EE': 10, 'ES': 3, 'EC': 2, 'FAM': 5}}]},
         format='json',
     )
     assert response.status_code == 200
     bad = api.post(
         f'/api/deals/{deal.id}/plans/enrollment/',
-        {'plans': [{'id': a['id'], 'enrollment': {'lives': 4}}]},
+        {'line': 'medical', 'plans': [{'id': a['id'], 'enrollment': {'lives': 4}}]},
         format='json',
     )
     assert bad.status_code == 400

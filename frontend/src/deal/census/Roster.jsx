@@ -19,11 +19,10 @@ import useRosterGrid from './useRosterGrid';
 import useRosterWrites from './useRosterWrites';
 
 /*
- * The Roster (plan.md §8.10; C1–C10, C25; the old CensusGrid at 891f1b3, its order and words): the header and its
- * counts, the validation banner, a mapped file waiting, the COBRA tick (intake's, C25), the toolbar, the ☑ Select
- * cells bar or the review bar, the line chips, the grid, the pager by employee, then the import door and the counts
- * the pricing reads. ✎ Edit is a screen mode (C4): "These came from the client" and the undo stack live only while
- * it is on.
+ * The Roster (plan.md §8.10; C1–C10, C25; the old CensusGrid at 891f1b3, its order and words): under the header, its
+ * counts and banners (CensusTab), the COBRA tick (intake's, C25), the toolbar, the ☑ Select cells bar or the review
+ * bar, the line chips, the grid, the pager by employee, then the import door and the counts the pricing reads. ✎ Edit
+ * is a screen mode (C4): "These came from the client" and the undo stack live only while it is on.
  */
 export default function Roster({ deal, meta, census, onPage, onReview, refetch }) {
   const toast = useToast();
@@ -114,6 +113,7 @@ export default function Roster({ deal, meta, census, onPage, onReview, refetch }
 
   return (
     <>
+      <CobraCheck dealId={deal.id} cobra={census.cobra} onChanged={refetch} />
       <RosterToolbar
         mode={{ editing, picking }}
         edit={edit}
@@ -158,7 +158,6 @@ export default function Roster({ deal, meta, census, onPage, onReview, refetch }
         onAddEmployee={actions.addEmployee}
       />
       <Pager page={census.page} onPage={onPage} />
-      <CobraCheck dealId={deal.id} cobra={census.cobra} onChanged={refetch} />
       <ImportDoor
         dealId={deal.id}
         meta={meta}

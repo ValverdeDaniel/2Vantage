@@ -2,14 +2,16 @@
 
 The plans come in `order.layout`'s order (F120), each priced by the server with its comparison base, its source of
 enrollment, its change or the plan whose people it shares (`part_of`), its facts (F122) and its closeness to the
-nearest current plan (F121); cells carry compact flags and the documents are listed once (C23). A fixed number of
-queries at any size (Q.3 #4); 600 plans stay within 3 MB and 2.5 s (Q.7).
+nearest current plan (F121); cells carry compact flags and the documents are listed once (C23). The line's
+`enrollment` block (`selectors.enrollment`) is what the counts card, the census notice and the split read (F85–F91).
+A fixed number of queries at any size (Q.3 #4); 600 plans stay within 3 MB and 2.5 s (Q.7).
 """
 
 from deals import lines
 
 from .. import closeness, facts, fields, presented
 from .. import math as m
+from .enrollment import line_block
 from .plans import Documents, base, cells
 from .state import line_state
 
@@ -67,6 +69,7 @@ def comparison(deal, line):
     if any(result['reason'] == 'per_plan_counts_needed' for result in results.values()):
         warnings.append({'code': 'per_plan_counts_needed', 'message': 'Enter enrollment for each current plan'})
     return {
+        'enrollment': line_block(data, results),
         'line': line,
         'rate_basis': data.rate_basis,
         'groups': [{'key': g, 'label': label, 'fields': keys} for g, label, keys in fields.groups_for(line)],

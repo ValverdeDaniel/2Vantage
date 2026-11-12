@@ -106,10 +106,10 @@ def test_E54_a_write_that_can_be_undone_returns_its_activity_id(api, deal, plan)
     assert patch(api, plan, {'rate_ee': '640'})['activity_id'] is None  # nothing changed, nothing to undo
     response = api.post(
         f'/api/deals/{deal.id}/plans/enrollment/',
-        {'plans': [{'id': plan.id, 'enrollment': {'EE': 10, 'ES': 3, 'EC': 2, 'FAM': 5}, 'on': True}]},
+        {'line': 'medical', 'plans': [{'id': plan.id, 'enrollment': {'EE': 10, 'ES': 3, 'EC': 2, 'FAM': 5}}]},
         format='json',
     )
-    assert Activity.objects.get(pk=response.json()['activity_id']).area == 'quotes'
+    assert Activity.objects.get(pk=response.json()['activity_id']).area == 'enrollment'
 
 
 def test_A34_a_sold_plan_refuses_revert_with_a_sentence(api, plan):
@@ -176,13 +176,13 @@ def test_Q3_plan_details_write_path(user, plan):
 
 
 def test_Q3_enrollment_write_path(user, deal, plan):
-    def enroll(counts, on=True):
-        return lambda: services.set_enrollment(user, deal, [{'id': plan.id, 'enrollment': counts, 'on': on}])
+    def enroll(counts):
+        return lambda: services.set_enrollment(user, deal, 'medical', plans=[{'id': plan.id, 'enrollment': counts}])
 
     write_path_contract(
         user,
         plan,
         call=enroll({'EE': 10, 'ES': 3, 'EC': 2, 'FAM': 5}),
-        read=lambda p: (p.enrollment, p.enrollment_on),
+        read=lambda p: p.enrollment,
         later=enroll({'EE': 11, 'ES': 3, 'EC': 2, 'FAM': 5}),
     )

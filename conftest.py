@@ -103,8 +103,46 @@ def gd2(golden):
 
 
 @pytest.fixture(scope='module')
+def gd3(golden):
+    """GD3 at checkpoint A as seeded: no current plan, ten quotes on typed whole-line counts (slice 13)."""
+    return golden['GD3']
+
+
+@pytest.fixture(scope='module')
 def gd6(golden):
     return golden['GD6']
+
+
+class QuoteFirst:
+    """A fresh GD3 for one test, moved through its checkpoints the way a person's clicks move it
+    (golden/quote_first.py): `arrive('D')`, `split()`, `census()`. `built` is the Golden(deal, refs, spec) now."""
+
+    def __init__(self, user):
+        from golden import seed, specs
+
+        self.user = user
+        self.built = seed.build(specs.load('GD3'), user)
+
+    def _step(self, name, *args):
+        from golden import quote_first
+
+        self.built = getattr(quote_first, name)(self.user, self.built, *args)
+        return self
+
+    def arrive(self, ref):
+        return self._step('arrive', ref)
+
+    def split(self):
+        return self._step('split')
+
+    def census(self):
+        return self._step('census')
+
+
+@pytest.fixture
+def quote_first(user):
+    """GD3 built for this test only (it writes), at checkpoint A; see QuoteFirst."""
+    return QuoteFirst(user)
 
 
 @pytest.fixture(scope='session')

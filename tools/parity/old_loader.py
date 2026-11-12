@@ -16,12 +16,15 @@ The rows are written the way the old app writes them, through its own writers wh
 - links, typed enrollment and stars through `plan_links`, `enrollment` and `stars`;
 - one recommendation per current plan, the reasons and the line counts, through `composition.merge_config`;
 - the intake answers (slice 39, GD6) as the old form's hand edit stores them (CaseField.edited_value), each cleaned by
-  the old app's own `intake_writes.clean_value`, so the old form shows what 2Vantage's one cleaner stores.
+  the old app's own `intake_writes.clean_value`, so the old form shows what 2Vantage's one cleaner stores;
+- a census roster (slice 41, GD4) as the old import writes a spreadsheet's people (`old_census.py`, beside this file);
+- a whole line's typed counts (slice 13, GD3's `line_figures`) as the old line counts (`tier_counts_by_line`).
 Then every row is read back and checked against the spec; a difference stops the load.
 """
 
 import json
 import os
+import sys
 from pathlib import Path
 
 from benefits.demo_data import seed_case_fields
@@ -35,6 +38,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 SPEC_DIR = Path(os.environ.get('PARITY_SPECS', '/parity/specs'))
+TOOLS_DIR = Path(os.environ.get('PARITY_TOOLS', '/parity'))  # old_census.py and golden/census_roster.py
 USERNAME = os.environ.get('PARITY_USER', 'parity-admin')
 PASSWORD = os.environ.get('PARITY_PASSWORD', 'parity-only-pw')
 
@@ -164,6 +168,8 @@ def apply_marks(spec, case, made):
     by_line = {line: made[ref].pk for line, ref in profile.get('recommended_by_line', {}).items()}
     typed = {p['ref']: p.get('enrollment') for p in plans}
     line_counts = {line: typed[ref] for line, ref in profile.get('line_counts', {}).items()}
+    # GD3 (slice 13): a figure typed for the whole line (LineEnrollment) becomes the old line counts
+    line_counts.update({line: spec['line_enrollment'][line] for line in profile.get('line_figures', [])})
     case.proposal_config = composition.merge_config(
         case.proposal_config,
         {
@@ -195,6 +201,20 @@ def load_intake(spec, case):
         if field.effective_value != text:
             field.edited_value = text
             field.save(update_fields=['edited_value'])
+
+
+def load_census(spec, case):
+    """The spec's census roster (slice 41) when the profile names its layer, read back: its differences in words."""
+    layer = spec['parity'].get('census_layer')
+    if layer is None:
+        return []
+    if layer != 'import':
+        raise ParityError(f'{spec["key"]}: the loader writes a census only as the old import does, not {layer!r}')
+    if str(TOOLS_DIR) not in sys.path:
+        sys.path.insert(0, str(TOOLS_DIR))
+    import old_census
+
+    return old_census.check(case, old_census.load(spec, case))
 
 
 def check(spec, case, made):
@@ -229,6 +249,9 @@ def check(spec, case, made):
     for line, ref in spec['parity'].get('line_counts', {}).items():
         if stored.get(line) != typed[ref]:
             wrong.append(f'{line}: line counts {stored.get(line)} != {ref} {typed[ref]}')
+    for line in spec['parity'].get('line_figures', []):
+        if stored.get(line) != spec['line_enrollment'][line]:
+            wrong.append(f'{line}: line figure {stored.get(line)} != {spec["line_enrollment"][line]}')
     return wrong
 
 
@@ -236,11 +259,12 @@ def load(spec, user):
     with transaction.atomic():
         case = make_case(spec, user)
         load_intake(spec, case)
+        census_wrong = load_census(spec, case)
         made = {}
         for plan in spec['plans']:
             made[plan['ref']] = make_plan(spec, plan, case, user, made)
         apply_marks(spec, case, made)
-        wrong = check(spec, case, made)
+        wrong = check(spec, case, made) + census_wrong
         if wrong:
             raise ParityError(f'{spec["key"]} did not load as its spec says:\n  ' + '\n  '.join(wrong))
     left_out = '; '.join(item['what'] for item in spec['parity'].get('left_out', []))

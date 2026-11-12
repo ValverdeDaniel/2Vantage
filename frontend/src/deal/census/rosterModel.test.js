@@ -71,12 +71,12 @@ describe('C3 a cell says what it is', () => {
     expect(cellTitle(person(), census.fields[2])).toBe('Accepts: EE · ES');
   });
 
-  it('shows dates month-first and a required blank as ＋ Add only while editing', () => {
+  it('shows dates month-first, a required blank as ＋ Add and any other blank as —', () => {
     expect(shownValue(census.fields[1], '1980-01-15')).toBe('01/15/1980');
     expect(shownValue(census.fields[1], 'soon')).toBe('soon');
     const blank = person({ missing: ['medical_tier'] });
-    expect(cellText(blank, census.fields[2], true)).toBe('＋ Add');
-    expect(cellText(blank, census.fields[2], false)).toBe('—');
+    expect(cellText(blank, census.fields[2])).toBe('＋ Add');
+    expect(cellText(blank, census.fields[3])).toBe('—');
   });
 
   it('labels a dependent by relationship', () => {

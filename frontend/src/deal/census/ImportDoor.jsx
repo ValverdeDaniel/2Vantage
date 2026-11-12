@@ -9,10 +9,18 @@ import { useToast } from '../../ui/useToast';
 /*
  * The import door (plan.md §5.3.2, §8.10; C12): a census spreadsheet goes in through documents' one upload door (kind
  * Census), and its columns are mapped next; a census file already on the deal can be mapped as it is. Laid out in the
- * old empty roster's row of doors (`bnf-census-empty-actions`). Claude's scan of a census (PDF rosters included) is
- * slice 51's; adding people by hand and asking the client for the file come with the roster grid and the request tray.
+ * old empty roster's row of doors (`bnf-census-empty-actions`); `children` are the row's other doors (adding the first
+ * employee by hand). Claude's scan of a census (PDF rosters included) is slice 51's; asking the client for the file
+ * comes with the request tray.
  */
-export default function ImportDoor({ dealId, meta, onStarted, label = 'Import a census file ▸', primary = true }) {
+export default function ImportDoor({
+  dealId,
+  meta,
+  onStarted,
+  label = 'Import a census file ▸',
+  primary = true,
+  children = null,
+}) {
   const toast = useToast();
   const input = useRef(null);
   const [picked, setPicked] = useState('');
@@ -68,6 +76,7 @@ export default function ImportDoor({ dealId, meta, onStarted, label = 'Import a 
           </Button>
         </>
       )}
+      {children}
     </div>
   );
 }

@@ -1,7 +1,8 @@
 """Reads for the Advisor (plan.md §7.8, F.6), one module per read: `state` (`deal_state`, every line worked out in one
 grouped read), `comparison` (one line's compact payload), `lines` (the per-line counts), `plans` (one plan as a write
-answers it), `sales` (what other apps ask about sales), `find` (the finder's index) and `saved_views` (the saved board
-setups a person may use). GETs write nothing (Q.3 #2).
+answers it), `sales` (what other apps ask about sales), `find` (the finder's index), `saved_views` (the saved board
+setups a person may use), `people` (each line's typed figure and census, slice 13), `enrollment` (the comparison's
+enrollment block) and `headcount` (the one headcount and its cross-check, §5.7). GETs write nothing (Q.3 #2).
 """
 
 from .comparison import comparison

@@ -34,7 +34,7 @@ def board(user):
     )
     renewal = plan(role='renewal', carrier='Aetna', name='HMO 1500', renews_id=current.id, values={'rate_ee': '540'})
     quote = plan(role='alternate', carrier='Cigna', name='=1+1', replaces_ids=[current.id], values={'rate_ee': '480'})
-    services.set_enrollment(user, deal, [{'id': current.id, 'enrollment': {'EE': 10}, 'on': True}])
+    services.set_enrollment(user, deal, 'medical', plans=[{'id': current.id, 'enrollment': {'EE': 10}}])
     return deal, current, renewal, quote
 
 

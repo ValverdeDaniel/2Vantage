@@ -1,0 +1,117 @@
+{
+ "deal": "GD3",
+ "client": "Golden Quote-First (synthetic)",
+ "checked_by": null,
+ "checked_on": null,
+ "method": null,
+ "note": "Worked by hand from the spec's rates and counts (golden/specs/gd3.json): monthly = the sum of rate × count per tier, rounded half up to the dollar; lives × the PEPM rate; annual = monthly × 12; the census counts counted from the spec's census groups. Never the app's output. Not yet signed: Stephanie signs it before the slice that prices the deal relies on it, and a figure changes only with her agreement (plan.md §12.6).",
+ "checkpoints": {
+  "A": {
+   "about": "As seeded: no current plan; every medical quote prices from the typed whole-line counts.",
+   "plans": {
+    "QA1": {"monthly": 56363, "annual": 676356, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×688.20 + 8×1445.20 + 6×1273.15 + 8×2064.60 = 56363.30"},
+    "QA2": {"monthly": 52478, "annual": 629736, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×640.75 + 8×1345.60 + 6×1185.40 + 8×1922.25 = 52477.70"},
+    "QA3": {"monthly": 45234, "annual": 542808, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×552.30 + 8×1159.85 + 6×1021.75 + 8×1656.90 = 45233.50"},
+    "QC1": {"monthly": 54988, "annual": 659856, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×671.40 + 8×1409.95 + 6×1242.10 + 8×2014.20 = 54987.80"},
+    "QC2": {"monthly": 50766, "annual": 609192, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×619.85 + 8×1301.70 + 6×1146.75 + 8×1859.55 = 50766.00"},
+    "QC3": {"monthly": 44111, "annual": 529332, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×538.60 + 8×1131.05 + 6×996.40 + 8×1615.80 = 44111.20"},
+    "QU1": {"monthly": 57748, "annual": 692976, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×705.10 + 8×1480.70 + 6×1304.45 + 8×2115.30 = 57747.70"},
+    "QU2": {"monthly": 50160, "annual": 601920, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×612.45 + 8×1286.15 + 6×1133.05 + 8×1837.35 = 50159.80"},
+    "QU3": {"monthly": 45942, "annual": 551304, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×560.95 + 8×1178.00 + 6×1037.75 + 8×1682.85 = 45941.80"},
+    "QV1": {"monthly": 48992, "annual": 587904, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×598.20 + 8×1256.20 + 6×1106.65 + 8×1794.60 = 48992.30"},
+    "AC": {"monthly": 960, "annual": 11520, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "proxy", "worked": "30×12.40 + 8×21.85 + 6×24.10 + 8×33.55 = 959.80"},
+    "TH": {"monthly": 234, "annual": 2808, "enrollment": {"lives": 52}, "source": "line", "worked": "52×4.50 = 234.00"}
+   },
+   "headcount": {"count": 52, "source": "advisor", "estimate": false, "band": "large"}
+  },
+  "A_one_current": {
+   "about": "D arrives: one current plan, so the line figure still prices D and every quote (no price vanishes).",
+   "plans": {
+    "QA1": {"monthly": 56363, "annual": 676356, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×688.20 + 8×1445.20 + 6×1273.15 + 8×2064.60 = 56363.30"},
+    "QA2": {"monthly": 52478, "annual": 629736, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×640.75 + 8×1345.60 + 6×1185.40 + 8×1922.25 = 52477.70"},
+    "QA3": {"monthly": 45234, "annual": 542808, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×552.30 + 8×1159.85 + 6×1021.75 + 8×1656.90 = 45233.50"},
+    "QC1": {"monthly": 54988, "annual": 659856, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×671.40 + 8×1409.95 + 6×1242.10 + 8×2014.20 = 54987.80"},
+    "QC2": {"monthly": 50766, "annual": 609192, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×619.85 + 8×1301.70 + 6×1146.75 + 8×1859.55 = 50766.00"},
+    "QC3": {"monthly": 44111, "annual": 529332, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×538.60 + 8×1131.05 + 6×996.40 + 8×1615.80 = 44111.20"},
+    "QU1": {"monthly": 57748, "annual": 692976, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×705.10 + 8×1480.70 + 6×1304.45 + 8×2115.30 = 57747.70"},
+    "QU2": {"monthly": 50160, "annual": 601920, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×612.45 + 8×1286.15 + 6×1133.05 + 8×1837.35 = 50159.80"},
+    "QU3": {"monthly": 45942, "annual": 551304, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×560.95 + 8×1178.00 + 6×1037.75 + 8×1682.85 = 45941.80"},
+    "QV1": {"monthly": 48992, "annual": 587904, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×598.20 + 8×1256.20 + 6×1106.65 + 8×1794.60 = 48992.30"},
+    "AC": {"monthly": 960, "annual": 11520, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "proxy", "worked": "30×12.40 + 8×21.85 + 6×24.10 + 8×33.55 = 959.80"},
+    "TH": {"monthly": 234, "annual": 2808, "enrollment": {"lives": 52}, "source": "line", "worked": "52×4.50 = 234.00"},
+    "D": {"monthly": 57526, "annual": 690312, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "line", "worked": "30×702.40 + 8×1474.95 + 6×1299.45 + 8×2107.20 = 57525.90"}
+   }
+  },
+  "A_two_current": {
+   "about": "F arrives: two current plans stop the line figure; the split is asked for.",
+   "no_price": ["D", "F", "QA1", "QA2", "QA3", "QC1", "QC2", "QC3", "QU1", "QU2", "QU3", "QV1"],
+   "unlinked": ["QA1", "QA2", "QA3", "QC1", "QC2", "QC3", "QU1", "QU2", "QU3", "QV1"],
+   "priced": {
+    "AC": {"monthly": 960, "annual": 11520, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "proxy", "worked": "30×12.40 + 8×21.85 + 6×24.10 + 8×33.55 = 959.80"},
+    "TH": {"monthly": 234, "annual": 2808, "enrollment": {"lives": 52}, "source": "line", "worked": "52×4.50 = 234.00"}
+   },
+   "headcount": {"count": 52, "source": "advisor", "estimate": false, "band": "large"}
+  },
+  "A_split": {
+   "about": "The packet's per-plan counts typed for D and F, and each quote linked to the plan it replaces.",
+   "plans": {
+    "D": {"monthly": 35752, "annual": 429024, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "typed", "worked": "18×702.40 + 5×1474.95 + 4×1299.45 + 5×2107.20 = 35751.75"},
+    "F": {"monthly": 20308, "annual": 243696, "enrollment": {"EE": 12, "ES": 3, "EC": 2, "FAM": 3}, "source": "typed", "worked": "12×655.10 + 3×1375.70 + 2×1211.95 + 3×1965.30 = 20308.10"},
+    "QA1": {"monthly": 35029, "annual": 420348, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "from replaced plan", "worked": "18×688.20 + 5×1445.20 + 4×1273.15 + 5×2064.60 = 35029.20"},
+    "QA2": {"monthly": 32614, "annual": 391368, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "from replaced plan", "worked": "18×640.75 + 5×1345.60 + 4×1185.40 + 5×1922.25 = 32614.35"},
+    "QA3": {"monthly": 28112, "annual": 337344, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "from replaced plan", "worked": "18×552.30 + 5×1159.85 + 4×1021.75 + 5×1656.90 = 28112.15"},
+    "QC1": {"monthly": 34174, "annual": 410088, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "from replaced plan", "worked": "18×671.40 + 5×1409.95 + 4×1242.10 + 5×2014.20 = 34174.35"},
+    "QC2": {"monthly": 31551, "annual": 378612, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "from replaced plan", "worked": "18×619.85 + 5×1301.70 + 4×1146.75 + 5×1859.55 = 31550.55"},
+    "QC3": {"monthly": 27415, "annual": 328980, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "from replaced plan", "worked": "18×538.60 + 5×1131.05 + 4×996.40 + 5×1615.80 = 27414.65"},
+    "QU1": {"monthly": 21858, "annual": 262296, "enrollment": {"EE": 12, "ES": 3, "EC": 2, "FAM": 3}, "source": "from replaced plan", "worked": "12×705.10 + 3×1480.70 + 2×1304.45 + 3×2115.30 = 21858.10"},
+    "QU2": {"monthly": 18986, "annual": 227832, "enrollment": {"EE": 12, "ES": 3, "EC": 2, "FAM": 3}, "source": "from replaced plan", "worked": "12×612.45 + 3×1286.15 + 2×1133.05 + 3×1837.35 = 18986.00"},
+    "QU3": {"monthly": 17389, "annual": 208668, "enrollment": {"EE": 12, "ES": 3, "EC": 2, "FAM": 3}, "source": "from replaced plan", "worked": "12×560.95 + 3×1178.00 + 2×1037.75 + 3×1682.85 = 17389.45"},
+    "QV1": {"monthly": 18544, "annual": 222528, "enrollment": {"EE": 12, "ES": 3, "EC": 2, "FAM": 3}, "source": "from replaced plan", "worked": "12×598.20 + 3×1256.20 + 2×1106.65 + 3×1794.60 = 18544.10"},
+    "AC": {"monthly": 960, "annual": 11520, "enrollment": {"EE": 30, "ES": 8, "EC": 6, "FAM": 8}, "source": "proxy", "worked": "30×12.40 + 8×21.85 + 6×24.10 + 8×33.55 = 959.80"},
+    "TH": {"monthly": 234, "annual": 2808, "enrollment": {"lives": 52}, "source": "line", "worked": "52×4.50 = 234.00"}
+   },
+   "headcount": {"count": 52, "source": "advisor", "estimate": false, "band": "large"}
+  },
+  "B": {
+   "about": "The census of 48 enrolled employees arrives, naming D and F: the counts typed before it give way.",
+   "plans": {
+    "D": {"monthly": 31573, "annual": 378876, "enrollment": {"EE": 16, "ES": 4, "EC": 3, "FAM": 5}, "source": "census", "worked": "16×702.40 + 4×1474.95 + 3×1299.45 + 5×2107.20 = 31572.55"},
+    "F": {"monthly": 21029, "annual": 252348, "enrollment": {"EE": 11, "ES": 4, "EC": 2, "FAM": 3}, "source": "census", "worked": "11×655.10 + 4×1375.70 + 2×1211.95 + 3×1965.30 = 21028.70"},
+    "QA1": {"monthly": 30934, "annual": 371208, "enrollment": {"EE": 16, "ES": 4, "EC": 3, "FAM": 5}, "source": "census", "worked": "16×688.20 + 4×1445.20 + 3×1273.15 + 5×2064.60 = 30934.45"},
+    "QA2": {"monthly": 28802, "annual": 345624, "enrollment": {"EE": 16, "ES": 4, "EC": 3, "FAM": 5}, "source": "census", "worked": "16×640.75 + 4×1345.60 + 3×1185.40 + 5×1922.25 = 28801.85"},
+    "QA3": {"monthly": 24826, "annual": 297912, "enrollment": {"EE": 16, "ES": 4, "EC": 3, "FAM": 5}, "source": "census", "worked": "16×552.30 + 4×1159.85 + 3×1021.75 + 5×1656.90 = 24825.95"},
+    "QC1": {"monthly": 30180, "annual": 362160, "enrollment": {"EE": 16, "ES": 4, "EC": 3, "FAM": 5}, "source": "census", "worked": "16×671.40 + 4×1409.95 + 3×1242.10 + 5×2014.20 = 30179.50"},
+    "QC2": {"monthly": 27862, "annual": 334344, "enrollment": {"EE": 16, "ES": 4, "EC": 3, "FAM": 5}, "source": "census", "worked": "16×619.85 + 4×1301.70 + 3×1146.75 + 5×1859.55 = 27862.40"},
+    "QC3": {"monthly": 24210, "annual": 290520, "enrollment": {"EE": 16, "ES": 4, "EC": 3, "FAM": 5}, "source": "census", "worked": "16×538.60 + 4×1131.05 + 3×996.40 + 5×1615.80 = 24210.00"},
+    "QU1": {"monthly": 22634, "annual": 271608, "enrollment": {"EE": 11, "ES": 4, "EC": 2, "FAM": 3}, "source": "census", "worked": "11×705.10 + 4×1480.70 + 2×1304.45 + 3×2115.30 = 22633.70"},
+    "QU2": {"monthly": 19660, "annual": 235920, "enrollment": {"EE": 11, "ES": 4, "EC": 2, "FAM": 3}, "source": "census", "worked": "11×612.45 + 4×1286.15 + 2×1133.05 + 3×1837.35 = 19659.70"},
+    "QU3": {"monthly": 18007, "annual": 216084, "enrollment": {"EE": 11, "ES": 4, "EC": 2, "FAM": 3}, "source": "census", "worked": "11×560.95 + 4×1178.00 + 2×1037.75 + 3×1682.85 = 18006.50"},
+    "QV1": {"monthly": 19202, "annual": 230424, "enrollment": {"EE": 11, "ES": 4, "EC": 2, "FAM": 3}, "source": "census", "worked": "11×598.20 + 4×1256.20 + 2×1106.65 + 3×1794.60 = 19202.10"},
+    "AC": {"monthly": 899, "annual": 10788, "enrollment": {"EE": 27, "ES": 8, "EC": 5, "FAM": 8}, "source": "proxy", "worked": "27×12.40 + 8×21.85 + 5×24.10 + 8×33.55 = 898.50"},
+    "TH": {"monthly": 216, "annual": 2592, "enrollment": {"lives": 48}, "source": "census", "worked": "48×4.50 = 216.00"}
+   },
+   "census_now": ["D", "F", "QA1", "QA2", "QA3", "QC1", "QC2", "QC3", "QU1", "QU2", "QU3", "QV1"],
+   "headcount": {"count": 48, "source": "advisor", "estimate": false, "band": "small"}
+  },
+  "B_kept": {
+   "about": "Keep my typed counts on medical: the typed counts win again; telehealth and accident keep the census.",
+   "plans": {
+    "D": {"monthly": 35752, "annual": 429024, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "typed", "worked": "18×702.40 + 5×1474.95 + 4×1299.45 + 5×2107.20 = 35751.75"},
+    "F": {"monthly": 20308, "annual": 243696, "enrollment": {"EE": 12, "ES": 3, "EC": 2, "FAM": 3}, "source": "typed", "worked": "12×655.10 + 3×1375.70 + 2×1211.95 + 3×1965.30 = 20308.10"},
+    "QA1": {"monthly": 35029, "annual": 420348, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "from replaced plan", "worked": "18×688.20 + 5×1445.20 + 4×1273.15 + 5×2064.60 = 35029.20"},
+    "QA2": {"monthly": 32614, "annual": 391368, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "from replaced plan", "worked": "18×640.75 + 5×1345.60 + 4×1185.40 + 5×1922.25 = 32614.35"},
+    "QA3": {"monthly": 28112, "annual": 337344, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "from replaced plan", "worked": "18×552.30 + 5×1159.85 + 4×1021.75 + 5×1656.90 = 28112.15"},
+    "QC1": {"monthly": 34174, "annual": 410088, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "from replaced plan", "worked": "18×671.40 + 5×1409.95 + 4×1242.10 + 5×2014.20 = 34174.35"},
+    "QC2": {"monthly": 31551, "annual": 378612, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "from replaced plan", "worked": "18×619.85 + 5×1301.70 + 4×1146.75 + 5×1859.55 = 31550.55"},
+    "QC3": {"monthly": 27415, "annual": 328980, "enrollment": {"EE": 18, "ES": 5, "EC": 4, "FAM": 5}, "source": "from replaced plan", "worked": "18×538.60 + 5×1131.05 + 4×996.40 + 5×1615.80 = 27414.65"},
+    "QU1": {"monthly": 21858, "annual": 262296, "enrollment": {"EE": 12, "ES": 3, "EC": 2, "FAM": 3}, "source": "from replaced plan", "worked": "12×705.10 + 3×1480.70 + 2×1304.45 + 3×2115.30 = 21858.10"},
+    "QU2": {"monthly": 18986, "annual": 227832, "enrollment": {"EE": 12, "ES": 3, "EC": 2, "FAM": 3}, "source": "from replaced plan", "worked": "12×612.45 + 3×1286.15 + 2×1133.05 + 3×1837.35 = 18986.00"},
+    "QU3": {"monthly": 17389, "annual": 208668, "enrollment": {"EE": 12, "ES": 3, "EC": 2, "FAM": 3}, "source": "from replaced plan", "worked": "12×560.95 + 3×1178.00 + 2×1037.75 + 3×1682.85 = 17389.45"},
+    "QV1": {"monthly": 18544, "annual": 222528, "enrollment": {"EE": 12, "ES": 3, "EC": 2, "FAM": 3}, "source": "from replaced plan", "worked": "12×598.20 + 3×1256.20 + 2×1106.65 + 3×1794.60 = 18544.10"},
+    "AC": {"monthly": 899, "annual": 10788, "enrollment": {"EE": 27, "ES": 8, "EC": 5, "FAM": 8}, "source": "proxy", "worked": "27×12.40 + 8×21.85 + 5×24.10 + 8×33.55 = 898.50"},
+    "TH": {"monthly": 216, "annual": 2592, "enrollment": {"lives": 48}, "source": "census", "worked": "48×4.50 = 216.00"}
+   },
+   "headcount": {"count": 52, "source": "advisor", "estimate": false, "band": "large"}
+  }
+ }
+}

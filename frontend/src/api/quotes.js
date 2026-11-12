@@ -18,7 +18,7 @@ export function useAdvisorLines(dealId) {
 
 /**
  * One line's comparison, as the server sends it (F.6, C23): {line, rate_basis, groups, plans, documents, room,
- * packages, member_packages, recommendation, warnings}, the plans in `order.layout`'s order, each with its compact
+ * packages, member_packages, recommendation, warnings, enrollment}, the plans in `order.layout`'s order, each with its compact
  * `cells` ({key: {s: status, o: origin, d: index into documents, m: mark}}), `premium`, `change`, `facts`,
  * `closeness`, `presented` and `base_ids`. A value's full source comes on ↗ (plans/{id}/source/).
  */
@@ -144,14 +144,6 @@ export function useSetRecommended(dealId) {
   return useAdvisorMutation(
     dealId,
     async ({ planId, recommended }) => (await api.post(`plans/${planId}/recommend/`, { recommended })).data,
-  );
-}
-
-/** [{id, enrollment: {...}, on}] */
-export function useSaveEnrollment(dealId) {
-  return useAdvisorMutation(
-    dealId,
-    async (plans) => (await api.post(`deals/${dealId}/plans/enrollment/`, { plans })).data,
   );
 }
 

@@ -11,7 +11,7 @@ from dataclasses import replace
 from deals import lines
 
 from .. import packages as pk
-from ..shapes import LineData
+from ..shapes import LineData, People
 from .comparison import premium
 from .state import plan_data
 
@@ -28,13 +28,15 @@ def figures(result):
     }
 
 
-def preview(line, rows, drafts):
-    """[figures] in `drafts`' order. New drafts take stand-in ids below zero for the length of the sum."""
+def preview(line, rows, drafts, people=None):
+    """[figures] in `drafts`' order. New drafts take stand-in ids below zero for the length of the sum. `people`: the
+    line's typed figures and census (`state.people_for`), so a draft prices the people the saved version will."""
     ids, plans = [], []
     for at, draft in enumerate(drafts):
         plan_id = draft.id if draft.id is not None else -(at + 1)
         ids.append(plan_id)
         plans.append(replace(plan_data(draft), id=plan_id))
     plans += [plan_data(row) for row in rows if row.id not in ids]
-    results = pk.evaluate(LineData(lines.BY_KEY[line]['rate_basis'], plans, key=line))
+    data = LineData(lines.BY_KEY[line]['rate_basis'], plans, key=line, people=people or People())
+    results = pk.evaluate(data)
     return [figures(results[plan_id]) for plan_id in ids]

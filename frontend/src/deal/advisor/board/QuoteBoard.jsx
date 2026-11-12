@@ -12,6 +12,7 @@ import cx from '../../../ui/cx';
 import { useToast } from '../../../ui/useToast';
 import ReviewBulkBar from '../../../valuereview/ReviewBulkBar';
 import PricedComposer from '../priced/PricedComposer';
+import { buttonLabel, sourceWords } from '../enrollment/countsModel';
 import usePricedDraft from '../priced/usePricedDraft';
 import BoardHead from './BoardHead';
 import FilterCard from './FilterCard';
@@ -41,9 +42,10 @@ import useTicks from './useTicks';
  * switches; ticks do not. While ✎ Edit is on and a column sort is set, the rows hold their order until the person
  * changes the sort or a filter (F33). Under the board header, the review strip: "N AI values to review" on the ticked,
  * filtered or line's plans, with Approve, Ignore and Needs checking (F65; slice 17). In ✎ Edit, ＋ on a plan prices a
- * version of it (slice 35, F76–F84): the draft lives in the table, or docked above it in PricedComposer.
+ * version of it (slice 35, F76–F84): the draft lives in the table, or docked above it in PricedComposer. Above the
+ * table, `enrollment.panel`: the counts card or the split and census notices (slice 13, F85–F91).
  */
-export default function QuoteBoard({ deal, meta, lines, line, onLine, data, prefs, onDialog }) {
+export default function QuoteBoard({ deal, meta, lines, line, onLine, data, prefs, onDialog, enrollment }) {
   const toast = useToast();
   const boardMeta = meta.board;
   const view = useBoardConfig(boardMeta, prefs);
@@ -136,7 +138,7 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
     await actions.exportBoard({ line, plans: drawn.map((p) => p.id), columns, orientation: shown });
     setExporting(false);
   };
-  const typed = board.plans.filter((p) => p.enrollment_on && Object.values(p.enrollment ?? {}).some(Number)).length;
+  const openCounts = () => onDialog(enrollment.open ? null : { kind: 'counts' });
   const otherIds = new Set(lines.map((row) => row.line));
 
   const ui = {
@@ -146,6 +148,7 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
     errorOf: writes.errorOf,
     documents: data.documents,
     compliance: boardMeta.compliance,
+    sources: sourceWords(meta), // where a total's enrollment came from, in words (F86)
     families: boardMeta.priced?.families, // the priced-version chip's glyph (F62, F84)
     namesById: new Map(board.plans.map((p) => [p.id, `${p.carrier} ${p.name}`])),
     supersededIds: supersededIds(board.plans),
@@ -183,7 +186,7 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
           finderRef={finderRef}
           onFind={() => (filters.finder.active && quotes.length ? showPlan(quotes[0].id) : null)}
           onPickLine={onLine}
-          onCounts={data.rate_basis === 'composite' ? () => onDialog({ kind: 'counts' }) : null}
+          onCounts={() => onDialog({ kind: 'counts' })}
         />
         <BoardHead
           dealId={deal.id}
@@ -195,11 +198,11 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
           starred={board.quotes.filter((p) => p.starred).length}
           ui={{
             quoteCount: board.quotes.length,
-            counts: data.rate_basis === 'composite' && board.plans.length ? { typed, label: lineLabel(line).toLowerCase() } : null,
+            counts: board.plans.length ? { label: buttonLabel(data.enrollment, lineLabel(line)), open: enrollment.open } : null,
             busy: { exporting, remove: actions.busy.remove },
             open: {
               activity: () => onDialog({ kind: 'activity' }),
-              counts: () => onDialog({ kind: 'counts' }),
+              counts: openCounts,
               importing: () => onDialog({ kind: 'import' }),
               addPlan: () => onDialog({ kind: 'plan', plan: null }),
               clearLine: () => setConfirm({ kind: 'clear' }),
@@ -236,6 +239,7 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
           onClear={ticks.clear}
         />
         {editing && priced.draft?.expanded && <PricedComposer kit={priced} />}
+        {enrollment.panel}
         <div className="bb-grid-card">
           <TableBar
             board={boardMeta}

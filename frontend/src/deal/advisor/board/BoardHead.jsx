@@ -41,11 +41,11 @@ export default function BoardHead({ dealId, lines, line, onLine, count, editing,
           {ui.counts && (
             <button
               type="button"
-              className="btn btn-sm btn-secondary"
-              title="Type how many employees each plan covers by tier (EE, ES, EC, FAM). Those counts price the plans you pick."
+              className={`btn btn-sm ${ui.counts.open ? 'btn-primary' : 'btn-secondary'}`}
+              title="Type how many employees each plan covers (by tier, or lives or volume). Those counts price the plans you pick; switch them off to go back to the census."
               onClick={open.counts}
             >
-              {ui.counts.typed ? `Summary tiers · On (${ui.counts.typed})` : `＋ Add summary ${ui.counts.label} tiers`}
+              {ui.counts.label}
             </button>
           )}
           {!editing ? (

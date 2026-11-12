@@ -9,7 +9,8 @@
   counter 1–500 down column A. No Warner file is opened: no Warner census template is tracked in the old repo's
   assets/, so the layout is rebuilt from the definition and every value is synthetic.
 `attach` uploads both through documents' one door (kind census) and imports the client's file through the census
-services with the proposed mapping, as a member who clicks Apply would.
+services with the proposed mapping, as a member who clicks Apply would. A census that arrives later (GD3's, at its
+checkpoint B; slice 13) is left out of the seed and brought in by `arrive`, the same way.
 """
 
 import datetime
@@ -168,9 +169,19 @@ def files(spec):
 
 
 def attach(user, deal, spec):
-    """Upload GD4's census and its Warner copy, and import the census. {} for a spec with no census."""
-    if not spec.get('census'):
+    """Upload GD4's census and its Warner copy, and import the census. {} for a spec with no census, or one whose
+    census arrives at a later checkpoint (GD3's, at B: `arrive`)."""
+    if not spec.get('census') or spec['census'].get('arrives'):
         return {}
+    return _upload_and_import(user, deal, spec)
+
+
+def arrive(user, deal, spec):
+    """A census that arrives at a checkpoint (GD3's at B, slice 13): uploaded and imported as `attach` does."""
+    return _upload_and_import(user, deal, spec)
+
+
+def _upload_and_import(user, deal, spec):
     client, warner = files(spec)
     names = spec['census']
     uploaded = {

@@ -24,7 +24,7 @@ FIVE_OFF = {'kind': 'concession', 'all': {'op': 'pct_off', 'value': 5}}
 
 def make_line(user, deal):
     a = services.create_plan(user, deal, line='medical', role='current', carrier='Aetna', name='HMO 1500', values=RATES)
-    services.set_enrollment(user, deal, [{'id': a.id, 'enrollment': COUNTS, 'on': True}])
+    services.set_enrollment(user, deal, 'medical', plans=[{'id': a.id, 'enrollment': COUNTS}])
     cigna = services.create_plan(
         user,
         deal,

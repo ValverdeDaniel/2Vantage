@@ -28,6 +28,7 @@ from .roles import STAR_AND_PICK, no_longer_current
 
 KEYS = ('plan.line', *columns.LINKS, *STAR_AND_PICK, 'plan.sort_order')
 ENROLLMENT = 'enrollment.'
+CENSUS_NAMES = 'census_names'
 
 
 def _words(plan):
@@ -70,9 +71,9 @@ def _strip(plan, to_line):
     diff = apply_values(plan.values, plan.sources, {key: '' for key in plan.values if key not in kept}, None)
     for tier, count in plan.enrollment.items():
         diff[f'{ENROLLMENT}{tier}'] = [count, None]
-    if plan.enrollment_on:
-        diff['enrollment_on'] = [True, False]
-    plan.enrollment, plan.enrollment_on = {}, False
+    if plan.census_names:  # the old line's census plan texts (F90)
+        diff[CENSUS_NAMES] = [list(plan.census_names), []]
+    plan.enrollment, plan.census_names = {}, []
     plan.starred, plan.star_reason, plan.starred_by_id, plan.starred_at = False, '', None, None
     plan.recommended = False
     plan.role = 'alternate' if plan.role == 'renewal' else plan.role
@@ -126,7 +127,7 @@ def move_line(user, deal, plan_ids, to_line):
     changed, changes = batch.write()
     for plan in moving:
         flags.stamp(plan)  # its open warnings, over the new line's fields (O.3.7)
-    Plan.objects.bulk_update(moving, ['values', 'sources', 'enrollment', 'enrollment_on', 'flags'])
+    Plan.objects.bulk_update(moving, ['values', 'sources', 'enrollment', 'census_names', 'flags'])
     for entry in changes:
         entry['k'].update(extra.get(int(entry['t'].partition(':')[2]), {}))
     label = lines.label(to_line)

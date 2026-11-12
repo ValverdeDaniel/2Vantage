@@ -23,7 +23,7 @@ def plan(pid, role='current', counts=None, rates=None, quoted=None, **kw):
         if key in kw:
             values[key] = str(kw.pop(key))
     enrollment = counts or {}
-    return PlanData(id=pid, role=role, values=values, enrollment=enrollment, enrollment_on=bool(enrollment), **kw)
+    return PlanData(id=pid, role=role, values=values, enrollment=enrollment, **kw)
 
 
 def price(p, basis='composite', others=()):
