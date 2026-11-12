@@ -5,9 +5,8 @@ files' kinds and lines, and quotes' `quote_lines` provider.
 
 from deals import clock, comp, lines
 from deals.models import Deal
-from documents.models import Document
 
-from . import checklist, coverage, form, providers, status, validation, values
+from . import checklist, coverage, form, gate, providers, status, validation, values
 from .models import CurrentCoverage, Intake
 
 _UNSET = object()
@@ -42,19 +41,18 @@ def one_coverage_row(row):
     return coverage_row(row, (providers.quote_lines(row.deal_id).get(row.line) or {}).get('current'))
 
 
-def _documents(deal_id):
-    return list(Document.objects.filter(deal_id=deal_id).values_list('id', 'kind', 'lines'))
-
-
-def card(deal, coverage_rows=None, quote_lines=None, intake=_UNSET):
-    """The Coverage & marketing intent card (B16–B21, B24): its rows, the confirmation, the tally and the gaps."""
+def card(deal, coverage_rows=None, quote_lines=None, intake=_UNSET, documents=None):
+    """The Coverage & marketing intent card (B16–B21, B24): its rows, the confirmation, the tally and the gaps.
+    `documents` are `gate.documents_of`'s rows (read here when not given)."""
     rows_in = _coverage(deal.id) if coverage_rows is None else coverage_rows
     quote_lines = providers.quote_lines(deal.id) if quote_lines is None else quote_lines
     if intake is _UNSET:
         intake = Intake.objects.filter(deal_id=deal.id).first()
+    documents = gate.documents_of(deal.id) if documents is None else documents
     confirmed = (intake.intent_confirmed if intake else None) or {}
     rows = coverage.intent_rows(lines.LINE_KEYS, deal.requested_lines, rows_in)
-    by_line = coverage.documents_by_line(_documents(deal.id), [row['line'] for row in rows])
+    triples = [(doc_id, kind, doc_lines) for doc_id, kind, doc_lines, _name in documents]
+    by_line = coverage.documents_by_line(triples, [row['line'] for row in rows])
     expected = on_file = 0
     for row in rows:
         present = by_line.get(row['line'], {})
@@ -111,9 +109,10 @@ def _medical_funding(rows, quote_lines):
     return first.funding if first else ''
 
 
-def form_state(deal, intake, rows, quote_lines):
+def form_state(deal, intake, rows, quote_lines, contacts=None):
     """What the form shows beside the answers (§5.2; B2, B6, B8, B9): the hidden and needed questions, each answer's
-    status, the inline checks, the needed questions answered, and the two notes. The answers PATCH answers it too."""
+    status, the inline checks (the contacts' emails among them, `contact:<id>`), the needed questions answered, and
+    the two notes. The answers PATCH answers it too."""
     answers = answers_of(deal, intake)
     sources = intake.sources if intake else {}
     rules = intake.rules if intake else {}
@@ -121,9 +120,13 @@ def form_state(deal, intake, rows, quote_lines):
     needed = values.needed_keys(answers, rules)
     pending = status.pending_keys(intake.client if intake else {})
     dated = [{'id': row.id, 'renewal_date': row.renewal_date} for row in rows]
-    # Contacts (and their email check) join with slice 40.
+    people = gate.contacts_of(deal) if contacts is None else contacts
     issues = validation.validate_intake(
-        answers, coverage=dated, medical_funding=_medical_funding(rows, quote_lines), today=clock.today()
+        answers,
+        coverage=dated,
+        contacts=[{'id': contact.id, 'email': contact.email} for contact in people],
+        medical_funding=_medical_funding(rows, quote_lines),
+        today=clock.today(),
     )
     return {
         'hidden': hidden,
@@ -138,18 +141,44 @@ def form_state(deal, intake, rows, quote_lines):
 
 def intake_payload(deal):
     """GET deals/{id}/intake/ (§7.6): the answers and their sources, the form's state (hidden and needed questions,
-    statuses, issues, readiness, notes), the coverage rows and the intent card. Slice 40 adds the contacts, the
-    checklist, the BOR and the ready state."""
+    statuses, issues, readiness, notes), the coverage rows and the intent card, then the gate's blocks (slice 40):
+    contacts, the BOR, the compliance files, the checklist, the ready state and the marketed stamp."""
     intake = Intake.objects.filter(deal_id=deal.id).first()
     rows = _coverage(deal.id)
     quote_lines = providers.quote_lines(deal.id)
+    documents = gate.documents_of(deal.id)
+    contacts = gate.contacts_of(deal)
+    answers = answers_of(deal, intake)
+    state = form_state(deal, intake, rows, quote_lines, contacts)
+    intent = card(deal, rows, quote_lines, intake, documents)
     return {
-        'answers': answers_of(deal, intake),
+        'answers': answers,
         'sources': intake.sources if intake else {},
-        **form_state(deal, intake, rows, quote_lines),
+        **state,
         'coverage': [coverage_row(row, (quote_lines.get(row.line) or {}).get('current')) for row in rows],
-        'intent': card(deal, rows, quote_lines, intake),
+        'intent': intent,
+        **gate.read(
+            deal,
+            intake,
+            rows=rows,
+            quote_lines=quote_lines,
+            intent=intent,
+            documents=documents,
+            answers=answers,
+            needed=state['needed'],
+            contacts=contacts,
+            issues=state['issues'],
+        ),
     }
+
+
+def gate_of(deal):
+    """The gate's blocks alone, read fresh (Mark as marketed's check and the gate doors' answers)."""
+    payload = intake_payload(deal)
+    return {key: payload[key] for key in GATE_KEYS}
+
+
+GATE_KEYS = ('contacts', 'primary_id', 'contacts_ok', 'bor', 'compliance', 'checklist', 'ready', 'marketed')
 
 
 def checklist_item(deal_id, key):

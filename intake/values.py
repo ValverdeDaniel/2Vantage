@@ -7,7 +7,7 @@ list, a number is stored without trailing zeros, and dates are read without date
 
 `clean_answers` cleans a whole request with it, all or nothing (§7.6). `needed` is the one rule behind the rose star,
 the "Missing" badge and readiness (B6, B33; old `needs`, D-064). Readiness's other parts (contacts, BOR, census, the
-checklist and the ready state) join this module in slice 40.
+checklist and the ready state) are `intake/readiness.py` (slice 40).
 """
 
 import datetime

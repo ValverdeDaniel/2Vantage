@@ -2188,14 +2188,25 @@ N.1).
   self-funded, the intake answer included) and custom asks.
 - Each item's state lives in `Intake.checklist` (B27). The COBRA tick lives there too, and the Census tab shows the
   same tick (O.6 #2). One card serves Intake, the RFP tab and the Overview (B28).
-- Built in slice 41, the smallest part: `intake/checklist.py` (pure: `COBRA`, `ATTESTED`, `item_state`) and
-  `intake.services.set_checklist_item` with its revert, for the COBRA item only (who and when, Activity `checklist`);
-  the census page reads it through `intake.selectors.checklist_item`. Slice 40 adds the other items and the card.
+- Built in slices 41 (the COBRA tick, which the census page reads through `intake.selectors.checklist_item`) and 40:
+  `intake/checklist.py` (pure: `tier`, `items`, `meter`, `card`; the words in the data module
+  `intake/checklist_words.py`, the old app's), `intake/readiness.py` (pure: contacts OK, BOR on file, the gaps and the
+  state), `intake/gate.py` (the one read of a deal's gate) and `set_checklist_item` for every attested item: the
+  "On file" / "Confirmed" tick and the requirement (Waived "Not needed"; Required "Still needed ▸" with a note the
+  client sees, not done even when satisfied; '' Undo); the two derived items take neither. Medical marketed = medical
+  requested, or nothing requested yet (the old rule). The questionnaire rows read their form and signature from
+  `intake.providers.questionnaire_items` (slice 42); custom asks are Review's (slice 53). A file a person marked the
+  wrong one counts for nothing (old `document_rows`). `intake.summary.facts(deal_ids)` gives Agenda and the Overview
+  the ready state, its gaps and the counts (§5.10; its provider calls are per deal until agenda's batch slots, 60).
 
 **Mark as marketed** (`intake.services.mark_marketed`; B34, K33). While the deal is not Ready to market it answers 409
-listing the gaps; "Market anyway" confirms and records the skipped items in Activity. It keeps the first
-`marketed_at`; a repeat changes nothing; Undo reverts it. A lost deal refuses it (§5.1). It moves no stage (OQ52
-default): the deal reaches `quoting` on the first quote read or RFP send.
+listing the gaps (`{detail, keys, gaps: [{kind, key, label}]}`: the needed questions blank or to check, HR contact,
+Signed BOR, Census, then the checklist's missing items); "Market anyway" (`override`) confirms and records the skipped
+items in Activity (the summary names six and "N more"; `changes` keeps every gap's words under `skipped`). It keeps
+the first `marketed_at`; a repeat changes nothing; Undo reverts it, and `unmark_marketed` takes it off by hand. A lost
+deal refuses it (§5.1). It moves no stage (OQ52 default): the deal reaches `quoting` on the first quote read or RFP
+send. The BOR's typed signature (`sign_bor`, `clear_bor`; B29) records who signed, when and who recorded it; a lost
+deal refuses signing (`refuses(deal, 'sign')`), not clearing.
 
 **Full rules:** Part B (B1–B37; B.6), O.1's `intake.providers`, O.6 #2. **Slices:** 11 (models, the cleaner, coverage
 and intent), 39 (the form and validation), 40 (contacts, checklist, BOR, readiness, Mark as marketed).
@@ -3327,7 +3338,7 @@ for that carrier (D119, OQ4; slice 24). Built in slice 24 (`ai/migrations/0003_c
 
 ### 6.5 intake
 
-Built in slices 11 and 39 (slice 40 adds the BOR, the checklist and readiness). B.6 and O.2.
+Built in slices 11, 39 and 40 (the BOR, the checklist, readiness and the marketed stamp). B.6 and O.2.
 
 **Intake** — one per deal, created on the first write
 
@@ -3929,15 +3940,20 @@ Payloads come from `ai/selectors.py`; `useAiState` is the only poller (O.4). Cli
 
 ### 7.6 Intake — `intake/`
 
-Built: slices 11 and 39 (the GET, the answers PATCH, coverage and the intent doors). Slice 40 adds the BOR and the
-checklist. The GET answers `{answers, sources, hidden, needed, status, issues, readiness, notes, coverage, intent}`;
+Built: slices 11, 39 and 40 (the GET, the answers PATCH, coverage and the intent doors; the checklist, the BOR and
+Mark as marketed). Slice 40's GET adds `contacts` (the client's, each with its `issues`), `primary_id`,
+`contacts_ok`, `bor {name, signed_at, signed_by, by_name, files, on_file}`, `compliance [{kind, label, documents}]`,
+`checklist {tier, tier_label, enrolled, estimate, headcount_source, geo, items, required, done, missing, all_clear}`,
+`ready {state, label, gaps, contacts_ok, bor_on_file, census_ok, checklist_clear}` and `marketed {at, by, by_name} |
+null`. The GET answers `{answers, sources, hidden, needed, status, issues, readiness, notes, coverage, intent}`;
 `answers.target_effective_date` is read from `Deal.effective_date`, its one home (B1).
 
 | Method | Path | Auth | Request | Response |
 |---|---|---|---|---|
 | GET | `deals/{id}/intake/` | user | — | intake payload; a deal with no row reads as empty (M.5 B34) |
 | PATCH | `deals/{id}/intake/` | user | `{"answers": {key: raw value \| list \| null}, "expect"?: {key: value seen}, "relay"?: bool}` | `200 {answers (changed; null = cleared), sources (changed), hidden, needed, status, issues, readiness {needed, answered, pct}, notes {multi_state, census}, effective_date, activity_id}` · `400 {"answers": {key: "error"}}` — nothing saved if any key fails; unknown key → 400 · `409 {detail, keys}` when an `expect`ed answer changed since. `relay` saves with origin `relay` ("These came from the client"). Built in slice 39 |
-| POST / DELETE | `deals/{id}/intake/sign/` | user | `{name}` | `200 bor` / `204` |
+| POST / DELETE | `deals/{id}/intake/sign/` | user | `{name}` | `200 {bor, ready, activity_id}` / `204`; `400 {name}` without a name; `409` on a lost deal. Built in slice 40 |
+| POST / DELETE | `deals/{id}/intake/marketed/` | user | `{override?: bool}` | `200 {marketed, ready, skipped: [gap], activity_id}` · `409 {detail, keys, gaps}` while not ready and not overridden · `409` on a lost deal / DELETE (unmark) `200 {marketed: null, ready, activity_id}`. Built in slice 40 |
 | GET / POST | `deals/{id}/coverage/` | user | `{line, carrier, funding, effective_date, renewal_date, in_force, rate_guarantee_through, notes, on_proposal, commission, commission_source}` and the renewal letter's facts (B14, J65) | list / `201 coverage row` |
 | PATCH / DELETE | `coverage/{id}/` | user | same | row / `204` · `400 {"carrier": ["Edit carrier and funding on the current plans in the Advisor."]}` when the line has current plans (§6.5) |
 | GET / POST | `deals/{id}/intake/sources/`, `deals/{id}/intake/marks/` | user | `?documents=&bucket=&page=` / `{action, ids or document_ids}` | the station's rows, counts and quality / the changed marks and the Activity id (E.6) |
@@ -3949,8 +3965,8 @@ Writes the later slices add. Their paths sit under `deals/{id}/intake/`, and the
 |---|---|---|---|
 | `set_intent` | Per line: in force, Shop it / Keep as-is / Leave off, and on the proposal; bulk or single, all or nothing. The only writer of `requested_lines`, through `deals.services.set_lines`. `POST deals/{id}/intake/intent/` `{line \| lines, has_today?, this_year? (market, keep, off), shop?, remove?}` → `{intent, coverage, requested_lines, activity_id}`; `shop` is the Lines-to-quote chips' and the header picker's control (it never answers a line); `remove` takes one line | B16–B19, B32 | 11 |
 | `confirm_intent`, `reopen_intent` | Confirm coverage and intent; reopen. `POST deals/{id}/intake/intent/confirm/` and `…/reopen/`, answered like the intent door; an unchanged confirmation writes nothing | B20 | 11 |
-| `set_checklist_item` | One checklist item's controls. Slice 41 built its door for the COBRA tick only (C25, O.6 #2): `PATCH deals/{id}/intake/checklist/` `{item: "cobra", checked}` → `{item: {key, label, checked, by, by_name, at, requirement}, activity_id}`; an unchanged tick writes nothing; Undo reverts it | B26, B27 | 40 (41: COBRA) |
-| `mark_marketed`, `unmark` | Mark as marketed; a 409 lists the gaps until confirmed; the skipped items are recorded; Undo | B34 | 40 |
+| `set_checklist_item` | One checklist item's controls (C25, O.6 #2): `PATCH deals/{id}/intake/checklist/` `{item, checked?, note?, requirement? ('' \| required \| waived), client_note?}` → `{item: {key, label, checked, by, by_name, at, requirement}, checklist, ready, activity_id}`; each half writes only when sent; the two derived items answer 400; an unchanged change writes nothing; Undo reverts it | B26, B27 | 40 (41: COBRA) |
+| `mark_marketed`, `unmark_marketed` | Mark as marketed (`POST`/`DELETE deals/{id}/intake/marketed/`, above); a 409 lists the gaps until confirmed; the skipped items are recorded; Undo | B34 | 40 |
 | rules | Per-question Auto, Required or Waived, from Review's board | B37, OQ17 | 57 |
 
 `client_guidance` is an answer like any other, saved by the drawer's GuidanceBox through `PATCH deals/{id}/intake/`

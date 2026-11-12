@@ -9,7 +9,8 @@ export const intakeKey = (dealId) => dealKey(dealId, 'intake');
 
 /**
  * GET deals/{id}/intake/ → {answers, sources, hidden, needed, status, issues, readiness, notes, coverage: [row],
- * intent: card}. A deal with no Intake row reads as empty.
+ * intent: card, contacts, primary_id, contacts_ok, bor, compliance, checklist, ready, marketed}. A deal with no
+ * Intake row reads as empty.
  */
 export function useIntake(dealId) {
   return useQuery({
@@ -38,12 +39,78 @@ export async function postMarks(dealId, body) {
 }
 
 /**
- * PATCH deals/{id}/intake/checklist/ — tick one checklist item (slice 41: the COBRA tick the Census tab shows, C25,
- * O.6 #2; slice 40 adds the rest). body: {item, checked} → {item: {key, label, checked, by, by_name, at,
- * requirement}, activity_id}.
+ * PATCH deals/{id}/intake/checklist/ — one checklist item (B26, B27; the Census tab's COBRA tick, C25, O.6 #2).
+ * body: {item, checked?, note?, requirement? ('' | 'required' | 'waived'), client_note?} → {item: {key, label, checked,
+ * by, by_name, at, requirement}, checklist, ready, activity_id}.
  */
 export async function setChecklistItem(dealId, body) {
   return (await api.patch(`deals/${dealId}/intake/checklist/`, body)).data;
+}
+
+// A gate door's answer into the intake cache: the blocks it carries ({checklist, ready, bor, marketed}), then the rest
+// of the deal refetches (the header and the other tabs read the same gate).
+function adoptGate(queryClient, dealId, answer) {
+  const blocks = Object.fromEntries(
+    ['checklist', 'ready', 'bor', 'marketed'].filter((key) => key in answer).map((key) => [key, answer[key]]),
+  );
+  queryClient.setQueryData(intakeKey(dealId), (current) => (current ? { ...current, ...blocks } : current));
+  invalidateDeal(queryClient, dealId);
+}
+
+function useGateWrite(dealId, mutationFn) {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn, onSuccess: (answer) => answer && adoptGate(queryClient, dealId, answer) });
+}
+
+/** mutate({item, checked?, requirement?, client_note?}) — the checklist card's controls (B27). */
+export function useChecklistItem(dealId) {
+  return useGateWrite(dealId, (body) => setChecklistItem(dealId, body));
+}
+
+/** mutate(name) — POST deals/{id}/intake/sign/ {name} → {bor, ready, activity_id} (B29); 409 on a lost deal. */
+export function useSignBor(dealId) {
+  return useGateWrite(dealId, async (name) => (await api.post(`deals/${dealId}/intake/sign/`, { name })).data);
+}
+
+/** mutate() — DELETE deals/{id}/intake/sign/ → 204: the signature cleared (B29). */
+export function useClearBor(dealId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => (await api.delete(`deals/${dealId}/intake/sign/`)).data,
+    onSettled: () => invalidateDeal(queryClient, dealId),
+  });
+}
+
+/**
+ * mutate({override?}) — POST deals/{id}/intake/marketed/ (B34) → {marketed, ready, skipped, activity_id}. While the
+ * deal is not ready, 409 {detail, keys, gaps: [{kind, key, label}]} until sent again with override (Market anyway).
+ */
+export function useMarkMarketed(dealId) {
+  return useGateWrite(
+    dealId,
+    async ({ override = false } = {}) => (await api.post(`deals/${dealId}/intake/marketed/`, { override })).data,
+  );
+}
+
+/** The client's contacts (B13) through deals' doors (§7.3); the intake payload carries them, so it refetches after. */
+function useContactWrite(dealId, mutationFn) {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn, onSettled: () => invalidateDeal(queryClient, dealId) });
+}
+
+/** mutate({role?, name?, …}) — POST clients/{id}/contacts/ → 201 contact (an HR admin when no role is sent). */
+export function useAddContact(dealId, clientId) {
+  return useContactWrite(dealId, async (body) => (await api.post(`clients/${clientId}/contacts/`, body)).data);
+}
+
+/** mutate({id, changes}) — PATCH contacts/{id}/ → contact; a bad email answers 400. */
+export function useEditContact(dealId) {
+  return useContactWrite(dealId, async ({ id, changes }) => (await api.patch(`contacts/${id}/`, changes)).data);
+}
+
+/** mutate(id) — DELETE contacts/{id}/ → 204 (the card asks first). */
+export function useRemoveContact(dealId) {
+  return useContactWrite(dealId, async (id) => (await api.delete(`contacts/${id}/`)).data);
 }
 
 /**

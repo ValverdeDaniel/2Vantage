@@ -1,6 +1,6 @@
 """Intake API (plan.md §7.6): the intake payload and the answers PATCH, one answer's source (slice 65), the coverage
-rows and the intent door. Thin: parse → service or selector → respond. The checklist, BOR and Mark as marketed arrive
-in slice 40."""
+rows and the intent door. Thin: parse → service or selector → respond. The gate's doors — the checklist, the BOR and
+Mark as marketed (slice 40) — are `market_views.py`."""
 
 from django.http import Http404
 from django.shortcuts import get_object_or_404
@@ -119,23 +119,6 @@ class MarksView(APIView):
                 'sources': marked.sources,
                 'status': state['status'],
                 'review': state['review'],
-            }
-        )
-
-
-class ChecklistView(APIView):
-    """PATCH deals/{id}/intake/checklist/ {item, checked} — tick one checklist item (slice 41: `cobra`, from the
-    Census tab, C25; slice 40 adds the rest) → {item: {key, label, checked, by, by_name, at, requirement},
-    activity_id}."""
-
-    def patch(self, request, pk):
-        _deal(pk)
-        data = _body(request)
-        ticked = services.set_checklist_item(request.user, pk, data.get('item'), checked=data.get('checked'))
-        return Response(
-            {
-                'item': selectors.checklist_item(pk, ticked.item),
-                'activity_id': ticked.activity.id if ticked.activity else None,
             }
         )
 

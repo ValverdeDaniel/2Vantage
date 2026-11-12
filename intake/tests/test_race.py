@@ -37,3 +37,31 @@ def test_B17_Q3_two_lines_shopped_at_once_both_stay(user):
         for thread in threads:
             thread.join()
     assert Deal.objects.get(pk=deal.pk).requested_lines == ['medical', 'dental']
+
+
+def test_B27_Q3_two_checklist_items_ticked_at_once_both_stay(user):
+    from intake.models import Intake
+    from intake.services import checklist
+
+    deal = make_deal(user, requested_lines=('medical',))
+    Intake.objects.create(deal=deal)
+    real = rows.lock_intake
+
+    def slow(deal_id):
+        found = real(deal_id)
+        time.sleep(0.2)  # hold the Intake row between reading the checklist and writing it
+        return found
+
+    def tick(item):
+        try:
+            checklist.set_checklist_item(user, deal.id, item, checked=True)
+        finally:
+            connection.close()
+
+    with mock.patch.object(rows, 'lock_intake', slow):
+        threads = [threading.Thread(target=tick, args=(item,)) for item in ('cobra', 'renewal')]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+    assert set(Intake.objects.get(deal=deal).checklist) == {'cobra', 'renewal'}

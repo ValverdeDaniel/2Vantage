@@ -12,6 +12,7 @@ import { census41 } from './census41.mjs';
 import { documents23 } from './documents23.mjs';
 import { documents65 } from './documents65.mjs';
 import { intake39 } from './intake39.mjs';
+import { market40 } from './market40.mjs';
 import { pages14 } from './pages14.mjs';
 import { pdf29 } from './pdf29.mjs';
 import { pptx31 } from './pptx31.mjs';
@@ -232,4 +233,5 @@ export const WALKS = {
   s29: { ...pdf29, run: (ctx) => pdf29.run(ctx, { signIn, openDeal }) }, // slice 29's done-when
   s31: { ...pptx31, run: (ctx) => pptx31.run(ctx, { signIn, openDeal }) }, // slice 31's done-when
   s38: { ...archive38, run: (ctx) => archive38.run(ctx, { signIn, openDeal }) }, // slice 38's done-when
+  s40: { ...market40, run: (ctx) => market40.run(ctx, { signIn, openDeal }) }, // slice 40's done-when
 };

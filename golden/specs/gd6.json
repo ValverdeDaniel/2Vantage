@@ -1,6 +1,6 @@
 {
   "key": "GD6",
-  "about": "Get to Market (slices 38–59): a 60-enrolled group taken from intake to sale. Slice 39 seeds its full intake (the four cards' answers, typed as a person types them) and a priced medical line for the Advisor's budget hints; later slices add contacts, coverage with in-force commission, the BOR, a 60-person census, Florida Blue 51+, the Warner route, the portal and booking.",
+  "about": "Get to Market (slices 38–59): a 60-enrolled group taken from intake to sale. Slice 39 seeds its full intake (the four cards' answers, typed as a person types them) and a priced medical line for the Advisor's budget hints; slice 40 adds its road to Ready to market (contacts, the BOR, a 60-person census, the confirmed coverage and the checklist ticks: checkpoint ready, golden/get_to_market.py); later slices add coverage with in-force commission, Florida Blue 51+, the Warner route, the portal and booking.",
   "client": "Golden Get to Market (synthetic)",
   "status": "prospect",
   "effective_date": "2027-04-01",
@@ -61,6 +61,28 @@
       "aca_1095b": "no",
       "pcori_filing": "no"
     }
+  },
+  "census": {
+    "arrives": "ready",
+    "file": "Golden Get to Market census (synthetic).xlsx",
+    "id_prefix": "G6",
+    "medical_effective": "2026-04-01",
+    "dental_plan": "",
+    "vision_plan": "",
+    "groups": [
+      {"n": 30, "medical_plan": "BlueOptions PPO 3500", "tier": "EE", "dental": "", "vision": ""},
+      {"n": 10, "medical_plan": "BlueOptions PPO 3500", "tier": "ES", "dental": "", "vision": ""},
+      {"n": 8, "medical_plan": "BlueOptions PPO 3500", "tier": "EC", "dental": "", "vision": ""},
+      {"n": 12, "medical_plan": "BlueOptions PPO 3500", "tier": "FAM", "dental": "", "vision": ""}
+    ]
+  },
+  "get_to_market": {
+    "contacts": [
+      {"role": "hr_admin", "name": "Riley Example", "title": "HR Manager", "email": "riley.hr@example.test", "phone": "555-0100", "is_primary": true}
+    ],
+    "in_force": ["medical"],
+    "bor_signer": "Jordan Example",
+    "ticks": ["cobra", "medical_questionnaire", "renewal", "invoice"]
   },
   "plans": [
     {

@@ -162,6 +162,34 @@ def quote_first(user):
     return QuoteFirst(user)
 
 
+class GetToMarket:
+    """A fresh GD6 for one test, as seeded (Blocked), moved toward Ready to market the way a person's clicks move it
+    (golden/get_to_market.py; slice 40): `step('contacts')`, `'census_arrives'`, `'intent'`, `'bor'`, `'ticks'`, or
+    `ready()` for all of them. `built` is the Golden(deal, refs, spec) now."""
+
+    def __init__(self, user):
+        from golden import seed, specs
+
+        self.user = user
+        self.built = seed.build(specs.load('GD6'), user)
+
+    def step(self, *names):
+        from golden import get_to_market
+
+        for name in names:
+            self.built = getattr(get_to_market, name)(self.user, self.built)
+        return self
+
+    def ready(self):
+        return self.step('ready')
+
+
+@pytest.fixture
+def get_to_market(user):
+    """GD6 built for this test only (it writes), as seeded; see GetToMarket."""
+    return GetToMarket(user)
+
+
 @pytest.fixture(scope='session')
 def golden_keys():
     """{'GD1': its answer key, …} (Q.4): the figures, with checked_by, checked_on and method (null until signed)."""

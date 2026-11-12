@@ -24,6 +24,8 @@ def samples(world):
         'api/deals/<int:pk>/intake/marks/': deal,
         'api/deals/<int:pk>/intake/source/': {**deal, 'query': {'key': 'legal_name'}},
         'api/deals/<int:pk>/intake/checklist/': deal,
+        'api/deals/<int:pk>/intake/sign/': deal,
+        'api/deals/<int:pk>/intake/marketed/': deal,
         'api/deals/<int:pk>/intake/intent/': deal,
         'api/deals/<int:pk>/intake/intent/confirm/': deal,
         'api/deals/<int:pk>/intake/intent/reopen/': deal,
@@ -41,6 +43,10 @@ MATRIX = [
     ('POST', 'api/deals/<int:pk>/intake/marks/', ALL, {'action': 'approve'}),
     ('GET', 'api/deals/<int:pk>/intake/source/', ALL),
     ('PATCH', 'api/deals/<int:pk>/intake/checklist/', ALL, {'item': 'cobra', 'checked': True}),
+    ('POST', 'api/deals/<int:pk>/intake/sign/', ALL, {'name': 'Jordan Example'}),
+    ('DELETE', 'api/deals/<int:pk>/intake/sign/', GONE),
+    ('POST', 'api/deals/<int:pk>/intake/marketed/', ALL, {'override': True}),
+    ('DELETE', 'api/deals/<int:pk>/intake/marketed/', ALL),
     ('POST', 'api/deals/<int:pk>/intake/intent/', ALL, {'line': 'dental', 'has_today': True}),
     ('POST', 'api/deals/<int:pk>/intake/intent/confirm/', ALL),
     ('POST', 'api/deals/<int:pk>/intake/intent/reopen/', ALL),
@@ -150,3 +156,39 @@ def test_Q3_the_intake_payload_reads_in_a_fixed_number_of_queries(api, user, dea
     for line in ('dental', 'vision', 'basic_life_add', 'std', 'ltd', 'eap', 'hsa', 'fsa', 'pet'):
         services.create_coverage(user, deal.id, {'line': line, 'carrier': 'Carrier'})
     assert queries() == one
+
+
+def test_Q3_4_the_payload_reads_in_a_fixed_number_of_queries_however_many_contacts_and_files(api, user, deal):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    from deals.services import create_contact
+    from documents import services as documents
+
+    def queries():
+        with CaptureQueriesContext(connection) as captured:
+            assert api.get(f'/api/deals/{deal.id}/intake/').status_code == 200
+        return len(captured.captured_queries)
+
+    def add(n):
+        create_contact(user, deal.client_id, role='hr_admin', name=f'Contact {n}', email=f'c{n}@example.test')
+        documents.upload(user, deal, SimpleUploadedFile(f'BOR {n}.pdf', b'%PDF-1.4\n%%EOF\n'), {'kind': 'bor'})
+        services.set_checklist_item(user, deal.id, ('cobra', 'renewal', 'invoice')[n % 3], checked=True)
+
+    add(0)
+    one = queries()
+    for n in range(1, 10):
+        add(n)
+    assert queries() == one
+
+
+def test_Q3_the_gate_doors_lock_the_deal_first_then_the_intake_row(user, world):
+    for call in (
+        lambda: services.set_checklist_item(user, world['deal'].id, 'cobra', checked=True),
+        lambda: services.sign_bor(user, world['deal'].id, 'Jordan Example'),
+        lambda: services.mark_marketed(user, world['deal'].id, override=True),
+    ):
+        with CaptureQueriesContext(connection) as queries:
+            call()
+        locks = [q['sql'] for q in queries.captured_queries if 'FOR UPDATE' in q['sql']]
+        assert '"deals_deal"' in locks[0]
+        assert f'"{Intake._meta.db_table}"' in locks[1]

@@ -22,8 +22,12 @@ A spec (`specs/gdN.json`) is the one description of a golden deal. `seed.py` bui
                     counts the packet prints; `links_after_split` {quote ref: [current refs]} (golden/quote_first.py)
     renewal_packet  optional (GD3): the synthetic packet the arrivals come from, attached unread (file, carrier, title,
                     each arrival's renewal rates); golden/renewal_packet.py prints it and its perfect read (slice 18)
-    census          optional (GD4, GD3): the census's people by groups (golden/census_roster.py); `arrives` names the
-                    checkpoint that brings it, and the seed leaves such a census out; `id_prefix` starts employee ids
+    census          optional (GD4, GD3, GD6): the census's people by groups (golden/census_roster.py); `arrives`
+                    names the checkpoint that brings it, and the seed leaves such a census out; `id_prefix` starts
+                    employee ids
+    get_to_market   optional (GD6, slice 40): what golden/get_to_market.py does on the road to Ready to market —
+                    `contacts` [{role, name, title, email, phone, is_primary}], `in_force` [lines answered in force and
+                    shopped before Confirm], `bor_signer`, `ticks` [checklist items ticked]
     starred, recommended    refs
     packages        [{line, name, plans: [refs]}]: member-built packages
     reasons         {line: the proposal's reason}

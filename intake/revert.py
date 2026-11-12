@@ -17,9 +17,10 @@ from deals.services import set_effective_date, set_lines
 from deals.values import apply as apply_values
 from deals.values import source
 
+from . import checklist as checklist_rules
 from . import flags, form
 from .models import CurrentCoverage
-from .services import checklist, marks, rows
+from .services import bor, checklist, marketed, marks, rows
 from .signals import announce
 
 LABELS = {
@@ -33,8 +34,14 @@ LABELS = {
     'commission_source': 'Commission source',
     'line': 'The coverage line',
     'cobra': 'The COBRA check',
+    'name': 'The BOR signature',
+    'signed_at': 'The BOR signature',
+    'signed_by': 'The BOR signature',
+    'marketed_at': 'Sent to market',
+    'marketed_by': 'Sent to market',
 }
 TOUCHED_SINCE = 'This coverage line was changed after this, so this change cannot be reverted.'
+DOORS = {'checklist': checklist.revert, 'bor': bor.revert, 'marketed': marketed.revert}  # slice 40's gate
 
 
 def _label(key):
@@ -42,6 +49,8 @@ def _label(key):
         return form.BY_KEY[key]['label']
     if key == form.GUIDANCE:
         return 'Client guidance'
+    if key in checklist_rules.LABELS and key not in LABELS:
+        return checklist_rules.LABELS[key]
     return LABELS.get(key, key.replace('_', ' ').capitalize())
 
 
@@ -141,7 +150,7 @@ def revert(row, user):
     _refuse_later(row)
     deal_id = row.deal_id
     kinds = {entry['t'].partition(':')[0] for entry in row.changes}
-    if 'intake' in kinds or 'checklist' in kinds:
+    if kinds & {'intake', 'checklist', 'bor', 'marketed'}:
         rows.lock_intake(deal_id)  # lock order: the Deal (already), the Intake row, then coverage rows by id
     ids = [int(entry['t'].partition(':')[2]) for entry in row.changes if entry['t'].startswith('coverage:')]
     if ids:
@@ -171,14 +180,14 @@ def revert(row, user):
                 diff.update(_answers_back(deal_id, intake, answered, user))
             if diff:
                 written.append(activity.change(entry['t'], diff))
-        elif kind == 'checklist':
-            diff = checklist.revert(deal_id, entry['k'])  # a checklist tick (slice 41: COBRA, C25)
+        elif kind in DOORS:
+            diff = DOORS[kind](deal_id, entry['k'])  # a checklist item, the BOR signature, the marketed stamp
             if diff:
                 written.append(activity.change(entry['t'], diff))
         elif kind == 'coverage':
             change = _put_back(int(ident), entry['k'], deal_id)
             if change and change['k']:
                 written.append(change)
-    if written:
+    if any(entry['t'].partition(':')[0] not in DOORS for entry in written):
         announce(deal_id)  # the lines to quote or a coverage row came back: census's required columns follow
     return written

@@ -250,7 +250,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -305,7 +305,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -360,7 +360,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -415,7 +415,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -470,7 +470,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -800,7 +800,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -836,7 +836,7 @@
       "signed_on": null,
       "check": "pixels",
       "item": "B1",
-      "why": "Slices 11 and 39 build the view pills (B36), the four question cards (B1–B8), the \"Required to market\" banner (B9), \"These came from the client\" and ☑ Select fields (B10), the coverage card, Current coverage and Lines to quote. Pending: the ready badge, Market anyway ▸, Contacts (B13), the marketing readiness checklist (B25–B28), Compliance & authorizations (B29, B31) and the medical row's form pickers (B22) in slice 40; ＋ Ask all N and the section bar with Review & requests (slices 53–56). The Goals card ends with Client guidance (§4.5 †). GD1 has no intake answers, so every needed question reads Missing on both sides."
+      "why": "Slices 11 and 39 build the view pills (B36), the four question cards (B1–B8), the \"Required to market\" banner (B9), \"These came from the client\" and ☑ Select fields (B10), the coverage card, Current coverage and Lines to quote. Slice 40 builds the ready badge and Market anyway ▸ (B33, B34), the Marketing readiness checklist (B25–B27), Contacts (B13) and Compliance & authorizations (B29, B31). Pending: the questionnaire and stop-loss form pickers on the medical row and the checklist (B22, slice 42); ＋ Ask on the checklist rows, the census row's ＋ Ask ▸ and ＋ Ask all N (the request tray, slice 56); ＋ Add request (Review's asks, slice 53); the section bar with Review & requests (slices 53–56). The Goals card ends with Client guidance (§4.5 †). GD1 has no intake answers, so every needed question reads Missing on both sides."
     },
     {
       "screen": "gd1.intake",
@@ -847,7 +847,7 @@
       "signed_on": null,
       "check": "classes",
       "item": "B1",
-      "why": "The checklist's, the contacts' and the authorizations' classes (bnf-mc-*, bnf-ready-badge, bnf-esign-*, bnf-compliance-row, bnf-cvg-forms, bnf-cvg-formpick…) arrive with slice 40 (B13, B22, B25–B35); the section bar's (rr-section-*) with Review & requests (53)."
+      "why": "The checklist, contacts, authorizations and ready badge are built (slice 40; bnf-marketing-*, bnf-ready-badge, bnf-esign-*, bnf-compliance-row); still missing: the form pickers' bnf-cvg-forms, bnf-cvg-formpick, bnf-q-formpick and bnf-q-formselect (B22, slice 42), ＋ Add request's bnf-ask-form (Review's asks, slice 53), and the section bar's rr-* with Review & requests (53)."
     },
     {
       "screen": "gd1.intake",
@@ -858,7 +858,18 @@
       "signed_on": null,
       "check": "style",
       "item": "M112",
-      "why": "The nav, the tab title, the buttons and the cards sit higher or elsewhere: the header strip replaces the journey stepper and the NEXT bar, the checklist and Contacts are pending slice 40, and the sidebar has fewer tabs."
+      "why": "The nav, the tab title, the buttons and the cards sit higher or elsewhere: the header strip replaces the journey stepper and the NEXT bar, the checklist's pickers and asks are pending (slices 42, 53, 56), and the sidebar has fewer tabs."
+    },
+    {
+      "screen": "gd1.intake",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "B25",
+      "why": "The checklist's tier comes from the one headcount (quotes' enrolled_headcount: the Advisor's medical enrollment first; O.6 #24, OQ21), so GD1 reads \"11–50 enrolled · 46 enrolled\" with the small group's questionnaire and ZIP codes; the old checklist read the intake's enrolled count, then the census, found neither and read \"Under 10 enrolled · —\". The renewal row is done (\"✓ Document on file\", 1/6) because GD1's synthetic renewal file is on the 2V deal (slice 15); the old parity load carries no files.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
     },
     {
       "screen": "gd6.advisor",
@@ -888,7 +899,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1020,7 +1031,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1045,7 +1056,7 @@
       "signed_on": null,
       "check": "style",
       "item": "M112",
-      "why": "The nav, the tab title, the buttons and the cards sit higher or elsewhere: the header strip replaces the journey stepper and the NEXT bar, the checklist and Contacts are pending slice 40, and the sidebar has fewer tabs."
+      "why": "The nav, the tab title, the buttons and the cards sit higher or elsewhere: the header strip replaces the journey stepper and the NEXT bar, the checklist's pickers and asks are pending (slices 42, 53, 56), and the sidebar has fewer tabs."
     },
     {
       "screen": "gd6.intake",
@@ -1064,7 +1075,7 @@
       "check": "pixels",
       "selector": null,
       "item": "B10",
-      "why": "The head's ready badge (\"Blocked — required items open\") and Market anyway ▸ wait for readiness (B33, B34; slice 40); Intake's ✦ Work with Claude button (D134) for the intake reader (slice 51); ＋ Ask all N for the request tray (slice 56).",
+      "why": "The head's ready badge (\"Blocked — required items open\") and Market anyway ▸ are built (B33, B34; slice 40) and match; Intake's ✦ Work with Claude button (D134) waits for the intake reader (slice 51) and ＋ Ask all N for the request tray (slice 56), so Market anyway ▸ sits on the head's first row, not wrapped to a second.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1075,7 +1086,7 @@
       "check": "pixels",
       "selector": null,
       "item": "B26",
-      "why": "The Marketing readiness checklist (B25–B28) and the medical row's questionnaire and stop-loss pickers (B22) are pending slices 40 and 42, so the cards start higher.",
+      "why": "The Marketing readiness checklist is built (B25–B27; slice 40) and matches row for row; pending: the medical row's and the checklist's questionnaire and stop-loss pickers (\"Fillable form\", \"Needed for this group?\"; B22, slice 42), ＋ Ask on each document row and the census row's ＋ Ask ▸ (the request tray, slice 56) and ＋ Add request (Review's asks, slice 53), so the rows are shorter and the cards below start higher.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1086,7 +1097,7 @@
       "check": "pixels",
       "selector": null,
       "item": "B13",
-      "why": "Contacts (B13) and Compliance & authorizations with the BOR e-signature (B29, B31) are pending slice 40: the grid ends with Current coverage and Lines to quote.",
+      "why": "Contacts (B13) and Compliance & authorizations with the BOR e-signature (B29, B31) are built (slice 40) and match the old cards; they sit higher only because the cards above are shorter (the pickers and asks of slices 42, 53 and 56). The × on a subcard is a button (B13: removing asks first).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1119,7 +1130,7 @@
       "check": "classes",
       "selector": null,
       "item": "B1",
-      "why": "The checklist's, the contacts' and the authorizations' classes (bnf-mc-*, bnf-ready-badge, bnf-esign-*, bnf-compliance-row, bnf-cvg-forms…) arrive with slice 40; the section bar's and the sidebar badges' with slices 53 and 61.",
+      "why": "The checklist, contacts, authorizations and ready badge are built (slice 40); still missing: the form pickers' bnf-cvg-forms, bnf-cvg-formpick, bnf-q-formpick and bnf-q-formselect (B22, slice 42), ＋ Add request's bnf-ask-form (slice 53), the section bar's rr-sbar-* (53) and the sidebar badges and readiness chip (bb-nav-badge*, bnf-ready-badge-sm; slice 61).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1130,7 +1141,7 @@
       "check": "style",
       "selector": ".bb-nav",
       "item": "M112",
-      "why": "The nav, the tab title, the buttons and the cards sit higher: the header strip replaces the journey stepper, the checklist is pending slice 40, and the sidebar has fewer tabs.",
+      "why": "The nav, the tab title, the buttons and the cards sit higher or lower: the header strip replaces the journey stepper, the checklist's pickers and asks are pending (slices 42, 53, 56), and the sidebar has fewer tabs.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1207,7 +1218,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1350,7 +1361,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1449,7 +1460,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1647,7 +1658,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1889,7 +1900,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

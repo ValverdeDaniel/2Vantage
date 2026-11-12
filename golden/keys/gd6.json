@@ -27,6 +27,20 @@
   },
   "budget_hints": {"target_monthly": 62000, "accepts_up_to_pct": 8, "budget_step": 5}
  },
+ "ready": {
+  "note": "Slice 40, worked out by hand from the spec and plan.md §5.2 (tiers, items, readiness), never from the app's output; not yet signed. 60 enrolled (the current plan's 30/10/8/12) is mid; medical alone is requested and fully insured, so salary & occupation and claims do not apply; the stop-loss disclosure is an optional offer.",
+  "tier": "mid",
+  "tier_label": "51–99 enrolled",
+  "enrolled": 60,
+  "geo": "home address",
+  "items": ["coverage_intent", "census", "cobra", "medical_questionnaire", "stop_loss_disclosure", "renewal", "invoice"],
+  "optional": ["stop_loss_disclosure"],
+  "seeded": {
+   "state": "blocked",
+   "gaps": ["contacts", "bor", "census", "coverage_intent", "cobra", "medical_questionnaire", "renewal", "invoice"]
+  },
+  "at_ready": {"state": "ready", "required": 6, "done": 6}
+ },
  "plans": {
   "C": {"monthly": 65360, "annual": 784320, "change": null},
   "U": {"monthly": 62168, "annual": 746016, "change": {"delta": -38304, "pct": -4.9}},
