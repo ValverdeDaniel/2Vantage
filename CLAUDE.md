@@ -27,8 +27,8 @@ accounts → deals → documents → ai → intake → census → quotes → que
 An app imports only from apps to its left (lint-imports); a fact read by an app lives in that app or one to its left.
 To reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
 AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client,
-never business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far:
-accounts, deals, documents, ai, quotes, proposals, golden. The chain orders imports, not screens: the deal sidebar keeps old
+never business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far: accounts,
+deals, documents, ai, quotes, proposals, golden. The chain orders imports, not screens: the deal sidebar keeps old
 Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review & requests, Intake, Census,
 Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close: Advisor, Proposal · Shared: Documents.
 Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry the Advisor and Proposal.
