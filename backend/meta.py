@@ -10,6 +10,7 @@ from deals import carriers, comp, lifecycle, lines, stages
 from documents import kinds, review_rules
 from intake import coverage as intake_coverage
 from intake import form as intake_form
+from proposals import catalog as proposal_catalog
 from quotes import board_presets, fields
 from quotes.math import enrollment as quote_enrollment
 
@@ -37,6 +38,7 @@ class MetaView(APIView):
                 # the intake questions (§4.5) and the coverage card's words (B16–B21)
                 'intake': {'form': intake_form.meta(), 'coverage': intake_coverage.meta()},
                 'census': census_fields.meta(),  # the 45 columns, groups, choices, rules (§4.4)
+                'proposal': proposal_catalog.meta(),  # the builder's cards, parts, layouts and limits (J.6.6; slice 25)
                 **({'ai': ai_selectors.meta()} if ai_client.available() else {}),  # only with a key (D26; slice 18)
             }
         )

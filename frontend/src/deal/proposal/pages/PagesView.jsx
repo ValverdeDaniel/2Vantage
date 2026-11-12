@@ -6,6 +6,7 @@ import { carrierForms } from '../../../lib/findText';
 import ConfirmDialog from '../../../ui/ConfirmDialog';
 import InlineError from '../../../ui/InlineError';
 import PageTable from './PageTable';
+import PlanMenu from './PlanMenu';
 import PlanPicker from './PlanPicker';
 import { columnsById, shownPages } from './pageRows';
 import { movedNote, pageMemo } from './pageToast';
@@ -15,7 +16,8 @@ import usePageWrites from './usePageWrites';
 /*
  * "What the client will see" (plan.md §8.14; F37–F39, F45, F46, F48, J5–J13; the old ProposalPages.jsx at 7385bb3,
  * D-221): a line's comparison pages as the PowerPoint prints them, one table per page, plans as columns left to right.
- * The Advisor mounts it as ▦ Pages (its Columns tab picks the rows); the builder's Plans card mounts it in slice 25.
+ * The Advisor mounts it as ▦ Pages (its Columns tab picks the rows); the builder's Plans card mounts it with Key rows
+ * or All rows, "Our recommendation" (`recommend`: {keepable: [current plan ids], disabled}) and ⋯ More (`withMenu`).
  *
  * The pages are the server's (`GET proposal/pages/`, the one splitter): six plans a page, a renewal page three pairs
  * a page, a page per current plan once quotes say what they replace. Nothing here works out a page, a figure or a rule.
@@ -23,7 +25,7 @@ import usePageWrites from './usePageWrites';
  * "＋ Add a plan" puts one beside a current plan. With nothing starred it shows the first two pages; a write that adds
  * a page says which plan moved.
  */
-export default function PagesView({ dealId, line, lineLabel, preset, intro = null }) {
+export default function PagesView({ dealId, line, lineLabel, preset, intro = null, recommend = null, withMenu = false }) {
   const query = usePages(dealId, line, preset);
   const payload = query.data?.line === line ? query.data : null;
   const writes = usePageWrites(dealId, line, payload);
@@ -57,6 +59,7 @@ export default function PagesView({ dealId, line, lineLabel, preset, intro = nul
     openPicker: (spot, anchor) => setPicker({ spot, anchor }),
     move: writes.move,
     link: writes.link,
+    recommend: writes.recommend,
     remove: (plan) => (plan.remove.unrecommend ? setConfirm(plan) : writes.takeOff(plan)),
   };
   const choose = (plan, extra) => {
@@ -101,6 +104,8 @@ export default function PagesView({ dealId, line, lineLabel, preset, intro = nul
               busy={writes.busy}
               openId={picker?.spot?.plan_id ?? null}
               actions={actions}
+              recommend={recommend}
+              menu={withMenu ? (plan) => <PlanMenu plan={plan} busy={writes.busy} onRename={writes.rename} /> : null}
             />
           ))}
           {foldable && (

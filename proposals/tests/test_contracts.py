@@ -1,13 +1,12 @@
-"""The Q.3 contracts for proposals (plan.md §12.3): GETs that write nothing, the permission matrix and query scaling
-for the page split (slice 14). The configuration row is made before the sweep: v1.1's GET still creates it on first
-read (J.5 B27), which slice 25 retires with the rest of that payload."""
+"""The Q.3 contracts for proposals (plan.md §12.3): GETs that write nothing (the builder's GET no longer makes the
+config row, J.5 B27), the permission matrix and query scaling for the page split (slice 14) and the builder
+(slice 25)."""
 
 import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 
 from conftest import check_permissions, make_big_deal, make_deal, sweep_gets
-from proposals.models import ProposalConfig
 from quotes import services
 from quotes.models import Plan
 
@@ -19,7 +18,6 @@ def world(user):
     services.create_plan(
         user, deal, line='medical', role='alternate', carrier='Cigna', name='Quote', replaces_ids=[current.id]
     )
-    ProposalConfig.for_deal(deal)
     return {'deal': deal}
 
 
@@ -27,6 +25,7 @@ def samples(world):
     deal = world['deal']
     return {
         'api/deals/<int:pk>/proposal/': {'pk': deal.id},
+        'api/deals/<int:pk>/proposal/marks/': {'pk': deal.id},
         'api/deals/<int:pk>/proposal/pages/': {'pk': deal.id, 'query': {'line': 'medical', 'preset': 'all'}},
     }
 
@@ -34,7 +33,8 @@ def samples(world):
 ALL = {'signed_out': 401, 'producer': 200, 'admin': 200}
 MATRIX = [
     ('GET', 'api/deals/<int:pk>/proposal/', ALL),
-    ('PUT', 'api/deals/<int:pk>/proposal/', ALL, {'title': 'Plan comparison'}),
+    ('PATCH', 'api/deals/<int:pk>/proposal/', ALL, {'title': 'Plan comparison'}),
+    ('POST', 'api/deals/<int:pk>/proposal/marks/', ALL, {'card': 'quotes', 'line': 'medical', 'done': True}),
     ('GET', 'api/deals/<int:pk>/proposal/pages/', ALL),
 ]
 
@@ -60,3 +60,15 @@ def _queries(api, deal, nothing_starred):
 def test_Q3_4_F37_pages_read_the_same_queries_at_ten_and_two_hundred_plans(api, user, nothing_starred):
     small, big = make_big_deal(user, 10, name='Small (synthetic)'), make_big_deal(user, 200, name='Big (synthetic)')
     assert _queries(api, small, nothing_starred) == _queries(api, big, nothing_starred)
+
+
+def _builder_queries(api, deal):
+    with CaptureQueriesContext(connection) as queries:
+        response = api.get(f'/api/deals/{deal.id}/proposal/')
+    assert response.status_code == 200
+    return len(queries)
+
+
+def test_Q3_4_J17_the_builder_reads_the_same_queries_at_ten_and_two_hundred_plans(api, user):
+    small, big = make_big_deal(user, 10, name='Small (synthetic)'), make_big_deal(user, 200, name='Big (synthetic)')
+    assert _builder_queries(api, small) == _builder_queries(api, big)

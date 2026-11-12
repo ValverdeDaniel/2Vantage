@@ -53,7 +53,10 @@ class Plan(models.Model):
     recommended = models.BooleanField(default=False)
     sold = models.BooleanField(default=False)
     sold_at = models.DateTimeField(null=True, blank=True)
-    option_label = models.CharField(max_length=10, blank=True)  # goes with option numbers (slice 25)
+    # "Option n" on its line, in the proposal's reading order: stamped once at Issue and never reused; none for current
+    # plans or priced versions (§5.4; J159, OQ35, OQ36). Written only by `services.numbers`; a move to another line
+    # clears it (it starts again there).
+    option_number = models.PositiveIntegerField(null=True, blank=True)
     # A priced version and how it was made (F76–F84; slice 35).
     derived_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='versions')
     derived = models.JSONField(default=dict, blank=True)
@@ -84,7 +87,9 @@ class Plan(models.Model):
                 name='one_renewal_per_current_plan',
             ),
             models.UniqueConstraint(
-                fields=['deal', 'option_label'], condition=~Q(option_label=''), name='option_label_unique_per_deal'
+                fields=['deal', 'line', 'option_number'],
+                condition=Q(option_number__isnull=False),
+                name='option_number_unique_per_line',
             ),
         ]
         ordering = ['sort_order', 'id']

@@ -8,7 +8,8 @@
 - `enrollment`: typed counts; `packages`: member-built packages; `imports`: applying the plan template;
 - `saved_views`: the Advisor's saved board setups (firm rows, not plans; F28);
 - `priced`: priced versions, with their dry run (`price`, ✎ `reprice`; F76–F84);
-- `review`: approve, ignore, needs checking and clear on plan values (`mark_values`; E85–E89, F63–F67).
+- `review`: approve, ignore, needs checking and clear on plan values (`mark_values`; E85–E89, F63–F67);
+- `numbers`: option numbers, stamped at Issue (`stamp_option_numbers`; J159).
 `locks` (the Deal, then plans by id) and `batch` (one bulk_update, before and after) serve them. Every write records
 Activity with before and after, writes nothing when nothing changes, and returns only what changed.
 """
@@ -20,6 +21,7 @@ from .imports import apply_template
 from .marks import HAND_PICKED, clear_shortlist, set_recommended, set_sold, star
 from .merge import merge_plans
 from .moves import move_line
+from .numbers import stamp_option_numbers
 from .ordering import arrange, put_in_slot
 from .packages import create_package, delete_package, update_package
 from .plans import clean_values, create_plan, update_plan
@@ -51,6 +53,7 @@ __all__ = [
     'set_recommended',
     'set_role',
     'set_sold',
+    'stamp_option_numbers',
     'star',
     'update_package',
     'update_plan',

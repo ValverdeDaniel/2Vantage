@@ -31,6 +31,7 @@ describe('F1 F5 the kept choices', () => {
   it('an unavailable view falls back to Quote comparison', () => {
     expect(chooseView('stop-loss', null)).toBe('quotes');
     expect(chooseView(null, 'quotes')).toBe('quotes');
+    expect(chooseView('build', 'quotes')).toBe('build'); // the Proposal builder (slice 25)
     expect(chooseOrientation('cols')).toBe('cols');
     expect(chooseOrientation('sideways')).toBe('rows');
   });

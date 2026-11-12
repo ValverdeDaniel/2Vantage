@@ -108,8 +108,16 @@ def _put_back(plan, keys, user):
 
 def _broken(line_key, rows, held_before):
     """Why the line's live plans, as the revert would leave them, break §5.4's rules; None when they hold."""
-    renewed = {}
+    renewed, numbered = {}, {}
     for plan in rows.values():
+        if plan.option_number and plan.option_number in numbered:  # J159: a move back meets a number given since
+            other = numbered[plan.option_number]
+            return (
+                f'{other.carrier} {other.name} and {plan.carrier} {plan.name} would both be Option '
+                f'{plan.option_number} on {lines.label(line_key)}.'
+            )
+        if plan.option_number:
+            numbered[plan.option_number] = plan
         if plan.role == 'current' and (plan.starred or plan.renews_id or plan.replaces_ids):
             return f'{plan.carrier} {plan.name} is a current plan now, and a current plan takes no star or link.'
         if plan.role == 'renewal':

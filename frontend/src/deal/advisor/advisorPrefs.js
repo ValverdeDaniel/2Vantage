@@ -3,13 +3,20 @@
  * and ▦ Pages, under the old key `vantage.bnf.advisor`. Not per deal, so an unavailable view or a line the deal does not have
  * falls back rather than drawing nothing. `?view=` and `?line=` win over the kept choice. Pure.
  *
- * Views (F1): only Quote comparison is built. The Stop-loss analysis pill (only with a stop-loss line, F2), the
- * Proposal builder and the Export viewer join this list with their slices (36, 25, 28); Unleashed waits (F4).
+ * Views (F1): Quote comparison and the Proposal builder (slice 25; J17) are built. The Stop-loss analysis pill (only
+ * with a stop-loss line, F2) and the Export viewer join this list with their slices (36, 28); Unleashed waits (F4).
  */
 
 export const PREFS_KEY = 'vantage.bnf.advisor';
 
-export const VIEWS = [{ key: 'quotes', label: 'Quote comparison', hint: 'Filter, sort and shortlist the quoted plans' }];
+export const VIEWS = [
+  { key: 'quotes', label: 'Quote comparison', hint: 'Filter, sort and shortlist the quoted plans' },
+  {
+    key: 'build',
+    label: 'Proposal builder',
+    hint: 'Which quote from each carrier, what the client sees, and the executive summary',
+  },
+];
 export const DEFAULT_VIEW = 'quotes';
 
 export function readPrefs(storage) {

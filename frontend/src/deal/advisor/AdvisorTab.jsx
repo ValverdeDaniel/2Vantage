@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useMeta } from '../../api/meta';
 import * as q from '../../api/quotes';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import RefreshChip from '../../ui/RefreshChip';
-import { PagesView } from '../proposal';
+import { PagesView, ProposalBuilder } from '../proposal';
 import BoardDialogs from './BoardDialogs';
 import EnrollmentPanel from './enrollment/EnrollmentPanel';
 import LineTabs from './LineTabs';
@@ -20,7 +21,8 @@ import ViewPills from './ViewPills';
  * Refreshing chip (§8.22). Queries are ['deal', id, 'advisor', …] with staleTime 0. The finder, filters and saved
  * setups (slice 10) are the board's filter card, above its header; the counts card and the enrollment notices
  * (slice 13) sit between the board's header and its table. ▦ Pages mounts the proposal folder's PagesView in the
- * table's place (slice 14; F37), kept per browser.
+ * table's place (slice 14; F37), kept per browser. The Proposal builder view mounts the proposal folder's builder
+ * (slice 25; J17), on the line the Advisor shows.
  */
 
 function EmptyPanel({ title, children, actions }) {
@@ -42,6 +44,7 @@ const PAGES_INTRO = (
 
 export default function AdvisorTab({ deal }) {
   const { data: meta } = useMeta();
+  const navigate = useNavigate();
   const lines = q.useAdvisorLines(deal.id);
   const prefs = useAdvisorPrefs(lines.data ?? []);
   const comparison = q.useComparison(deal.id, prefs.line);
@@ -81,7 +84,20 @@ export default function AdvisorTab({ deal }) {
   const row = lines.data.find((r) => r.line === prefs.line);
   const count = row ? row.current + row.renewal + row.alternate : 0;
   let body;
-  if (!lines.data.length) {
+  if (prefs.view === 'build') {
+    body = (
+      <div className="bnf-advisor-tab-split">
+        <ProposalBuilder
+          dealId={deal.id}
+          meta={meta}
+          line={prefs.line}
+          onLine={prefs.pickLine}
+          onQuotes={() => prefs.pickView('quotes')}
+          onGoTab={(tab) => navigate(`/deals/${deal.id}/${tab}`)}
+        />
+      </div>
+    );
+  } else if (!lines.data.length) {
     body = (
       <EmptyPanel title="No lines to quote yet">
         Add the lines to quote in the deal header (Lines), then add plans here.

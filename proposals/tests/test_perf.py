@@ -33,3 +33,18 @@ def test_Q7_F37_pages_of_600_plans_stay_within_3_MB_and_2_5_s(api, gd_big, nothi
     print(f'\npages, 600 plans, nothing starred {nothing_starred}: {len(response.content) / MB:.2f} MB, {took:.2f} s')
     assert len(body['plans']) + len(body['others']) == 600
     assert len(response.content) <= 3 * MB and took <= 2.5
+
+
+@pytest.mark.parametrize('nothing_starred', [False, True])
+def test_Q7_J17_the_builder_of_600_plans_stays_within_3_MB_and_2_5_s(api, gd_big, nothing_starred):
+    if nothing_starred:
+        Plan.objects.filter(deal=gd_big).update(starred=False, recommended=False)
+    best, response = None, None
+    for _ in range(3):
+        start = time.perf_counter()
+        response = api.get(f'/api/deals/{gd_big.id}/proposal/')
+        took = time.perf_counter() - start
+        best = took if best is None else min(best, took)
+    assert response.status_code == 200
+    print(f'\nbuilder, 600 plans, nothing starred {nothing_starred}: {len(response.content) / MB:.2f} MB, {best:.2f} s')
+    assert len(response.content) <= 3 * MB and best <= 2.5

@@ -2,8 +2,8 @@
 J10–J13; ported from old Vantage at 7385bb3, `ProposalPages.jsx` and `PlanPicker.jsx`). Pure.
 
 The facts and words the old screen worked out in the browser are worked out here once (J.5 B6): the column's kind
-and title ("Today", "Option n" in reading order, a priced version's label), its chips, "Replacing:", the arrows'
-ends among the plans shown, what ✕ does (and the sentence when it cannot, J.5 B5), the premium and the change vs
+and title ("Today", "Option n" as `line_layout` numbers it, a priced version's label), its chips, "Replacing:", the
+arrows' ends among the plans shown, what ✕ does (and the sentence when it cannot, J.5 B5), the premium and the change vs
 current (quotes' math only), and the picker's greyed reasons that do not depend on the spot. Stop-loss is a line like
 every other (OQ13): its names take picks and its quotes take arrows and links.
 """
@@ -87,17 +87,6 @@ def arrows(shown, data):
     for ids in groups.values():
         for i, pid in enumerate(ids):
             out[pid] = {'first': i == 0, 'last': i == len(ids) - 1}
-    return out
-
-
-def option_numbers(pages, data):
-    """{plan id: n}: "Option n" as Issue will stamp it, in the order the client first meets the plans; renewals are
-    numbered, current plans and priced versions are not (§5.4, J159)."""
-    out = {}
-    for pid in splitter.reading_order(pages):
-        plan = data.by_id[pid]
-        if plan.role != 'current' and data.root(plan).id == plan.id:
-            out[pid] = len(out) + 1
     return out
 
 
@@ -210,9 +199,10 @@ def facts(plan, data, results, rows, ctx):
         'number': numbers.get(plan.id),
         'title': title or (f'Option {option}' if option else ''),
         'option': option,
-        'predicted': option is not None,  # until Issue stamps the numbers (§5.4, J102)
+        'predicted': option is not None and not row.option_number,  # until Issue stamps it (§5.4, J102)
         'carrier': row.carrier,
         'name': row.client_name or row.name,
+        'client_name': row.client_name,  # "Name on client documents" (J14), edited under ⋯ More
         'words': words(row),
         'chips': chips(plan, kind, numbers, data, row),
         'pickable': kind in ('option', 'renewal'),

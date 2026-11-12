@@ -4,7 +4,8 @@ A reader can file a plan under the wrong line (the old app's D-089: life quotes 
 id, so its Activity, sources and file links stay with it (C10). What names the old line does not travel:
 - values outside the new line's fields are dropped (kept in the Activity row);
 - its star, its recommendation (the room of the new line holds, as the old app cleared its shortlist flag), its
-  links, its typed enrollment and its packages clear; a renewal arrives as an alternate;
+  links, its typed enrollment, its packages and its option number clear (it is numbered again on the new line,
+  J159); a renewal arrives as an alternate;
 - the plans it leaves behind lose their link to it: a moved current plan's renewal becomes an alternate and it
   leaves every `replaces` list (§5.4's rule for a plan that stops being current there);
 - a current plan joins the end of the new line's current plans; a quote lands last.
@@ -26,7 +27,7 @@ from .batch import Batch
 from .plans import next_number
 from .roles import STAR_AND_PICK, no_longer_current
 
-KEYS = ('plan.line', *columns.LINKS, *STAR_AND_PICK, 'plan.sort_order')
+KEYS = ('plan.line', *columns.LINKS, *STAR_AND_PICK, 'plan.sort_order', 'plan.option_number')
 ENROLLMENT = 'enrollment.'
 CENSUS_NAMES = 'census_names'
 
@@ -76,6 +77,7 @@ def _strip(plan, to_line):
     plan.enrollment, plan.census_names = {}, []
     plan.starred, plan.star_reason, plan.starred_by_id, plan.starred_at = False, '', None, None
     plan.recommended = False
+    plan.option_number = None
     plan.role = 'alternate' if plan.role == 'renewal' else plan.role
     plan.renews_id, plan.replaces_ids = None, []
     plan.line = to_line

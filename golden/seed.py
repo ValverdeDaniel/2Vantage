@@ -113,7 +113,7 @@ def build(spec, user):
         plans.set_recommended(user, refs[ref], True)
     for package in spec['packages']:
         plans.create_package(user, deal, package['line'], package['name'], [refs[ref] for ref in package['plans']])
-    proposals.save_config(user, deal, {'reasons': spec['reasons']})
+    proposals.set_config(user, deal, {'reasons': spec['reasons']})
     deal.refresh_from_db()
     return Golden(deal, refs, spec)
 

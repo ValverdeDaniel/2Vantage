@@ -19,7 +19,7 @@ from intake.selectors import line_facts
 from quotes import presented
 from quotes import selectors as quotes
 
-from . import page_cells
+from . import line_layout, page_cells
 from . import page_columns as cols
 from . import pages as splitter
 
@@ -70,17 +70,15 @@ def _off(deal, line, state):
 def payload(deal, line, preset):
     state = quotes.line_state(deal, line)
     data, results = state.data, state.results
-    rows = {plan.id: plan for plan in state.plans}
     label = lines.label(line)
     off = _off(deal, line, state) if state.plans else None
-    shown = presented.presented(data, off=bool(off))
-    numbers = {plan.id: n for n, plan in enumerate(data.current, start=1)}
-    captions = {plan.id: f'Replacing: {cols.words(rows[plan.id])}' for plan in data.current}
-    pages = splitter.sequence([cols.column(plan, data) for plan in shown], captions)
+    layout = line_layout.layout_of(line_layout.stored_config(deal))
+    laid = line_layout.lay_out(state, off, layout, line_layout.tops(deal, [line]).get(line, 0))
+    rows, shown, numbers, pages = laid.rows, laid.shown, laid.numbers, laid.pages
     on = {plan.id for plan in shown}
     ctx = {
         'numbers': numbers,
-        'options': cols.option_numbers(pages, data),
+        'options': laid.options,
         'first_page': splitter.first_pages(pages),
         'arrows': cols.arrows(shown, data),
         'label': label,

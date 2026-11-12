@@ -514,7 +514,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F1",
-      "why": "The view pills show only where a second view exists (F1): Proposal builder (slice 25), Export viewer (28) and Stop-loss analysis (36, F2) join with their slices, so while Quote comparison is the only view the row stays away; Unleashed waits (F4).",
+      "why": "The view pills show Quote comparison and Proposal builder (F1; slice 25): the Export viewer (28) and Stop-loss analysis (36, F2) join with their slices, and Unleashed waits (F4).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -591,7 +591,7 @@
       "check": "classes",
       "selector": null,
       "item": "F1",
-      "why": "bnf-advisor-views and bnf-viewtab arrive with the second view (slices 25, 28, 36); bnf-plan-head, bnf-plan-menu-btn and bnf-link-picker-text are F134's ⋯ menu and F52's renewal text; the Packages panel (bb-panel) is 2V's, kept (F134); bnf-filter-num-wrap appears once more for \"Monthly total ≤ $\" (F19).",
+      "why": "bnf-advisor-views and bnf-viewtab show with the Proposal builder's pill (slice 25), two pills where the old row has more (28, 36, F4); bnf-plan-head, bnf-plan-menu-btn and bnf-link-picker-text are F134's ⋯ menu and F52's renewal text; the Packages panel (bb-panel) is 2V's, kept (F134); bnf-filter-num-wrap appears once more for \"Monthly total ≤ $\" (F19).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -602,7 +602,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F1",
-      "why": "The view pills show only where a second view exists (F1): Proposal builder (slice 25), Export viewer (28) and Stop-loss analysis (36, F2) join with their slices, so while Quote comparison is the only view the row stays away; Unleashed waits (F4).",
+      "why": "The view pills show Quote comparison and Proposal builder (F1; slice 25): the Export viewer (28) and Stop-loss analysis (36, F2) join with their slices, and Unleashed waits (F4).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -679,7 +679,7 @@
       "check": "classes",
       "selector": null,
       "item": "F1",
-      "why": "bnf-advisor-views and bnf-viewtab arrive with the second view (slices 25, 28, 36); bnf-plan-head, bnf-plan-menu-btn and bnf-link-picker-text are F134's ⋯ menu and F52's renewal text; the Packages panel (bb-panel) is 2V's, kept (F134); bnf-filter-num-wrap appears once more for \"Monthly total ≤ $\" (F19).",
+      "why": "bnf-advisor-views and bnf-viewtab show with the Proposal builder's pill (slice 25), two pills where the old row has more (28, 36, F4); bnf-plan-head, bnf-plan-menu-btn and bnf-link-picker-text are F134's ⋯ menu and F52's renewal text; the Packages panel (bb-panel) is 2V's, kept (F134); bnf-filter-num-wrap appears once more for \"Monthly total ≤ $\" (F19).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -690,7 +690,7 @@
       "check": "pixels",
       "selector": null,
       "item": "J70",
-      "why": "2V's Proposal (selection, recommendation and preview per line, Issue to client) on the old builder and packet classes until slices 25 and 32; its ＋ Plan and ＋ Package dialogs are §8.15's gap.",
+      "why": "Until slice 32 brings the Plan comparison board and the packet card, the tab holds the old packet card's \"Issue to client\" head with the builder's readiness sentence and \"Open the proposal builder ▸\" (2V's selection and preview retired in slice 25).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -701,7 +701,7 @@
       "check": "classes",
       "selector": null,
       "item": "J70",
-      "why": "The old Plan comparison grid and packet card arrive with slice 32; the builder cards with slice 25.",
+      "why": "The old Plan comparison grid and packet card arrive with slice 32; the interim tab uses the packet card's classes (bnf-packet-card, bnf-build-ready).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -712,7 +712,7 @@
       "check": "pixels",
       "selector": null,
       "item": "J70",
-      "why": "2V's Proposal (selection, recommendation and preview per line, Issue to client) on the old builder and packet classes until slices 25 and 32; its ＋ Plan and ＋ Package dialogs are §8.15's gap.",
+      "why": "Until slice 32 brings the Plan comparison board and the packet card, the tab holds the old packet card's \"Issue to client\" head with the builder's readiness sentence and \"Open the proposal builder ▸\" (2V's selection and preview retired in slice 25).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -723,7 +723,7 @@
       "check": "classes",
       "selector": null,
       "item": "J70",
-      "why": "The old Plan comparison grid and packet card arrive with slice 32; the builder cards with slice 25.",
+      "why": "The old Plan comparison grid and packet card arrive with slice 32; the interim tab uses the packet card's classes (bnf-packet-card, bnf-build-ready).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -921,7 +921,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F1",
-      "why": "The view pills show only where a second view exists (F1): Proposal builder (slice 25), Export viewer (28) and Stop-loss analysis (36, F2) join with their slices, so while Quote comparison is the only view the row stays away; Unleashed waits (F4).",
+      "why": "The view pills show Quote comparison and Proposal builder (F1; slice 25): the Export viewer (28) and Stop-loss analysis (36, F2) join with their slices, and Unleashed waits (F4).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -976,7 +976,7 @@
       "check": "classes",
       "selector": null,
       "item": "F1",
-      "why": "bnf-advisor-views and bnf-viewtab arrive with the second view (slices 25, 28, 36); bnf-plan-head, bnf-plan-menu-btn and bnf-link-picker-text are F134's ⋯ menu and F52's renewal text; the Packages panel (bb-panel) is 2V's, kept (F134); bnf-filter-num-wrap appears once more for \"Monthly total ≤ $\" (F19).",
+      "why": "bnf-advisor-views and bnf-viewtab show with the Proposal builder's pill (slice 25), two pills where the old row has more (28, 36, F4); bnf-plan-head, bnf-plan-menu-btn and bnf-link-picker-text are F134's ⋯ menu and F52's renewal text; the Packages panel (bb-panel) is 2V's, kept (F134); bnf-filter-num-wrap appears once more for \"Monthly total ≤ $\" (F19).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1482,7 +1482,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F1",
-      "why": "The view pills show only where a second view exists (F1): Proposal builder (slice 25), Export viewer (28) and Stop-loss analysis (36, F2) join with their slices, so while Quote comparison is the only view the row stays away; Unleashed waits (F4).",
+      "why": "The view pills show Quote comparison and Proposal builder (F1; slice 25): the Export viewer (28) and Stop-loss analysis (36, F2) join with their slices, and Unleashed waits (F4).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1537,7 +1537,7 @@
       "check": "classes",
       "selector": null,
       "item": "F1",
-      "why": "bnf-advisor-views and bnf-viewtab arrive with the second view (slices 25, 28, 36); bnf-plan-head, bnf-plan-menu-btn and bnf-link-picker-text are F134's ⋯ menu and F52's renewal text; the Packages panel (bb-panel) is 2V's, kept (F134); bnf-filter-num-wrap appears once more for \"Monthly total ≤ $\" (F19).",
+      "why": "bnf-advisor-views and bnf-viewtab show with the Proposal builder's pill (slice 25), two pills where the old row has more (28, 36, F4); bnf-plan-head, bnf-plan-menu-btn and bnf-link-picker-text are F134's ⋯ menu and F52's renewal text; the Packages panel (bb-panel) is 2V's, kept (F134); bnf-filter-num-wrap appears once more for \"Monthly total ≤ $\" (F19).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1691,7 +1691,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F1",
-      "why": "The view pills show only where a second view exists (F1): Proposal builder (slice 25), Export viewer (28) and Stop-loss analysis (36, F2) join with their slices, so while Quote comparison is the only view the row stays away; Unleashed waits (F4).",
+      "why": "The view pills show Quote comparison and Proposal builder (F1; slice 25): the Export viewer (28) and Stop-loss analysis (36, F2) join with their slices, and Unleashed waits (F4).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1735,7 +1735,7 @@
       "check": "classes",
       "selector": null,
       "item": "F1",
-      "why": "bnf-advisor-views and bnf-viewtab arrive with the second view (slices 25, 28, 36); bnf-plan-head, bnf-plan-menu-btn and bnf-link-picker-text are F134's ⋯ menu and F52's renewal text; the Packages panel (bb-panel) is 2V's, kept (F134); bnf-filter-num-wrap appears once more for \"Monthly total ≤ $\" (F19).",
+      "why": "bnf-advisor-views and bnf-viewtab show with the Proposal builder's pill (slice 25), two pills where the old row has more (28, 36, F4); bnf-plan-head, bnf-plan-menu-btn and bnf-link-picker-text are F134's ⋯ menu and F52's renewal text; the Packages panel (bb-panel) is 2V's, kept (F134); bnf-filter-num-wrap appears once more for \"Monthly total ≤ $\" (F19).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1923,6 +1923,226 @@
       "selector": null,
       "item": "D39",
       "why": "Slice 18: with Claude set up, under the station sits \"✦ Read with Claude\" for the files the quote reader reads (the one read door, deals/{id}/ai/reads/), standing in for the Re-read panel (E75, slice 19) and the drawer's File room (D14, slice 20); while a read runs it shows the old Claude strip, and a read waiting for review shows the staged card \"Review this scan\" there (D28, D29), with Use this scan and Apply N selected disabled until slice 19 lands reads.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A6",
+      "why": "The top bar keeps Benefits, Commissions and Admin; Dashboard, P&C, Joint Ventures and the other old links are modules out of scope (A2, A22, A40), and the Calendar link waits with the Radar (I88).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "M112",
+      "why": "The header strip on every tab (client name and status, stage pill, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "A24",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the client block for slice 67 (A20).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A21",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, RFP 44, Commission 48 (OQ9).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A25",
+      "why": "The ✦ Work with Claude pill, drawer and strip (bnf-wwc-room, bnf-claude-section) are pending slice 20.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-nav",
+      "item": "M112",
+      "why": "Buttons, nav, the tab title and the first panel sit elsewhere: the header strip replaces the journey stepper, the deal cards above the line tabs are not built yet (J32–J46), so the line tabs, the Plans card and the rows card sit thousands of pixels higher.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "J32",
+      "why": "The deal cards — Cover, Pictures, How the documents look, Presentation pages, Coverage & marketing intent, Executive summary, Next steps and Markets checked — arrive with slices 26 and 34 (J32–J46, J63–J67); \"n of N completed\" counts only the cards on screen (Plans and rows per line).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "J32",
+      "why": "bnf-cover-strip, bnf-cover-head and the other deal cards' classes arrive with slices 26 and 34; bnf-build-ready shows only when the proposal is not ready (GD1 is, J28); bnf-advisor-tab-split wraps the builder as in the old app; bnf-advisor-pages wraps the pages the builder shares with ▦ Pages; bnf-build-enroll-note words the strip's source (J48); bnf-chip-renewal, bnf-link-picker-text and bnf-delta-pos come with C2 on page 3 (OQ11).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "J24",
+      "why": "The toolbar's ⬇ Client PDF, the orientation chip, ⬇ PowerPoint and ⬇ Client spreadsheet arrive with the files (J24, J25; slices 27–31) and 🔗 Share with client is deferred (J26); \"Open proposal ▸\" shows disabled until it can open the Export viewer (J27, slice 28).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "J28",
+      "why": "No readiness banner: every Medical current plan is answered by a recommended plan (§5.4 reads quotes' recommended flags; C2, the recommended renewal, answers Current 3), where the old builder read its per-current picks from the config and asked for Current 3's (\"Medical, for Aetna HMO 1000\").",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "J23",
+      "why": "\"⚠ 1 to check\" counts the checks built in slice 25 (J23: 12 of 17; no_next_steps, summary_counts_hidden_carriers and medicare_not_shown come with their cards in slice 26, split_plan in 33).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "J48",
+      "why": "The EnrollmentStrip reads the line's people as quotes prices them (slice 13, OQ18): \"Typed for the current plans: 24 EE · 6 ES · 5 EC · 11 FAM\", with the split pointing to the Advisor's counts card on a line with several current plans; the old strip read only the config's tier_counts_by_line and showed \"No enrollment yet\".",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-build-enroll",
+      "item": "J48",
+      "why": "The strip is not the empty (yellow) state: GD1's medical line has its current plans' typed counts (J48, OQ18).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "J55",
+      "why": "Under the recommendation's status each recommended plan is listed with its option number, its own change and what it replaces (§5.4: several picks per line, each showing its own change; slice 25's done-when).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "OQ11",
+      "why": "Page 3 holds C2, the recommended renewal of Current 3, and numbers it Option 9 (LocalPlus 1000 becomes Option 10): a recommended plan is always on the proposal (§5.4, F119, OQ37), as on gd1.pages.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "F41",
+      "why": "Dual choice — HDHP 5000 and — PPO 1000 are bought together, sharing Current 1's people, so Change vs current shows — (§5.5), as on gd1.pages.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "F52",
+      "why": "Choice Plus 2000 replaces Current 2 and Current 3 together (a consolidation, §5.4): \"Replacing:\" reads \"Several: Current 2 + …\", as on gd1.pages.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "J68",
+      "why": "The rows card's TEMPLATE bar (row-set templates, J68) arrives with slice 34.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "F48",
+      "why": "\"Back to the default order\" shows on every line with quotes: the one order lives in quotes (F120), which keeps no flag for a hand order.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "J16",
+      "why": "Key rows label the rows with the plan fields' own labels (\"Coinsurance (member share)\", \"Rx tiers\"), the client files' words (§4.3).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

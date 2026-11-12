@@ -89,7 +89,7 @@ def base(plan):
         'client_name': plan.client_name,
         'renews_id': plan.renews_id,
         'replaces_ids': list(plan.replaces_ids),
-        'option_label': plan.option_label,
+        'option_number': plan.option_number,
         'starred': plan.starred,
         'star': star(plan),
         'recommended': plan.recommended,

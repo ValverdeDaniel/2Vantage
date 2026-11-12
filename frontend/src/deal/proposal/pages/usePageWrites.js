@@ -1,4 +1,4 @@
-import { useSetRecommended } from '../../../api/quotes';
+import { useSetRecommended, useUpdatePlan } from '../../../api/quotes';
 import { useOrderPlans, usePutInSlot, useSetLinks, useStar } from '../../../api/quotesBoard';
 import { errorText } from '../../../lib/errors';
 import { useToast } from '../../../ui/useToast';
@@ -7,7 +7,9 @@ import { useToast } from '../../../ui/useToast';
  * What "What the client will see" writes, each through quotes' own door (plan.md §7.8; F43, F45, F46, F52, J5, J10–J13;
  * the old AdvisorTab's placeOnPage / moveOnPage / takeOffPage at 7385bb3): a pick (`plans/slot/` `at`), "＋ Add a plan"
  * (`beside`), the arrows (`plans/order/` passing the plans the pages do not show), "Replacing:" (`plans/links/`) and ✕
- * (`plans/star/`, and `recommend/` for a recommended plan, as the server's `remove` says). Every write refetches the
+ * (`plans/star/`, and `recommend/` for a recommended plan, as the server's `remove` says); in the builder, "Our
+ * recommendation" (`recommend/`, J52) and ⋯ More's name on client documents (PATCH `client_name`, J14). Every write
+ * refetches the
  * deal's queries, the pages among them; a refusal shows the server's sentence.
  */
 export default function usePageWrites(dealId, line, payload) {
@@ -18,6 +20,7 @@ export default function usePageWrites(dealId, line, payload) {
     links: useSetLinks(dealId),
     star: useStar(dealId),
     recommend: useSetRecommended(dealId),
+    rename: useUpdatePlan(dealId),
   };
   const failed = (error) => {
     toast.error(errorText(error));
@@ -33,6 +36,10 @@ export default function usePageWrites(dealId, line, payload) {
         .mutateAsync({ line, move: { plan_id: plan.plan_id, step, among: payload?.presented_ids ?? [] } })
         .catch(failed),
     link: (plan, replacesIds) => doors.links.mutateAsync({ planId: plan.plan_id, replacesIds }).catch(failed),
+    recommend: (plan) =>
+      doors.recommend.mutateAsync({ planId: plan.plan_id, recommended: !plan.recommended }).catch(failed),
+    rename: (plan, name) =>
+      doors.rename.mutateAsync({ planId: plan.plan_id, changes: { client_name: name } }).catch(failed),
     takeOff: async (plan) => {
       const { unstar, unrecommend, star } = plan.remove;
       try {

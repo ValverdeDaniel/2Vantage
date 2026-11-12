@@ -43,7 +43,7 @@ def test_PAR1_one_spec_loads_the_deal_into_2vantage(golden, api, key):
         assert body['enrollment']['figure'] == spec.get('line_enrollment', {}).get(line)  # the whole-line figure
         built = {p['name']: sorted(names[pid] for pid in p['plan_ids']) for p in body['member_packages']}
         assert built == {p['name']: sorted(p['plans']) for p in spec['packages'] if p['line'] == line}
-    assert api.get(f'/api/deals/{deal.id}/proposal/').json()['reasons'] == spec['reasons']
+    assert api.get(f'/api/deals/{deal.id}/proposal/').json()['config'].get('reasons', {}) == spec['reasons']
 
 
 FIRST_SEEN = {}

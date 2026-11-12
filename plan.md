@@ -2542,8 +2542,10 @@ is its sold plans, totalled as a package (§5.5).
 
 **Option numbers** (`Plan.option_number`, per line; J159; OQ35, OQ36 defaults). A plan's number is its place in
 reading order: the order it first appears on the pages of the chosen layout (`proposals.pages`). Numbers are stamped
-at Issue under the Deal lock and never reused. Renewals are numbered; current plans and priced versions are not; a
-move to another line renumbers. Until Issue, drafts show the numbers Issue would stamp, and wear Draft (J102). They
+at Issue under the Deal lock and never reused (`quotes.labels.numbers`, `services.stamp_option_numbers`;
+`proposals.line_layout.reading_ids` gives Issue the order; slice 25). Renewals are numbered; current plans and priced
+versions are not; a move to another line renumbers (Revert of the move is refused once its number went to another
+plan). Until Issue, drafts show the numbers Issue would stamp, and wear Draft (J102). They
 replace v1.1's C/R/P labels; `option_label` goes (O.6 #15).
 
 **One plan under two plan numbers** (Florida Blue's 5182 for employee-only and 5183 for the dependent tiers; D-219;
@@ -3562,9 +3564,12 @@ list: the lines are the requested lines (K16). One key space serves include, pil
 
 ### 6.11 proposals
 
-Built: `ProposalConfig` in v1.1's shape (`title`, `notes`, `lines` as `{line: [plan ids]}`, `reasons`, `updated_by`,
-`updated_at`), created by a GET (J.5 B27). There is no `ProposalIssue` yet. Slice 25 reshapes the config; slices 29,
-32 and 34 add the rest (J.6.2).
+Built (slice 25): `ProposalConfig(deal, config, marks, updated_by, updated_at)`, created on the first write. `config`
+holds the keys below by path (`proposals/config.py`; the paths built so far are `title`, `intro`, `recommendation`,
+`reasons.<line>`, `order`, `next_steps`, `output.layout` and `lines.<line>.{parts.<part>, rows, card_stats,
+table_note}`; the summary, markets, experience, team, the rest of `output` and `merged` join with their slices); `marks`
+is its own column so that what prints and the bookkeeping never mix. There is no `ProposalIssue` yet; slices 29, 32 and
+34 add the rest (J.6.2).
 
 **ProposalConfig** — one per deal, created on the first write; a GET reads the defaults. `notes` becomes `intro`.
 `lines` holds per-line settings, never membership or pairs: `presented()` decides what prints (F119), and a pair is
@@ -4087,8 +4092,9 @@ chunks; census and PHI files write `downloaded` rows. No query parameter is name
 
 ### 7.12 Proposal — `proposals/`
 
-Built: `GET` and `PUT deals/{id}/proposal/`, v1.1's selection and preview, which slice 25 replaces; `GET
-proposal/pages/` (slice 14).
+Built: `GET`, `PATCH deals/{id}/proposal/` and `POST …/proposal/marks/` (slice 25: the builder payload; `{path:
+value}` → `{changed, cleared, activity_id}`; `{card, line?, done}` → `{card, line, stamp, activity_id}`); `GET
+proposal/pages/` (slice 14; `?preset=key` gives the builder's Key rows). v1.1's PUT, selection and preview are gone.
 
 | Method | Path | What it does |
 |---|---|---|

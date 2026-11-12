@@ -1,15 +1,17 @@
 import { Fragment } from 'react';
 import cx from '../../../ui/cx';
 import PageColumn from './PageColumn';
+import RecommendRow from './RecommendRow';
 import { cellText, pageColumns, pageHead, pageSections } from './pageRows';
 
 /*
  * One comparison page as the PowerPoint prints it (plan.md §8.14; F37, F38, J49; the old ProposalPages.jsx page
  * table at 7385bb3): "Page n of N" and the page's words, "x of 6 columns · full", then the plans as columns. The rows:
  * Monthly premium and Change vs current lead, worked out against the "Replacing:" plan by the server; then the
- * Columns tab's rows, as the client files print them. Display only: the documents print every row.
+ * Columns tab's rows (or the builder's Key rows), as the client files print them; in the builder, "Our
+ * recommendation" (J52). Display only: the documents print every row.
  */
-export default function PageTable({ page, count, payload, byId, busy, openId, actions }) {
+export default function PageTable({ page, count, payload, byId, busy, openId, actions, recommend = null, menu = null }) {
   const columns = pageColumns(page, byId);
   const plans = columns.map((column) => column.plan);
   const head = pageHead(page, count, payload.per_page);
@@ -40,6 +42,7 @@ export default function PageTable({ page, count, payload, byId, busy, openId, ac
                   onMove={actions.move}
                   onRemove={actions.remove}
                   onLink={actions.link}
+                  menu={menu}
                 />
               ))}
             </tr>
@@ -92,6 +95,15 @@ export default function PageTable({ page, count, payload, byId, busy, openId, ac
                 ))}
               </Fragment>
             ))}
+            {recommend && (
+              <RecommendRow
+                plans={plans}
+                keepable={recommend.keepable}
+                disabled={recommend.disabled}
+                busy={busy}
+                onChoose={actions.recommend}
+              />
+            )}
           </tbody>
         </table>
       </div>
