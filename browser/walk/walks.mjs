@@ -6,6 +6,7 @@
 import { archive38 } from './archive38.mjs';
 import { asQuoted21 } from './asQuoted21.mjs';
 import { boardClaude24 } from './boardClaude24.mjs';
+import { booking49 } from './booking49.mjs';
 import { builder25 } from './builder25.mjs';
 import { builder26 } from './builder26.mjs';
 import { commission48 } from './commission48.mjs';
@@ -260,6 +261,7 @@ export const WALKS = {
   s45: { ...rfp45, run: (ctx) => rfp45.run(ctx, { signIn, openDeal }) }, // slice 45's done-when (GD4; files to $WALK_FILES)
   s46: { ...rfp46, run: (ctx) => rfp46.run(ctx, { signIn, openDeal }) }, // slice 46's done-when (fresh GD6; re-seed after)
   s48: { ...commission48, run: (ctx) => commission48.run(ctx, { signIn, openDeal }) }, // slice 48's done-when (re-seed GD1 after)
+  s49: { ...booking49, run: (ctx) => booking49.run(ctx, { signIn, openDeal }) }, // slice 49's done-when (re-seed GD1 after)
   s53: { ...review53, run: (ctx) => review53.run(ctx, { signIn, openDeal }) }, // slice 53's done-when (re-seed GD4 after)
   s66: { ...voice66, run: (ctx) => voice66.run(ctx, { signIn, openDeal }) }, // slice 66's done-when (a fake recognizer; no Claude, no writes)
 };

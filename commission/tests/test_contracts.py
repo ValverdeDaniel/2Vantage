@@ -10,7 +10,7 @@ from rest_framework.test import APIClient
 
 from accounts.models import Profile
 from commission import services
-from commission.models import ClientSplit, Commission, Party, Settings
+from commission.models import ClientSplit, Commission, Party, Record, Settings
 from conftest import check_permissions, make_deal, sweep_gets, write_path_contract
 from deals.models import Client, Deal
 
@@ -45,8 +45,30 @@ def party(db):
     return Party.objects.create(kind='partner', name='Riverside Partners (synthetic)')
 
 
-def samples(deal, party):
+@pytest.fixture
+def record(user, deal, django_capture_on_commit_callbacks):
+    """The deal sold and booked (slice 49): one medical record, its primary the deal's owner (`user`)."""
+    from quotes import services as quotes
+
+    plan = quotes.create_plan(user, deal, line='medical', role='alternate', carrier='Cigna', name='One', values={})
+    with django_capture_on_commit_callbacks(execute=True):
+        quotes.set_sold(user, plan.id, True)
+    return Record.objects.get(deal=deal)
+
+
+def samples(deal, party, record=None):
     return {
+        'api/deals/<int:pk>/commission/book/': {'pk': deal.id},
+        'api/deals/<int:pk>/commission/disclosure.pdf': {'pk': deal.id},
+        'api/commissions/records/': {},
+        'api/commissions/records/export/': {},
+        'api/commissions/records/<int:pk>/': {'pk': getattr(record, 'id', 0)},
+        'api/commissions/records/<int:pk>/shares/': {'pk': getattr(record, 'id', 0)},
+        'api/commissions/records/<int:pk>/rebook/': {'pk': getattr(record, 'id', 0)},
+        'api/commissions/people/': {},
+        'api/commissions/people/export/': {},
+        'api/commissions/people/<str:key>/': {'key': 'house'},
+        'api/commissions/clients/': {'query': {'q': 'Example'}},
         'api/deals/<int:pk>/commission/': {'pk': deal.id},
         'api/deals/<int:pk>/commission/split/': {'pk': deal.id},
         'api/deals/<int:pk>/commission/split/preview/': {'pk': deal.id},
@@ -79,15 +101,38 @@ def matrix(user):
         ('PATCH', 'api/commissions/parties/<int:pk>/', ALL_TIER, {'npn': '1234'}),
         ('GET', 'api/commissions/settings/', ALL_TIER),
         ('PATCH', 'api/commissions/settings/', ALL_TIER, {'confirm': True}),
+        ('POST', 'api/deals/<int:pk>/commission/book/', ALL_TIER),
+        ('GET', 'api/deals/<int:pk>/commission/disclosure.pdf', ALL_TIER),
+        ('GET', 'api/commissions/records/', A_TIER),
+        (
+            'POST',
+            'api/commissions/records/',
+            {**ALL_TIER, 'all': 201, 'admin': 201},
+            {'client_name': 'Outside Co.', 'line': 'dental'},
+        ),
+        ('GET', 'api/commissions/records/export/', A_TIER),
+        ('GET', 'api/commissions/records/<int:pk>/', {**A_TIER, 'producer': 404}),
+        ('PATCH', 'api/commissions/records/<int:pk>/', ALL_TIER, {'notes': 'Billed quarterly'}),
+        (
+            'PUT',
+            'api/commissions/records/<int:pk>/shares/',
+            ALL_TIER,
+            {'shares': [{'role': 'house', 'pct': '100'}], 'reason': 'House account'},
+        ),
+        ('POST', 'api/commissions/records/<int:pk>/rebook/', ALL_TIER),
+        ('GET', 'api/commissions/people/', A_TIER),
+        ('GET', 'api/commissions/people/export/', A_TIER),
+        ('GET', 'api/commissions/people/<str:key>/', A_TIER),
+        ('GET', 'api/commissions/clients/', ALL_TIER),
     ]
 
 
-def test_Q3_commission_gets_write_nothing(admin_api, deal, party):
-    sweep_gets(admin_api, ('commission',), samples(deal, party))
+def test_Q3_commission_gets_write_nothing(admin_api, deal, party, record):
+    sweep_gets(admin_api, ('commission',), samples(deal, party, record))
 
 
-def test_Q3_OQ70_H102_commission_permission_matrix(tiers, no_csrf_api, user, deal, party):
-    check_permissions(tiers, ('commission',), matrix(user), samples(deal, party), no_csrf_api)
+def test_Q3_OQ70_H102_commission_permission_matrix(tiers, no_csrf_api, user, deal, party, record):
+    check_permissions(tiers, ('commission',), matrix(user), samples(deal, party, record), no_csrf_api)
 
 
 def test_Q3_ids_past_bigint_answer_404(admin_api):
@@ -208,4 +253,50 @@ def test_Q3_4_the_roster_reads_in_a_fixed_number_of_queries(admin_api):
         login = get_user_model().objects.create_user(f'more{n}', f'm{n}@example.com', 'pw-Example-1')
         Profile.objects.create(user=login, commissions_access='all')
         Party.objects.create(kind='producer' if n % 2 else 'partner', name=f'More {n}', user=login if n % 2 else None)
+    assert queries() == before
+
+
+def test_Q3_record_ids_past_bigint_answer_404_and_junk_answers_400(admin_api, record):
+    big = 2**64
+    assert admin_api.get(f'/api/commissions/records/{big}/').status_code == 404
+    assert admin_api.patch(f'/api/commissions/records/{big}/', {}, format='json').status_code == 404
+    assert admin_api.get(f'/api/commissions/people/{big}/').status_code == 404
+    assert admin_api.get('/api/commissions/people/nobody/').status_code == 404
+    url = f'/api/commissions/records/{record.id}/'
+    assert admin_api.patch(url, ['notes'], format='json').status_code == 400
+    assert admin_api.put(url + 'shares/', {'shares': 'all', 'reason': 'x'}, format='json').status_code == 400
+    assert (
+        admin_api.post('/api/commissions/records/', {'line': 'medical', 'client': 'abc'}, format='json').status_code
+        == 400
+    )
+    assert admin_api.get('/api/commissions/records/', {'status': 'gone'}).status_code == 400
+
+
+def test_Q3_record_write_path(admin_user, record):
+    write_path_contract(
+        admin_user,
+        record,
+        lambda: services.edit_record(admin_user, record.id, {'premium_annual': '1200', 'policy_number': 'P-1'}),
+        lambda row: (row.values, row.notes),
+        lambda: services.edit_record(admin_user, record.id, {'premium_annual': '1300'}),
+    )
+
+
+def test_Q3_booking_locks_the_deal_then_its_records(user, deal, record):
+    with CaptureQueriesContext(connection) as queries:
+        services.rebook(user, deal.id)
+    locks = [q['sql'].split(' FROM ', 1)[1].split()[0] for q in queries.captured_queries if 'FOR UPDATE' in q['sql']]
+    assert list(dict.fromkeys(locks))[:2] == [f'"{Deal._meta.db_table}"', f'"{Record._meta.db_table}"']
+
+
+def test_Q3_4_the_book_reads_in_a_fixed_number_of_queries(admin_api, admin_user):
+    def queries():
+        with CaptureQueriesContext(connection) as captured:
+            assert admin_api.get('/api/commissions/records/').status_code == 200
+        return len(captured.captured_queries)
+
+    services.add_to_book(admin_user, {'client_name': 'First Co.', 'line': 'medical', 'rate': '5'})
+    before = queries()
+    for n in range(6):
+        services.add_to_book(admin_user, {'client_name': f'More Co. {n}', 'line': 'dental', 'premium_annual': '100'})
     assert queries() == before

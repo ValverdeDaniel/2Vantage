@@ -13,6 +13,7 @@ const SIZES = { sm: 'bnf-saved-modal', md: '', lg: '' };
  *   hint (the footer's grey note), size: 'sm' | 'md' | 'lg'
  *   onSubmit: the dialog is a <form noValidate> so Enter submits (give the main button type="submit")
  *   initialFocus: ref to focus first (default: the first field) · dismissible=false ignores Escape and the backdrop
+ *   className: the old modal's own class beside bb-modal (e.g. `bnf-com-booking`, which sets its width)
  */
 export default function Modal({ open, ...props }) {
   return open ? <ModalLayer {...props} /> : null;
@@ -29,6 +30,7 @@ function ModalLayer({
   onSubmit,
   initialFocus,
   dismissible = true,
+  className,
 }) {
   const ref = useRef(null);
   const titleId = useId();
@@ -58,7 +60,7 @@ function ModalLayer({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={cx('bb-modal', SIZES[size])}
+        className={cx('bb-modal', SIZES[size], className)}
         {...formProps}
       >
         <div className="bb-modal-header">

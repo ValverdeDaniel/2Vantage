@@ -1,0 +1,56 @@
+{
+ "deal": "GD1-sold",
+ "client": "Golden Manufacturing Sold (synthetic)",
+ "checked_by": null,
+ "checked_on": null,
+ "method": null,
+ "note": "Worked out by hand in slice 49 from GD1's key (CG1N 209,088 and U2 200,724 a year, priced on A's and B's typed counts), independently of the app (each record at cents, OQ75: 5% of 209,088.00 is 10,454.40, of 200,724.00 is 10,036.20); not yet signed. A figure changes only with Stephanie's agreement (plan.md §12.6).",
+ "client_status": "new_client",
+ "records": [
+  {
+   "line": "medical",
+   "carrier": "Cigna",
+   "plans": [
+    "CG1N"
+   ],
+   "premium_annual": "209088.00",
+   "employees": 20,
+   "rate": "5%",
+   "expected": 10454.4,
+   "year_number": 1,
+   "shares": {
+    "house": {
+     "pct": "60",
+     "amount": 6272.64
+    },
+    "primary": {
+     "pct": "40",
+     "amount": 4181.76
+    }
+   }
+  },
+  {
+   "line": "medical",
+   "carrier": "UnitedHealthcare",
+   "plans": [
+    "U2"
+   ],
+   "premium_annual": "200724.00",
+   "employees": 15,
+   "rate": "5%",
+   "expected": 10036.2,
+   "year_number": 1,
+   "shares": {
+    "house": {
+     "pct": "60",
+     "amount": 6021.72
+    },
+    "primary": {
+     "pct": "40",
+     "amount": 4014.48
+    }
+   }
+  }
+ ],
+ "expected_total": 20490.6
+}

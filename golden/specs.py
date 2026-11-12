@@ -55,6 +55,13 @@ The parity profile (Q.5) says what the old app (commit `old_app`) cannot express
 
 An answer key (`keys/gdN.json`) carries `checked_by`, `checked_on` and `method` (null until Stephanie signs it)
 beside the figures, and changes only with her agreement.
+
+A variant (`variants/<key>.json`, plan.md §13.4) is a golden deal at a later point of its life, built from its base
+spec under a client name of its own, so it never replaces the base deal: GD1-sold (slice 49) is GD1 with an agreed
+rate and two medical plans sold. It names `key`, `variant_of`, `about`, `client`, and what the seed does after the
+base deal is built: `rates` {line: rate} typed on the Commission tab, then `sold` [refs] marked sold (which books them
+and makes the client a New client). Its answer key is `keys/<key>.json`. Variants are not in `keys()`: the test
+fixtures and the parity harness build the base deals only; `seed_golden` builds every one.
 """
 
 import json
@@ -64,6 +71,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 SPEC_DIR = HERE / 'specs'
 KEY_DIR = HERE / 'keys'
+VARIANT_DIR = HERE / 'variants'
 
 
 def _read(path):
@@ -81,8 +89,24 @@ def keys():
     return list(_all())
 
 
+@cache
+def _variants():
+    variants = [_read(path) for path in sorted(VARIANT_DIR.glob('*.json'))]
+    return {variant['key']: variant for variant in variants}
+
+
+def variant_keys():
+    """The variants' keys: ['GD1-sold']."""
+    return list(_variants())
+
+
 def load(key):
-    """One spec, as a fresh dict (callers may change their copy)."""
+    """One spec, as a fresh dict (callers may change their copy). A variant is its base spec with its own key,
+    client, words and after-steps."""
+    if key in _variants():
+        variant = _variants()[key]
+        base = json.loads(json.dumps(_all()[variant['variant_of']]))
+        return {**base, **json.loads(json.dumps(variant))}
     return json.loads(json.dumps(_all()[key]))
 
 

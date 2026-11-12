@@ -1,0 +1,8 @@
+{
+  "key": "GD1-sold",
+  "variant_of": "GD1",
+  "about": "GD1 after its sale (plan.md §13.4, slice 49): two medical plans sold from two carriers (OQ12, OQ75), so two records book at the agreed 5%, and the Prospect becomes a New client (§5.1).",
+  "client": "Golden Manufacturing Sold (synthetic)",
+  "rates": {"medical": "5"},
+  "sold": ["CG1N", "U2"]
+}

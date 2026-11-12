@@ -1,7 +1,8 @@
 """Commission's reads (plan.md §7.10, §8.13; H3–H24, H106, H109). GETs write nothing (Q.3 #2).
 
 - `deal_payload(deal, viewer)`: the Commission tab: the rates grid and the deal total (`revenue.line_rows`), the split
-  that applies with its source and the live preview, the picker's people, and whether the viewer may save a split.
+  that applies with its source and the live preview, the picker's people, whether the viewer may save a split, and
+  after the sale the `booking` block (`booking_read`; slice 49). The deal's line states are worked out once.
 - `client_payload(client, viewer)`: the client-scope split editor (H106; the client page mounts it in slice 68).
 - `preview(...)`: what the split pays in the year, shares in millionths and dollars (H18); the preview endpoint and
   the GET share it, and so does the save's validation (`rules.validate_rows`), so a preview never disagrees with a save.
@@ -16,9 +17,10 @@ from deals import comp as comps
 from deals import lines
 from deals.models import AgencySettings
 from quotes.math import plain
+from quotes.selectors import deal_state
 
-from . import math, parties, revenue, rules, vocab
-from .models import ClientSplit, Commission, Settings
+from . import book_rules, booking_read, math, parties, revenue, rules, vocab
+from .models import ClientSplit, Commission, Record, Settings
 
 HUNDRED = Decimal(100)
 
@@ -126,10 +128,22 @@ def _client_rows(client_id):
     return ClientSplit.objects.filter(client_id=client_id).values_list('rows', flat=True).first() or []
 
 
+def earlier_years(deal):
+    """The client's distinct earlier effective years on records that are not void (H30)."""
+    dates = (
+        Record.objects.filter(client_id=deal.client_id)
+        .exclude(deal_id=deal.id)
+        .exclude(status=vocab.VOID)
+        .values_list('effective_date', flat=True)
+    )
+    return book_rules.earlier_years(list(dates), deal.effective_date)
+
+
 def deal_payload(deal, viewer):
     row = Commission.objects.filter(deal_id=deal.id).first() or Commission(deal=deal)
     agency = agency_default()
-    grid, total, note, (employees, _line) = revenue.line_rows(deal, row.rates or {}, agency)
+    states = deal_state(deal)
+    grid, total, note, (employees, _line) = revenue.line_rows(deal, row.rates or {}, agency, states)
     entries = parties.people()
     people = parties.lookup(entries)
     source, rows = rules.resolve(
@@ -138,7 +152,7 @@ def deal_payload(deal, viewer):
         parties.owner_person(deal.owner_id, entries),
         parties.owner_person(deal.client.owner_id, entries),
     )
-    year = rules.year_number(row.year_number, deal.opened_as)
+    year = rules.year_number(row.year_number, deal.opened_as, earlier_years(deal))
     scope = vocab.DEAL if source == vocab.DEAL else vocab.CLIENT
     return {
         'deal_id': deal.id,
@@ -153,12 +167,14 @@ def deal_payload(deal, viewer):
         'split': _split_block(source, rows, people, entries, viewer, deal.owner_id, scope),
         'basis': {'revenue': total, 'employees': employees, 'year': year},
         'preview': preview(rows, people, Settings.get(), total, employees, year),
+        'booking': booking_read.block(deal, booking_read.viewer_of(viewer), states),
     }
 
 
 def client_payload(client, viewer):
     """The client's split (H106): the client's own, else the client owner, else the house. There is no revenue at the
-    client level, so the preview shows percentages only; the year is the first until slice 49's records count."""
+    client level, so the preview shows percentages only, in first-year terms (the deal tab's preview counts the
+    client's earlier records, `earlier_years`; the client page, slice 68, may do the same)."""
     entries = parties.people()
     people = parties.lookup(entries)
     source, rows = rules.resolve(None, _client_rows(client.id), None, parties.owner_person(client.owner_id, entries))

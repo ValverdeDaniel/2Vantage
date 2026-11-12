@@ -1,19 +1,22 @@
-"""Commission API for the deal and the client (plan.md §7.10; H3–H24, H106). Thin: parse → service → answer with what
-the screen redraws. Any deal user reads the tab, edits the rates and previews a split (H102); saving a split is the
-all tier's or the owner's (OQ70), which the service checks. Producers & partners and Settings are in `people_views`.
+"""Commission API for the deal and the client (plan.md §7.10; H3–H24, H25–H37, H106, H108). Thin: parse → service →
+answer with what the screen redraws. Any deal user reads the tab, edits the rates and previews a split (H102); saving
+a split is the all tier's or the owner's (OQ70), which the service checks; booking and the CAA disclosure are the all
+tier's. Producers & partners and Settings are in `people_views`, the Book and By person in `record_views`.
 """
 
 from decimal import Decimal, InvalidOperation
 
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.access import commission_tier
+from deals import activity
 from deals.models import Client, Deal
 
-from . import parties, rules, selectors, services
+from . import disclosure, disclosure_pdf, parties, rules, selectors, services
 from .models import Settings
 
 MAX_ID = 2**63 - 1  # a bigger id is not a row: 404, never a database error
@@ -133,3 +136,48 @@ class ClientSplitPreviewView(APIView):
     def post(self, request, pk):
         client_or_404(pk)
         return Response(preview_answer(body(request), from_body=False))
+
+
+ALL_ONLY = 'Only someone with all commission access can do this.'
+
+
+def _all_tier(request):
+    if commission_tier(request.user) != 'all':
+        raise PermissionDenied(ALL_ONLY)
+
+
+class DealBookView(APIView):
+    """POST deals/{id}/commission/book/ → {booked: [record ids], changed: [targets], activity_id, …payload}: Book now,
+    Update and Rebook (H25, H36, H120); the all tier; 409 on a lost deal (H124)."""
+
+    def post(self, request, pk):
+        deal_or_404(pk)
+        _all_tier(request)
+        written = services.rebook(request.user, pk)
+        payload = selectors.deal_payload(deal_or_404(pk), request.user)
+        activity_id = written.activity.id if written.activity else None
+        changed = [entry['t'] for entry in written.changes]
+        booked = [record.id for record in written.records]
+        return Response({'booked': booked, 'changed': changed, 'activity_id': activity_id, **payload})
+
+
+def _slug(text):
+    return ''.join(ch if ch.isalnum() else '-' for ch in str(text).lower()).strip('-')[:40] or 'client'
+
+
+class DealDisclosureView(APIView):
+    """GET deals/{id}/commission/disclosure.pdf → the CAA comp disclosure (H108; all tier), built from the deal's booked
+    medical, dental and vision records; 409 when none is booked. The download is logged (§3.8)."""
+
+    def get(self, request, pk):
+        deal = deal_or_404(pk)
+        _all_tier(request)
+        found = disclosure.data(deal)
+        if not found['has_records']:
+            raise activity.Refused(disclosure.NOTHING_BOOKED)
+        content = disclosure_pdf.build(found)
+        activity.log_access(deal, request.user, 'downloaded', 'the comp disclosure', None, area='commission')
+        year = deal.effective_date.year if deal.effective_date else 'year'
+        response = HttpResponse(content, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="comp-disclosure-{_slug(deal.client.name)}-{year}.pdf"'
+        return response

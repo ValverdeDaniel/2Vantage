@@ -3774,6 +3774,138 @@
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
+    },
+    {
+      "screen": "commissions.book",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A6",
+      "why": "The top bar keeps Benefits, Commissions and Admin; Dashboard, P&C, Joint Ventures and the other old links are modules out of scope (A2, A22, A40).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "commissions.book",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H45",
+      "why": "The tiles are Expected, House share, Producer pool, Next 12 months and Booked records: Received YTD and Open gaps wait with the ledger (OQ6 is No), and Owed to producers is dropped (H46). Figures show in whole dollars as everywhere in 2V (the old formatCurrency showed cents below $1,000, so an empty book read $0.00).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "commissions.book",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H48",
+      "why": "The tabs are Book, By person, Producers & partners and Settings: Documents, Statements and Gaps wait with the ledger (OQ6), and the Book split waits (H69).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "commissions.book",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H47",
+      "why": "The unconfirmed-defaults banner names the two producer %s only: the external-referrer default was a dead field and is dropped (H100).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "commissions.book",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H49",
+      "why": "The Book's filters drop the LOB select (2V is benefits only, H49), and the all tier gets \"＋ Add to book\" (H58: the old empty Book promised booking by hand but had no screen).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "commissions.book",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H51",
+      "why": "The dev DB holds GD1-sold (slice 49's variant: two medical records, Cigna and UnitedHealthcare), which the old parity profile cannot load (a deal on the client book); the old book is empty. The Received and Gap columns wait with the ledger (OQ6).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "commissions.people",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A6",
+      "why": "The top bar keeps Benefits, Commissions and Admin; Dashboard, P&C, Joint Ventures and the other old links are modules out of scope (A2, A22, A40).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "commissions.people",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H45",
+      "why": "The tiles are Expected, House share, Producer pool, Next 12 months and Booked records: Received YTD and Open gaps wait with the ledger (OQ6 is No), and Owed to producers is dropped (H46). Figures show in whole dollars as everywhere in 2V (the old formatCurrency showed cents below $1,000, so an empty book read $0.00).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "commissions.people",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H48",
+      "why": "The tabs are Book, By person, Producers & partners and Settings: Documents, Statements and Gaps wait with the ledger (OQ6), and the Book split waits (H69).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "commissions.people",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H47",
+      "why": "The unconfirmed-defaults banner names the two producer %s only: the external-referrer default was a dead field and is dropped (H100).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "commissions.people",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H49",
+      "why": "The Book's filters drop the LOB select (2V is benefits only, H49), and the all tier gets \"＋ Add to book\" (H58: the old empty Book promised booking by hand but had no screen).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "commissions.people",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H51",
+      "why": "The dev DB holds GD1-sold (slice 49's variant: two medical records, Cigna and UnitedHealthcare), which the old parity profile cannot load (a deal on the client book); the old book is empty. The Received and Gap columns wait with the ledger (OQ6).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
     }
   ]
 }

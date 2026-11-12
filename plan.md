@@ -3573,8 +3573,12 @@ H.6. v1.1's `Commission` (rates and a split list totalling 100) is replaced. The
 `Receipt`, `GapNote`, `Alias`) are not built while OQ6 is No (slice 50 waits).
 Built in slice 48 (`commission.0001`): `Party`, `Settings` (without `gap_grace_days`, which waits with the ledger, OQ6),
 `Commission` and `ClientSplit`, with no `choices` (rule 1: `commission/vocab.py`). A split row stored names its `party`
-by id; the API also takes `user` for a producer with a login and no Party yet, whose Party the save creates. `Record`
-joins with slice 49.
+by id; the API also takes `user` for a producer with a login and no Party yet, whose Party the save creates. Built in
+slice 49 (`commission.0002`): `Record`, as below; its facts are the values plus four columns (`carrier`,
+`effective_date`, `term_end`, `status`), each with its `sources` entry through `deals.values.apply`; a record's expected
+revenue is worked out at cents (891f1b3 `record_expected`), so a line booked as two carriers' records adds up to the
+tab's line figure. `Record.client` and `Record.deal` are PROTECTed, so `seed_golden` drops a golden client's records
+first (`commission.services.forget_client`, for the seeders only).
 
 - **Comp** (`deals/comp.py`): `{type, value}`, with exact decimal strings (H1).
 - **Row**: `{party, role, amount, renewal_amount, basis, expires_after_years, works_it}`. `role` is primary,
@@ -4175,7 +4179,9 @@ review's (§7.14). Full list: Part G, G.6.
 
 Any deal user reads and edits rates and previews a split; only the all tier or the deal's owner saves a split (OQ70;
 on the client page the client's owner); the Book's figures follow the viewer's tier (H.6). Built in slice 48: the deal
-endpoints but `book/` and `disclosure.pdf` (slice 49), the client split with its own `POST
+endpoints but `book/` and `disclosure.pdf` (built in slice 49 with the records, people and their exports, the tab's
+`booking` block, and `GET commissions/clients/?q`, Add to book's client search, archived clients and clients with no
+deal included), the client split with its own `POST
 clients/{id}/commission/split/preview/` (percentages only: no revenue at the client level), parties (GET: a commission
 tier, the own tier without the percentages; writes: the all tier) and settings (the all tier; the PATCH also takes the
 agency's `default_commission`, H100). Split errors are keyed `rows.<i>.<field>`, `rows.primary` and `rows.split_total`.
@@ -5382,7 +5388,10 @@ exporter (F93, J167; slice 9). It is staff-only and equals the screen. Like the 
 - **By person export** (H68; slice 49): a pivot plus a sheet per person; the own tier sees only its own row.
 - **CAA comp disclosure** (H108; slice 49): a PDF per plan year for medical, dental and vision, for the all tier only,
   from "Comp disclosure ⤓" on the Commission tab's booked block, with the old tooltip "send it only inside the close-out
-  packet". The back office sends it (OQ76). It is drawn with `deals/pdfkit.py`.
+  packet". The back office sends it (OQ76). Built in slice 49 per deal (`deals/{id}/commission/disclosure.pdf`, from its
+  live medical, dental and vision records), drawn with reportlab in `commission/disclosure_pdf.py` (the old template's
+  words, the agency's name from `AgencySettings`): there is no `deals/pdfkit.py`, and commission sits left of the PDF
+  kits in `rfp` and `proposals`. The per-plan-year disclosure waits with the client statement (H103, H105; OQ6).
 - No client file carries commission (H125).
 
 ---
@@ -6161,7 +6170,10 @@ and payroll_100 bases before slice 27 (OQ103). Q.4 lists what each key pins.
 - **GD1 Golden Manufacturing** (built): three current medical plans with renewals; alternates from two carriers; a
   consolidation; plans bought together; two picks for one plan; dental and vision. Slice 15 adds a synthetic quote PDF,
   workbook and SBC; slice 33 a Florida Blue pair; slice 49 a variant, GD1-sold, with two sold medical plans (OQ12),
-  whose client is a New client.
+  whose client is a New client (built: `golden/variants/gd1-sold.json`, GD1 under the client "Golden Manufacturing
+  Sold (synthetic)" with Medical agreed at 5 % and CG1N and U2 sold, so Cigna and UnitedHealthcare book one record each,
+  OQ75; its key `golden/keys/gd1-sold.json`, unsigned; the root fixtures `gd1_sold` (module) and `sell_gd1` (a test's
+  own copy); `seed_golden` builds it with the rest, and `seed_golden GD1-sold` alone).
 - **GD2 Golden Small Shop** (built): a one-plan small group.
 - **GD3 Quote-first** (slice 13): no intake answers and no census. Medical starts with typed whole-line tier counts and
   ten alternates; a PEPM line prices from typed lives (F92) and an accident quote borrows medical's counts (OQ19). Its

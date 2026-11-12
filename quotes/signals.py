@@ -4,7 +4,7 @@
 - `plans_changed(deal_id, lines)`: plans on these lines changed (values, stars, order, slots, links, roles,
   enrollment, plans added or removed); proposals clears the lines' Plans card marks (J19, J.6.4).
 Each is sent once the write's transaction commits, with `send_robust`, so a receiver that fails is logged and never
-undoes the write (N.3 #6). No app receives them yet.
+undoes the write (N.3 #6). Commission receives `sold_changed` (it books the deal; slice 49).
 """
 
 from django.db import transaction

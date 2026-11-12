@@ -57,7 +57,44 @@ BASIS_PACKAGES = {'sold': 'Sold', 'renewal': 'Renewal', 'current': 'Current', 'e
 DEFAULT_FIRST_YEAR_PCT = Decimal('40')
 DEFAULT_RENEWAL_PCT = Decimal('30')
 
-LIMITS = {'name': 200, 'email': 254, 'phone': 50, 'npn': 20, 'max_years': 99}
+LIMITS = {'name': 200, 'email': 254, 'phone': 50, 'npn': 20, 'max_years': 99, 'notes': 2000, 'reason': 300}
+
+# A booked record's status (H54; 891f1b3 `BookTab.jsx` STATUS_OPTIONS, plus `void`, H32). Expected counts booked and
+# active records only (bug 5); a void record is hidden from the Book unless the status filter asks for it.
+BOOKED, ACTIVE, RENEWED, TERMINATED, LOST_BOR, VOID = 'booked', 'active', 'renewed', 'terminated', 'lost_bor', 'void'
+STATUSES = [
+    (BOOKED, 'Booked'),
+    (ACTIVE, 'Active'),
+    (RENEWED, 'Renewed'),
+    (TERMINATED, 'Terminated'),
+    (LOST_BOR, 'Lost (BOR)'),
+    (VOID, 'Void'),
+]
+STATUS_KEYS = tuple(key for key, _ in STATUSES)
+STATUS_LABELS = dict(STATUSES)
+LIVE = (BOOKED, ACTIVE)
+ENDED = (RENEWED, TERMINATED, LOST_BOR, VOID)  # a hand move to one of these adds a term end (H54)
+
+# What booking could not fill (H37), shown, never guessed: the Book's short word and the drawer's sentence
+# (891f1b3 `BookingSummaryModal.jsx` HOLE_LABEL, `RecordDrawer.jsx` HOLE_LABEL).
+HOLES = {
+    'premium': ('premium', 'premium not known — enter the final premium as billed'),
+    'rate': ('rate', 'rate not set for this deal'),
+    'employees': ('enrolled count', 'enrolled count needed for PEPM'),
+    'year': ('year unknown', 'year with us not known — booked at the renewal %'),
+    'effective': ('effective date', 'no effective date'),
+    'plan': ('no sold plan', 'no sold plan on this line'),
+}
+# Where a record's fact came from (`sources` origin; the old SOURCE_LABEL's words).
+RECORD_SOURCES = {
+    'sale': 'from the sale',
+    'typed': 'entered by hand',
+    'in_force': 'in force (Intake)',
+    'agency': 'agency default',
+}
+BOOK_CAP = 500  # rows one Book answer carries; past it the screen asks to narrow the filter (H50, review 32)
+NOT_BOOKED = 'Sold — not booked'
+DISCLOSURE_HINT = 'Send it only inside the close-out packet.'
 
 
 def _pairs(choices):
@@ -81,4 +118,10 @@ def meta():
         'scope_hint': SCOPE_HINT,
         'rate_sources': RATE_SOURCES,
         'limits': LIMITS,
+        'statuses': _pairs(STATUSES),
+        'live_statuses': list(LIVE),
+        'holes': {key: {'short': short, 'long': long} for key, (short, long) in HOLES.items()},
+        'record_sources': RECORD_SOURCES,
+        'not_booked': NOT_BOOKED,
+        'disclosure_hint': DISCLOSURE_HINT,
     }

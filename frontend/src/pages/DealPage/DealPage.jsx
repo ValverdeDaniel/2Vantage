@@ -8,6 +8,7 @@ import { dealPresence, useDocWindowPresence } from '../../viewer/docWindowLink';
 import ErrorBoundary from '../../ui/ErrorBoundary';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
+import BookingSlot from './BookingSlot';
 import DealHeader from './DealHeader';
 import DealSidebar from './DealSidebar';
 import { tabFor, tabLabel } from './nav';
@@ -74,6 +75,7 @@ export default function DealPage() {
       <div className="bb-content">
         <DealHeader key={deal.id} deal={deal} meta={meta.data} />
         <WorkWithClaude deal={deal} tab={shown} />
+        <BookingSlot deal={deal} />
         <section aria-label={label} className="bnf-claude-section">
           <ErrorBoundary resetKey={shown}>
             <Suspense fallback={<Loading label={`Loading the ${label}…`} />}>

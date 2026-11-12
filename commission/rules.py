@@ -8,9 +8,9 @@ data, and nothing here reads the database.
 - `resolve`: the split that applies: the deal's, else the client's, else the deal owner, else the client owner, else
   the house at 100 % (H10).
 - `producer_pct`: the primary's producer share in the year, else the firm default; the house keeps the rest.
-- `year_number`: the year a deal pays in, before any record exists: the typed "year with us", else the first year
-  for a deal opened for a Prospect or a New client, else unknown (renewal terms; OQ72's default, H30). Slice 49 adds
-  the earlier records.
+- `year_number`: the year a deal pays in (H30, OQ72's default in §5.6's order): with earlier records, 1 + the number
+  of distinct earlier effective years; else the typed "year with us"; else the first year for a deal opened for a
+  Prospect or a New client, else unknown (renewal terms and a "year unknown" hole).
 """
 
 from decimal import Decimal
@@ -179,9 +179,12 @@ def producer_pct(primary, settings, first_year):
     return Decimal(getattr(settings, field)), 'default'
 
 
-def year_number(typed, opened_as):
-    """The year the deal pays in, before any booked record: typed, else 1 unless the deal was opened for an Existing
-    client (then None: not known, which pays the renewal terms)."""
+def year_number(typed, opened_as, earlier=0):
+    """The year the deal pays in: 1 + `earlier` (the client's distinct earlier effective years on records that are not
+    void), else typed, else 1 unless the deal was opened for an Existing client (then None: not known, which pays the
+    renewal terms)."""
+    if earlier:
+        return 1 + earlier
     if typed:
         return typed
     return None if opened_as == lifecycle.EXISTING_CLIENT else 1

@@ -108,7 +108,7 @@ def _basis_block(state, package, line):
     }
 
 
-def _coverage(deal_id):
+def coverage_rows(deal_id):
     """{line: first in-force coverage row} in the card's order (the row the intent card decides on)."""
     out = {}
     for row in CurrentCoverage.objects.filter(deal_id=deal_id, in_force=True).order_by('sort_order', 'id'):
@@ -130,13 +130,13 @@ def _in_force(state, row):
     }
 
 
-def line_rows(deal, rates, agency):
+def line_rows(deal, rates, agency, states=None):
     """(rows, total, note, employees for a PEPM split row) for the grid (H3–H8). `rates` is the deal's {line: Comp};
-    `agency` the agency default Comp or None."""
-    states = deal_state(deal)
+    `agency` the agency default Comp or None; `states` the deal's line states when the caller has them."""
+    states = deal_state(deal) if states is None else states
     sold_lines = [key for key, state in states.items() if any(plan.sold for plan in state.plans)]
     keys = shown_lines(deal.requested_lines, rates, states, sold_lines)
-    coverage = _coverage(deal.id)
+    coverage = coverage_rows(deal.id)
     rows, total, counted = [], Decimal(0), False
     for key in keys:
         state = states.get(key) or empty(key)

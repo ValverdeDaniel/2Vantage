@@ -1,5 +1,6 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { createElement } from 'react';
-import { useRevertActivity } from '../../../api/deals';
+import { dealKey, useRevertActivity } from '../../../api/deals';
 import { boardExport, useCopyPlan, useCreateRenewal, useSetSold } from '../../../api/quotes';
 import {
   useClearLine,
@@ -14,6 +15,7 @@ import {
 import { downloadFile } from '../../../lib/download';
 import { errorText } from '../../../lib/errors';
 import { useToast } from '../../../ui/useToast';
+import * as bookingBridge from '../../shared/bookingBridge';
 import UndoNote from './UndoNote';
 
 /*
@@ -26,6 +28,7 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 export default function useBoardActions(dealId, line, lineLabel) {
   const toast = useToast();
+  const queryClient = useQueryClient();
   const doors = {
     star: useStar(dealId),
     shortlist: useClearShortlist(dealId),
@@ -132,11 +135,18 @@ export default function useBoardActions(dealId, line, lineLabel) {
         .mutateAsync(plan.id)
         .then(() => toast.success('Duplicated, with its rates'))
         .catch(failed),
-    setSold: (plan, sold) =>
-      doors.sold
+    setSold: (plan, sold) => {
+      // The booking summary opens when this sale first makes the deal Sold (H35), never on every Sold toggle (bug 27).
+      const first = sold && queryClient.getQueryData(dealKey(dealId, 'header'))?.stage !== 'sold';
+      return doors.sold
         .mutateAsync({ planId: plan.id, sold })
-        .then(() => toast.success(sold ? `${plan.name} marked sold` : `${plan.name} un-sold`))
-        .catch(failed),
+        .then((answer) => {
+          toast.success(sold ? `${plan.name} marked sold` : `${plan.name} un-sold`);
+          if (first && answer?.deal?.stage === 'sold') bookingBridge.open(dealId);
+        })
+        .catch(failed);
+    },
+    viewBooking: () => bookingBridge.open(dealId), // the sold plan's "Booked · view" (H35)
     exportBoard: (params) => {
       const { url, params: query } = boardExport(dealId, params);
       return downloadFile(url, { params: query, fallbackName: 'quote-comparison.xlsx' })

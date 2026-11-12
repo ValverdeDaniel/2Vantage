@@ -196,12 +196,44 @@ def get_to_market(user):
     return GetToMarket(user)
 
 
+# ---- GD1-sold (plan.md §13.4; slice 49): GD1 after its sale, a variant under a client name of its own ---------------
+@pytest.fixture(scope='module')
+def gd1_sold(django_db_setup, django_db_blocker):
+    """GD1-sold built once for this test module and removed after it: its sale books on commit (two medical records,
+    Cigna and UnitedHealthcare) and makes its client a New client. Read-only; a test that writes uses `sell_gd1`."""
+    from commission.models import Party
+    from deals.models import Activity
+    from golden import seed, specs
+
+    with django_db_blocker.unblock():
+        builder, _ = get_user_model().objects.get_or_create(username='golden-sold-builder')
+        built = seed.build(specs.load('GD1-sold'), builder)
+    yield built
+    with django_db_blocker.unblock():
+        seed.remove(built.spec, builder)
+        for party in Party.objects.filter(user=builder):  # the owner's Party, made by the booking (H95)
+            Activity.objects.filter(subject=f'party:{party.id}').delete()
+            party.delete()
+        builder.delete()
+
+
+@pytest.fixture
+def sell_gd1(user, django_capture_on_commit_callbacks):
+    """GD1-sold built for this test only (it writes), owned by `user`, with its sale's on-commit booking run."""
+    from golden import seed, specs
+
+    with django_capture_on_commit_callbacks(execute=True):
+        built = seed.build(specs.load('GD1-sold'), user)
+    return built
+
+
 @pytest.fixture(scope='session')
 def golden_keys():
-    """{'GD1': its answer key, …} (Q.4): the figures, with checked_by, checked_on and method (null until signed)."""
+    """{'GD1': its answer key, …} (Q.4): the figures, with checked_by, checked_on and method (null until signed), the
+    variants' (GD1-sold) among them."""
     from golden import specs
 
-    return {key: specs.answer_key(key) for key in specs.keys()}
+    return {key: specs.answer_key(key) for key in [*specs.keys(), *specs.variant_keys()]}
 
 
 # ---- GD-Big (plan.md §13.4, Q.7): scale, in tests only; the builder is the root's gd_big.py -------------------------

@@ -8,6 +8,7 @@ from collections import namedtuple
 from django.contrib.auth import get_user_model
 from django.db import transaction
 
+from commission import services as commission
 from deals.lifecycle import NEW_CLIENT, PROSPECT
 from deals.models import Client
 from deals.services import create_client, delete_client, set_status
@@ -37,8 +38,10 @@ def seed_user():
 
 @transaction.atomic
 def remove(spec, user):
-    """Delete every client named as the spec's client, with its deals (the client service)."""
+    """Delete every client named as the spec's client, with its deals (the client service) and, first, its booked
+    commission records, which are never deleted otherwise (commission's seeders-only `forget_client`, slice 49)."""
     for client_id in Client.objects.filter(name=spec['client']).values_list('id', flat=True):
+        commission.forget_client(client_id)
         delete_client(user, client_id)
 
 
@@ -114,16 +117,28 @@ def build(spec, user):
     for package in spec['packages']:
         plans.create_package(user, deal, package['line'], package['name'], [refs[ref] for ref in package['plans']])
     proposals.set_config(user, deal, {'reasons': spec['reasons']})
+    _after(user, deal, spec, refs)
     deal.refresh_from_db()
     return Golden(deal, refs, spec)
 
 
-def build_all(user=None, only=None):
-    """{key: Golden} for every spec (or the keys in `only`), in key order."""
+def _after(user, deal, spec, refs):
+    """A variant's steps after its base deal (golden/specs.py): the agreed rates typed on the Commission tab, then its
+    plans marked sold, as a person clicks them. The sale books on commit (quotes' `sold_changed`, H25)."""
+    if spec.get('rates'):
+        commission.update(user, deal.id, {'rates': spec['rates']})
+    for ref in spec.get('sold', []):
+        plans.set_sold(user, refs[ref], True)
+
+
+def build_all(user=None, only=None, variants=False):
+    """{key: Golden} for every spec (or the keys in `only`, variants among them), in key order; `variants` adds every
+    variant when `only` is empty (`seed_golden` with no keys)."""
     user = user or seed_user()
-    return {key: build(specs.load(key), user) for key in specs.keys() if not only or key in only}
+    keys = specs.keys() + (specs.variant_keys() if variants or only else [])
+    return {key: build(specs.load(key), user) for key in keys if not only or key in only}
 
 
 def remove_all(user):
-    for spec in specs.load_all():
+    for spec in [*specs.load_all(), *(specs.load(key) for key in specs.variant_keys())]:
         remove(spec, user)

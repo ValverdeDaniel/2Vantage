@@ -62,8 +62,13 @@ def _party_id(row, by):
     return party.id
 
 
+def stored_row(row, by):
+    """A cleaned or resolved row as it is stored: its Party id (made now for a login with none, H11) and its terms."""
+    return {'party': _party_id(row, by), **{key: row.get(key) for key in STORED}}
+
+
 def _stored(rows, by):
-    return [{'party': _party_id(row, by), **{key: row[key] for key in STORED}} for row in rows]
+    return [stored_row(row, by) for row in rows]
 
 
 def _owner(by, stored, deal, client, scope):
