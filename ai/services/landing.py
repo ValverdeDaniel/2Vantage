@@ -10,21 +10,28 @@
   applied too, writing nothing on the deal (D60). Applying twice is refused (409).
 - `undo(user, job_id, force)` is ↶ Undo this run (D73): the reader's `undo` reverts the landing; when something
   changed since, the 409 says what and that "Undo anyway" (`force`) can leave those and put back the rest.
+- `on_finish(job, change_set)` is the `read` kind's land hook (D71, slice 20): in the transaction that ends the job it
+  asks `ai/land.py` whether the read lands by itself and, if so, lands it as proposed through the reader, exactly as
+  "Use this scan ▸" would, with the same ↶ Undo this run. A landing the owner refuses (the deal changed meanwhile) is
+  taken back and the read waits for review with the refusal's sentence.
 Each locks the Deal first, then the job (O.3.7), then the reader locks its owner's rows.
 """
+
+import logging
 
 from django.db import transaction
 from rest_framework import status
 from rest_framework.exceptions import APIException
 
-from deals import clock
+from deals import clock, rules
 from deals.activity import Refused
 from deals.models import Deal
 
-from .. import kinds, registry
-from ..models import Job
+from .. import kinds, land, registry
+from ..models import DealAi, Job
 
-STAGED = 'staged'
+logger = logging.getLogger(__name__)
+
 DISCARDED, APPLIED, UNDONE = 'discarded', 'applied', 'undone'
 NOT_WAITING = 'This read is not waiting for review, so there is nothing to discard.'
 ALREADY_APPLIED = 'This read was already used, so it cannot be discarded. Undo it instead.'
@@ -33,6 +40,7 @@ USED = 'This read was already used.'
 NOT_USED = 'This read was not used, so there is nothing to undo.'
 NOTHING_WRITTEN = 'Using this read changed nothing on the deal, so there is nothing to undo.'
 NO_LANDING = 'Reads of this kind cannot be used here yet.'
+COULD_NOT = 'Claude’s read could not be put on the deal by itself, so it waits for review.'
 KEPT = ('v', 'target', 'documents', 'summary', 'counts', 'model', 'cost_usd', 'estimate_usd')
 
 
@@ -51,7 +59,7 @@ def waiting(job):
     return (
         job.kind in (kinds.READ, kinds.RECHECK)
         and job.status in (kinds.DONE, kinds.CANCELLED)
-        and job.land == STAGED
+        and job.land == land.STAGED
         and not job.resolution.startswith((DISCARDED, APPLIED, UNDONE))
         and bool((job.result or {}).get('items'))
     )
@@ -125,3 +133,57 @@ def undo(user, job_id, force=False):
         job.resolution = UNDONE
         job.save(update_fields=['result', 'resolution', 'updated_at'])
     return job, True
+
+
+def _direct(user):
+    from accounts.access import can_direct
+
+    return bool(getattr(user, 'is_staff', False)) or can_direct(user)
+
+
+def _sentence(exc):
+    detail = getattr(exc, 'detail', None)
+    if isinstance(detail, dict):
+        detail = next(iter(detail.values()), '')
+    if isinstance(detail, list):
+        detail = detail[0] if detail else ''
+    return str(getattr(exc, 'sentence', '') or detail or COULD_NOT)[:200]
+
+
+def on_finish(job, change_set):
+    """The job fields a finished read ends with: landed by itself ({land: auto, resolution: applied, result with
+    `landed`, activity}), or waiting with why ({land: staged, wait_reason}). Runs inside `running._finish`'s
+    transaction, after its Deal and job are locked here."""
+    reader = registry.readers.get(job.target)
+    if reader is None or not (change_set or {}).get('items'):
+        return {}
+    locked = _locked(job.id)
+    user = locked.created_by
+    decision = land.decide(
+        change_set,
+        target=job.target,
+        must_review=reader.must_review or reader.apply is None,
+        direct=_direct(user),
+        asked_review=bool((job.params or {}).get('review')),
+        locked=DealAi.objects.filter(deal_id=job.deal_id, locked_at__isnull=False).exists(),
+        lost=rules.refuses(locked.deal, 'ai_land') or '',
+    )
+    if decision.mode != land.AUTO:
+        return {'land': land.STAGED, 'wait_reason': decision.sentence[:200]}
+    locked.result = change_set
+    try:
+        with transaction.atomic():  # a savepoint: a refused landing goes back alone, the job still ends
+            landed = reader.apply(user, locked.deal, locked, select=None, picks=None)
+    except (Refused, APIException) as exc:
+        return {'land': land.STAGED, 'wait_reason': _sentence(exc)}
+    except Exception as exc:  # noqa: BLE001 - the read stays, waiting; the class only, never its text (rule 10)
+        logger.warning('Job %s could not land by itself: %s', job.id, exc.__class__.__name__)
+        return {'land': land.STAGED, 'wait_reason': COULD_NOT}
+    landed = {**landed, 'by': user.id, 'at': clock.now().isoformat(), 'auto': True}
+    return {
+        'land': land.AUTO,
+        'wait_reason': '',
+        'resolution': APPLIED,
+        'result': {**change_set, 'landed': landed},
+        'activity_id': landed.get('activity_id'),
+    }

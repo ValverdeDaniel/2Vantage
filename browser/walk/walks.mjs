@@ -11,6 +11,7 @@ import { documents23 } from './documents23.mjs';
 import { documents65 } from './documents65.mjs';
 import { intake39 } from './intake39.mjs';
 import { pages14 } from './pages14.mjs';
+import { quoteDoor20 } from './quoteDoor20.mjs';
 import { quoteFirst13 } from './quoteFirst13.mjs';
 import { scanQuotes19 } from './scanQuotes19.mjs';
 
@@ -56,6 +57,7 @@ export const WALKS = {
     },
   },
   1: { ...scanQuotes19, run: (ctx) => scanQuotes19.run(ctx, { signIn, openDeal }) }, // scan quotes; slice 19 (one real read)
+  '1q': { ...quoteDoor20, run: (ctx) => quoteDoor20.run(ctx, { signIn }) }, // need 1 by the quote-first door; slice 20 (one real read)
   4: {
     title: 'Search plans by name: "UHC" finds the UnitedHealthcare quotes on every line (F14–F17, OQ14)',
     deal: 'GD1',

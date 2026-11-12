@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useAiState, useStopJob } from '../../api/ai';
 import { useMeta } from '../../api/meta';
-import { QuoteReview } from '../advisor';
 import LandedStrip from './LandedStrip';
 import { endedText, readerKinds, readsOn, runningText } from './readWords';
+import { RENDERERS } from './renderers';
 import ReviewCard from './ReviewCard';
 
 /*
@@ -14,8 +14,6 @@ import ReviewCard from './ReviewCard';
  * (D26). Reads start from the station's ↻ Re-read… panel (E75) and, from slice 20, the drawer. `onOpen(doc, page)`
  * shows a staged value's page in the station's viewer (E78's pin).
  */
-const RENDERERS = { quotes: QuoteReview };
-
 export default function ReadReviews({ dealId, files, onOpen }) {
   const { data: meta } = useMeta();
   const [dismissed, setDismissed] = useState(new Set());

@@ -2,9 +2,11 @@
 
 A `read` job's files go in upload order: screen → ranges (`ranges.py`) → an estimate that stops at the cap → content
 (`content.py`) → `extract`, up to four ranges at once, halving a range whose answer is cut off → the reader merges the
-answers, finds each value in its file and builds the change set (D.6's shape) → it waits for review. In slice 18 every
-read waits (`land` 'staged'); who lands at once is slice 20's (D71). Nothing here writes a plan, a value or Activity:
-the job's own row holds the change set, and each call its row in the ledger.
+answers, finds each value in its file and builds the change set (D.6's shape) → when the read found something it
+doubts hard and its person may use Opus 5.5, Opus reads the files again and its read replaces the first (D76's
+step-up, before landing) → the change set lands by itself or waits for review (`ai/land.py`, D71; the job's land hook,
+`services.landing.on_finish`). Nothing here writes a plan, a value or Activity: the job's own row holds the change
+set, and each call its row in the ledger.
 
 What a read keeps when it ends early: Stop keeps the ranges finished (the change set is marked partial); a run past its
 cost cap, or one the total cap or the account refuses, keeps them too and names the rest as failed parts. A run whose
@@ -26,8 +28,10 @@ from .models import Job
 from .progress import JobFailed, Stopped
 
 USAGE_KEYS = ('input_tokens', 'output_tokens', 'cache_creation_input_tokens', 'cache_read_input_tokens')
-OVER_BUDGET, STAGED = 'budget', 'staged'  # Job.land: waiting past a cap; waiting for review
+OVER_BUDGET, STAGED = 'budget', 'staged'  # Job.land: waiting past a cap; waiting for review (land.py: auto)
 HALTS = {budget.TOTAL: 'total_cap', budget.RUN: 'over_cap'}
+STEP_UP = 'Claude doubted part of this read, so Opus 5.5 reads it again'
+STEP_UP_FAILED = 'Opus 5.5 could not finish reading these files again, so this is the first read.'
 
 
 def may_use_opus(user):
@@ -154,8 +158,33 @@ def build(job, run, extra):
     return run.reader.build_changes(job.deal, job.created_by, merged, run.files, extra)
 
 
+def steps_up(changes, reading):
+    """The Opus step-up (D76): a whole read with a hard finding, by a person who may use Opus 5.5 (D91)."""
+    return (
+        reading.model != pricing.OPUS
+        and reading.allow_other
+        and not (reading.failed or reading.halt)
+        and any(finding.get('hard') for finding in changes.get('findings') or [])
+    )
+
+
+def step_up(job, progress, first, work, extra, changes):
+    """(run, changes): Opus reads the same ranges again; its whole read replaces the first, which stays otherwise.
+    The run's cost cap counts both reads."""
+    progress.step(STEP_UP, 50)
+    second = Run(job, progress, first.reader, first.files, model=pricing.OPUS, effort=first.effort)
+    second.spent, second.usage, second.calls = first.spent, first.usage, first.calls
+    second.run(work)
+    _save_usage(job, second)
+    if second.parts and not (second.failed or second.halt):
+        return second, build(job, second, {**extra, 'model': pricing.OPUS, 'cost_usd': f'{second.spent:.4f}'})
+    findings = [*(changes.get('findings') or []), {'text': STEP_UP_FAILED, 'hard': False}]
+    return second, {**changes, 'cost_usd': f'{second.spent:.4f}', 'findings': findings}
+
+
 def run(job, progress):
-    """The `read` job's runner: returns the change set (Job.result), which waits for review."""
+    """The `read` job's runner: returns the change set (Job.result); the land hook then lands it or leaves it
+    waiting."""
     reader = registry.readers.get(job.target)
     if reader is None:
         raise JobFailed('Nothing reads files for this yet.')
@@ -193,6 +222,8 @@ def run(job, progress):
         if reading.halt:
             extra['halted'] = reading.halt[1]
         changes = build(job, reading, extra)
+        if steps_up(changes, reading):
+            reading, changes = step_up(job, progress, reading, work, extra, changes)
     except Stopped:  # Stop keeps what finished (D105): the change set waits, marked partial
         _save_usage(job, reading)
         extra.update(cost_usd=f'{reading.spent:.4f}', partial=True, failed_parts=failed + reading.failed)

@@ -29,6 +29,8 @@ def samples(world):
         'api/ai/jobs/<int:job_id>/discard/': {'job_id': job.id},
         'api/ai/jobs/<int:job_id>/apply/': {'job_id': job.id},
         'api/ai/jobs/<int:job_id>/undo/': {'job_id': job.id},
+        'api/deals/<int:pk>/ai/sends/': {'pk': deal.id},
+        'api/ai/jobs/<int:job_id>/retry/': {'job_id': job.id},
     }
 
 
@@ -48,6 +50,9 @@ def matrix(world):
         ('POST', 'api/ai/jobs/<int:job_id>/discard/', REFUSED),  # a rank job is no change set waiting for review
         ('POST', 'api/ai/jobs/<int:job_id>/apply/', REFUSED),  # nor a read to use (slice 19)
         ('POST', 'api/ai/jobs/<int:job_id>/undo/', REFUSED),  # nor a used read to undo (slice 19)
+        # attaching without a key reads nothing (D26), and a rank job is no read to try again (slice 20)
+        ('POST', 'api/deals/<int:pk>/ai/sends/', REFUSED, {'document_ids': [world['document'].id]}),
+        ('POST', 'api/ai/jobs/<int:job_id>/retry/', REFUSED),
     ]
 
 

@@ -1,12 +1,16 @@
 """Running one claimed job to its end (plan.md §10.2; O.3.3, D105).
 
 `run(job)` calls the kind's runner (registry.job_kinds) with a `Progress`, then writes how it ended, but only while the
-job is still running: a job the reaper took is left as the reaper wrote it. A failure is logged by the job's id and
-the exception's class, never its text (a message can carry a file's words, rule 10); the person reads a fixed
-sentence. `run_inline(job)` claims one job and runs it at once: tests and AI_JOBS_INLINE (plan §3.5).
+job is still running: a job the reaper took is left as the reaper wrote it. A kind's `land` hook runs in that same
+transaction (a read that lands by itself, D71): if the job is no longer running, its landing is taken back too. A
+failure is logged by the job's id and the exception's class, never its text (a message can carry a file's words, rule
+10); the person reads a fixed sentence. `run_inline(job)` claims one job and runs it at once: tests and AI_JOBS_INLINE
+(plan §3.5).
 """
 
 import logging
+
+from django.db import transaction
 
 from deals import clock
 
@@ -21,23 +25,29 @@ STOPPED_STEP = 'Stopped — what was finished is kept.'
 PAUSED_STEP = 'Paused while the worker restarted; it starts again in a moment.'
 
 
-def _finish(job, progress, status, *, result=None, error='', resolution=''):
+def _finish(job, progress, status, *, result=None, error='', resolution='', land=None):
     now = clock.now()
     steps = progress.steps
     if status == kinds.CANCELLED:
         steps = [*steps, STOPPED_STEP][-kinds.STEPS_KEPT :]
-    written = Job.objects.filter(pk=job.pk, status=kinds.RUNNING).update(
-        status=status,
-        result=result or {},
-        error=error,
-        resolution=resolution,
-        steps=steps,
-        progress=100 if status == kinds.DONE else progress.progress,
-        activity_id=progress.activity_id,
-        finished_at=now,
-        heartbeat_at=now,
-        updated_at=now,
-    )
+    fields = {
+        'status': status,
+        'result': result or {},
+        'error': error,
+        'resolution': resolution,
+        'steps': steps,
+        'progress': 100 if status == kinds.DONE else progress.progress,
+        'activity_id': progress.activity_id,
+        'finished_at': now,
+        'heartbeat_at': now,
+        'updated_at': now,
+    }
+    with transaction.atomic():
+        if land is not None:
+            fields.update(land(job, fields['result']) or {})
+        written = Job.objects.filter(pk=job.pk, status=kinds.RUNNING).update(**fields)
+        if not written:
+            transaction.set_rollback(True)  # reaped meanwhile: a landing in this transaction goes back too
     return bool(written)
 
 
@@ -77,7 +87,7 @@ def run(job, stopping=None):
         logger.warning('Job %s (%s) failed: %s', job.id, job.kind, exc.__class__.__name__)
         _finish(job, progress, kinds.FAILED, result=progress.result, error=FAILED_SENTENCE)
         return kinds.FAILED
-    _finish(job, progress, kinds.DONE, result=result)
+    _finish(job, progress, kinds.DONE, result=result, land=entry.land)
     return kinds.DONE
 
 

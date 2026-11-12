@@ -13,6 +13,7 @@ import QuoteBoard from './board/QuoteBoard';
 import PackagesPanel from './PackagesPanel';
 import useAdvisorPrefs from './useAdvisorPrefs';
 import ViewPills from './ViewPills';
+import { AddQuotesButton } from '../claude'; // Work with Claude's door on the board (F96; slice 20)
 
 /*
  * The Advisor (plan.md §8.14; F1, F2, F5–F8; the old close/AdvisorTab.jsx, split by responsibility): the title and
@@ -99,8 +100,16 @@ export default function AdvisorTab({ deal }) {
     );
   } else if (!lines.data.length) {
     body = (
-      <EmptyPanel title="No lines to quote yet">
-        Add the lines to quote in the deal header (Lines), then add plans here.
+      <EmptyPanel
+        title="No lines to quote yet"
+        actions={
+          <span className="bnf-count-actions">
+            <AddQuotesButton primary />
+          </span>
+        }
+      >
+        Add the lines to quote in the deal header (Lines), then add plans here — or add the carrier quotes, and Claude
+        adds the lines they quote.
       </EmptyPanel>
     );
   } else if (!data && comparison.isError) {
@@ -130,6 +139,7 @@ export default function AdvisorTab({ deal }) {
             <button type="button" className="btn btn-secondary btn-sm" onClick={() => setDialog({ kind: 'import' })}>
               ⤒ Import from template
             </button>
+            <AddQuotesButton />
           </span>
         }
       >

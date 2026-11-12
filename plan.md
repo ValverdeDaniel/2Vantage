@@ -3880,7 +3880,19 @@ documents, stopping, queue_position, counts, landed: {areas, plan_ids}, error, r
 created_at, started_at, finished_at}`, and `ai/jobs/{id}/` adds `steps`, `params` and `result`. `locate/` takes
 `{document_ids, recheck?}` (this deal's files, removed ones too) and answers 201 with the new job, or 200 with the same
 check already queued or running. Stop on a finished job answers 409 with a sentence; on a stopped one it changes
-nothing. The two polled GETs use the `ai_poll` throttle alone.
+nothing. The two polled GETs use the `ai_poll` throttle alone. Built in slice 20: POST `deals/{id}/ai/sends/`
+`{document_ids, model?, budget_override?}` (attaching is the request, D16, D17) → 201 `{jobs: [job, one per reader, in
+the send order census → questionnaire → intake → quotes → sbc], not_read: [ids no reader reads]}`, 200 when nothing new
+started; 409 without a key; 400 for ids not this deal's. POST `ai/jobs/{id}/retry/` `{model?, force?,
+budget_override?}` (↻ Try again, D76; Run anyway, D24) → 201 the new read (`params.retry_of`), on the next model up the
+ladder when the person may use it, else the same; a used read is undone first (409 with `can_force`, as Undo), a
+waiting one discarded; 409 while it runs, for a job that is no read, or Opus or Run anyway by someone neither admin nor
+direct. `reads/` takes `review: true` (the Re-read panel: the read waits even for a direct person, E75). The state
+adds `read_documents` (files a finished read read), `spend.budget_usd` with the setting's default and `own_budget`,
+`can.opus` (Opus, Run anyway and reads that land at once: admins and direct people), and on each job `model`,
+`cost_usd` (so far), `recent_steps` (the last 8), `over` (run, deal or total), `retry_of`, `review`; `news` rows add
+`auto` (it landed by itself, D71), `model` and `plan_ids`. `/api/meta/`'s `ai` adds `tabs` ({tab: [readers]}),
+`send_order` and `default_model`.
 
 | Method | Path | Auth | Request and response |
 |---|---|---|---|
@@ -3891,7 +3903,8 @@ nothing. The two polled GETs use the `ai_poll` throttle alone.
 | POST | `deals/{id}/ai/messages/` | user | `{chat_id?, text, document_ids?, tab, viewer?, board?, model?, budget_override?}` → `201 {chat_id, message, job, queue_position}` |
 | POST | `deals/{id}/ai/reads/`, `…/recheck/`, `…/locate/`, `…/rank/` | user | The button doors: read files (D39), re-check values (D93), find each value in its file (E59), rank plans (D96) → `201` job |
 | GET | `ai/jobs/{id}/` | user | One job and its change set, with an ETag |
-| POST | `ai/jobs/{id}/cancel/`, `…/apply/`, `…/discard/`, `…/undo/`, `…/retry/` | user | `apply/ {select?, picks?}` → `{job, landed}`; `undo/ {force?}` → `{job, undone}`, 409 with `can_force` when something changed since (built in slice 19); `retry/ {model, mode}` |
+| POST | `deals/{id}/ai/sends/` | user | `{document_ids, model?, budget_override?}` → `201 {jobs, not_read}`: the files just attached, one read per reader in the send order (D16, D17; built in slice 20) |
+| POST | `ai/jobs/{id}/cancel/`, `…/apply/`, `…/discard/`, `…/undo/`, `…/retry/` | user | `apply/ {select?, picks?}` → `{job, landed}`; `undo/ {force?}` → `{job, undone}`, 409 with `can_force` when something changed since (built in slice 19); `retry/ {model?, force?, budget_override?}` → `201` the new read (built in slice 20) |
 
 Payloads come from `ai/selectors.py`; `useAiState` is the only poller (O.4). Client guidance is written through intake
 (§7.6), not here (O.6 #16). Attach SBC and "As quoted" are quotes' doors (§7.8). Full list: Part D, D.6.
@@ -4310,7 +4323,12 @@ Calendar button waits with the Radar (I88). The view pill (`bnf-viewtab`) keeps 
 - **New deal page** (`/deals/new`, A14): the two old mode cards, "1 · Get to Market — New client — start the intake" and
   "2 · Quote to Close — I already have carrier quotes", then Group name *, Renewal date and Notes (the deal's first
   note). It creates a Prospect and its deal. Card 2 creates the deal first and opens the Advisor with Work with Claude
-  (D43; slice 20). Until slice 20, **＋ New deal** opens the New client dialog with Status Prospect.
+  (D43; slice 20). Until slice 20, **＋ New deal** opens the New client dialog with Status Prospect. **Built in slice
+  20** (`pages/NewDealPage/`): ＋ New deal opens it; card 2 shows only with Claude set up (D26) and opens Work with
+  Claude on the page (`QuoteDrop`): the first files dropped or attached make the deal (Prospect, no lines: the read's
+  `add_lines` brings them, D56), are filed as carrier quotes and read at once, and the deal opens on
+  `/deals/{id}/advisor?claude=1`; card 1's "Create deal & open intake ▸" opens Intake. Notes go to the deal's notes
+  (slice 38's `deals/{id}/notes/`). The duplicate check ("Already here?") is the dialog's.
 - **New client dialog** (2V's, on old classes from slice 4): Client name (required), Status (Prospect or Existing
   client, §5.1), Target effective date (optional), Lines to quote (multi-select, default Medical; from slice 11 written
   through Intake's intent service, B17), Owner (users, default me). While the name is typed, up to 5 existing clients
@@ -4655,6 +4673,20 @@ Part D (D1–D45, D134; D.6). Slices 18–20, 24 and 66. Shown only when a key i
   Read it with Claude ▸" and Intake's ✦ (D37–D40, D42, D134); the quote-first door (D43); `?claude=read&docs=…` opens
   the quote reader on named files (I53).
 - Claude Unleashed, lessons and saved readers wait (D2, D10, D30, D33; OQ4).
+- **Built in slice 20** (`src/deal/claude/`): `WorkWithClaude` (the strip, the pill and the drawer, mounted once in the
+  deal shell under the header; the shell's section is `bnf-claude-section`, where landed plans flash, and the workspace
+  wears `bnf-wwc-room` on the pill's tabs), `door.js` (the one door: a tab opens the drawer on a kind or hands it the
+  files dropped on it), `ClaudeDrawer` (D4; Escape closes unless a dialog is over it) with the head's "Reading" picker
+  (D5: the tab's readers' kinds from meta `ai.tabs`, stamped on attached files, for everyone), `ModelBar` (D9's one
+  picker, labelled "Claude", Opus 5.5 only for admins and direct people; "Deal $y of $25"; "Last read: <model> · $x",
+  D8), `FileChips` (D13: kind and role selects, pages and left-out pages, "scanned"; "📥 Read N files into the table"),
+  `FileRoom` (D14: on Documents and Overview the "File as" list, then every file with ticks), `useAttach` (D16, D17: a
+  drop or 📎 uploads under the kind and sends at once; a drop is never refused, the read queues), `RunningCard` (D21,
+  D22, D27), `OverBudget` (D24), `ClaudeStrip` (D34), `flashPlans` (D35, F112), `AddQuotesButton` (F96, D37: the
+  Advisor's board head and its empty states) and `QuoteDrop` (the quote-first door's drawer, D43). Documents' drop zone
+  and "＋ Add files" hand their files to the drawer when Claude is set up (else the tab files them itself). Not built
+  here: chats and the composer (D7, D19, D25; slice 24), the lock switch and guidance box (D5's lock, D6; slice 24),
+  the mic (D20; slice 66), ＋ Add SBCs and Attach SBC… (slice 22), Check again (D93; slice 22).
 
 ### 8.18 Commissions page (`/commissions`)
 
@@ -5086,7 +5118,12 @@ AI door hides and the manual flow is unchanged (D26). Slices 16–24 build it; 3
 - **Who lands what** (D71; O.3.3; OQ4). A quote read started by an admin or a `claude_direct` person lands at once, with
   Undo, unless the table is locked, the deal is lost, the read is partial, the file is an SBC or the read removes a
   plan; then it waits. Everyone else's reads wait as a staged change set. Intake, census and questionnaire reads always
-  wait in their owner's review, and SBC reads always wait (OQ33).
+  wait in their owner's review, and SBC reads always wait (OQ33). Reads started from the Documents' ↻ Re-read… panel
+  always wait too (E75: "nothing on the deal changes until you use it"). **Built in slice 20:** `ai/land.py` decides
+  (pure); the `read` kind's land hook (`ai.services.landing.on_finish`) lands the read as proposed through the reader's
+  `apply`, exactly as "Use this scan ▸" would, inside the transaction that ends the job (`ai/running.py`), so a job the
+  reaper took meanwhile takes its landing back; a landing the owner refuses waits with the refusal's sentence. The
+  landed job is `land: auto`, `resolution: applied`, with `landed.auto`, and ↶ Undo this run works as for a person's.
 - **A person applies every re-check**, and Claude never confirms its own value (D-119; OQ28). A value needs review when
   Claude doubted it or the locator could not find it: `review_rules.open_warning`, the old meaning (OQ28, answered
   2026-11-11: "only the values claude doubted need approval, but even unapproved values shouldn't stop the user from
@@ -5211,7 +5248,9 @@ finding, when allowed → landing (§10.5).
   label), `changes.py` and `counts.py` (the change set: reading order, D117's current-plan rule, renewals' links,
   D115's replaces, OQ30's counts, D56's lines, `kept`), `locating.py` (E79: every value found in its file before
   review). The read door is `POST deals/{id}/ai/reads/` (D39). Not built here: `read_checks` beyond the findings the
-  rules make (D88, slice 24), the Opus step-up on a hard finding (D76, slice 20), carrier notes (D119, slice 24).
+  rules make (D88, slice 24), the Opus step-up on a hard finding (D76; built in slice 20: `reading.steps_up` and
+  `step_up`, the whole read again on Opus 5.5 for an admin or a direct person, its read replacing the first, the cost
+  cap counting both), carrier notes (D119, slice 24).
 
 ### 10.5 Landing, review and Undo
 
@@ -5228,7 +5267,11 @@ finding, when allowed → landing (§10.5).
 - **Undo this run** (D73) reverts the job's Activity row. It checks each value against the stored "after"; when
   something changed since, it says so and offers **Undo anyway**. A plan the run created stays when someone starred,
   recommended, sold, packaged, linked or typed into it. A census import is undone through its `CensusImport`.
-- **Try again** with the next model, and **Check again** (D76).
+- **Try again** with the next model, and **Check again** (D76). **Built in slice 20:** `ai.services.retry` (`POST
+  ai/jobs/{id}/retry/`): the same files on the next model up the ladder the person may use (Sonnet 5.5 → Opus 5.5 for
+  admins and direct people; the same model for others), undoing a used read first and discarding a waiting one; the
+  landed strip offers "↻ Try again with Opus 5.5", a failed read "↻ Try again", and an over-budget read "Run anyway"
+  (D24) through the same door. Check again is slice 22's re-check.
 - **Built in slice 19:** `quotes/services/read_apply.py` (D72), `read_plans.py` (the plans and values) and
   `quotes/reader/choice.py` (what the person chose): **Use this scan ▸** sends nothing and lands the read as proposed
   (ticked items and values; never a printed count, an unsure link or a "Which current plan?" item); once a tick
@@ -6298,7 +6341,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | OQ29 | The BAA and the key: only the Foobalabs key, and real files only after Anthropic confirms coverage in writing? | "live data is allowed in this version" (2026-11-12): the BAA prerequisites are met. Applied in slice 18: only `settings.ANTHROPIC_API_KEY`, the Messages API with no beta features; tests, seeds and the Eval corpus stay synthetic and no build step opens a real client's file (§10.8) | Answered | 18; 47 |
 | OQ30 | With no census, should Claude propose a quote's printed tier counts, unticked: as the line's figure, or per current plan when printed per plan? | Open. Default: yes. Built in slice 18 (`quotes/reader/counts.py`): per current plan when printed per plan, else as the line's figure, always unticked; with a census on the line they are not proposed and a finding says so | Open (default built) | 18 |
 | **Slice 20: AI-3** | | | | |
-| OQ31 | Should the golden-deal trial set the default model, read effort and cost caps, with Opus 5.5 kept to admins and direct people? (v1.1 §16 #7) | Open. Default: yes | Open | 20 |
+| OQ31 | Should the golden-deal trial set the default model, read effort and cost caps, with Opus 5.5 kept to admins and direct people? (v1.1 §16 #7) | Open. Default: yes. Built in slice 20 on the default: Opus 5.5 is offered and stepped up to only for admins and direct people (D91); until the trial, §3.5's settings stand (Sonnet 5.5, effort high for reads, $3 a run, $25 a deal) | Open (default built) | 20 |
 | **Slice 21: AI-4** | | | | |
 | OQ32 | Need 3: show "As quoted" in the Advisor, on Documents, or both? Should printed rows that match no field reach the client files? | Open. Default: both screens; client files keep the quote's plan order but the house rows | Open | 21 |
 | **Slice 22: AI-5** | | | | |

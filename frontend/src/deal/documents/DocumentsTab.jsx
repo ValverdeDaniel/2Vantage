@@ -17,7 +17,7 @@ import cx from '../../ui/cx';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import { useToast } from '../../ui/useToast';
-import { ReadReviews } from '../claude';
+import { claudeDoor, ReadReviews } from '../claude';
 import AddFilesRow from './AddFilesRow';
 import FileAsList from './FileAsList';
 import HistoryCard from './HistoryCard';
@@ -41,7 +41,8 @@ import ViewerPane from './ViewerPane';
  * Find, Review mode and ✎ Edit, where F or a value followed in Review moves the viewer to the value's own file while
  * the panel keeps its files (`?list=`, D-164) and the file bar offers "← Back to" (E31); slice 65 the pop-out window
  * (useStationWindow) and census, intake and questionnaire files beside their owners' views; slice 19 ↻ Re-read… and
- * Claude's waiting reads under the station, used or undone here. The Claude drawer is slice 20's.
+ * Claude's waiting reads under the station, used or undone here; slice 20 Work with Claude's drawer, which takes the
+ * files dropped or added here.
  */
 export default function DocumentsTab({ deal }) {
   const toast = useToast();
@@ -61,7 +62,9 @@ export default function DocumentsTab({ deal }) {
   const [pending, setPending] = useState([]);
   const [expanded, setExpanded] = useState(false);
   const [viewed, setViewed] = useState({ id: null, page: null }); // the page on screen, for the file bar
-  const addPending = (chosen) => setPending((list) => [...list, ...chosen.map((file) => ({ file, kind: '' }))]);
+  const filedHere = (chosen) => setPending((list) => [...list, ...chosen.map((file) => ({ file, kind: '' }))]);
+  // With Claude set up, files dropped or added here go to Work with Claude's File room (D16); else they are filed here.
+  const addPending = meta?.ai ? claudeDoor.attach : filedHere;
   const drop = useFileDrop(addPending);
 
   const files = useMemo(() => inUploadOrder(documents.data), [documents.data]);

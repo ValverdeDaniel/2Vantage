@@ -38,7 +38,7 @@ export default function useReread(dealId, files, shown, allOn) {
     const ids = offered.filter((file) => picked.has(file.id)).map((file) => file.id);
     setOpen(false);
     try {
-      await start.mutateAsync({ documentIds: ids });
+      await start.mutateAsync({ documentIds: ids, review: true }); // a re-read always waits, even a direct person's (E75)
     } catch (error) {
       toast.error(errorText(error));
     }

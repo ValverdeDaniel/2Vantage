@@ -5,7 +5,8 @@ import { formErrorText } from '../../lib/errors';
  * "File as" (plan.md §8.16; E4–E6, D-096): files dropped on the tab (or chosen) wait here until each says what it is,
  * from Daniel's six (the kinds marked `file_as`); then each is uploaded under its kind, one per request. A file the
  * kind does not take, or over the size cap, keeps its row with the server's sentence. The old drawer's markup
- * (bnf-scanchat-fileas*); the drawer itself is slice 20's, which moves this list there.
+ * (bnf-scanchat-fileas*): Work with Claude's File room shows it too (slice 20), and reads what it filed
+ * (`onDone(count, documents)`).
  */
 export default function FileAsList({ pending, meta, upload, onChange, onDone }) {
   const [busy, setBusy] = useState(false);
@@ -17,18 +18,17 @@ export default function FileAsList({ pending, meta, upload, onChange, onDone }) 
   async function send() {
     setBusy(true);
     const left = [];
-    let done = 0;
+    const filed = [];
     for (const item of pending) {
       try {
-        await upload.mutateAsync({ file: item.file, kind: item.kind });
-        done += 1;
+        filed.push(await upload.mutateAsync({ file: item.file, kind: item.kind }));
       } catch (error) {
         left.push({ ...item, error: formErrorText(error) });
       }
     }
     setBusy(false);
     onChange(left);
-    if (done) onDone(done);
+    if (filed.length) onDone(filed.length, filed);
   }
 
   return (

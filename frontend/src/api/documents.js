@@ -33,15 +33,19 @@ function useDocumentsWrite(dealId, mutationFn) {
   });
 }
 
+/** One file to a deal: ({file, kind, role, carrier, lines, label}) → document (E7). Work with Claude's attach calls
+ *  it for a deal made a moment ago (the quote-first door, D43), so it takes the deal id. */
+export async function uploadDocument(dealId, { file, lines = [], ...meta }) {
+  const form = new FormData();
+  form.append('file', file);
+  Object.entries(meta).forEach(([key, value]) => value != null && value !== '' && form.append(key, value));
+  form.append('lines', JSON.stringify(lines));
+  return (await api.post(`deals/${dealId}/documents/`, form)).data;
+}
+
 /** ({file, kind, role, carrier, lines, label}) → document. One file per request (E7). */
 export function useUploadDocument(dealId) {
-  return useDocumentsWrite(dealId, async ({ file, lines = [], ...meta }) => {
-    const form = new FormData();
-    form.append('file', file);
-    Object.entries(meta).forEach(([key, value]) => value != null && form.append(key, value));
-    form.append('lines', JSON.stringify(lines));
-    return (await api.post(`deals/${dealId}/documents/`, form)).data;
-  });
+  return useDocumentsWrite(dealId, (fields) => uploadDocument(dealId, fields));
 }
 
 /** ({documentId, changes}) → document. An unchanged PATCH writes nothing (E14). */

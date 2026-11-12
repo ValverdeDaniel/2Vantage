@@ -61,15 +61,21 @@ export function landedToast(landed) {
   return `Scan applied — ${landed.summary}`;
 }
 
-/** The strip under a used read: "✓ Used Claude's read — 2 current plans · 2 renewals". */
+/** The strip under a used read: "✓ Used Claude's read — 2 current plans · 2 renewals"; a read that landed by itself
+ *  (an admin's or a direct person's, D71) says so: "✓ Claude's read landed — …". */
 export function landedText(news) {
-  return `✓ Used Claude’s read — ${news.summary}`;
+  return news.auto ? `✓ Claude’s read landed — ${news.summary}` : `✓ Used Claude’s read — ${news.summary}`;
 }
 
 /** What ↶ Undo this run asks first (the old ScanChat's confirm). */
 export const UNDO_ASK =
   'The plans this read added come off and the values it changed go back to what they were. A plan someone has ' +
   'starred, recommended, sold, packaged, linked or typed into since stays.';
+
+/** What ↻ Try again asks first (the old ScanChat's "Undo this run and send the same message again on Opus 5.5?"). */
+export function retryAsk(label) {
+  return `Undo this run and read the same files again with ${label}? ${UNDO_ASK}`;
+}
 
 /** The toast after an Undo: what came back, and what stayed. */
 export function undoneToast(undone) {

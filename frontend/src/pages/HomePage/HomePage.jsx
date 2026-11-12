@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useClients } from '../../api/deals';
 import { clientStatuses, creatableStatuses, PROSPECT, useMeta } from '../../api/meta';
 import InlineError from '../../ui/InlineError';
@@ -37,7 +37,9 @@ export default function HomePage() {
 
   const update = (changes, options) => setParams((current) => changeHome(current, changes), options);
   const existing = creatableStatuses(meta.data).find((s) => s.key !== PROSPECT)?.key;
-  const startCreating = () => setCreating(state.view === 'book' ? existing : PROSPECT);
+  const navigate = useNavigate();
+  // ＋ New deal opens the New deal page with its two mode cards (A14; slice 20); Clients' ＋ New client, the dialog.
+  const startCreating = () => (state.view === 'book' ? setCreating(existing) : navigate('/deals/new'));
 
   let body;
   if (meta.isError) {

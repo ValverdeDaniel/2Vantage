@@ -14,6 +14,20 @@ KINDS = tuple(LANE_OF)
 # The readers a `read` or `recheck` names in `target` (slice 18 on); a locate or an issue has none.
 TARGETS = ('quotes', 'sbc', 'intake', 'census', 'questionnaire', 'commission_statement')
 
+# The readers Work with Claude reads for on each deal tab (D5; the old claudePages.PAGE_KINDS): the drawer's "Reading"
+# picker offers the file kinds they read and files an attached file as the one picked. A tab not listed (Overview,
+# Documents) asks what each file is ("File as"). Served by /api/meta/ for the readers registered.
+TAB_TARGETS = {
+    'advisor': ('quotes', 'sbc'),
+    'proposal': ('quotes', 'sbc'),
+    'intake': ('intake',),
+    'census': ('census',),
+    'questionnaire': ('questionnaire',),
+}
+# One send's reads run in this order, one job per reader (D17): the census, the questionnaire and intake first, so the
+# plans are read last, over what the others filled.
+SEND_ORDER = ('census', 'questionnaire', 'intake', 'quotes', 'sbc')
+
 QUEUED, RUNNING, DONE, FAILED, CANCELLED = 'queued', 'running', 'done', 'failed', 'cancelled'
 STATUSES = (QUEUED, RUNNING, DONE, FAILED, CANCELLED)
 ACTIVE = (QUEUED, RUNNING)

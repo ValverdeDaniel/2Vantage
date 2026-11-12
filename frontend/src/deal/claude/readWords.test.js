@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   endedText,
   failedText,
+  landedText,
   landedToast,
   leftOutText,
   readerKinds,
   readsOn,
   runningText,
+  retryAsk,
   summaryLine,
   undoneToast,
 } from './readWords';
@@ -60,5 +62,16 @@ describe('using and undoing a read (D72, D73)', () => {
 
   it('names the plans an Undo kept', () => {
     expect(undoneToast({ kept: ['Florida Blue PPO'], skipped: [] })).toContain('Florida Blue PPO stayed');
+  });
+});
+
+describe('a read that landed by itself, and trying again (D71, D76)', () => {
+  it('D71 says a read landed by itself apart from one a person used', () => {
+    expect(landedText({ auto: true, summary: '2 current plans' })).toBe('✓ Claude’s read landed — 2 current plans');
+    expect(landedText({ auto: false, summary: '2 current plans' })).toBe('✓ Used Claude’s read — 2 current plans');
+  });
+
+  it('D76 asks before undoing a run to read it again', () => {
+    expect(retryAsk('Opus 5.5')).toMatch(/^Undo this run and read the same files again with Opus 5\.5\? The plans/);
   });
 });

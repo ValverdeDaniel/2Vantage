@@ -92,10 +92,22 @@ def cancel(user, job_id):
     return job, True
 
 
-def start_read(user, deal, document_ids, *, target='quotes', pages=None, model='', budget_override=False):
+def start_read(
+    user,
+    deal,
+    document_ids,
+    *,
+    target='quotes',
+    pages=None,
+    model='',
+    budget_override=False,
+    review=False,
+    retry_of=None,
+):
     """A read of these files by `target`'s reader (the one read door, D39; D46, D48). Refused with a sentence when
     Claude is not set up (409), the files are not this deal's or not of a kind the reader reads (400), or the person
-    may not pick Opus or run past the cap (403-style sentences, 409)."""
+    may not pick Opus or run past the cap (403-style sentences, 409). `review`: the read waits for review whoever
+    starts it (the Re-read panel, E75); `retry_of`: the read it tries again (D76)."""
     from .. import client, pricing, reading, registry
 
     if not client.available():
@@ -124,4 +136,8 @@ def start_read(user, deal, document_ids, *, target='quotes', pages=None, model='
         params['pages'] = sorted(set(pages))
     if budget_override:
         params['budget_override'] = True
+    if review:
+        params['review'] = True
+    if retry_of:
+        params['retry_of'] = int(retry_of)
     return start(user, deal, kinds.READ, documents=[doc.id for doc in ordered], params=params, target=target)

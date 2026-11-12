@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router';
+import { AddQuotesButton } from '../../claude';
 import LineTabs from '../LineTabs';
 
 /*
  * The board header (plan.md §8.14; F5, F9–F11, F68, F73, F93–F96; the old `bnf-advisor-boardhead`): this line's tabs
- * and count on the left, its actions on the right. Outside ✎ Edit: ⤓ Export, the summary tiers card, ⤒ Import from
- * template with ⬇ Template, ✎ Edit. In Edit (a screen mode only, F68): ＋ Add plan, Clear all plans, where a priced
- * version's editor sits (⌸, slice 35), ↶ Undo and Done ✓, and the banner whose "change history ▸" opens Activity. With stars: View shortlist in proposal ▸ and
+ * and count on the left, its actions on the right. Outside ✎ Edit: ⤓ Export, the summary tiers card, ＋ Add quotes
+ * (Work with Claude's door, F96; slice 20), ⤒ Import from template with ⬇ Template, ✎ Edit. In Edit (a screen mode
+ * only, F68): ＋ Add plan, Clear all plans, where a priced version's editor sits (⌸, slice 35), ↶ Undo and Done ✓, and the banner whose "change history ▸" opens Activity. With stars: View shortlist in proposal ▸ and
  * Clear shortlist (this line only, F55).
  */
 export default function BoardHead({ dealId, lines, line, onLine, count, editing, starred, ui }) {
@@ -50,6 +51,7 @@ export default function BoardHead({ dealId, lines, line, onLine, count, editing,
           )}
           {!editing ? (
             <>
+              <AddQuotesButton />
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"

@@ -9,6 +9,7 @@ import Loading from './ui/Loading';
 const LoginPage = lazy(() => import('./auth/LoginPage'));
 const HomePage = lazy(() => import('./pages/HomePage/HomePage'));
 const ArchivedPage = lazy(() => import('./pages/ArchivedPage/ArchivedPage'));
+const NewDealPage = lazy(() => import('./pages/NewDealPage/NewDealPage')); // A14, D43 (slice 20)
 const DealRedirect = lazy(() => import('./pages/DealPage/DealRedirect'));
 const DealPage = lazy(() => import('./pages/DealPage/DealPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage/NotFoundPage'));
@@ -39,6 +40,7 @@ export default function App() {
           >
             <Route index element={<HomePage />} />
             <Route path="archived" element={<ArchivedPage />} />
+            <Route path="deals/new" element={<NewDealPage />} />
             <Route path="deals/:dealId" element={<DealRedirect />} />
             <Route path="deals/:dealId/:tab" element={<DealPage />} />
             <Route path="*" element={<NotFoundPage />} />

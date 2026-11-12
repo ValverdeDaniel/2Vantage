@@ -2,6 +2,7 @@ import { Suspense, useEffect } from 'react';
 import { Link, Navigate, useParams } from 'react-router';
 import { useDeal } from '../../api/deals';
 import { useMeta } from '../../api/meta';
+import { claudeRoom, WorkWithClaude } from '../../deal/claude';
 import { errorStatus } from '../../lib/errors';
 import { dealPresence, useDocWindowPresence } from '../../viewer/docWindowLink';
 import ErrorBoundary from '../../ui/ErrorBoundary';
@@ -66,11 +67,12 @@ export default function DealPage() {
   const Tab = TAB_COMPONENTS[shown];
   const label = tabLabel(shown);
   return (
-    <div className="bb-workspace">
+    <div className={`bb-workspace${claudeRoom(shown) ? ' bnf-wwc-room' : ''}`}>
       <DealSidebar deal={deal} tab={shown} />
       <div className="bb-content">
         <DealHeader key={deal.id} deal={deal} meta={meta.data} />
-        <section aria-label={label}>
+        <WorkWithClaude deal={deal} tab={shown} />
+        <section aria-label={label} className="bnf-claude-section">
           <ErrorBoundary resetKey={shown}>
             <Suspense fallback={<Loading label={`Loading the ${label}…`} />}>
               <Tab deal={deal} />

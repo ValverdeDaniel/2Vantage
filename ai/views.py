@@ -1,6 +1,8 @@
 """The ai API (plan.md §7.5; D.6). Slice 16: the state the browser polls, "Check this file", one job, and Stop.
 Slice 18: the one read door (`deals/{id}/ai/reads/`, D39) and Discard on a waiting change set (D28, D74).
 Slice 19: using a read (`ai/jobs/{id}/apply/`, D72) and ↶ Undo this run (`ai/jobs/{id}/undo/`, D73).
+Slice 20: attaching files to Claude (`deals/{id}/ai/sends/`, D16, D17) and ↻ Try again (`ai/jobs/{id}/retry/`, D76);
+the read door's `review` (the Re-read panel's reads always wait, E75).
 
 The two GETs a browser polls (`deals/{id}/ai/` and `ai/jobs/{id}/`) use the `ai_poll` throttle alone, so polling
 every 2 s on two tabs never uses up the user rate (§3.5, E.6). Any signed-in person may start or stop a job on any
@@ -104,9 +106,17 @@ def _pages(raw):
     return pages
 
 
+def _model(data):
+    model = data.get('model') or ''
+    if not isinstance(model, str):
+        raise ValidationError({'model': ['Name a model.']})
+    return model
+
+
 class ReadsView(APIView):
-    """POST {document_ids, target?, pages?, model?, budget_override?}: read these files with Claude (D39) → 201 the job,
-    or 200 the same read already going. 409 without a key; 400 for files this reader does not read."""
+    """POST {document_ids, target?, pages?, model?, budget_override?, review?}: read these files with Claude (D39) →
+    201 the job, or 200 the same read already going. 409 without a key; 400 for files this reader does not read.
+    `review: true` makes the read wait for review whoever starts it (E75)."""
 
     def post(self, request, pk):
         deal = _deal(pk)
@@ -114,17 +124,15 @@ class ReadsView(APIView):
         target = request.data.get('target') or 'quotes'
         if not isinstance(target, str):
             raise ValidationError({'target': ['Name a reader.']})
-        model = request.data.get('model') or ''
-        if not isinstance(model, str):
-            raise ValidationError({'model': ['Name a model.']})
         job, created = services.start_read(
             request.user,
             deal,
             ids,
             target=target,
             pages=_pages(request.data.get('pages')),
-            model=model,
+            model=_model(request.data),
             budget_override=request.data.get('budget_override') is True,
+            review=request.data.get('review') is True,
         )
         job = _job(job.id)
         return Response(selectors.job_payload(job), status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
@@ -158,3 +166,39 @@ class UndoView(APIView):
         job, _changed = services.undo(request.user, _job(job_id).id, force=request.data.get('force') is True)
         job = _job(job.id)
         return Response({'job': selectors.job_payload(job), 'undone': (job.result.get('landed') or {}).get('undone')})
+
+
+class SendsView(APIView):
+    """POST {document_ids, model?, budget_override?}: files just attached in Work with Claude, read by the reader of
+    their kind (D16, D17) → 201 {jobs: [job, in the order they run], not_read: [ids no reader reads]}, or 200 when
+    every read was already going (or none was started). 409 without a key."""
+
+    def post(self, request, pk):
+        deal = _deal(pk)
+        started, not_read = services.start_send(
+            request.user,
+            deal,
+            _ids(request.data.get('document_ids')),
+            model=_model(request.data),
+            budget_override=request.data.get('budget_override') is True,
+        )
+        created = any(made for _job, made in started)
+        body = {'jobs': [selectors.job_payload(_job(job.id)) for job, _made in started], 'not_read': not_read}
+        return Response(body, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+
+class RetryView(APIView):
+    """POST {model?, force?, budget_override?}: ↻ Try again (D76) → 201 the new read. A used read is undone first (409
+    with `can_force` as Undo; `force` is Undo anyway); one waiting is discarded. 409 while it runs, for a job that is
+    not a read, or Opus or Run anyway for a producer."""
+
+    def post(self, request, job_id):
+        job, created = services.retry(
+            request.user,
+            _job(job_id).id,
+            model=_model(request.data),
+            force=request.data.get('force') is True,
+            budget_override=request.data.get('budget_override') is True,
+        )
+        job = _job(job.id)
+        return Response(selectors.job_payload(job), status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)

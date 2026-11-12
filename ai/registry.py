@@ -2,9 +2,11 @@
 
 ai sits left of every value owner in the chain, so it never imports them: they fill these tables.
 
-- `job_kinds` {kind: JobKind(lane, run)}: how a job of that kind runs. `run(job, progress)` does the work and returns
-  the job's `result`; `progress` (ai.progress.Progress) reports steps and stops it between steps. ai registers
-  `locate` itself (ai/check.py); quotes adds `rank` and proposals `issue` in their slices.
+- `job_kinds` {kind: JobKind(lane, run, land)}: how a job of that kind runs. `run(job, progress)` does the work and
+  returns the job's `result`; `progress` (ai.progress.Progress) reports steps and stops it between steps. `land(job,
+  result) -> {job fields}`, when given, runs in the transaction that ends the job (`running._finish`), so a read that
+  lands by itself (D71, slice 20) and the job's end commit together, or not at all. ai registers `locate` and `read`
+  itself; quotes adds `rank` and proposals `issue` in their slices.
 - `locate_hooks` {owner: LocateHook(queries, save)}: the value owners whose values the locator checks (E.6, O.3.1).
   `queries(deal, document, recheck)` -> [(ref, Query or Located)] for the owner's values that name `document`
   (`recheck` False: only values never checked, or checked by an older locator); `save(user, deal, document,
@@ -23,7 +25,7 @@ from dataclasses import dataclass, field
 
 from . import kinds
 
-JobKind = namedtuple('JobKind', 'lane run')
+JobKind = namedtuple('JobKind', 'lane run land', defaults=(None,))
 LocateHook = namedtuple('LocateHook', 'queries save')
 
 job_kinds = {}
@@ -33,11 +35,12 @@ context = {}
 tools = {}
 
 
-def register_kind(kind, run):
-    """`run(job, progress) -> result` for every job of `kind`, in the kind's lane (kinds.LANE_OF)."""
+def register_kind(kind, run, land=None):
+    """`run(job, progress) -> result` for every job of `kind`, in the kind's lane (kinds.LANE_OF); `land(job, result)`
+    as above."""
     if kind not in kinds.LANE_OF:
         raise ValueError(f'Unknown job kind: {kind}')
-    job_kinds[kind] = JobKind(kinds.LANE_OF[kind], run)
+    job_kinds[kind] = JobKind(kinds.LANE_OF[kind], run, land)
 
 
 def register_locate(owner, queries, save):

@@ -83,13 +83,14 @@ export function useStopJob(dealId) {
 }
 
 /**
- * The one read door (D39): ({documentIds, target, pages, model, budgetOverride}) → the read job (201 new, or 200 the
- * same read already going). Without a key the server answers 409 with a sentence (D26).
+ * The one read door (D39): ({documentIds, target, pages, model, budgetOverride, review}) → the read job (201 new, or
+ * 200 the same read already going). Without a key the server answers 409 with a sentence (D26). `review` makes the read
+ * wait for review whoever starts it (the Re-read panel, E75).
  */
 export function useStartRead(dealId) {
   return useJobWrite(
     dealId,
-    async ({ documentIds, target = 'quotes', pages, model, budgetOverride }) =>
+    async ({ documentIds, target = 'quotes', pages, model, budgetOverride, review }) =>
       (
         await api.post(`deals/${dealId}/ai/reads/`, {
           document_ids: documentIds,
@@ -97,6 +98,7 @@ export function useStartRead(dealId) {
           ...(pages ? { pages } : {}),
           ...(model ? { model } : {}),
           ...(budgetOverride ? { budget_override: true } : {}),
+          ...(review ? { review: true } : {}),
         })
       ).data,
   );
@@ -162,4 +164,50 @@ export function useUndoRead(dealId) {
     dealId,
     async ({ jobId, force = false }) => (await api.post(`ai/jobs/${jobId}/undo/`, force ? { force: true } : {})).data,
   );
+}
+
+/**
+ * Attaching is the request (D16, D17): ({dealId, documentIds, model, budgetOverride}) → {jobs, not_read}. The files
+ * just attached are read by the reader of their kind, one read per reader, in the send order; a drop is never refused
+ * (the reads queue). Takes the deal id when called: the quote-first door attaches to a deal it made a moment ago.
+ */
+export function useSendFiles() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ dealId, documentIds, model, budgetOverride }) =>
+      (
+        await api.post(`deals/${dealId}/ai/sends/`, {
+          document_ids: documentIds,
+          ...(model ? { model } : {}),
+          ...(budgetOverride ? { budget_override: true } : {}),
+        })
+      ).data,
+    onSuccess: (sent, { dealId }) => {
+      sent.jobs.forEach((job) => watchJob(dealId, job));
+      queryClient.invalidateQueries({ queryKey: aiKey(dealId) });
+    },
+  });
+}
+
+/**
+ * ↻ Try again (D76) and Run anyway (D24): ({jobId, model, force, budgetOverride}) → the new read. A read that was used
+ * is undone first (a 409 with `can_force` offers "Undo anyway", sent as `force`); one waiting is discarded.
+ */
+export function useRetryRead(dealId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ jobId, model, force, budgetOverride }) =>
+      (
+        await api.post(`ai/jobs/${jobId}/retry/`, {
+          ...(model ? { model } : {}),
+          ...(force ? { force: true } : {}),
+          ...(budgetOverride ? { budget_override: true } : {}),
+        })
+      ).data,
+    onSuccess: (job, { jobId }) => {
+      watchJob(dealId, job);
+      queryClient.invalidateQueries({ queryKey: jobKey(jobId) });
+      invalidateDeal(queryClient, dealId, { header: true });
+    },
+  });
 }
