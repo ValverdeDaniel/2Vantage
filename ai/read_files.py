@@ -56,7 +56,7 @@ def _bytes(document):
 def from_documents(documents):
     """[FileIn] for these Documents in upload order, and [failed part] for those whose bytes are gone."""
     files, failed = [], []
-    ordered = sorted(documents, key=lambda doc: (doc.uploaded_at, doc.id))
+    ordered = sorted(documents, key=lambda doc: doc.id)  # upload order by id, never the clock, which steps back (D57)
     for order, document in enumerate(ordered):
         raw = _bytes(document)
         if raw is None:

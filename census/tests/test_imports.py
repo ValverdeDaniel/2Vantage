@@ -1,5 +1,7 @@
 """The import door: propose, change, dry run, apply (plan.md §5.3.2, §7.7; C12–C17). Factory deals, synthetic files."""
 
+from datetime import timedelta
+
 import pytest
 
 from census import facts, services
@@ -98,7 +100,8 @@ def test_C17_apply_writes_the_roster_and_a_key_only_activity_row(user, deal):
     row = Activity.objects.filter(deal=deal, area='census', action='imported').get()
     assert row.summary == 'Imported census: 5 people (3 dependents)'
     assert all(isinstance(entry['k'], list) for entry in row.changes)
-    assert 'Smith' not in str(row.changes) and '1980' not in str(row.changes)
+    keys = [key for entry in row.changes for key in entry['k']]  # not the targets: "member:1980" is only an id
+    assert 'Smith' not in str(row.changes) and not any('1980' in key for key in keys)
     with pytest.raises(Refused) as refused:
         revert(row.id, user)
     assert refused.value.sentence == KEYS_ONLY
@@ -258,3 +261,20 @@ def test_C15_remapping_a_file_starts_from_the_last_choices_for_it(user, deal):
     again = services.create_import(user, deal.id, document.id)
     assert again.mapping == CensusImport.objects.get(pk=imp.id).mapping
     assert (again.header_row, again.first_data_row) == (2, 3)
+
+
+def test_C15_remapping_starts_from_the_last_import_applied_even_when_the_clock_stepped_back(user, deal):
+    from .helpers import upload
+
+    document = upload(user, deal, xlsx([['Notes', 'First Name', 'Last Name'], ['x', 'Avery', 'Smith']]))
+    applied = []
+    for field in ('middle_name', ''):  # the second import ignores the Notes column
+        imp = services.create_import(user, deal.id, document.id)
+        imp, _ = services.update_import(user, imp.id, {'mapping': [{'column': 0, 'field': field}]})
+        services.apply_import(user, imp.id)
+        applied.append(CensusImport.objects.get(pk=imp.id))
+    first, last = applied
+    # The clock stepped back a second between the two applies (a VM resyncing its time under load).
+    CensusImport.objects.filter(pk=last.id).update(applied_at=first.applied_at - timedelta(seconds=1))
+    again = services.create_import(user, deal.id, document.id)
+    assert again.mapping == last.mapping != first.mapping

@@ -120,7 +120,7 @@ def deal_state(deal, user):
         Job.objects.filter(deal=deal)
         .filter(Q(status__in=kinds.ACTIVE) | Q(finished_at__gte=since))
         .select_related('created_by')
-        .order_by('created_at', 'id')
+        .order_by('id')  # the order the worker claims them in (by id, never the clock), so queue places agree
     )
     staged = (
         Job.objects.filter(deal=deal, kind__in=(kinds.READ, kinds.RECHECK), land='staged', result__has_key='items')

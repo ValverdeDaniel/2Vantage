@@ -1,13 +1,15 @@
 """The claim race (plan.md §10.2; O.3.3, Q.3 #8): two workers claiming at once pass each other's locked rows, and the
-one-running-job-per-deal-and-lane constraint settles a tie. Real transactions on separate connections."""
+one-running-job-per-deal-and-lane constraint settles a tie. Real transactions on separate connections. The queue runs
+in the order jobs were started, by id, never by the clock, which steps back under load."""
 
 import threading
 import time
+from datetime import timedelta
 
 import pytest
 from django.db import connection, transaction
 
-from ai import kinds, worker
+from ai import kinds, selectors, worker
 from ai.models import Job
 from conftest import make_deal
 
@@ -63,3 +65,15 @@ def test_A36_two_workers_claim_at_once_and_one_job_runs_per_deal_and_lane(user):
         y1.id: kinds.RUNNING,
         x2.id: kinds.QUEUED,
     }
+
+
+@pytest.mark.django_db
+def test_A36_the_queue_runs_in_the_order_jobs_were_started_even_when_the_clock_stepped_back(user):
+    deal, other = make_deal(user, name='First Co.'), make_deal(user, name='Other Co.')
+    first, elsewhere, then = _job(deal), _job(other), _job(deal)
+    # The clock stepped back a second after the first job was started (a VM resyncing its time under load).
+    Job.objects.filter(pk__in=[elsewhere.pk, then.pk]).update(created_at=first.created_at - timedelta(seconds=1))
+    places = {job['id']: job['queue_position'] for job in selectors.deal_state(deal, user)['jobs']}
+    assert places == {first.id: 1, then.id: 2}
+    assert [worker.claim(name).id for name in 'ab'] == [first.id, elsewhere.id]
+    assert worker.claim('c') is None  # `then` waits for `first`: one job runs per deal and lane

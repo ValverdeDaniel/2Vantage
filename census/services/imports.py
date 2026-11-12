@@ -64,9 +64,9 @@ def _record(deal, user, imp, action, summary, coalesce=False):
 def _as_before(imp, document):
     """⟲ Re-map source file, or the same file again: start from the member's last applied choices for this file (its
     sheet, rows, reformat and columns) when the file still reads the same way. True when they were taken."""
-    earlier = (
-        CensusImport.objects.filter(document=document, status=CensusImport.APPLIED).order_by('-applied_at').first()
-    )
+    # The last applied is the last made (one proposal at a time on a deal), by id, never by `applied_at`: the clock
+    # can step back.
+    earlier = CensusImport.objects.filter(document=document, status=CensusImport.APPLIED).order_by('-id').first()
     if earlier is None:
         return False
     reformat = not (earlier.pivot or {}).get('declined')

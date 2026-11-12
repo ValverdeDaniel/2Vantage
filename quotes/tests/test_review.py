@@ -1,11 +1,14 @@
 """Reviewing plan values (plan.md §10.7; E85–E89, F63, F65, F67, OQ28): quotes' marks writer, its Activity row and
 its Revert, and `Plan.flags` kept equal to a rebuild after every service (Q.3 #9)."""
 
+from datetime import UTC, datetime
+from unittest import mock
+
 import pytest
 from rest_framework.exceptions import ValidationError
 
 from conftest import make_deal
-from deals import activity
+from deals import activity, clock
 from deals.models import Activity
 from quotes import facts, flags, services
 from quotes.models import Plan
@@ -25,6 +28,15 @@ def entry(plan, key):
 
 def stored(plan):
     return Plan.objects.get(pk=plan.id).flags
+
+
+def leaves(value):
+    """Every scalar inside a JSON value (dict keys left out), each whole."""
+    if isinstance(value, dict):
+        return [leaf for item in value.values() for leaf in leaves(item)]
+    if isinstance(value, list):
+        return [leaf for item in value for leaf in leaves(item)]
+    return [value]
 
 
 def test_OQ28_flags_count_only_doubted_and_unfound_read_values(w):
@@ -105,7 +117,9 @@ def test_E86_other_deals_and_fields_answer_400(user, w):
 
 
 def test_E87_one_activity_row_that_holds_marks_never_values(user, w):
-    marked = review.mark_values(user, w['deal'], 'approve', plan_ids=[w['cigna'].id, w['uhc'].id])
+    at = datetime(2026, 11, 12, 15, 30, 5, 530530, tzinfo=UTC)  # the marks' time carries a value's digits, '530'
+    with mock.patch.object(clock, 'now', return_value=at):
+        marked = review.mark_values(user, w['deal'], 'approve', plan_ids=[w['cigna'].id, w['uhc'].id])
     row = marked.row
     assert row.action == 'marked' and row.area == 'quotes' and row.count == 3 and row.revertible
     keys = {key for change in row.changes for key in change['k']}
@@ -113,8 +127,10 @@ def test_E87_one_activity_row_that_holds_marks_never_values(user, w):
     for change in row.changes:
         for before, after in change['k'].values():
             assert before is None and set(after) == {'confirmed'}
-    text = repr(row.changes) + row.summary
-    assert '512.34' not in text and '530' not in text  # marks, never values (E74)
+    # Marks, never values (E74): no value anywhere in the row, each compared whole, never as a substring of the text,
+    # where the marks' time ("….530…") or an id ("plan:1530") can carry a value's digits.
+    held = set(leaves(row.changes)) | set(row.summary.split())
+    assert not held & {'512.34', '1580.47', '530'}
     again = review.mark_values(user, w['deal'], 'check', refs=[f'plan:{w["cigna"].id}:rate_ee'])
     assert again.row.id != row.id  # review rows never merge
 

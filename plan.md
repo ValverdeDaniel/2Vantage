@@ -5233,7 +5233,8 @@ AI door hides and the manual flow is unchanged (D26). Slices 16–24 build it; 3
   `issue` (proposals); context providers from quotes, intake, census (counts only), questionnaire, proposals and
   review; strict chat tools (§10.6); locate hooks from quotes, intake and questionnaire.
 - **Worker** (`manage.py run_worker`, its own Compose service `worker`, same image; D105; slice 16):
-  - it claims the oldest queued job whose deal and lane are free, with `select_for_update(skip_locked=True)`;
+  - it claims the oldest queued job whose deal and lane are free, with `select_for_update(skip_locked=True)`; oldest is
+    first started, by id, never `created_at` (a clock that steps back under load would put a later job first);
   - it beats on stream events and between calls, never on a timer; each call has a read timeout and a wall-clock cap;
   - Stop aborts the stream and keeps the finished ranges;
   - a reaper takes jobs silent for 10 minutes, re-checking the heartbeat in its update;
@@ -5286,7 +5287,8 @@ AI door hides and the manual flow is unchanged (D26). Slices 16–24 build it; 3
 
 ### 10.4 Readers
 
-Every reader runs through `ai/reading.py` (D.6). Files go in upload order, up to four page ranges at once: screen →
+Every reader runs through `ai/reading.py` (D.6). Files go in upload order (by id, never the clock: a later file wins,
+D57), up to four page ranges at once: screen →
 ranges (`ranges.py`) → an estimate that stops at the cap → content (PDF ranges with a page map, sheets as A1 grids,
 images) → `extract`, halving on `Truncated` → locate → merge → `build_changes` → checks → an Opus step-up on a hard
 finding, when allowed → landing (§10.5).

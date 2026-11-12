@@ -37,11 +37,13 @@ def claim(worker='', job_id=None):
     now = clock.now()
     busy = Job.objects.filter(status=kinds.RUNNING, deal_id=OuterRef('deal_id'), lane=OuterRef('lane'))
     with transaction.atomic():
+        # The oldest is the first started: its id, never its clock stamp (a clock that steps back, as a VM resyncing
+        # its time under load does, would put a later job first).
         queued = (
             Job.objects.select_for_update(skip_locked=True)
             .filter(status=kinds.QUEUED)
             .exclude(Exists(busy))
-            .order_by('created_at', 'id')
+            .order_by('id')
         )
         if job_id is not None:
             queued = queued.filter(pk=job_id)
