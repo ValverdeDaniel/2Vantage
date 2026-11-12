@@ -2406,7 +2406,7 @@
       "check": "pixels",
       "selector": null,
       "item": "K34",
-      "why": "Slice 44 builds the page shell, the census line and cards 1–3 (K1–K33); the RFP packet card (K34–K56, slices 45–46) and Emails to send (K57–K68, slice 46) are pending, so the page ends after the checklist and the toolbar counts \"✓ 0 of 3 completed\" over the cards on the page (K6), where the old counted five.",
+      "why": "Slices 44–45 build the page shell, the census line, cards 1–3 (K1–K33) and the RFP packet's carrier census rows (K34–K41, slice 45: with no census on GD1 every row says \"No census yet\" and cannot be ticked, K41). The packet's other sections (Warner forms + census K42, questionnaires K43, request form and cover K46–K47, attachments K49), its download (K55) and Emails to send (K57–K68) are slice 46's, so the toolbar counts \"✓ 0 of 4 completed\" over the cards on the page (K6), where the old counted five.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2472,7 +2472,7 @@
       "check": "classes",
       "selector": null,
       "item": "K34",
-      "why": "The packet's classes (bnf-rfp-packetcard, bnf-rfp-grid*, bnf-rfp-tritick*, bnf-review-note …) wait for slices 45–46; the form pickers' bnf-cvg-forms and bnf-cvg-formpick for slice 42, ＋ Add request's bnf-ask-form for 53; the header strip's bnf-ov-*, bb-stage-pill, bnf-line-chips and bb-chip are new against the old app (M112).",
+      "why": "The packet's census rows bring bnf-rfp-packetcard, bnf-rfp-grid*, bnf-rfp-row-alt, bnf-rfp-include-off and bnf-rfp-rownote (slice 45); the other sections' classes (form variants, questionnaire notices, attachments, bnf-rfp-packet's download) wait for slice 46; the form pickers' bnf-cvg-forms and bnf-cvg-formpick for slice 42, ＋ Add request's bnf-ask-form for 53; the header strip's bnf-ov-*, bb-stage-pill, bnf-line-chips and bb-chip are new against the old app (M112).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

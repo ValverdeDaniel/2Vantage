@@ -6,8 +6,10 @@ changes, default_funding)` answers the new value of each key sent, or raises `In
 `{add, remove}` (K21, K25: two quick clicks both land, where the old page sent the whole list from stale props); null
 puts the funding back to its default and empties the carriers. The route takes 'warner', 'direct', or ''/null to
 follow the band again (K20). The due date is a date (K26; the old one was raw text). Other carriers ≤ 300 characters,
-notes ≤ 2,000, both trimmed. `done` and `sends` have their own doors (old `WRITER_OWNED`), and the packet's `include`
-and the form chip arrive with their cards (slices 45, 46).
+notes ≤ 2,000, both trimmed. `done` and `sends` have their own doors (old `WRITER_OWNED`). The packet's ticks,
+`include` (slice 45), take `{key: true | false | null}` over the census file keys, or 'reset'; what is stored is worked
+out by the service against the defaults the request will have (`cards.include.merged`). The form chip arrives with
+slice 46.
 """
 
 from datetime import date
@@ -15,10 +17,20 @@ from datetime import date
 from deals import carriers as identities
 
 from . import request
+from .cards import include as ticks
+from .formats import scope
 
 LIMITS = {'other_carriers': 300, 'notes': 2000}
-SETTINGS = ('route', 'carriers', 'other_carriers', 'funding', 'due_date', 'notes')
-EMPTY = {'route': '', 'carriers': [], 'other_carriers': '', 'funding': None, 'due_date': None, 'notes': ''}
+SETTINGS = ('route', 'carriers', 'other_carriers', 'funding', 'due_date', 'notes', 'include')
+EMPTY = {
+    'route': '',
+    'carriers': [],
+    'other_carriers': '',
+    'funding': None,
+    'due_date': None,
+    'notes': '',
+    'include': {},
+}
 WRITER_OWNED = {
     'done': 'Marked on each card with “Mark completed”, not here.',
     'sends': 'Recorded by marking an email draft sent, not here.',
@@ -29,6 +41,7 @@ BAD_ROUTE = 'Send warner, direct, or null to follow the group size.'
 BAD_PICKS = 'Send {"add": [...], "remove": [...]} with known keys.'
 BAD_DATE = 'Enter a date like 2027-01-15, or leave it blank.'
 BAD_TEXT = 'Send text.'
+BAD_INCLUDE = 'Send {"<file key>": true, false or null}, or "reset".'
 TOO_LONG = 'At most {limit:,} characters.'
 
 
@@ -43,7 +56,7 @@ class Invalid(Exception):
 def stored(row):
     """The request's settings as plain values: lists, text, an ISO date or None."""
     if row is None:
-        return {key: (list(value) if isinstance(value, list) else value) for key, value in EMPTY.items()}
+        return {key: (type(value)(value) if isinstance(value, list | dict) else value) for key, value in EMPTY.items()}
     return {
         'route': row.route or '',
         'carriers': list(row.carriers or []),
@@ -51,6 +64,7 @@ def stored(row):
         'funding': None if row.funding is None else list(row.funding),
         'due_date': row.due_date.isoformat() if row.due_date else None,
         'notes': row.notes or '',
+        'include': dict(row.include or {}),
     }
 
 
@@ -87,6 +101,18 @@ def _date(raw):
         raise ValueError(BAD_DATE) from None
 
 
+def _include(raw):
+    """The change asked for: 'reset', or {known file key: bool | None}."""
+    if raw == ticks.RESET:
+        return ticks.RESET
+    known = set(scope.keys())
+    if not isinstance(raw, dict) or not raw:
+        raise ValueError(BAD_INCLUDE)
+    if any(key not in known or not (value is None or isinstance(value, bool)) for key, value in raw.items()):
+        raise ValueError(BAD_INCLUDE)
+    return dict(raw)
+
+
 def _one(key, raw, current, default_funding):
     if key == 'route':
         if raw in (None, ''):
@@ -109,6 +135,8 @@ def _one(key, raw, current, default_funding):
         return picked
     if key == 'due_date':
         return _date(raw)
+    if key == 'include':
+        return _include(raw)
     return _text(raw, key)
 
 

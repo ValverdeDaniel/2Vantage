@@ -1,5 +1,6 @@
 """RFP API (plan.md §7.11; K.6 endpoints): the page payload and the request's settings, and the cards' marks. Thin:
-parse → service → answer with what the screen redraws. The packet, checks, files, lens and sends join with slices 45–46.
+parse → service → answer with what the screen redraws. The census files are in `file_views`, the lens in `lens_views`
+(slice 45); the packet zip, checks and sends join with slice 46.
 """
 
 from django.http import Http404
@@ -30,8 +31,9 @@ def _body(request):
 
 class RfpView(APIView):
     """GET deals/{id}/rfp/ → the page payload (rfp/page.py).
-    PATCH {route?, carriers?: {add, remove}, funding?: {add, remove} | null, other_carriers?, due_date?, notes?} →
-    {changed: {key: value}, cleared: [card], activity_id, request, carriers, done}; 400 {field: [sentence]}."""
+    PATCH {route?, carriers?: {add, remove}, funding?: {add, remove} | null, other_carriers?, due_date?, notes?,
+    include?: {file key: true | false | null} | 'reset'} → {changed: {key: value}, cleared: [card], activity_id,
+    request, carriers, packet, done}; 400 {field: [sentence]}."""
 
     def get(self, request, pk):
         return Response(page.page(_deal(pk)))

@@ -3,7 +3,8 @@ Registered as `activity.reverters['rfp']` in RfpConfig.ready().
 
 `deals.activity.revert` has already locked the Deal; this locks the RfpRequest row. It refuses after a later write to
 one of the row's keys (naming it), and otherwise puts each key's "before" back: a setting onto the row, a mark
-(`done.<card>`) into `done`. Notes rows name the key only, so `deals.activity` refuses them before this runs.
+(`done.<card>`) into `done`. Putting back the carriers, "Other carriers" or the ticks rewrites census's stored counts
+on commit, as the edit did (K124). Notes rows name the key only, so `deals.activity` refuses them before this runs.
 """
 
 from deals import activity
@@ -18,6 +19,7 @@ WORDS = {
     'funding': 'The funding to quote',
     'due_date': 'Quotes due back',
     'notes': 'The notes for the carriers',
+    'include': 'The packet’s ticks',
 }
 
 
@@ -52,4 +54,6 @@ def revert(row, user):  # noqa: ARG001 (the reverters' signature)
         written.append(activity.change(entry['t'], diff))
     services.put(stored, settings)
     stored.save(update_fields=[*sorted(fields), 'updated_at'])
+    if fields & set(services.REQUIRES):
+        services.refresh_census_on_commit(row.deal_id)
     return written

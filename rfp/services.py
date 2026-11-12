@@ -1,16 +1,20 @@
 """Every write to the RFP request (plan.md §6.10, §7.11; K.6 services; K9, K10, K20–K27, K115).
 
 - `update(user, deal_id, changes)`: the request's settings (route, carriers and funding as `{add, remove}`, other
-  carriers, due date, notes), cleaned by `cleaners.apply`. An unchanged value writes nothing. Each edit takes the
-  completed mark off the card that owns it, in the same transaction (K10; `CARD_OF`). One Activity row per call
-  (area `rfp`), coalesced as `rfp:request:<deal>`: a burst of chip clicks is one row whose first "before" and last
-  "after" an Undo puts back (K115). Notes are free text for the carriers and never enter Activity: their edit gets a
+  carriers, due date, notes) and the packet's ticks (`include`, slice 45: only what differs from the default is kept,
+  worked out against the request as this write leaves it; K35, K56), cleaned by `cleaners.apply`. An unchanged value
+  writes nothing. Each edit takes the completed mark off the card that owns it, in the same transaction (K10;
+  `CARD_OF`; the ticks belong to the packet card). One Activity row per call (area `rfp`), coalesced as
+  `rfp:request:<deal>`: a burst of chip clicks is one row whose first "before" and last "after" an Undo puts back
+  (K115). Notes are free text for the carriers and never enter Activity: their edit gets a
   row of its own that names the key only (K115's "a summary only"), coalesced as `rfp:notes:<deal>`.
 - `set_done(user, deal_id, card, done)`: a card marked completed ({by: user id, at}) or not (K9); never coalesced.
 - `clear_coverage_mark`: intake's `coverage_changed` receiver: an intent or coverage edit takes the coverage card's
   mark off inside intake's transaction (K10; the proposal builder's J46 does the same), one JSONB `-`, no Activity.
   The checklist card's mark comes off from the page after a checklist edit there (K10: intake never sees rfp).
 
+A change to the carriers, "Other carriers" or the ticks moves which census cells the RFP's files require (K124), so
+census's stored counts are rewritten once the write commits (`census.services.refresh_facts`, K.6).
 Lost deals keep every edit (K111); sends, refused there, arrive with slice 46. The row is made by the first write, never
 by a GET. Lock order (rule 3): the Deal first (it serializes the row's creation), then the RfpRequest row.
 """
@@ -22,11 +26,14 @@ from django.db import transaction
 from django.db.models.expressions import RawSQL
 from rest_framework.exceptions import ValidationError
 
+from census.services.facts import refresh_facts
 from deals import activity, clock
 from deals.models import Deal
 from quotes import facts as quote_facts
 
 from . import cleaners, request
+from .cards import include as ticks
+from .formats import scope
 from .models import RfpRequest
 
 AREA = 'rfp'
@@ -42,7 +49,8 @@ CARDS = (
 )
 CARD_KEYS = tuple(key for key, _ in CARDS)
 CARD_TITLES = dict(CARDS)
-CARD_OF = dict.fromkeys(cleaners.SETTINGS, REQUEST)  # the packet's include and form chip join with slices 45–46
+CARD_OF = {**dict.fromkeys(cleaners.SETTINGS, REQUEST), 'include': PACKET}  # the form chip joins with slice 46
+REQUIRES = ('carriers', 'other_carriers', 'include')  # what moves the census cells the files require (K124)
 PRIVATE = ('notes',)  # never in Activity, by value
 
 Updated = namedtuple('Updated', 'changed cleared activity')  # {key: after}, [cards whose mark came off], last row
@@ -63,6 +71,25 @@ def default_funding(deal):
     """The funding asked while none is picked (K22): the medical incumbent's, else fully insured and level-funded."""
     found = quote_facts.incumbent(deal, 'medical') or {}
     return request.default_funding(found.get('funding'))
+
+
+def route_now(deal, stored_route):
+    """The route the request follows: the stored pick, else the band's (K20)."""
+    if stored_route:
+        return stored_route
+    return request.route('', request.band(quote_facts.enrolled_headcount(deal)['count']))[0]
+
+
+def _ticks(deal, current, wanted):
+    """The include map to store: the change against the defaults the request will have after this write."""
+    after = {**current, **{key: value for key, value in wanted.items() if key != 'include'}}
+    defaults = scope.defaults(after, route_now(deal, after['route']))
+    return ticks.merged(current['include'], wanted['include'], defaults)
+
+
+def refresh_census_on_commit(deal_id):
+    """Census's stored counts follow what the files require (K124), rewritten after this write commits."""
+    transaction.on_commit(lambda: refresh_facts(deal_id))
 
 
 def put(row, values):
@@ -116,6 +143,8 @@ def update(user, deal_id, changes):
         wanted = cleaners.apply(current, changes, lambda: default_funding(deal))
     except cleaners.Invalid as exc:
         raise ValidationError(exc.errors) from exc
+    if 'include' in wanted:
+        wanted['include'] = _ticks(deal, current, wanted)
     diff = {key: [current[key], value] for key, value in wanted.items() if value != current[key]}
     if not diff:
         return Updated({}, [], None)
@@ -124,6 +153,8 @@ def update(user, deal_id, changes):
     cleared = _take_off(row, {CARD_OF[key] for key in diff})
     row.save(update_fields=[*diff, 'done', 'updated_at'])
     written = _record(deal, user, diff, cleared)
+    if set(diff) & set(REQUIRES):
+        refresh_census_on_commit(deal.id)
     changed = {key: after for key, (_before, after) in diff.items()}
     return Updated(changed, [key.removeprefix('done.') for key in cleared], written)
 

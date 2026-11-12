@@ -1,6 +1,7 @@
 // The request card's words and write bodies, pure (plan.md §8.12; K17–K29; old CarriersTab.jsx RequestPanel at
 // 891f1b3). Vocabularies come from /api/meta/ `rfp` (rule 1); the server checks every value.
 import { formatDate } from '../../lib/format';
+import { optimisticTicks } from './packet/packetModel';
 
 const plural = (count, noun) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
@@ -78,10 +79,12 @@ export function optimistic(page, body, fundingOrder) {
   for (const key of ['other_carriers', 'due_date', 'notes']) {
     if (key in body) request[key] = body[key] ?? '';
   }
-  return { ...page, request, carriers };
+  const packet = 'include' in body ? optimisticTicks(page.packet, body.include) : page.packet;
+  return { ...page, request, carriers, packet };
 }
 
-/** A write's answer into the page: the blocks the request card redraws. */
+/** A write's answer into the page: the blocks the request and packet cards redraw. */
 export function adopt(page, answer) {
-  return { ...page, request: answer.request, carriers: answer.carriers, done: answer.done };
+  const packet = answer.packet ?? page.packet;
+  return { ...page, request: answer.request, carriers: answer.carriers, packet, done: answer.done };
 }

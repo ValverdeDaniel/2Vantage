@@ -11,6 +11,7 @@ nothing and makes no row (a deal with no RfpRequest reads as the defaults).
 - `carriers`: one chip per carrier, eligibility and its reason (K23, K24). `lines`: the requested lines (K16).
 - `commission`: the text the form prints (K29), from the agency default until commission is built.
 - `census`: the census line (K8). `done`: the cards' marks, each with the marker's name (K9).
+- `packet`: the packet card's census rows and how many are in the packet (K34–K41, slice 45; `cards.census`).
 """
 
 from django.contrib.auth import get_user_model
@@ -24,6 +25,7 @@ from quotes import facts as quote_facts
 from quotes.selectors.headcount import WHERE
 
 from . import cleaners, request, services
+from .cards import census as packet_census
 from .models import RfpRequest
 
 
@@ -92,11 +94,14 @@ def census_block(deal_id):
 
 
 def request_parts(deal, row, band_key):
-    """The blocks a request edit redraws: the settings, the carrier chips and the marks."""
+    """The blocks a request edit redraws: the settings, the carrier chips, the packet's census rows and the marks."""
     block = request_block(deal, row, band_key)
     requested = [line for line in lines.LINE_KEYS if line in set(deal.requested_lines or [])]
     chips = request.chips(set(block['carriers']), band_key, requested, identities.CARRIERS)
-    return {'request': block, 'carriers': chips, 'done': marks(row.done if row else {})}
+    counts = census_facts.stored(deal.id)
+    members = counts['employees'] + counts['dependents']
+    packet = packet_census.block(cleaners.stored(row), block['route'], members)
+    return {'request': block, 'carriers': chips, 'packet': packet, 'done': marks(row.done if row else {})}
 
 
 def page(deal):

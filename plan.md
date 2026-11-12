@@ -2315,7 +2315,10 @@ files the deal's RFP will send (the picked carriers' own formats, hand-ticked fo
 picked carrier or "Other carriers" takes it; K124). The carrier names say whose file needs the cell. `rfp` is to the
 right of `census` (§3.3), so census never imports it: `census.providers.carrier_required` is a provider slot whose
 default answers `{}`, and rfp fills it at start-up (O.1). rfp's answer is pure over the request, the format
-definitions and the requested lines; it reads no census. Until slice 45 it is empty.
+definitions and the requested lines; it reads no census. Built in slice 45 (`rfp.formats.required`): a column counts
+when the carrier requires it (our flag or the carrier's asterisk) and holds a census key, its own or what a required
+derived column reads by value (UHC's "Out of Area" reads the ZIP); a carrier, "Other carriers" or tick change rewrites
+census's stored counts on commit (`census.services.refresh_facts`).
 
 #### 5.3.4 Validation — `census/validation.py: validate(members, deal) → {(member_id, key): [issue]}`
 
@@ -3600,6 +3603,11 @@ Built in slice 44 (no migration): `rfp.services.update` (the settings, carriers 
 owning card's mark cleared in the same write, Activity coalesced as `rfp:request:<deal>`, notes key-only) and
 `set_done` (`done[card] = {by: user id, at}`); intake's `coverage_changed` takes the coverage card's mark off; the
 reverter `rfp`; `rfp/carriers.py`, `request.py`, `cleaners.py`, `page.py`, `meta.py` (`/api/meta/` `rfp`).
+Built in slice 45 (no migration): `include` written by `update` (only the ticks that differ from the default, worked
+out against the request as the write leaves it; `'reset'`; stale keys pruned; the packet card's mark cleared);
+`rfp/formats/` (the four definitions, generated from a migrated old database, the bundled workbooks and their drift
+guard, the row builder, the fill, the scope, census's `carrier_required`, the lens), `rfp/xlsx/` (the old `fill_xlsx`),
+`rfp/printed.py`, `rfp/cards/` (the packet's census rows and ticks).
 
 **RfpRequest** — one per deal, created on the first write (it replaces v1.1's `RfpConfig`): `route` (blank follows the
 band until the first send pins it, `warner` or `direct`), `carriers` (JSON list of carrier keys, in registry order),
@@ -4171,6 +4179,10 @@ Slice 44 builds `GET / PATCH deals/{id}/rfp/` (the page payload; the PATCH takes
 `{add, remove}`, other carriers, due date and notes, and answers `{changed, cleared, activity_id, request, carriers,
 done}`) and `POST deals/{id}/rfp/done/` (`{done, activity_id}`); `checks_stamp`, `include`, `form` and the other rows
 come with the packet, files and sends (slices 45–46). Slice 26 added no endpoint (proposals reads `asked_by_line`).
+Slice 45 builds `include` on the PATCH (`{file key: true | false | null}` or `'reset'`; the answer adds `packet`), the
+census files of the one key space (`files/census-warner|aetna|angle|angle-csv|uhc/`, no `ack` until slice 46's check;
+400 an unknown key, 409 no census), their `look/` windows (`documents.sheets.window`'s shape plus `warnings`) and the
+lens (`formats/`, `formats/{key}/?rows=1–200`).
 
 | Method | Path | What it does |
 |---|---|---|
@@ -4620,6 +4632,8 @@ Florida Blue 51+, Warner large group and the SIIA disclosure (G1; OQ5).
 Part K (K1–K124; K.6). Slices 44–46; slice 26 builds only the app and `asked_by_line`. The old tab key was `carriers`;
 the route is `/deals/:id/rfp` (K1). Slice 44 builds the shell, the census line and cards 1–3 (intake's coverage card
 and checklist mounted with this page's marks; OQ60: Confirmed and Mark completed both), and the idle warm-up (K3).
+Slice 45 builds card 4's carrier census rows (K34–K41) and the lens with its Export readiness cards (K79–K88; OQ63:
+both), which the Census tab mounts around its roster ("Our census"; `?lens=<key>` is where "Check ▸" lands).
 - Title and subtitle, "✓ N of M completed", the census line, and five collapsible cards with **Mark completed**
   (K4–K12).
 - Cards: 1 What we're shopping (K13–K16); 2 What we're requesting (K17–K30); 3 Marketing readiness checklist
@@ -5088,7 +5102,7 @@ Each carrier's own workbook, filled the way a careful person would fill it in Ex
 
 | Key | Carrier | Columns | Row cap | Delivered as | Notes |
 |---|---|---|---|---|---|
-| `warner_census` | Warner Pacific (the universal census) | B–X | 500 | xlsx | PAY MODE prints "Annual" whenever a salary is written. Columns S and X, both headed CLASSES, are checked against the workbook in slice 45 |
+| `warner_census` | Warner Pacific (the universal census) | B–X | 500 | xlsx | PAY MODE prints "Annual" whenever a salary is written. Columns S and X, both headed CLASSES (S under the BASIC LIFE banner, X under DISABILITY), both take `emp_class` (checked against the workbook in slice 45, OQ109) |
 | `aetna_gateway` | Aetna | A–I | 485 | xlsx | The AFA UW / FI UW selector in J1 follows the funding asked; status words "Active, Cobra, St Con, Retiree"; gender required |
 | `angle` | Angle Health | B–I | 213 (the pre-styled rows) | xlsx, plus a CSV that carries everyone | Angle's own workbook, filled in place; the example row is cleared; dates are real dates |
 | `uhc` | UnitedHealthcare | A–X | 350 | xlsx | A group-information tab with 19 group facts; a middle initial in hidden column H; "Waive all products?" is gone (0066) |
@@ -6616,7 +6630,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | OQ62 | Should Warner's Nature of Business cell print the SIC code, or a new intake description? | Open. Default: the SIC code | Open | 45 |
 | OQ63 | Readiness cards and lens chips: keep both, or merge them (X-163)? | Open. Default: both | Open | 45 |
 | OQ64 | Does the universal census leave the packet when every picked carrier has its own format and "Other carriers" is empty (reversing D-063 #6)? | Open. Default: yes | Open | 45 |
-| OQ109 | Does `emp_class` fill both Warner columns S and X? (v1.1 §16 #11) | Open. Default: checked against the workbook when K's data modules are generated | Open (developer) | 45 |
+| OQ109 | Does `emp_class` fill both Warner columns S and X? (v1.1 §16 #11) | Yes: in `warner_census.xlsx` S3 "CLASSES" sits under the BASIC LIFE banner (R2:S2) and X3 "CLASSES" under DISABILITY (U2:X2), both hinted "If multiple classes please list"; one census class per employee fills both, ungated by line, as the old final state did | Answered (developer, slice 45) | 45 |
 | **Slice 46: RFP-3** | | | | |
 | OQ65 | Which address is the returns inbox? | Open. Default: the deal owner's email until one is set | Open | 46 |
 | OQ66 | Do PHI documents go only to carriers quoting their lines, to medical carriers when a document has no lines, and never to "Other carriers"? | Open. Default: yes | Open | 46 |

@@ -9,6 +9,8 @@ from conftest import check_permissions, make_deal, sweep_gets, write_path_contra
 from rfp import services
 from rfp.models import RfpRequest
 
+from .roster import family
+
 pytestmark = pytest.mark.django_db
 
 
@@ -16,6 +18,10 @@ def samples(deal):
     return {
         'api/deals/<int:pk>/rfp/': {'pk': deal.id},
         'api/deals/<int:pk>/rfp/done/': {'pk': deal.id},
+        'api/deals/<int:pk>/rfp/files/<str:key>/': {'pk': deal.id, 'key': 'census-uhc'},
+        'api/deals/<int:pk>/rfp/files/<str:key>/look/': {'pk': deal.id, 'key': 'census-angle-csv'},
+        'api/deals/<int:pk>/rfp/formats/': {'pk': deal.id},
+        'api/deals/<int:pk>/rfp/formats/<str:key>/': {'pk': deal.id, 'key': 'census-warner'},
     }
 
 
@@ -24,19 +30,27 @@ MATRIX = [
     ('GET', 'api/deals/<int:pk>/rfp/', ALL),
     ('PATCH', 'api/deals/<int:pk>/rfp/', ALL, {'carriers': {'add': ['aetna']}}),
     ('POST', 'api/deals/<int:pk>/rfp/done/', ALL, {'card': 'request', 'done': True}),
+    ('GET', 'api/deals/<int:pk>/rfp/files/<str:key>/', ALL),
+    ('GET', 'api/deals/<int:pk>/rfp/files/<str:key>/look/', ALL),
+    ('GET', 'api/deals/<int:pk>/rfp/formats/', ALL),
+    ('GET', 'api/deals/<int:pk>/rfp/formats/<str:key>/', ALL),
 ]
 
 
-def test_Q3_rfp_gets_write_nothing(admin_api, deal):
+def test_Q3_rfp_gets_write_nothing_but_the_access_rows(admin_api, user, deal):
+    family(user, deal)  # the files are built from a census
     sweep_gets(admin_api, ('rfp',), samples(deal))
 
 
-def test_Q3_rfp_permission_matrix(actors, no_csrf_api, deal):
+def test_Q3_rfp_permission_matrix(actors, no_csrf_api, user, deal):
+    family(user, deal)
     check_permissions(actors, ('rfp',), MATRIX, samples(deal), no_csrf_api)
 
 
 def test_Q3_ids_past_bigint_answer_404(api):
     assert api.get(f'/api/deals/{2**64}/rfp/').status_code == 404
+    assert api.get(f'/api/deals/{2**64}/rfp/files/census-uhc/').status_code == 404
+    assert api.get(f'/api/deals/{2**64}/rfp/formats/').status_code == 404
     assert api.patch(f'/api/deals/{2**64}/rfp/', {}, format='json').status_code == 404
     assert api.post(f'/api/deals/{2**64}/rfp/done/', {}, format='json').status_code == 404
 
@@ -49,6 +63,17 @@ def test_Q3_settings_write_path(user, deal):
         lambda: services.update(user, deal.id, {'carriers': {'add': ['aetna', 'cigna']}, 'route': 'warner'}),
         lambda r: (r.carriers, r.route),
         lambda: services.update(user, deal.id, {'carriers': {'remove': ['cigna']}}),
+    )
+
+
+def test_Q3_ticks_write_path(user, deal):
+    row = RfpRequest.objects.create(deal=deal)
+    write_path_contract(
+        user,
+        row,
+        lambda: services.update(user, deal.id, {'include': {'census-uhc': False, 'census-angle-csv': True}}),
+        lambda r: r.include,
+        lambda: services.update(user, deal.id, {'include': {'census-uhc': None}}),
     )
 
 

@@ -5,6 +5,7 @@ import { errorText } from '../../lib/errors';
 import Button from '../../ui/Button';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
+import { CensusLens } from '../rfp';
 import { useToast } from '../../ui/useToast';
 import CobraCheck from './CobraCheck';
 import ImportDoor from './ImportDoor';
@@ -64,7 +65,10 @@ function RosterPage({ deal, meta, census, waiting, onReview, onPage, refetch }) 
           </button>
         </div>
       )}
-      <Roster deal={deal} meta={meta} census={census} onPage={onPage} onReview={onReview} refetch={refetch} />
+      {/* The carrier formats' readiness and lens (slice 45, K79–K89): "Our census" is this roster. */}
+      <CensusLens dealId={deal.id}>
+        <Roster deal={deal} meta={meta} census={census} onPage={onPage} onReview={onReview} refetch={refetch} />
+      </CensusLens>
     </div>
   );
 }

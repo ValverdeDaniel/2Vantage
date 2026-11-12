@@ -8,6 +8,7 @@ import { ChecklistCard, CoverageIntentCard } from '../intake';
 import BuilderCard from '../shared/BuilderCard';
 import CompletedMark from '../shared/CompletedMark';
 import CensusLine from './CensusLine';
+import PacketCard from './packet/PacketCard';
 import RequestCard from './RequestCard';
 import { requestSummary } from './requestModel';
 import useRfpCards from './useRfpCards';
@@ -18,8 +19,9 @@ import useRfpWrites from './useRfpWrites';
  * title and subtitle with the legal name (K4), "✓ N of M completed" and Collapse all (K6, K7), the census line (K8),
  * then the cards in working order, each collapsible and marked completed (K9): 1 What we're shopping, intake's
  * Coverage & marketing intent card with its own Confirmed beside this page's mark (K12–K16; OQ60: both); 2 What we're
- * requesting (K17–K29); 3 intake's Marketing readiness checklist (K31, K32). The packet and the emails join with
- * slices 45 and 46, and with the Emails card the Mark as marketed footer (K33). "Show me how ▸" is dropped (K5).
+ * requesting (K17–K29); 3 intake's Marketing readiness checklist (K31, K32); 4 RFP packet, its carrier census rows
+ * (K34–K41, slice 45; the other rows and the zip join with 46). The emails join with slice 46, and with the Emails card
+ * the Mark as marketed footer (K33). "Show me how ▸" is dropped (K5).
  */
 export default function RfpTab({ deal }) {
   const meta = useMeta().data;
@@ -30,7 +32,12 @@ export default function RfpTab({ deal }) {
   const page = rfp.data;
   const cards = useRfpCards({
     cards: rfpMeta?.cards,
-    available: { coverage: Boolean(intake.data), request: Boolean(page), checklist: Boolean(intake.data?.checklist) },
+    available: {
+      coverage: Boolean(intake.data),
+      request: Boolean(page),
+      checklist: Boolean(intake.data?.checklist),
+      packet: Boolean(page?.packet),
+    },
     done: page?.done,
     writes,
     checklist: intake.data?.checklist,
@@ -101,6 +108,14 @@ export default function RfpTab({ deal }) {
           />
         </div>
       )}
+
+      <PacketCard
+        dealId={deal.id}
+        title={rfpMeta.cards.find((entry) => entry.key === 'packet')?.label}
+        packet={page.packet}
+        card={cards.card('packet')}
+        onTicks={writes.save}
+      />
     </div>
   );
 }
