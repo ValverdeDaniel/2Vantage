@@ -17,3 +17,5 @@ AI_JOBS_INLINE = True  # a started job runs at once, in the test (plan.md §3.5)
 MEDIA_ROOT = tempfile.mkdtemp(prefix='vantage2-test-media-')
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 LOGGING = {**LOGGING, 'loggers': {**LOGGING['loggers'], 'django.request': {'level': 'ERROR'}}}
+AUTH_OIDC = False  # Microsoft 365 sign-in is off unless a test turns it on with the fake provider (accounts/testing.py)
+AI_PHI_READERS = True  # test data is synthetic: the readers that see member data register in tests (slice 47)

@@ -60,18 +60,37 @@ def _viewed(request, imp):
         record_access(request.user, document, inline=True)
 
 
+def _page_args(data):
+    """(page, page size, show) from the query string or a search's body."""
+    show = data.get('show') or 'all'
+    if not isinstance(show, str) or show not in SHOWS:
+        raise ValidationError({'show': ['Show all, issues or missing.']})
+    page = _whole(data.get('page'), 'page', 1, 1, 100000)
+    size = _whole(data.get('page_size'), 'page_size', PAGE_SIZE, 1, MAX_PAGE_SIZE)
+    return page, size, show
+
+
 class CensusView(APIView):
-    """GET deals/{id}/census/?page=&page_size=&show=all|issues|missing&q= — the census page."""
+    """GET deals/{id}/census/?page=&page_size=&show=all|issues|missing — the census page. A name never rides the URL,
+    where every request log keeps it (§3.8, E28; slice 47): a `q` here is ignored, and the search posts it."""
 
     def get(self, request, pk):
         deal = _deal(pk)
-        query = request.query_params
-        show = query.get('show') or 'all'
-        if show not in SHOWS:
-            raise ValidationError({'show': ['Show all, issues or missing.']})
-        page = _whole(query.get('page'), 'page', 1, 1, 100000)
-        size = _whole(query.get('page_size'), 'page_size', PAGE_SIZE, 1, MAX_PAGE_SIZE)
-        return Response(selectors.census_page(deal, page, size, show, (query.get('q') or '')[:100]))
+        return Response(selectors.census_page(deal, *_page_args(request.query_params)))
+
+
+class SearchView(APIView):
+    """POST deals/{id}/census/search/ {q, page, page_size, show} → the census page with the roster narrowed to the
+    families in which a first or last name holds `q` (case ignored). It writes nothing; it is a POST so that the name
+    stays in the body (§3.8, E28; slice 47). A refusal never repeats the name."""
+
+    def post(self, request, pk):
+        deal = _deal(pk)
+        data = _body(request)
+        name = data.get('q') or ''
+        if not isinstance(name, str):
+            raise ValidationError({'q': ['Send the name as text.']})
+        return Response(selectors.census_page(deal, *_page_args(data), name[:100]))
 
 
 class ImportsView(APIView):

@@ -35,6 +35,8 @@ ai sits left of every value owner in the chain, so it never imports them: they f
 from collections import namedtuple
 from dataclasses import dataclass, field
 
+from django.conf import settings
+
 from . import kinds
 
 JobKind = namedtuple('JobKind', 'lane run land', defaults=(None,))
@@ -122,9 +124,14 @@ class Reader:
 
 
 def register_reader(reader):
+    """Register a reader; one that sees member data (`kinds.PHI_TARGETS`) waits for the PHI-gate switch, so it is
+    left out while `AI_PHI_READERS` is off (§11.4 item 7; slice 47). Returns whether it registered."""
     if reader.target not in kinds.TARGETS:
         raise ValueError(f'Unknown reader target: {reader.target}')
+    if reader.target in kinds.PHI_TARGETS and not settings.AI_PHI_READERS:
+        return False
     readers[reader.target] = reader
+    return True
 
 
 @dataclass(frozen=True)

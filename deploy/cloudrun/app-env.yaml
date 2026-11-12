@@ -37,6 +37,16 @@
   value: ${DEFAULT_FROM_EMAIL}
 - name: AGENCY_TIME_ZONE
   value: ${AGENCY_TIME_ZONE}
+# Microsoft 365 sign-in and the PHI gate (slice 47; deploy/phi-gate.md). Entra's redirect URI for this registration is
+# https://${WEB_HOST}/api/auth/microsoft/callback/. At the gate passwords go off, and AI_PHI_READERS goes on last.
+- name: AUTH_OIDC_TENANT_ID
+  value: ${ENTRA_TENANT_ID}
+- name: AUTH_OIDC_CLIENT_ID
+  value: ${ENTRA_CLIENT_ID}
+- name: AUTH_PASSWORD_SIGNIN
+  value: '${AUTH_PASSWORD_SIGNIN}'
+- name: AI_PHI_READERS
+  value: '${AI_PHI_READERS}'
 - name: DJANGO_SECRET_KEY
   valueFrom:
     secretKeyRef:
@@ -52,3 +62,8 @@
     secretKeyRef:
       name: ${SECRET_EMAIL_PASSWORD}
       key: '${SECRET_EMAIL_PASSWORD_VERSION}'
+- name: AUTH_OIDC_CLIENT_SECRET
+  valueFrom:
+    secretKeyRef:
+      name: ${SECRET_ENTRA_CLIENT}
+      key: '${SECRET_ENTRA_CLIENT_VERSION}'

@@ -35,6 +35,7 @@ def samples(world):
     deal, imp = {'pk': world['deal'].id}, {'import_id': world['import'].id}
     return {
         'api/deals/<int:pk>/census/': deal,
+        'api/deals/<int:pk>/census/search/': deal,
         'api/deals/<int:pk>/census/imports/': deal,
         'api/census/imports/<int:import_id>/': imp,
         'api/census/imports/<int:import_id>/apply/': imp,
@@ -58,6 +59,7 @@ GONE = {**ALL, 'producer': 204, 'admin': 204}
 def matrix(world):
     return [
         ('GET', 'api/deals/<int:pk>/census/', ALL),
+        ('POST', 'api/deals/<int:pk>/census/search/', ALL, {'q': 'Smith'}),
         ('POST', 'api/deals/<int:pk>/census/imports/', MADE, {'document_id': world['file'].id}),
         ('GET', 'api/census/imports/<int:import_id>/', ALL),
         ('PATCH', 'api/census/imports/<int:import_id>/', ALL, {'first_data_row': 3}),

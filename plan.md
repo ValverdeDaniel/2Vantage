@@ -558,6 +558,7 @@ the rest). "Slice N" says when a piece arrives (§13). Untagged text in §3 is t
 | Lint | ruff; import-linter (`lint-imports`); ESLint 9 with react-hooks; stylelint | built (import-linter: 6; stylelint: 2) | import-linter holds the chain contract (§3.3); stylelint refuses undefined custom properties (§3.9) |
 | Acceptance harnesses | `browser/`: playwright-core driving the installed Chrome. `tools/parity/`: a tools image with headless LibreOffice, poppler and the Python readers | slice 3 | The Look, Walk, Recalc and Fidelity lanes (§12; Q.2, Q.5). Never in the app image |
 | Production serving | WhiteNoise 6.12; django-storages[google] 1.14 (Cloud Storage) | slice 69, staging (§11; built, Google Cloud not connected) | WhiteNoise serves `.mjs` as JavaScript, which pdf.js needs (E.6); Google's libraries load only when a bucket is named |
+| Microsoft 365 sign-in | PyJWT 2.15 (with cryptography and requests, already pinned) | slice 47 (built, Microsoft 365 not connected) | `accounts/oidc.py`: OpenID Connect's code flow with PKCE, our own (one module); PyJWT verifies the ID token (RS256, Entra's published keys, issuer, audience, expiry). mozilla-django-oidc 5.0 was weighed and left: it skips the audience and issuer checks, and its sessions ignore `is_active` (§3.8) |
 | Containers | Docker Compose (local) | built | Cloud Run later (§11) |
 
 Versions are pinned exactly in `requirements.txt` (`==`) and `package-lock.json`. A library is added in the slice that
@@ -873,7 +874,9 @@ python tools/parity/files.py --deals all                        # Fidelity, in t
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` | empty | SMTP; when `EMAIL_HOST_USER` is empty, mail prints to the console |
 | `MEDIA_ROOT` | `/data/media` | Where uploaded and issued files are stored locally: a Docker volume, never a folder inside the repository (§3.4) |
 | `AGENCY_TIME_ZONE` | `America/New_York` | The agency's time zone. Decides "today" (`deals/clock.py`) and every date printed on a screen or in a file |
-| `SESSION_COOKIE_AGE` | `43200` (12 hours) | Sign-in lifetime in seconds (built). Open in §16 (OQ107), settled before the PHI gate (slice 47) |
+| `SESSION_COOKIE_AGE` | `43200` (12 hours) | Sign-in lifetime in seconds (built). OQ107's default; signing the PHI-gate checklist settles it (slice 47, `deploy/phi-gate.md` item 3) |
+| `AUTH_OIDC_TENANT_ID`, `AUTH_OIDC_CLIENT_ID`, `AUTH_OIDC_CLIENT_SECRET` (slice 47, built) | empty: off | Microsoft 365 sign-in against the firm's Entra ID app registration (§3.8, §7.2). On when all three are set; the redirect URI is `FRONTEND_URL` + `/api/auth/microsoft/callback/`. `AUTH_OIDC_ISSUER` names another OpenID provider in place of `https://login.microsoftonline.com/<tenant>/v2.0` (a local stand-in) |
+| `AUTH_PASSWORD_SIGNIN` (slice 47, built) | `true` | Username and password on the sign-in page and in Django admin. The PHI gate sets it `false`, so Microsoft 365 is the only way in (§11.4 item 3) |
 | `GIT_SHA` | `unknown` | Build commit shown by `/api/health/` |
 | `GS_BUCKET_NAME` (slice 69) | empty | Set: files live in this private Cloud Storage bucket (`backend/storage.py`, django-storages, whose Google libraries load only then); its `url()` names a path nothing serves, never a signed or public link. Empty: the filesystem under `MEDIA_ROOT` |
 | `CLOUD_SQL_INSTANCE` (slice 69) | empty | `project:region:instance`: connect through Cloud Run's Cloud SQL socket at `/cloudsql/<instance>` |
@@ -885,7 +888,7 @@ python tools/parity/files.py --deals all                        # Fidelity, in t
 | `AI_DEAL_BUDGET_USD` (slice 18, built) | `25` | A deal's AI budget; admins change it per deal in the drawer (D99, D100, OQ34) |
 | `AI_TOTAL_BUDGET_USD` (slice 18, built) | empty: no cap | The cap on the sum of every Claude call this database has recorded (`ai.Call`, the ledger): each call is reserved at its worst case (its input plus every output token it may write, at the model's rates) under one lock before it is sent, and refused with a sentence when that could pass the cap; nothing overrides it. `manage.py ai_spend` shows the total. The development stack passes `20` (Daniel's build-time rule, 2026-11-12); production leaves it unset |
 | `AI_MEMBER_DATA_SCREEN` (slice 18) | `False` | On: Claude reads leave out the pages the member-data screen flagged at upload. Off: files are read whole, as the old app does since D-225 (OQ22) |
-| `AI_PHI_READERS` (slice 47) | `False` | The PHI-gate switch: the census, intake and questionnaire readers register only while it is on, after the PHI gate (slice 47; OQ29, O.3.3) |
+| `AI_PHI_READERS` (slice 47, built) | `False` | The PHI-gate switch: the census, intake and questionnaire readers (`ai.kinds.PHI_TARGETS`) register only while it is on, after the PHI gate (`ai.registry.register_reader`; OQ29, O.3.3). `settings_test.py` turns it on: test data is synthetic |
 
 Built in slice 18: `settings.py` reads every `AI_*` row above with its default (the PHI-gate switch waits for slice 47),
 and `.env.example` lists them in place of its old "Release 2 only" block. Fixed settings: `AI_READ_PARALLEL = 4` (a
@@ -944,7 +947,9 @@ runs `select 1`, counts unapplied migrations (cached once zero), returns
 **`backend/checks.py`** — Django system checks registered with `deploy=True`, active only when
 `ENVIRONMENT == 'production'`: E001 DEBUG on; E002 default secret key; E003 console email backend; E004 the
 `ANTHROPIC_LOG` environment variable set to `debug` or `info`; E005 (slice 69) running on Cloud Run (`K_SERVICE` or
-`CLOUD_RUN_JOB` set) with no `GS_BUCKET_NAME`, where files would stay on the instance. `manage.py check --deploy
+`CLOUD_RUN_JOB` set) with no `GS_BUCKET_NAME`, where files would stay on the instance; the PHI gate's order (slice 47):
+E006 `AI_PHI_READERS` on while Microsoft 365 sign-in is off or passwords still work, E007 no way left to sign in,
+E008 a Microsoft 365 provider not reached over HTTPS. `manage.py check --deploy
 --fail-level WARNING` must pass before a release.
 
 **`backend/middleware.py`** — `JsonGZipMiddleware`: Django's `GZipMiddleware`, applied only when the response
@@ -1142,7 +1147,12 @@ Rules:
 - **Sign-in** uses Django's session framework: `POST auth/login/` calls `django.contrib.auth.login`, the session
   cookie is `HttpOnly` (out of reach of page scripts) and expires after `SESSION_COOKIE_AGE`. Logging out flushes the
   session. Deactivating a user in Django admin ends their access at their next request. No token is stored in the
-  browser.
+  browser. **Microsoft 365** (slice 47, built; not connected): `GET auth/microsoft/` sends the browser to the firm's
+  Entra ID (OpenID Connect, code flow with PKCE, `accounts/oidc.py`), and the callback verifies the ID token and signs
+  in the one active user with the account's email, case ignored (`accounts/firm.py`). Nobody is created at sign-in;
+  an unknown email, a user turned off, or an email two active users share is refused with a sentence on the sign-in
+  page. The session is Django's, so the same lifetime and deactivation rules hold. At the gate
+  `AUTH_PASSWORD_SIGNIN=false` turns passwords off, here and in Django admin.
 - **Passwords** go through Django's password validators on every path that sets one. A member changes their own
   password on Django's built-in page (`/accounts/password_change/`); an admin resets one in Django admin. There is no
   self-service reset by email in version 1 (Microsoft 365 sign-in replaces passwords before real PHI).
@@ -3843,6 +3853,9 @@ Sections the later slices add, each served from its owner's constant:
 | POST | `auth/login/` | public (throttle 10/min) | `{username, password}` | `200 user`, session cookie set · `400 {"non_field_errors": ["Invalid username or password."]}` (also for inactive users) |
 | POST | `auth/logout/` | user | — | `204` (session flushed) |
 | GET | `auth/me/` | user | — | `200 user` · `401` when not signed in (the SPA calls this at start-up) |
+| GET | `auth/options/` (slice 47) | public | — | `200 {password: bool, microsoft: {start: "/api/auth/microsoft/", messages: {code: sentence}} or null}`: what the sign-in page offers |
+| GET | `auth/microsoft/?next=<path>` (slice 47) | public (throttle 10/min) | — | `302` to the firm's Entra ID authorize page; `404` while Microsoft 365 sign-in is off. Keeps the pending sign-in (state, nonce, PKCE verifier) in the session |
+| GET | `auth/microsoft/callback/?code=&state=` (slice 47) | public (throttle 10/min) | — | `302` to `next` (a path on this site; else `/`) with the session set · `302 /login?signin=<code>` when refused: `unknown`, `disabled`, `shared`, `no_email`, `cancelled`, `expired` or `failed`. `404` while off |
 
 `user` = `{id, username, first_name, last_name, full_name, email, is_admin}`, plus the Profile flags `claude_direct`
 and `commissions_access` (A3; slice 6).
@@ -3850,7 +3863,9 @@ and `commissions_access` (A3; slice 6).
 Everything else about accounts is Django's own: users, their Profile flags and agency settings are managed in Django
 admin (`/admin/`, staff only); a user changes their own password at `/accounts/password_change/` (Django's view, with
 Django admin's registration templates); an admin resets a forgotten password in Django admin. Before real PHI, sign-in
-moves to the firm's Microsoft 365 accounts (§3.8; slice 47), so no more password code is written.
+moves to the firm's Microsoft 365 accounts (§3.8; slice 47, built), so no more password code is written. With
+`AUTH_PASSWORD_SIGNIN=false`, `POST auth/login/` answers `400 {"non_field_errors": ["Sign in with your Microsoft 365
+account."]}`. The two Microsoft GETs write the session, as every sign-in does, and nothing else.
 
 ### 7.3 Clients and deals — `deals/`
 
@@ -4055,7 +4070,8 @@ for the Documents station's census view.
 
 | Method | Path | Auth | Request | Response |
 |---|---|---|---|---|
-| GET | `deals/{id}/census/` | user | `?page=1&page_size=100&show=all\|issues\|missing&q=` | census page |
+| GET | `deals/{id}/census/` | user | `?page=1&page_size=100&show=all\|issues\|missing` | census page. A `q` here is ignored: a name never rides a URL (§3.8, E28; slice 47) |
+| POST | `deals/{id}/census/search/` (slice 47) | user | `{q, page, page_size, show}` | the census page, its roster narrowed to the families with a first or last name holding `q`; writes nothing; a refusal never repeats the name |
 | POST | `deals/{id}/census/members/` | user | `{kind, employee_id?, values?, relay?}` | `201 {member, summary, review, activity_id}`: an employee sorts last, a dependent under its employee (C7) |
 | PATCH | `census/members/{id}/` | user | `{"values": {key: raw}, "expect"?: {key: value seen}, "relay"?: bool}` | `200 {member, changed, summary, review, activity_id}`: the changed member and its issues only (C6) · `400 {"values": …}` (an unknown key, or a masked SSN whose last four match nothing on file) · `409 {detail, keys}` when an `expect`ed value changed since |
 | DELETE | `census/members/{id}/` | user | — | `204`: a soft removal, dependents too (C7, O.6 #13) |
@@ -4469,6 +4485,9 @@ they were going.
 - **Change password** and every user or agency-settings screen are Django's own pages (§7.2); the SPA builds none of
   them. They are replaced by Microsoft 365 sign-in before real PHI (§3.8).
 - The sign-in page takes the old look in slice 4 (A1, A5).
+- **Sign in with Microsoft** (slice 47): when `auth/options/` names Microsoft 365, a full-width button above the
+  form takes the browser to the firm's sign-in; a refusal comes back as `/login?signin=<code>` and shows the server's
+  sentence in the error box. With passwords off, the button is all the card holds.
 
 ### 8.3 Home views
 
@@ -5824,6 +5843,17 @@ checklist needs. It is done when staff sign in on staging with their firm accoun
 The client portal comes after the gate (slice 54). It opens to clients only with its second factor (OQ80) and its
 logging (OQ86) in place.
 
+**Built in slice 47** (Google Cloud and Microsoft 365 not connected): the checklist itself, with each item's check,
+status and the order of the last switches, is `deploy/phi-gate.md`; Daniel signs it there. Item 3 is
+`accounts/oidc.py`, `firm.py` and `signin_views.py` with deploy checks E006–E008 (§3.5); item 4 is
+`backend/tests/test_phi_access.py` in the Fast lane; item 5 is `deploy/canary_walk.py` and `deploy/canary_scan.py`
+(`deploy/canary_scan.sh` on the dev stack); item 6 adds `manage.py scrub_key_only_values`, which rewrites Activity rows
+written before `sl_lasers` became key-only (commit c543269) and runs before real data; item 7 is the
+`ai.registry` gate on `AI_PHI_READERS`. Items 1 and 2 are confirmed by Daniel's answer to OQ29 (2026-11-12). The
+first local scan found the census roster's search sending a name in its URL; the search now posts it
+(`POST deals/{id}/census/search/`, §7.7), the page's GET ignores a `q`, and the local scan is clean. What stays open
+needs staging or Daniel.
+
 ---
 
 ## 12. Testing
@@ -6057,7 +6087,9 @@ Q.8 has the full lists.
 - **Client-safety canaries** go into `star_reason`, `client_guidance`, internal notes, document names, review marks,
   lasers, commission figures and birth dates. Every client file is read back in full, and none may appear (H125, J.4).
 - **The staging canary scan** (slice 47, and Gate A at Milestone 2): after a scripted walk with the canary census on
-  staging, a log query finds no canary (§11.4).
+  staging, a log query finds no canary (§11.4). Built: `deploy/canary_walk.py` (each run makes its own canaries,
+  `deploy/canaries.py`) and `deploy/canary_scan.py` over `gcloud logging read` on staging, or `deploy/canary_scan.sh`
+  over the dev stack's logs.
 
 ---
 
@@ -6700,7 +6732,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | **Slice 17: DOC-3** | | | | |
 | OQ28 | What needs approval: values Claude doubted or the locator missed (the old app), or every value Claude read? Does Claude never confirm its own value (D-119)? | "only the values claude doubted need approval, but even unapproved values shouldn't stop the user from continuing. just give a little flag saying X number of things should be reviewed" (2026-11-11). Applied: the old meaning, one rule (`review_rules.open_warning`): a value Claude read and doubted, or that the locator could not find in its file, until a person approves or ignores it, plus anything a person flagged ⚑; a typed value the file does not print is not one (§3.7, §10.7). Nothing is blocked by unreviewed values; the Advisor and the station show "N AI values to review". A person always applies; Claude never confirms its own value (D-119) | Answered | 17 |
 | **Slice 18: AI-1** | | | | |
-| OQ29 | The BAA and the key: only the Foobalabs key, and real files only after Anthropic confirms coverage in writing? | "live data is allowed in this version" (2026-11-12): the BAA prerequisites are met. Applied in slice 18: only `settings.ANTHROPIC_API_KEY`, the Messages API with no beta features; tests, seeds and the Eval corpus stay synthetic and no build step opens a real client's file (§10.8) | Answered | 18; 47 |
+| OQ29 | The BAA and the key: only the Foobalabs key, and real files only after Anthropic confirms coverage in writing? | "live data is allowed in this version" (2026-11-12): the BAA prerequisites are met. Applied in slice 18: only `settings.ANTHROPIC_API_KEY`, the Messages API with no beta features; tests, seeds and the Eval corpus stay synthetic and no build step opens a real client's file (§10.8). Slice 47 records the key as confirmed under the BAA, with this answer as its source (`deploy/phi-gate.md` items 1–2) | Answered | 18; 47 |
 | OQ30 | With no census, should Claude propose a quote's printed tier counts, unticked: as the line's figure, or per current plan when printed per plan? | Open. Default: yes. Built in slice 18 (`quotes/reader/counts.py`): per current plan when printed per plan, else as the line's figure, always unticked; with a census on the line they are not proposed and a finding says so | Open (default built) | 18 |
 | **Slice 20: AI-3** | | | | |
 | OQ31 | Should the golden-deal trial set the default model, read effort and cost caps, with Opus 5.5 kept to admins and direct people? (v1.1 §16 #7) | Open. Default: yes. Built in slice 20 on the default: Opus 5.5 is offered and stepped up to only for admins and direct people (D91); until the trial, §3.5's settings stand (Sonnet 5.5, effort high for reads, $3 a run, $25 a deal) | Open (default built) | 20 |
@@ -6766,7 +6798,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | OQ68 | The RFP page stops offering five files (reversing D-063 #5). Agreed? Do carriers ever get the proposal? | Open. Default: agreed; an off-by-default card attaches the latest issued proposal | Open | 46 |
 | OQ69 | Are SBCs with no role sent by default? | Open. Default: listed, unticked, "Role not set" | Open | 46 |
 | **Slice 47: PHI** | | | | |
-| OQ107 | Sign-in lifetime (§3.5; v1.1 §16 #1) | Open. Default: 12 hours (`SESSION_COOKIE_AGE`, built) | Open | 47 |
+| OQ107 | Sign-in lifetime (§3.5; v1.1 §16 #1) | Open. Default: 12 hours (`SESSION_COOKIE_AGE`, built; a Microsoft 365 sign-in gets the same Django session, slice 47). Daniel's signature on `deploy/phi-gate.md` item 3 settles it | Open | 47 |
 | **Slice 48: COM-1** | | | | |
 | OQ70 | Who saves a split? | Open. Default: all-tier users and the deal's owner | Open | 48 |
 | OQ71 | Is a partner's flat or PEPM amount per deal or per line? Is a referral % taken from the producer pool or from gross? | Open. Default: per deal; the pool, with gross selectable per row | Open | 48 |

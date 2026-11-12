@@ -4,6 +4,7 @@ from . import file_views, roster_views, views
 
 urlpatterns = [
     path('deals/<int:pk>/census/', views.CensusView.as_view()),
+    path('deals/<int:pk>/census/search/', views.SearchView.as_view()),  # a name search posts its value (E28; s47)
     path('deals/<int:pk>/census/imports/', views.ImportsView.as_view()),
     path('census/imports/<int:import_id>/', views.ImportView.as_view()),
     path('census/imports/<int:import_id>/apply/', views.ApplyView.as_view()),

@@ -17,6 +17,15 @@ export async function login(credentials) {
   return data;
 }
 
+/**
+ * The ways in that are open (slice 47): {password: bool, microsoft: {start, messages: {code: sentence}} | null}.
+ * A refused Microsoft 365 sign-in ends on /login?signin=<code>; `messages[code]` says why.
+ */
+export async function getSignInOptions() {
+  const { data } = await api.get('auth/options/');
+  return data;
+}
+
 export async function logout() {
   await api.post('auth/logout/');
 }

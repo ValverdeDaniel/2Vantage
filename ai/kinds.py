@@ -13,6 +13,9 @@ KINDS = tuple(LANE_OF)
 
 # The readers a `read` or `recheck` names in `target` (slice 18 on); a locate or an issue has none.
 TARGETS = ('quotes', 'sbc', 'intake', 'census', 'questionnaire', 'commission_statement')
+# The readers that see member data (PHI): they register only while the PHI-gate switch AI_PHI_READERS is on, after
+# the PHI gate (plan.md §3.5, §10.8, §11.4 item 7; O.3.3; slice 47).
+PHI_TARGETS = ('intake', 'census', 'questionnaire')
 
 # The readers Work with Claude reads for on each deal tab (D5; the old claudePages.PAGE_KINDS): the drawer's "Reading"
 # picker offers the file kinds they read and files an attached file as the one picked. A tab not listed (Overview,

@@ -1,5 +1,7 @@
-"""Sign-in API over Django's session framework (plan.md §3.8, §7.2). Users live in Django admin."""
+"""Sign-in API over Django's session framework (plan.md §3.8, §7.2). Users live in Django admin. Microsoft 365
+sign-in (slice 47) is signin_views.py; with it, the gate turns username and password off (AUTH_PASSWORD_SIGNIN)."""
 
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
@@ -9,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .access import can_direct, commission_tier
+from .firm import PASSWORD_OFF
 
 
 def user_payload(user):
@@ -40,6 +43,8 @@ class LoginView(APIView):
     throttle_scope = 'login'
 
     def post(self, request):
+        if not settings.AUTH_PASSWORD_SIGNIN:
+            return Response({'non_field_errors': [PASSWORD_OFF]}, status=status.HTTP_400_BAD_REQUEST)
         username = str(request.data.get('username', '')).strip()
         password = str(request.data.get('password', ''))
         user = authenticate(request, username=username, password=password)

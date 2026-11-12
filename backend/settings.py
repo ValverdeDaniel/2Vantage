@@ -252,3 +252,29 @@ if ENVIRONMENT == 'production':
     # Request logs and error reports drop the token paths (§3.5, §11.2); gunicorn's access log: backend/gunicorn_log.py.
     LOGGING['filters'] = {'token_paths': {'()': 'backend.logs.DropTokenPaths'}}
     LOGGING['handlers']['console']['filters'] = ['token_paths']
+
+# ---- The PHI gate (slice 47; plan.md §11.4, §3.5, §3.8) --------------------------------------------------------------
+# Microsoft 365 sign-in (the firm's Entra ID directory, OpenID Connect with PKCE: accounts/oidc.py), on once the app
+# registration is named: the directory (tenant) id, the client id and the client secret (Secret Manager on Cloud Run).
+# Entra sends the browser back to FRONTEND_URL + /api/auth/microsoft/callback/, the redirect URI registered with it.
+# AUTH_OIDC_ISSUER names another OpenID provider in place of Entra's (a local stand-in); deploy checks want HTTPS.
+AUTH_OIDC_TENANT_ID = _env('AUTH_OIDC_TENANT_ID').strip()
+AUTH_OIDC_CLIENT_ID = _env('AUTH_OIDC_CLIENT_ID').strip()
+AUTH_OIDC_CLIENT_SECRET = _env('AUTH_OIDC_CLIENT_SECRET').strip()
+AUTH_OIDC_ISSUER = (
+    _env('AUTH_OIDC_ISSUER').strip()
+    or (f'https://login.microsoftonline.com/{AUTH_OIDC_TENANT_ID}/v2.0' if AUTH_OIDC_TENANT_ID else '')
+).rstrip('/')
+AUTH_OIDC = bool(AUTH_OIDC_ISSUER and AUTH_OIDC_CLIENT_ID and AUTH_OIDC_CLIENT_SECRET)
+AUTH_OIDC_REDIRECT_URI = f'{FRONTEND_URL}/api/auth/microsoft/callback/'
+# Username and password (the sign-in page's and Django admin's): turned off at the gate, so that MFA and offboarding
+# live in Microsoft 365 (§11.4 item 3). Every session, a firm account's too, finds its user again only while the user
+# is active, so turning someone off in Django admin ends their access at their next request (§3.8).
+AUTH_PASSWORD_SIGNIN = _flag('AUTH_PASSWORD_SIGNIN', 'True')
+AUTHENTICATION_BACKENDS = [
+    *(['django.contrib.auth.backends.ModelBackend'] if AUTH_PASSWORD_SIGNIN else []),
+    'accounts.firm.FirmAccounts',
+]
+# The PHI-gate switch, turned on last (§11.4 item 7): only then do the census, intake and questionnaire readers
+# register (ai/registry.py; O.3.3). vantage.E006 refuses it in production before sign-in moved to Microsoft 365.
+AI_PHI_READERS = _flag('AI_PHI_READERS')

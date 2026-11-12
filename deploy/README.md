@@ -42,6 +42,9 @@ start. `GIT_SHA` is baked in, and `/api/health/` names it.
 | `DB_HOST`, `DB_SSLMODE`, `DB_SSLROOTCERT` | Private IP with TLS verified (staging's shape, `cloudrun/app-env.yaml`) |
 | `CLOUD_SQL_INSTANCE` | The other shape: Cloud Run's Cloud SQL connection, through its socket at `/cloudsql/<instance>` |
 | `K_SERVICE` / `CLOUD_RUN_JOB` (set by Cloud Run) | `vantage.E005` fails `check --deploy` if files would stay on the instance |
+| `AUTH_OIDC_TENANT_ID`, `AUTH_OIDC_CLIENT_ID`, `AUTH_OIDC_CLIENT_SECRET` (slice 47) | Microsoft 365 sign-in against the firm's Entra ID app registration (step 5b); the sign-in page shows "Sign in with Microsoft" |
+| `AUTH_PASSWORD_SIGNIN` (slice 47) | `false` at the PHI gate: username and password stop working on the sign-in page and in Django admin |
+| `AI_PHI_READERS` (slice 47) | The PHI-gate switch, turned on last (`deploy/phi-gate.md`); `vantage.E006` refuses it before the two above |
 
 Every page path that is not `/api/`, `/admin/`, `/accounts/` or `/static/` answers the SPA's `index.html`
 (`backend/spa.py`); a client link's page (`/portal/…`, `/b/…`) adds `no-referrer`, `no-store` and `noindex`.
@@ -141,6 +144,28 @@ for secret in $SECRET_DJANGO_KEY $SECRET_DB_PASSWORD $SECRET_DB_CA $SECRET_EMAIL
 done
 ```
 
+**5b. Microsoft 365 sign-in** (slice 47; `deploy/phi-gate.md` item 3), by an admin of the firm's Entra ID: a
+single-tenant app registration whose one redirect URI is the web service's callback, asking only `openid email
+profile` (delegated; grant admin consent once, in the portal's API permissions), assignment required, and a client
+secret kept in Secret Manager. Nothing in this step has been run (Microsoft 365 is not connected in this build).
+Then put the directory id in `ENTRA_TENANT_ID` and the application id in `ENTRA_CLIENT_ID`. Require MFA for the app
+with a Conditional Access policy, and calendar the secret's expiry: an expired secret stops every sign-in.
+
+```bash
+az login --tenant <the firm's Entra directory>
+APP_ID=$(az ad app create --display-name "2Vantage staging" --sign-in-audience AzureADMyOrg \
+  --web-redirect-uris "https://$WEB_HOST/api/auth/microsoft/callback/" --query appId -o tsv)
+az ad sp create --id $APP_ID
+az ad sp update --id $APP_ID --set appRoleAssignmentRequired=true   # then assign the staff group to it
+az account show --query tenantId -o tsv                               # ENTRA_TENANT_ID; $APP_ID is ENTRA_CLIENT_ID
+az ad app credential reset --id $APP_ID --display-name staging --years 1 --query password -o tsv \
+  | gcloud secrets create $SECRET_ENTRA_CLIENT --data-file=-
+gcloud secrets add-iam-policy-binding $SECRET_ENTRA_CLIENT --member=serviceAccount:$SA \
+  --role=roles/secretmanager.secretAccessor
+```
+
+Each person who signs in needs a Django user with the same email (Django admin); nobody is created at sign-in.
+
 **6. The private bucket**: uniform access, public access prevented, versioned, old versions deleted after 30 days.
 
 ```bash
@@ -197,4 +222,5 @@ Manager mounts, IAM, the log exclusion filter, and the worker service's start-up
   pre-GA, so not for PHI), then ingress `internal-and-cloud-load-balancing` on the web service.
 - The worker as a Cloud Run worker pool (cheaper for always-on work): the same image with `args: [worker]`.
 - CI: GitHub Actions with Workload Identity Federation, promoting one digest from staging to production.
-- The PHI gate (slice 47): BAAs, Microsoft 365 sign-in, the staging canary scan, `AI_PHI_READERS`.
+- The PHI gate (slice 47): its checklist, with the staging canary scan and the order of the last switches, is
+  `deploy/phi-gate.md`. Microsoft 365 sign-in is step 5b; `deploy/canary_scan.sh` runs the scan on the dev stack.

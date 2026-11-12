@@ -21,13 +21,19 @@ export function refreshCensus(queryClient, dealId) {
 /**
  * GET deals/{id}/census/ → {summary, rollup, derived, columns, imports, last_import_at, page, members, review, cobra}.
  * `page`, `show` (all · issues · missing) and `q` (a first or last name) pick the roster page; the counts are the
- * whole census. The page on screen stays while the next one loads.
+ * whole census. The page on screen stays while the next one loads. A name search POSTs to deals/{id}/census/search/
+ * with the same fields in the body: a person's name never goes in a URL, where request logs keep it (plan.md §3.8,
+ * E28; slice 47). The query key keeps `q`, in memory only.
  */
 export function useCensus(dealId, { page = 1, pageSize = PAGE_SIZE, show = 'all', q = '' } = {}) {
   const params = { page, page_size: pageSize, show, q };
+  const { q: name, ...inUrl } = params;
   return useQuery({
     queryKey: [...censusPagesKey(dealId), params],
-    queryFn: async () => (await api.get(`deals/${dealId}/census/`, { params })).data,
+    queryFn: async () =>
+      name
+        ? (await api.post(`deals/${dealId}/census/search/`, params)).data
+        : (await api.get(`deals/${dealId}/census/`, { params: inUrl })).data,
     staleTime: 0,
     placeholderData: keepPreviousData,
   });

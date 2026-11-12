@@ -24,6 +24,9 @@ whitenoise==6.12.0
 django-storages[google]==1.14.6
 # Claude (slice 18; plan.md §3.1, §10.3): only ai/client.py imports it. 2.x sends API version 2026-10-21 over httpx2
 anthropic==2.8.0
+# Microsoft 365 sign-in (slice 47; plan.md §3.1, §11.4): verifies Entra ID's ID tokens (RS256 against its published
+# keys) in accounts/oidc.py; RSA through cryptography and the token exchange through requests, both pinned below
+PyJWT==2.15.1
 
 # Tests and lint
 pytest==8.4.2
