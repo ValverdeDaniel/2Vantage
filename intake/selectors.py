@@ -3,11 +3,11 @@ reads as empty (M.5 B34). One read per table, whatever the deal holds: the deal,
 files' kinds and lines, and quotes' `quote_lines` provider.
 """
 
-from deals import comp, lines
+from deals import clock, comp, lines
 from deals.models import Deal
 from documents.models import Document
 
-from . import coverage, providers, values
+from . import coverage, form, providers, status, validation, values
 from .models import CurrentCoverage, Intake
 
 _UNSET = object()
@@ -92,17 +92,61 @@ def line_facts(deal, quote_lines):
     return coverage.line_states(rows, quote_lines), coverage.lines_off(rows, quote_lines, recorded)
 
 
+def answers_of(deal, intake):
+    """The deal's answers as the form shows them: the row's, plus `target_effective_date`, which is a door onto the
+    deal's one effective date and lives there (B1, N.1), never in `answers`."""
+    answers = dict(intake.answers) if intake else {}
+    answers.pop(form.EFFECTIVE_DATE, None)
+    if deal.effective_date:
+        answers[form.EFFECTIVE_DATE] = deal.effective_date.isoformat()
+    return answers
+
+
+def _medical_funding(rows, quote_lines):
+    """The medical line's funding as the deal records it: its current plans' once they exist (§6.5), else its row's."""
+    current = (quote_lines.get('medical') or {}).get('current')
+    if current:
+        return current.get('funding') or ''
+    first = coverage.first_rows(rows).get('medical')
+    return first.funding if first else ''
+
+
+def form_state(deal, intake, rows, quote_lines):
+    """What the form shows beside the answers (§5.2; B2, B6, B8, B9): the hidden and needed questions, each answer's
+    status, the inline checks, the needed questions answered, and the two notes. The answers PATCH answers it too."""
+    answers = answers_of(deal, intake)
+    sources = intake.sources if intake else {}
+    rules = intake.rules if intake else {}
+    hidden = values.hidden(answers)
+    needed = values.needed_keys(answers, rules)
+    pending = status.pending_keys(intake.client if intake else {})
+    dated = [{'id': row.id, 'renewal_date': row.renewal_date} for row in rows]
+    # Contacts (and their email check) join with slice 40.
+    issues = validation.validate_intake(
+        answers, coverage=dated, medical_funding=_medical_funding(rows, quote_lines), today=clock.today()
+    )
+    return {
+        'hidden': hidden,
+        'needed': needed,
+        'status': status.statuses(answers, sources, needed, hidden, pending),
+        'issues': issues,
+        'readiness': values.readiness(answers, needed),
+        'review': status.review_counts(answers, sources, hidden),
+        'notes': status.notes(answers, deal.requested_lines),
+    }
+
+
 def intake_payload(deal):
-    """GET deals/{id}/intake/ (§7.6): the answers and their sources, the hidden questions, the coverage rows and the
-    intent card. Slices 39 and 40 add the issues, the checklist, the BOR and the ready state."""
+    """GET deals/{id}/intake/ (§7.6): the answers and their sources, the form's state (hidden and needed questions,
+    statuses, issues, readiness, notes), the coverage rows and the intent card. Slice 40 adds the contacts, the
+    checklist, the BOR and the ready state."""
     intake = Intake.objects.filter(deal_id=deal.id).first()
-    answers = intake.answers if intake else {}
     rows = _coverage(deal.id)
     quote_lines = providers.quote_lines(deal.id)
     return {
-        'answers': answers,
+        'answers': answers_of(deal, intake),
         'sources': intake.sources if intake else {},
-        'hidden': values.hidden(answers),
+        **form_state(deal, intake, rows, quote_lines),
         'coverage': [coverage_row(row, (quote_lines.get(row.line) or {}).get('current')) for row in rows],
         'intent': card(deal, rows, quote_lines, intake),
     }

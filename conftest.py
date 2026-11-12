@@ -102,6 +102,11 @@ def gd2(golden):
     return golden['GD2']
 
 
+@pytest.fixture(scope='module')
+def gd6(golden):
+    return golden['GD6']
+
+
 @pytest.fixture(scope='session')
 def golden_keys():
     """{'GD1': its answer key, …} (Q.4): the figures, with checked_by, checked_on and method (null until signed)."""

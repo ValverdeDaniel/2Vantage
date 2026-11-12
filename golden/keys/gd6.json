@@ -1,0 +1,35 @@
+{
+ "deal": "GD6",
+ "client": "Golden Get to Market (synthetic)",
+ "checked_by": null,
+ "checked_on": null,
+ "method": null,
+ "note": "Slice 39, worked out by hand from the spec and plan.md §4.5/§5.2, never from the app's output; not yet signed. The plan figures are 30/10/8/12 lives times each tier rate (the alternates borrow the current plan's counts); they are signed before the slice that prices GD6. A figure changes only with Stephanie's agreement (plan.md §12.6).",
+ "intake": {
+  "answered": 53,
+  "hidden": ["form_5500_handler", "aca_1095b_handler", "pcori_handler"],
+  "needed": ["legal_name", "fein", "sic_code", "address_physical", "situs_state", "states_operating", "total_employees", "employee_count", "waive_reason"],
+  "readiness": {"needed": 9, "answered": 9, "pct": 100},
+  "issues": {},
+  "multi_state": true,
+  "stored": {
+   "fein": "00-1234567",
+   "entity_type": "S-Corp",
+   "situs_state": "FL",
+   "states_operating": ["FL", "GA"],
+   "budget_target": "62000",
+   "acceptable_increase_pct": "8",
+   "decision_date": "2027-02-15",
+   "target_effective_date": "2027-04-01",
+   "multi_location": "Yes",
+   "section_125": "Yes",
+   "form_5500_required": "No"
+  },
+  "budget_hints": {"target_monthly": 62000, "accepts_up_to_pct": 8, "budget_step": 5}
+ },
+ "plans": {
+  "C": {"monthly": 65360, "annual": 784320, "change": null},
+  "U": {"monthly": 62168, "annual": 746016, "change": {"delta": -38304, "pct": -4.9}},
+  "A": {"monthly": 60200, "annual": 722400, "change": {"delta": -61920, "pct": -7.9}}
+ }
+}

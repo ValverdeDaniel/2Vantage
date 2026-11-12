@@ -5,7 +5,9 @@ producer's typed answer was never checked; B.5). Ported from old Vantage 891f1b3
 (`clean_value`, `_match_option`) and `market/intake.py` (`condition_met`), with §5.2's changes: a multi answer is a
 list, a number is stored without trailing zeros, and dates are read without dateutil (the formats below).
 
-Readiness (`needed`, contacts, BOR, census, the checklist) joins this module in slice 40.
+`clean_answers` cleans a whole request with it, all or nothing (§7.6). `needed` is the one rule behind the rose star,
+the "Missing" badge and readiness (B6, B33; old `needs`, D-064). Readiness's other parts (contacts, BOR, census, the
+checklist and the ready state) join this module in slice 40.
 """
 
 import datetime
@@ -166,3 +168,73 @@ def shown(question, answers):
 def hidden(answers):
     """The keys of the questions their rule hides, in form order."""
     return [question['key'] for question in form.QUESTIONS if not shown(question, answers)]
+
+
+REQUIRED, WAIVED = 'required', 'waived'
+UNKNOWN = 'Not an intake question.'
+NOT_TEXT = 'Send text, a number or (for a multi question) a list.'
+GUIDANCE_LONG = f'Keep the client guidance under {form.GUIDANCE_LIMIT:,} characters.'
+
+
+def rule_of(rules, key):
+    """This deal's rule for a question (B37, OQ17): 'required', 'waived' or '' (Auto). Written by slice 57."""
+    rule = (rules or {}).get(key)
+    state = rule.get('state') if isinstance(rule, dict) else rule
+    return state if state in (REQUIRED, WAIVED) else ''
+
+
+def needed(question, answers, rules=None):
+    """Whether the deal needs this question answered (B6, B33): never while hidden; Waived never, Required always;
+    otherwise every quote-blocking (Q) question and every shown conditional (C) one."""
+    if isinstance(question, str):
+        question = form.BY_KEY[question]
+    if not shown(question, answers):
+        return False
+    rule = rule_of(rules, question['key'])
+    if rule:
+        return rule == REQUIRED
+    return question['need'] in ('Q', 'C')
+
+
+def needed_keys(answers, rules=None):
+    """The questions this deal needs, in form order."""
+    return [question['key'] for question in form.QUESTIONS if needed(question, answers, rules)]
+
+
+def blank(value):
+    return value in (None, '', [])
+
+
+def readiness(answers, needed_list):
+    """The needed questions answered, and their share (§5.2: 100 when nothing is needed)."""
+    answered = sum(1 for key in needed_list if not blank(answers.get(key)))
+    pct = round(answered / len(needed_list) * 100) if needed_list else 100
+    return {'needed': len(needed_list), 'answered': answered, 'pct': pct}
+
+
+def _guidance(raw):
+    text = '' if raw is None else str(raw).strip()
+    return (None, GUIDANCE_LONG) if len(text) > form.GUIDANCE_LIMIT else (text, None)
+
+
+def clean_answers(raw):
+    """({key: cleaned value, '' to clear, or None to put back what was read}, {key: error}) for a request's answers.
+    Every key is checked; the caller saves nothing when any fails (§7.6)."""
+    cleaned, errors = {}, {}
+    for key, value in raw.items():
+        if key not in form.ANSWER_KEYS:
+            errors[key] = UNKNOWN
+            continue
+        if value is None:
+            cleaned[key] = None
+            continue
+        multi = key != form.GUIDANCE and form.BY_KEY[key]['type'] == 'multi'
+        if isinstance(value, dict) or (isinstance(value, (list, tuple)) and not multi):
+            errors[key] = NOT_TEXT
+            continue
+        result, error = _guidance(value) if key == form.GUIDANCE else clean_value(key, value)
+        if error:
+            errors[key] = error
+        else:
+            cleaned[key] = result
+    return cleaned, errors

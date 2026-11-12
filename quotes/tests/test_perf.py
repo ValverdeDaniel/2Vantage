@@ -52,3 +52,13 @@ def test_Q7_deal_state_and_plan_lines_stay_within_300_ms(api, gd_big):
     print(f'\ndeal_state, 600 plans: {state_took * 1000:.0f} ms; plans/lines/: {lines_took * 1000:.0f} ms')
     assert response.status_code == 200
     assert state_took <= 0.3 and lines_took <= 0.3
+
+
+def test_Q7_the_station_list_of_600_plans_pages_within_the_comparisons_budget(api, gd_big):
+    """The station's List (slice 17) sorts every value of GD-Big's files on the server and sends 200 a page; Q.7 has
+    no row of its own for it, so it is held to the comparison's 600-plan budget."""
+    took, response = timed(lambda: api.get(f'/api/deals/{gd_big.id}/plans/sources/'))
+    size = len(response.content)
+    body = response.json()
+    print(f'\nstation List, 600 plans: {body["total"]} values, a page {size / MB:.2f} MB, {took:.2f} s')
+    assert len(body['rows']) == body['page_size'] and size <= 3 * MB and took <= 2.5

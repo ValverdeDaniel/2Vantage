@@ -2,8 +2,8 @@
 
 - `statuses`: per field, `missing` (required and blank) or `to_check` (an open warning); blank and ok keys are left
   out. A plan with a quoted premium and no tier rate at all is not missing its tier rates (age-banded medical, §5.5).
-- `open_warning`: the one rule until `documents.review_rules.open_warning` (slice 17, OQ28): a value marked
-  ⚑ Needs checking, or one Claude read that nobody has approved or ignored.
+- `open_warning` is `documents.review_rules.open_warning`, the one rule (slice 17, OQ28): a value marked ⚑ Needs
+  checking, or one Claude read and doubted (or the locator could not find) that nobody has approved or ignored.
 - `plan_facts`: `incomplete` (a key field of the line blank or to check: what "Hide incomplete data" hides; a missing
   total is not, F22: the filter card names plans with no price instead, F140), `flags` (open warnings on the plan),
   `compliance` (the tests the carrier says it fails: minimum value and Medicare Part D; a blank answer is not a
@@ -19,6 +19,7 @@ import re
 from functools import cache
 
 from deals import lines
+from documents.review_rules import open_warning
 
 from . import fields
 
@@ -54,13 +55,6 @@ def _key_fields(line_key):
     return tuple(
         key for key in KEY_FIELDS.get(lines.BY_KEY[line_key]['field_set'], KEY_FIELDS['generic']) if key in has
     )
-
-
-def open_warning(entry):
-    mark = ((entry or {}).get('mark') or {}).get('state')
-    if mark == 'check':
-        return True
-    return (entry or {}).get('origin') == 'ai' and not entry.get('confirmed') and mark != 'ignored'
 
 
 def statuses(line_key, values, sources):

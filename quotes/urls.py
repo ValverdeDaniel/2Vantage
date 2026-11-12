@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import arrange_views, board_views, mark_views, move_views, source_views, template_views, views
+from . import arrange_views, board_views, mark_views, move_views, review_views, source_views, template_views, views
 
 urlpatterns = [
     path('deals/<int:pk>/plans/lines/', views.LinesView.as_view()),
@@ -20,6 +20,8 @@ urlpatterns = [
     path('deals/<int:pk>/plans/import/', template_views.TemplateImportView.as_view()),
     path('deals/<int:pk>/plans/board-export/', views.BoardExportView.as_view()),  # ⤓ Export (F93; slice 9)
     path('deals/<int:pk>/plans/find/', board_views.FindView.as_view()),  # the finder's index (F14, F15; slice 10)
+    path('deals/<int:pk>/plans/sources/', review_views.SourcesView.as_view()),  # the station's List (E56; slice 17)
+    path('deals/<int:pk>/plans/marks/', review_views.MarksView.as_view()),  # approve, ignore, check, clear (E85)
     path('plans/<int:plan_id>/', views.PlanView.as_view()),
     path('plans/<int:plan_id>/source/', source_views.PlanSourceView.as_view()),  # ↗ open in file (slice 15, E18)
     path('plans/<int:plan_id>/renewal/', views.RenewalView.as_view()),

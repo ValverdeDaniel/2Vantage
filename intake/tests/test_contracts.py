@@ -21,6 +21,7 @@ def samples(world):
     deal = {'pk': world['deal'].id}
     return {
         'api/deals/<int:pk>/intake/': deal,
+        'api/deals/<int:pk>/intake/marks/': deal,
         'api/deals/<int:pk>/intake/intent/': deal,
         'api/deals/<int:pk>/intake/intent/confirm/': deal,
         'api/deals/<int:pk>/intake/intent/reopen/': deal,
@@ -34,6 +35,8 @@ MADE = {**ALL, 'producer': 201, 'admin': 201}
 GONE = {**ALL, 'producer': 204, 'admin': 204}
 MATRIX = [
     ('GET', 'api/deals/<int:pk>/intake/', ALL),
+    ('PATCH', 'api/deals/<int:pk>/intake/', ALL, {'answers': {'dba': 'Ex'}}),
+    ('POST', 'api/deals/<int:pk>/intake/marks/', ALL, {'action': 'approve'}),
     ('POST', 'api/deals/<int:pk>/intake/intent/', ALL, {'line': 'dental', 'has_today': True}),
     ('POST', 'api/deals/<int:pk>/intake/intent/confirm/', ALL),
     ('POST', 'api/deals/<int:pk>/intake/intent/reopen/', ALL),
@@ -89,6 +92,39 @@ def test_Q3_confirmation_write_path(user, world):
         lambda r: r.intent_confirmed,
         lambda: services.reopen_intent(user, deal_id),
     )
+
+
+def test_Q3_answers_write_path(user, world):
+    deal_id = world['deal'].id
+    intake = Intake.objects.create(deal_id=deal_id)
+    write_path_contract(
+        user,
+        intake,
+        lambda: services.update_answers(user, deal_id, {'legal_name': 'Example Co.', 'union': 'y'}),
+        lambda r: (r.answers, r.sources),
+        lambda: services.update_answers(user, deal_id, {'union': 'No'}),
+    )
+
+
+def test_Q3_marks_write_path(user, world):
+    deal_id = world['deal'].id
+    intake = Intake.objects.create(deal_id=deal_id, answers={'dba': 'Ex'}, sources={'dba': {'origin': 'typed'}})
+    write_path_contract(
+        user,
+        intake,
+        lambda: services.mark_answers(user, deal_id, 'check', refs=['intake:dba']),
+        lambda r: r.sources,
+        lambda: services.mark_answers(user, deal_id, 'ignore', refs=['intake:dba']),
+    )
+
+
+def test_Q3_the_answers_door_locks_the_deal_first_then_the_intake_row(user, world):
+    Intake.objects.create(deal_id=world['deal'].id)
+    with CaptureQueriesContext(connection) as queries:
+        services.update_answers(user, world['deal'].id, {'dba': 'Ex'})
+    locks = [q['sql'] for q in queries.captured_queries if 'FOR UPDATE' in q['sql']]
+    assert '"deals_deal"' in locks[0]
+    assert f'"{Intake._meta.db_table}"' in locks[1]
 
 
 def test_Q3_the_intent_door_locks_the_deal_first_then_the_rows(user, world):

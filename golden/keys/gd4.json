@@ -1,0 +1,46 @@
+{
+ "deal": "GD4",
+ "client": "Golden Census by Plan (synthetic)",
+ "checked_by": null,
+ "checked_on": null,
+ "method": null,
+ "note": "Counted by hand from the spec's census groups (golden/specs/gd4.json), never from the app's output: each group is n employees with one medical plan text and tier; ES adds a spouse, EC one child (two where the group says so), FAM a spouse and two children; dental and vision follow the medical tier unless the group says otherwise. Ages at the effective date 2027-01-01. Not yet signed: Stephanie signs it before slice 13 prices the deal, and a figure changes only with her agreement (plan.md §12.6). Slice 13 adds the per-plan prices.",
+ "census": {
+  "employees": 100,
+  "dependents": 60,
+  "spouses": 24,
+  "children": 36,
+  "tiers": {
+   "medical": {"EE": 51, "ES": 13, "EC": 10, "FAM": 11, "waived": 12, "blank": 3},
+   "dental": {"EE": 57, "ES": 13, "EC": 10, "FAM": 11, "waived": 6, "blank": 3},
+   "vision": {"EE": 51, "ES": 13, "EC": 10, "FAM": 11, "waived": 12, "blank": 3}
+  },
+  "enrolled": {"medical": 85, "dental": 91, "vision": 85},
+  "by_plan": {
+   "medical": {
+    "Choice POS II 2000": {"EE": 18, "ES": 6, "EC": 4, "FAM": 5, "waived": 0, "blank": 0},
+    "Aetna POS 2000": {"EE": 4, "ES": 1, "EC": 1, "FAM": 0, "waived": 0, "blank": 0},
+    "Open Access HDHP 3300": {"EE": 15, "ES": 3, "EC": 3, "FAM": 2, "waived": 0, "blank": 0},
+    "Open Access HDHP 3300 (2025 rates)": {"EE": 2, "ES": 1, "EC": 0, "FAM": 1, "waived": 0, "blank": 0},
+    "Managed Choice 5000": {"EE": 12, "ES": 2, "EC": 2, "FAM": 3, "waived": 0, "blank": 0},
+    "": {"EE": 0, "ES": 0, "EC": 0, "FAM": 0, "waived": 12, "blank": 3}
+   },
+   "dental": {
+    "Dental PPO 1500": {"EE": 57, "ES": 13, "EC": 10, "FAM": 11, "waived": 0, "blank": 0},
+    "": {"EE": 0, "ES": 0, "EC": 0, "FAM": 0, "waived": 6, "blank": 3}
+   },
+   "vision": {
+    "Choice 10/25": {"EE": 51, "ES": 13, "EC": 10, "FAM": 11, "waived": 0, "blank": 0},
+    "": {"EE": 0, "ES": 0, "EC": 0, "FAM": 0, "waived": 12, "blank": 3}
+   }
+  },
+  "aged_65": 6,
+  "fte": 96,
+  "required_total": 1140,
+  "missing_required": 9,
+  "errors": 0,
+  "warnings": 0,
+  "readiness_pct": 99,
+  "ok": false
+ }
+}

@@ -9,6 +9,7 @@ A spec (`specs/gdN.json`) is the one description of a golden deal. `seed.py` bui
     status          the client's status (§5.1): prospect, new_client (made by Convert to client) or existing_client
     effective_date  ISO date
     lines           the requested lines, in any order (the deal keeps §4.1's)
+    intake          optional: {answers: {question key: raw text}}, typed through intake's one writer (slice 39)
     plans           in creation order; each:
         ref         the plan's name in the keys and in other plans' links ("A", "CG1N")
         line, role, carrier, name
@@ -26,6 +27,8 @@ The parity profile (Q.5) says what the old app (commit `old_app`) cannot express
     client_book         null: a Prospect, a deal not on the old client book (§13.4); later {"type": "new"|"existing"}
     values_layer        "edited": values land as the old hand edit does (edited_value over an empty read value)
     values_left_out     {field key: why}: keys the old plan has no row for
+    intake_layer        "edited": intake answers land as the old form's hand edit does (CaseField.edited_value)
+    intake_left_out     {question key: why}: answers the old form cannot hold
     links               {ref: current ref}: the one current plan an old option compares with (Plan.compares_to),
                         where the 2V links do not name exactly one; a renewal always maps to renewal_of
     copies              {ref: "duplicate"}: made with the old Duplicate (duplicate_of) and its values set

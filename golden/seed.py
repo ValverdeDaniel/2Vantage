@@ -11,11 +11,11 @@ from django.db import transaction
 from deals.lifecycle import NEW_CLIENT, PROSPECT
 from deals.models import Client
 from deals.services import create_client, delete_client, set_status
-from intake.services import set_intent
+from intake.services import set_intent, update_answers
 from proposals import services as proposals
 from quotes import services as plans
 
-from . import files, specs
+from . import census_files, files, specs
 
 Golden = namedtuple('Golden', 'deal refs spec')  # refs: {spec ref: plan id}
 
@@ -83,12 +83,15 @@ def build(spec, user):
     )
     if spec['lines']:  # the lines to quote, through their one writer (B17)
         set_intent(user, deal.id, lines=list(spec['lines']), shop=True)
+    if spec.get('intake', {}).get('answers'):  # the form's answers as a person types them (slice 39; GD6)
+        update_answers(user, deal.id, spec['intake']['answers'])
     if status == NEW_CLIENT:  # a New client is made only by a sale or Convert to client (CL6)
         set_status(user, deal.client_id, NEW_CLIENT)
     printed = files.attach(user, deal, spec)
     refs = {}
     for plan in spec['plans']:
         refs[plan['ref']] = _plan(user, deal, plan, refs, printed.get(plan['ref']))
+    census_files.attach(user, deal, spec)  # GD4's census, imported, and its Warner-template copy (slice 12)
     typed = [
         {'id': refs[plan['ref']], 'enrollment': plan['enrollment'], 'on': True}
         for plan in spec['plans']

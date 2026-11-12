@@ -46,6 +46,20 @@ def update_deal(user, deal_id, **changes):
     return deal
 
 
+def set_effective_date(deal_id, value):
+    """Write the deal's one effective date for intake's `target_effective_date` answer, its door (B1, N.1); returns
+    {'effective_date': [before, after]} (ISO text), or {} when unchanged. Like `set_lines`, it records no Activity:
+    intake records one row holding this change beside the answers, and intake's reverter puts it back. Runs inside
+    the caller's transaction and locks the Deal row (the caller has usually locked it already)."""
+    deal = locked(Deal, deal_id)
+    if value == deal.effective_date:
+        return {}
+    before = snapshot(deal, ('effective_date',))
+    deal.effective_date = value
+    deal.save(update_fields=['effective_date', 'updated_at'])
+    return diff(before, snapshot(deal, ('effective_date',)))
+
+
 def advance(deal, user, stage, reason):
     """An automatic move (a quote read lands → quoting, Issue → proposal, a sale → sold; §5.1).
 

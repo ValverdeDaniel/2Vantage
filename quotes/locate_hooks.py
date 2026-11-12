@@ -16,7 +16,7 @@ from deals.values import set_loc
 from documents.locate import NOCHECK, VERSION, Located, Query
 from documents.locate.fold import as_number, canonical
 
-from . import fields
+from . import fields, flags
 from .models import Plan
 from .services import locks
 
@@ -135,5 +135,7 @@ def save(user, deal, document, answers):
             saved += stored
             changed.append(plan)
     if changed:
-        Plan.objects.bulk_update(changed, ['sources'])  # bookkeeping: `updated_at` stays (§3.7)
+        for plan in changed:
+            flags.stamp(plan)  # a value the file does not print may now be an open warning (OQ28)
+        Plan.objects.bulk_update(changed, ['sources', 'flags'])  # bookkeeping: `updated_at` stays (§3.7)
     return {'saved': saved, 'areas': AREAS if saved else []}

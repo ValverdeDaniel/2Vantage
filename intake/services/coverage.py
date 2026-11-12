@@ -18,6 +18,7 @@ from deals import activity, comp, lines
 
 from .. import coverage, providers, values
 from ..models import CurrentCoverage
+from ..signals import announce
 from . import rows
 
 FROM_PLANS = 'Edit carrier and funding on the current plans in the Advisor.'
@@ -108,6 +109,7 @@ def create_coverage(user, deal_id, data):
     row_activity = _record(deal, user, 'coverage', f'Added a coverage line: {label}', [
         activity.change(rows.target(row.id), rows.created(row))
     ])
+    announce(deal_id)
     return Written(row, rows.created(row), row_activity)
 
 
@@ -126,7 +128,9 @@ def update_coverage(user, coverage_id, data):
         return Written(row, {}, None)
     row.save(update_fields=[key for key in cleaned if key in changed])
     entry = [activity.change(rows.target(row.id), changed)]
-    return Written(row, changed, _record(deal, user, 'coverage', 'Edited', entry, coalesce=True))
+    written = Written(row, changed, _record(deal, user, 'coverage', 'Edited', entry, coalesce=True))
+    announce(deal_id)
+    return written
 
 
 @transaction.atomic
@@ -139,4 +143,6 @@ def delete_coverage(user, coverage_id):
     row.delete()
     summary = f'Removed a coverage line: {lines.label(before["line"])}'
     entry = [activity.change(rows.target(coverage_id), rows.removed(before))]
-    return Written(None, rows.removed(before), _record(deal, user, 'coverage', summary, entry))
+    written = Written(None, rows.removed(before), _record(deal, user, 'coverage', summary, entry))
+    announce(deal_id)
+    return written

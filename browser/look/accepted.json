@@ -525,7 +525,7 @@
       "check": "pixels",
       "selector": null,
       "item": "F14",
-      "why": "The filter card is built (F14–F28) on the old classes; it adds \"Monthly total ≤ $\" after the budget select (F19, New: the line's total rule), so PCP copay and the hides wrap to the card's second row, and Claude's rule chips show only once Work with Claude sets a rule (F24, slice 24). The review bar (\"No AI warnings to review\", F63–F65) is pending slice 17; ▦ Pages (F37) slice 14; \"Claude can edit\" (F113) and \"＋ Add SBCs\" (F95) slices 20 and 22.",
+      "why": "The filter card is built (F14–F28) on the old classes; it adds \"Monthly total ≤ $\" after the budget select (F19, New: the line's total rule), so PCP copay and the hides wrap to the card's second row, and Claude's rule chips show only once Work with Claude sets a rule (F24, slice 24). ▦ Pages (F37) slice 14; \"Claude can edit\" (F113) and \"＋ Add SBCs\" (F95) slices 20 and 22.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -734,7 +734,7 @@
       "check": "pixels",
       "selector": null,
       "item": "E1",
-      "why": "Slice 15's station (E1–E32): 2Vantage's GD1 carries two synthetic files (an Aetna renewal PDF and a Cigna quote workbook, golden/files.py) that the old parity load does not upload, so 2V shows the file tabs with bucket tags, 📚 All proposals, ✎ File / Remove / Check this file (E59, slice 16, until slice 17's List takes it) / Expand, the file bar and the viewer where the old app says \"No documents yet\"; \"＋ Add files\" and the File-as list stand in for the ✦ Work with Claude button and drawer until slice 20 (E4); the subtitle names only what is built. The Scanned data panel (List, Grid, review keys) waits for slices 17 and 23 (E34–E58), Change history for slice 17 (E73).",
+      "why": "Slice 15's station (E1–E32): 2Vantage's GD1 carries two synthetic files (an Aetna renewal PDF and a Cigna quote workbook, golden/files.py) that the old parity load does not upload, so 2V shows the file tabs with bucket tags, 📚 All proposals, ✎ File / Remove / Expand, the file bar and the viewer where the old app says \"No documents yet\"; \"＋ Add files\" and the File-as list stand in for the ✦ Work with Claude button and drawer until slice 20 (E4); the subtitle names only what is built. Slice 17's Scanned data panel shows its List beside the file (E35, E56, D121; the old app's view when a file has values, side by side at 1,100 px) with the quality headline (E34), the file strip over it (E48: the old app drew the strip over the Grid only, and the Grid, Find, Review mode and ✎ Edit are slice 23's), the bucket chips, the bulk bar with Check this file (E58, E59), the keys and ↶ Undo (D124, E54); where the old GD1 has no files it shows the plan grid. The Change history lists the deal's Activity rows grouped by person (E73), so GD1's seeding shows as one long group; the old card listed versions (dropped, E72).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -745,7 +745,7 @@
       "check": "classes",
       "selector": null,
       "item": "E73",
-      "why": "The Scanned data panel's, the review toolbar's and Change history's classes (bnf-scan-*, gs-*, sf-*, hst-*) arrive with slices 17 and 23 (E34–E58, E73, E74); the station's own (bb-doc-tab*, bnf-doc-*, bnf-file-bar*, bb-pdf-*, bnf-sheet-*) are new against an old GD1 that has no files.",
+      "why": "The Scanned data panel's List, strip and Change history classes (bnf-frl-*, bnf-review-bar*, gs-legend, gs-done, hst-*) are slice 17's (E34–E58, E73, E74); the Grid's, Find's and Review mode's (bnf-compare-table, gs-toolbar, sf-*) arrive with slice 23; the station's own (bb-doc-tab*, bnf-doc-*, bnf-file-bar*, bb-pdf-*, bnf-sheet-*) are new against an old GD1 that has no files.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -757,6 +757,17 @@
       "selector": null,
       "item": "E18",
       "why": "Values printed in GD1's synthetic files (slice 15, golden/files.py) carry the old ↗ pin on hover (bnf-has-src, bnf-src-pin), which opens the value in Documents; the old parity load has no files, so its cells have none.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.advisor",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "F65",
+      "why": "The review strip under the board header (F65; the old ReviewBulkBar) reads \"✓ No AI warnings to review on every plan on Medical\" on GD1, whose file values were typed with their file (OQ28: only values Claude doubted, or the locator could not find, need review); the Flags column's \"⚠ N to review\" chip opens its Approve, Ignore and Needs checking menu (F63). The old strip's \"Show me how ▸\" walkthrough link is dropped (E49) and its \"✦ Ask Claude to re-check\" waits for slice 22 (F66).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -825,7 +836,7 @@
       "signed_on": null,
       "check": "pixels",
       "item": "B1",
-      "why": "Slice 11 builds the Coverage & marketing intent card (B16–B21, B23, B24), Current coverage (B14) and Lines to quote (B32). The view pills (B36), the header's ready badge and buttons (B10), the \"Required to market\" banner (B9) and the four question cards (B1–B8) are pending slice 39; Contacts (B13), the marketing readiness checklist (B25–B28), Compliance & authorizations (B29, B31) and the medical row's questionnaire and stop-loss pickers (B22) are pending slice 40, so Current coverage and Lines to quote sit first in the cards grid."
+      "why": "Slices 11 and 39 build the view pills (B36), the four question cards (B1–B8), the \"Required to market\" banner (B9), \"These came from the client\" and ☑ Select fields (B10), the coverage card, Current coverage and Lines to quote. Pending: the ready badge, Market anyway ▸, Contacts (B13), the marketing readiness checklist (B25–B28), Compliance & authorizations (B29, B31) and the medical row's form pickers (B22) in slice 40; ＋ Ask all N and the section bar with Review & requests (slices 53–56). The Goals card ends with Client guidance (§4.5 †). GD1 has no intake answers, so every needed question reads Missing on both sides."
     },
     {
       "screen": "gd1.intake",
@@ -836,7 +847,7 @@
       "signed_on": null,
       "check": "classes",
       "item": "B1",
-      "why": "The form's, the checklist's, the contacts' and the authorizations' classes (bnf-intake-field*, bnf-mc-*, bnf-next-banner, bnf-ready-badge, bnf-cvg-forms, bnf-cvg-formpick, bb-select-bar…) arrive with slices 39 and 40 (B1–B13, B22, B25–B35)."
+      "why": "The checklist's, the contacts' and the authorizations' classes (bnf-mc-*, bnf-ready-badge, bnf-esign-*, bnf-compliance-row, bnf-cvg-forms, bnf-cvg-formpick…) arrive with slice 40 (B13, B22, B25–B35); the section bar's (rr-section-*) with Review & requests (53)."
     },
     {
       "screen": "gd1.intake",
@@ -847,7 +858,326 @@
       "signed_on": null,
       "check": "style",
       "item": "M112",
-      "why": "The nav, the tab title, the buttons and the cards sit higher or elsewhere: the header strip replaces the journey stepper and the NEXT bar, the form, the checklist and Contacts are pending slices 39 and 40, and the sidebar has four tabs."
+      "why": "The nav, the tab title, the buttons and the cards sit higher or elsewhere: the header strip replaces the journey stepper and the NEXT bar, the checklist and Contacts are pending slice 40, and the sidebar has fewer tabs."
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A6",
+      "why": "The top bar keeps Benefits, Commissions and Admin; Dashboard, P&C, Joint Ventures and the other old links are modules out of scope (A2, A22, A40), and the Calendar link waits with the Radar (I88).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "M112",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "A24",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A25",
+      "why": "The ✦ Work with Claude pill, drawer and strip (bnf-wwc-room, bnf-claude-section) are pending slice 20.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-nav",
+      "item": "M112",
+      "why": "Buttons, nav and the tab title sit lower or elsewhere: the header strip replaces the journey stepper at the top of the content, and the sidebar has three tabs.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "F1",
+      "why": "The view pills show only where a second view exists (F1): Proposal builder (slice 25), Export viewer (28) and Stop-loss analysis (36, F2) join with their slices, so while Quote comparison is the only view the row stays away; Unleashed waits (F4).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "F14",
+      "why": "The filter card is built (F14–F28) on the old classes; it adds \"Monthly total ≤ $\" after the budget select (F19, New: the line's total rule), so PCP copay and the hides wrap to the card's second row, and Claude's rule chips show only once Work with Claude sets a rule (F24, slice 24). ▦ Pages (F37) slice 14; \"Claude can edit\" (F113) and \"＋ Add SBCs\" (F95) slices 20 and 22.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "F8",
+      "why": "The subtitle names only what is built (F8): the triggers, starring and the order; the old one also speaks of Work with Claude (slice 20).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "F9",
+      "why": "The count line counts this line's stars only (F9, bug 1: the old count was deal-wide), names the Current package's monthly total, and drops \"the budget trigger needs exactly one\": the budget select tests each plan's own change against what it replaces, so it works with several current plans (F18).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "F134",
+      "why": "2V's plan actions stay in a ⋯ menu on each Plan cell (Create renewal, Duplicate, Change role & links…, Mark sold, Delete…) and 2V's Packages panel stays under the board, until the Proposal grid's menu, the builder's package card and the booking replace them (F134).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "F1",
+      "why": "bnf-advisor-views and bnf-viewtab arrive with the second view (slices 25, 28, 36); bnf-plan-head, bnf-plan-menu-btn and bnf-link-picker-text are F134's ⋯ menu and F52's renewal text; the Packages panel (bb-panel) is 2V's, kept (F134); bnf-filter-num-wrap appears once more for \"Monthly total ≤ $\" (F19).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "F65",
+      "why": "The review strip under the board header (F65; the old ReviewBulkBar) reads \"✓ No AI warnings to review on every plan on Medical\" on GD1, whose file values were typed with their file (OQ28: only values Claude doubted, or the locator could not find, need review); the Flags column's \"⚠ N to review\" chip opens its Approve, Ignore and Needs checking menu (F63). The old strip's \"Show me how ▸\" walkthrough link is dropped (E49) and its \"✦ Ask Claude to re-check\" waits for slice 22 (F66).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.intake",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A6",
+      "why": "The top bar keeps Benefits, Commissions and Admin; Dashboard, P&C, Joint Ventures and the other old links are modules out of scope (A2, A22, A40), and the Calendar link waits with the Radar (I88).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.intake",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "M112",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Lines, Activity, Mark as lost…) is new against the old app, on the old Overview header classes.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.intake",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "A24",
+      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the intake ready chip waits for intake's readiness (B33); the client block for slice 67 (A20).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.intake",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A25",
+      "why": "The ✦ Work with Claude pill, drawer and strip (bnf-wwc-room, bnf-claude-section) are pending slice 20.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.intake",
+      "width": null,
+      "selector": ".bb-nav",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null,
+      "check": "style",
+      "item": "M112",
+      "why": "The nav, the tab title, the buttons and the cards sit higher or elsewhere: the header strip replaces the journey stepper and the NEXT bar, the checklist and Contacts are pending slice 40, and the sidebar has fewer tabs."
+    },
+    {
+      "screen": "gd6.intake",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A21",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Questionnaire 42, RFP 44, Commission 48 (OQ9).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.intake",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "B10",
+      "why": "The head's ready badge (\"Blocked — required items open\") and Market anyway ▸ wait for readiness (B33, B34; slice 40); ✦ Work with Claude for its drawer (slice 20); ＋ Ask all N for the request tray (slice 56).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.intake",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "B26",
+      "why": "The Marketing readiness checklist (B25–B28) and the medical row's questionnaire and stop-loss pickers (B22) are pending slices 40 and 42, so the cards start higher.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.intake",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "B13",
+      "why": "Contacts (B13) and Compliance & authorizations with the BOR e-signature (B29, B31) are pending slice 40: the grid ends with Current coverage and Lines to quote.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.intake",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "B36",
+      "why": "The section bar (\"0 to review · 0 waiting on the client · 2 missing\", \"Review & requests · all sections ▸\") and the Review pill's count come with Review & requests (slices 53–56); until then Board, Request and Review are drawn and cannot be picked.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.intake",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "B1",
+      "why": "The Goals card ends with Client guidance (plan.md §4.5 †: edited in the Goals card and the Work with Claude drawer, never a question), which the old form kept off the card; GD6 leaves it blank. The Target Effective Date reads \"On file\": it is the deal's own date, set when the deal was made, and the old form showed it from its own CaseField.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.intake",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "B1",
+      "why": "The checklist's, the contacts' and the authorizations' classes (bnf-mc-*, bnf-ready-badge, bnf-esign-*, bnf-compliance-row, bnf-cvg-forms…) arrive with slice 40; the section bar's and the sidebar badges' with slices 53 and 61.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.intake",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-nav",
+      "item": "M112",
+      "why": "The nav, the tab title, the buttons and the cards sit higher: the header strip replaces the journey stepper, the checklist is pending slice 40, and the sidebar has fewer tabs.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A21",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Questionnaire 42, RFP 44, Commission 48 (OQ9).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "F139",
+      "why": "The filter card adds the client's budget from the intake's Goals card, \"Client target $62,000/mo · Apply\" and \"Client accepts up to 8% · Apply\" (F139, New; OQ51 default: a hint with Apply, never prefilled), so the switches wrap to a second row.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "D104",
+      "why": "\"Claude can edit\" (D104, slice 24), ＋ Add SBCs (slice 22) and ▦ Pages (slice 14) are pending their slices.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.advisor",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-nav",
+      "item": "M112",
+      "why": "Buttons, nav and the tab title sit lower or elsewhere: the header strip replaces the journey stepper, and the sidebar has fewer tabs.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
     }
   ]
 }

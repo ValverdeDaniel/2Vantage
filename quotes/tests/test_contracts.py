@@ -63,6 +63,8 @@ def samples(world):
         'api/packages/<int:package_id>/': {'package_id': world['package'].id},
         'api/deals/<int:pk>/plans/find/': deal,  # slice 10: the finder's index (F14)
         'api/saved-views/<int:view_id>/': {'view_id': world['saved'].id},  # slice 10: saved setups (F28)
+        'api/deals/<int:pk>/plans/sources/': deal,  # slice 17: the station's List (E56)
+        'api/deals/<int:pk>/plans/marks/': deal,  # slice 17: approve, ignore, check, clear (E85)
     }
 
 
@@ -118,6 +120,9 @@ def matrix(world):
         ('GET', 'api/saved-views/<int:view_id>/', ok()),
         ('PATCH', 'api/saved-views/<int:view_id>/', ok(), {'name': 'Renamed setup'}),
         ('DELETE', 'api/saved-views/<int:view_id>/', ok(204)),
+        # slice 17: the station's List and the marks door (E56, E85); no open warning here, so nothing changes
+        ('GET', 'api/deals/<int:pk>/plans/sources/', ok()),
+        ('POST', 'api/deals/<int:pk>/plans/marks/', ok(), {'action': 'approve', 'plan_ids': [alternate.id]}),
     ]
 
 

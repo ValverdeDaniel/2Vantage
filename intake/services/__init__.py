@@ -1,22 +1,28 @@
 """Every write to intake (plan.md §5.2, §7.6; B.6, OQ9 d), one module per responsibility:
 
 - `coverage`: current coverage rows — add, edit, remove (B14, B19), the one service behind both editors (OQ15);
+- `answers`: the form's answers — `update_answers`, the one writer of `Intake.answers` and their sources, and the
+  door onto the deal's effective date (B1, B4);
+- `marks`: review marks on the answers — `mark_answers` (approve, ignore, needs checking, clear; B10, B11);
 - `intent`: the coverage intent — `set_intent`, the only writer of the lines to quote (B16–B18, B32), and
   `confirm_intent` / `reopen_intent` (B20).
 `rows` holds the locks (the Deal, the Intake row, then coverage rows by id) and the Activity entries they share.
 Every write records Activity (area `intake`) with before and after, writes nothing when nothing changes, and returns
-only what changed. The answers (`update_answers`, slice 39), the checklist, the BOR and Mark as marketed (slice 40)
-join this package in their slices.
+only what changed. The checklist, the BOR and Mark as marketed (slice 40) join this package in their slice.
 """
 
+from .answers import update_answers
 from .coverage import create_coverage, delete_coverage, update_coverage
 from .intent import confirm_intent, reopen_intent, set_intent
+from .marks import mark_answers
 
 __all__ = [
     'confirm_intent',
     'create_coverage',
     'delete_coverage',
+    'mark_answers',
     'reopen_intent',
     'set_intent',
+    'update_answers',
     'update_coverage',
 ]

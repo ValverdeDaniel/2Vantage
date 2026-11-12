@@ -10,7 +10,7 @@ from quotes.services import clean_values
 
 pytestmark = pytest.mark.django_db
 
-DEALS = ['GD1', 'GD2']
+DEALS = ['GD1', 'GD2', 'GD4']
 
 
 def _links(row, names):

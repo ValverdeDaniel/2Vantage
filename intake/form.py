@@ -473,6 +473,17 @@ QUESTIONS = [
 
 GUIDANCE = 'client_guidance'
 GUIDANCE_LIMIT = 4000
+# How the Goals card shows `client_guidance` (†): an answer, never a question (no need, never on the portal).
+GUIDANCE_QUESTION = {
+    'key': GUIDANCE,
+    'section': 'goals',
+    'label': 'Client guidance',
+    'type': 'text',
+    'hint': 'What the client wants: budget, networks, lines, deductible or benefit levels',
+    'need': '',
+    'limit': GUIDANCE_LIMIT,
+    'help': 'Rank and Claude read this; it never prints on a client file.',
+}
 EFFECTIVE_DATE = 'target_effective_date'
 
 KEYS = [question['key'] for question in QUESTIONS]
@@ -488,4 +499,5 @@ def meta():
             for key, label in SECTIONS
         ],
         'needs': [{'key': key, 'label': label} for key, label in NEEDS.items()],
+        'guidance': GUIDANCE_QUESTION,
     }

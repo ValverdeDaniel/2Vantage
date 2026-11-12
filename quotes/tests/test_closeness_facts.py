@@ -40,16 +40,24 @@ def test_F121_score_and_closest():
     'case, values, sources, status',
     [
         ('required and blank', {}, {}, {'deductible_single': 'missing', 'oop_max_single': 'missing'}),
+        # OQ28 (slice 17): a value Claude read needs review only when it doubted it or the file does not print it.
+        ('read by Claude, not doubted', {'deductible_single': '3300'}, {'deductible_single': {'origin': 'ai'}}, {}),
         (
-            'read by Claude, not approved',
+            'read by Claude and doubted, not approved',
             {'deductible_single': '3300'},
-            {'deductible_single': {'origin': 'ai'}},
+            {'deductible_single': {'origin': 'ai', 'low': 'two figures'}},
+            {'deductible_single': 'to_check'},
+        ),
+        (
+            'read by Claude and not in the file',
+            {'deductible_single': '3300'},
+            {'deductible_single': {'origin': 'ai', 'loc': {'state': 'absent'}}},
             {'deductible_single': 'to_check'},
         ),
         (
             'approved',
             {'deductible_single': '3300'},
-            {'deductible_single': {'origin': 'ai', 'confirmed': {'by': 1}}},
+            {'deductible_single': {'origin': 'ai', 'low': 'two figures', 'confirmed': {'by': 1}}},
             {},
         ),
         (

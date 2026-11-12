@@ -1,5 +1,5 @@
-"""Intake API (plan.md §7.6): the intake payload, the coverage rows and the intent door. Thin: parse → service or
-selector → respond. The form's PATCH arrives in slice 39; the checklist, BOR and Mark as marketed in slice 40."""
+"""Intake API (plan.md §7.6): the intake payload and the answers PATCH, the coverage rows and the intent door. Thin:
+parse → service or selector → respond. The checklist, BOR and Mark as marketed arrive in slice 40."""
 
 from django.http import Http404
 from django.shortcuts import get_object_or_404
@@ -10,8 +10,8 @@ from rest_framework.views import APIView
 
 from deals.models import Deal
 
-from . import selectors, services
-from .models import CurrentCoverage
+from . import providers, selectors, services
+from .models import CurrentCoverage, Intake
 
 MAX_ID = 2**63 - 1  # a bigger id is not a row: 404, never a database error
 INTENT_KEYS = ('line', 'lines', 'has_today', 'this_year', 'shop', 'remove')
@@ -49,11 +49,65 @@ def _intent_answer(deal_id, activity_row):
     )
 
 
+def _answered(deal_id, answered):
+    """The answers PATCH's reply (§7.6): the answers and sources that changed (null: cleared), then the form's state
+    as it now stands, so the form re-reads nothing after a save."""
+    deal = Deal.objects.get(pk=deal_id)
+    intake = Intake.objects.filter(deal_id=deal_id).first()
+    shown = selectors.answers_of(deal, intake)
+    rows = list(CurrentCoverage.objects.filter(deal_id=deal_id).order_by('sort_order', 'id'))
+    state = selectors.form_state(deal, intake, rows, providers.quote_lines(deal_id))
+    return {
+        'answers': {key: shown.get(key) for key in answered.changed},
+        'sources': answered.sources,
+        **state,
+        'effective_date': deal.effective_date,
+        'activity_id': answered.activity.id if answered.activity else None,
+    }
+
+
 class IntakeView(APIView):
-    """GET deals/{id}/intake/ — the intake payload; a deal with no Intake row reads as empty."""
+    """GET deals/{id}/intake/ — the intake payload; a deal with no Intake row reads as empty.
+    PATCH {answers: {key: raw}, expect?: {key: value seen}, relay?: bool} — the form's answers, all or nothing (B4)."""
 
     def get(self, request, pk):
         return Response(selectors.intake_payload(_deal(pk)))
+
+    def patch(self, request, pk):
+        _deal(pk)
+        data = _body(request)
+        relay = data.get('relay', False)
+        if not isinstance(relay, bool):
+            raise ValidationError({'relay': ['Send true or false.']})
+        answered = services.update_answers(
+            request.user, pk, data.get('answers'), expect=data.get('expect'), origin='relay' if relay else 'typed'
+        )
+        return Response(_answered(pk, answered))
+
+
+class MarksView(APIView):
+    """POST deals/{id}/intake/marks/ {action: approve|ignore|check|clear, refs?: ["intake:<key>"]} (B10, B11; E.6):
+    refs name exactly those answers; none takes the shown answers' open warnings (for clear, their marks). Answers
+    {action, changed, activity_id, sources: {key: entry}, status, flags}."""
+
+    def post(self, request, pk):
+        _deal(pk)
+        data = _body(request)
+        marked = services.mark_answers(request.user, pk, data.get('action'), refs=data.get('refs'))
+        deal = Deal.objects.get(pk=pk)
+        intake = Intake.objects.filter(deal_id=pk).first()
+        rows = list(CurrentCoverage.objects.filter(deal_id=pk).order_by('sort_order', 'id'))
+        state = selectors.form_state(deal, intake, rows, providers.quote_lines(pk))
+        return Response(
+            {
+                'action': marked.action,
+                'changed': len(marked.keys),
+                'activity_id': marked.row.id if marked.row else None,
+                'sources': marked.sources,
+                'status': state['status'],
+                'review': state['review'],
+            }
+        )
 
 
 class IntentView(APIView):

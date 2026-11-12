@@ -4,6 +4,7 @@ import { lazy } from 'react';
 // the sidebar (nav.js) when its slice adds it here.
 export const TAB_COMPONENTS = {
   intake: lazy(() => import('../../deal/intake')),
+  census: lazy(() => import('../../deal/census')),
   advisor: lazy(() => import('../../deal/advisor')),
   proposal: lazy(() => import('../../deal/proposal')),
   documents: lazy(() => import('../../deal/documents')),

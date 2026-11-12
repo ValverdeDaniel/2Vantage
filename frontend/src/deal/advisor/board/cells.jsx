@@ -2,6 +2,7 @@ import { formatMoney, formatPercent } from '../../../lib/format';
 import cx from '../../../ui/cx';
 import { displayValue, enrollmentText, SOURCE_WORDS } from '../display';
 import { networkType } from './boardModel';
+import FlagsChip from './FlagsChip';
 
 /*
  * The board's small cells (plan.md §8.14; F41, F50, F57; the old AdvisorTab's derived columns): the ★, the ☐ tick
@@ -95,22 +96,8 @@ function Delta({ plan }) {
   return <span className={cx('bnf-delta', pct > 0 ? 'bnf-delta-pos' : 'bnf-delta-neg')}>{formatPercent(pct)}</span>;
 }
 
-function Flags({ plan }) {
-  const flags = plan.facts?.flags ?? 0;
-  return (
-    <span className="bnf-flag-cell">
-      {flags > 0 && (
-        <span className="bnf-flag-chip" title="Values the reader was unsure of, or that someone flagged">
-          ⚠ {flags} to review
-        </span>
-      )}
-      {flags === 0 && plan.facts?.incomplete && <span className="bnf-flag-chip">incomplete</span>}
-    </span>
-  );
-}
-
-/** A derived column's cell (F41). */
-export function DerivedValue({ col, plan }) {
+/** A derived column's cell (F41); the Flags column is the review chip (F63). */
+export function DerivedValue({ col, plan, ui }) {
   switch (col.key) {
     case 'total':
       return <Total plan={plan} />;
@@ -119,7 +106,7 @@ export function DerivedValue({ col, plan }) {
     case 'network_type':
       return networkType(plan) || '—';
     case 'flags':
-      return <Flags plan={plan} />;
+      return <FlagsChip plan={plan} ui={ui} />;
     default:
       return null;
   }

@@ -1,0 +1,146 @@
+{
+  "key": "GD6",
+  "about": "Get to Market (slices 38–59): a 60-enrolled group taken from intake to sale. Slice 39 seeds its full intake (the four cards' answers, typed as a person types them) and a priced medical line for the Advisor's budget hints; later slices add contacts, coverage with in-force commission, the BOR, a 60-person census, Florida Blue 51+, the Warner route, the portal and booking.",
+  "client": "Golden Get to Market (synthetic)",
+  "status": "prospect",
+  "effective_date": "2027-04-01",
+  "lines": ["medical"],
+  "intake": {
+    "answers": {
+      "legal_name": "Golden Get to Market LLC",
+      "dba": "Golden G2M",
+      "fein": "00 1234567",
+      "entity_type": "s-corp",
+      "sic_code": "4213 — Trucking, Except Local",
+      "years_in_business": "18",
+      "website": "https://example.com/golden-g2m",
+      "address_physical": "100 Example Way, Tampa, FL 33602",
+      "address_mailing": "PO Box 100, Tampa, FL 33601",
+      "situs_state": "fl",
+      "states_operating": "FL, GA",
+      "location_count": "2",
+      "total_employees": "72",
+      "atne": "68",
+      "employee_count": "64",
+      "enrolled_count": "60",
+      "enrolled_life_count": "64",
+      "waiving_count": "4",
+      "waive_reason": "Spouse's plan",
+      "contractor_count": "3",
+      "payroll_frequency": "Bi-weekly",
+      "payroll_vendor": "Example Payroll Co.",
+      "payroll_vendor_contact": "Payroll desk, payroll@example.com",
+      "payroll_processing": "API",
+      "multi_location": "yes",
+      "locations_list": "Tampa, FL; Savannah, GA",
+      "commission_employees": "no",
+      "classes_divisions": "Drivers; office staff",
+      "waiting_period": "1st of the month following 30 days",
+      "hours_threshold": "30",
+      "union": "no",
+      "employee_class_1": "Full-time drivers",
+      "employee_class_2": "Office staff",
+      "contribution_by_class": "ER pays 80% EE-only for both classes",
+      "child_age_limit": "26",
+      "domestic_partner": "no",
+      "reinstatement": "Standard (3 Months)",
+      "budget_target": "$62,000",
+      "acceptable_increase_pct": "8%",
+      "network_priorities": "Keep Tampa General in network",
+      "contribution_philosophy": "ER pays 80% EE-only",
+      "pain_points": "Renewal up 14%; few in-network doctors near the Savannah yard",
+      "decision_date": "2/15/2027",
+      "target_effective_date": "4/1/2027",
+      "self_funded": "no",
+      "section_125": "yes",
+      "section_125_handler": "Example Payroll Co.",
+      "ale_status": "yes",
+      "form_5500_required": "no",
+      "aca_1095c": "yes",
+      "aca_1095c_handler": "Example Payroll Co.",
+      "aca_1095b": "no",
+      "pcori_filing": "no"
+    }
+  },
+  "plans": [
+    {
+      "ref": "C", "line": "medical", "role": "current", "carrier": "Florida Blue", "name": "BlueOptions PPO 3500", "links": [],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "PPO",
+        "deductible_single": "3500",
+        "oop_max_single": "7500",
+        "pcp_copay": "$30",
+        "rate_ee": "640.00",
+        "rate_es": "1380.00",
+        "rate_ec": "1180.00",
+        "rate_fam": "1910.00"
+      },
+      "enrollment": {"EE": 30, "ES": 10, "EC": 8, "FAM": 12}
+    },
+    {
+      "ref": "U", "line": "medical", "role": "alternate", "carrier": "UnitedHealthcare", "name": "Choice Plus PPO 3000", "links": ["C"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "PPO",
+        "deductible_single": "3000",
+        "oop_max_single": "7000",
+        "pcp_copay": "$35",
+        "rate_ee": "610.00",
+        "rate_es": "1312.00",
+        "rate_ec": "1121.00",
+        "rate_fam": "1815.00"
+      }
+    },
+    {
+      "ref": "A", "line": "medical", "role": "alternate", "carrier": "Aetna", "name": "Open Access PPO 4000", "links": ["C"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "PPO",
+        "deductible_single": "4000",
+        "oop_max_single": "8000",
+        "pcp_copay": "$40",
+        "rate_ee": "590.00",
+        "rate_es": "1270.00",
+        "rate_ec": "1085.00",
+        "rate_fam": "1760.00"
+      }
+    }
+  ],
+  "starred": [],
+  "recommended": [],
+  "packages": [
+  ],
+  "reasons": {},
+  "parity": {
+    "old_app": "891f1b3",
+    "case": {
+      "stage": "intake"
+    },
+    "client_book": null,
+    "values_layer": "edited",
+    "values_left_out": {
+      "funding": "The old app keeps funding on the deal's coverage line, not on a plan."
+    },
+    "intake_layer": "edited",
+    "intake_left_out": {},
+    "links": {},
+    "copies": {},
+    "recommended_by_current": {},
+    "recommended_by_line": {},
+    "line_counts": {
+      "medical": "C"
+    },
+    "figures_left_out": {},
+    "left_out": [
+      {
+        "what": "Funding on every plan",
+        "why": "The old app keeps funding on the deal's coverage line (CoverageLine.funding)."
+      },
+      {
+        "what": "Multi-choice answers as lists",
+        "why": "The old app stores States of Operation as one text (its cleaner writes \"FL, GA\"); 2Vantage stores a list (B3). Both show FL, GA."
+      }
+    ]
+  }
+}

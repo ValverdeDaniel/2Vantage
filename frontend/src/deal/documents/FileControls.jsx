@@ -1,11 +1,10 @@
-import { CHECK_TITLE, checkLabel } from './checkWords';
-
 /*
- * The buttons under the file row (`bnf-doc-controls`; plan.md §8.16; E10, E15, E32, E59): ✎ File, Remove (refused for
- * a protected file, O.3.7), Check this file (the locator, in code; slice 16) and ⛶ Expand / ✕ Collapse (Esc
- * collapses). A removed file shows only Expand: it comes back through "Show removed files".
+ * The buttons under the file row (`bnf-doc-controls`; plan.md §8.16; E10, E15, E32): ✎ File, Remove (refused for a
+ * protected file, O.3.7) and ⛶ Expand / ✕ Collapse (Esc collapses). A removed file shows only Expand: it comes back
+ * through "Show removed files". "Check this file" (E59) sits in the Scanned data List's bulk bar, as in the old app
+ * (slice 17); its progress strip stays under these buttons.
  */
-export default function FileControls({ file, editing, expanded, onEdit, onRemove, onExpand, check, checkCount = 1 }) {
+export default function FileControls({ file, editing, expanded, onEdit, onRemove, onExpand }) {
   const removed = Boolean(file.archived_at);
   return (
     <div className="bnf-doc-controls">
@@ -29,18 +28,6 @@ export default function FileControls({ file, editing, expanded, onEdit, onRemove
           onClick={onRemove}
         >
           Remove
-        </button>
-      )}
-      {!removed && check && (
-        <button
-          type="button"
-          className="btn btn-sm btn-secondary"
-          disabled={check.busy}
-          onClick={check.check}
-          title={CHECK_TITLE}
-          data-check-file
-        >
-          {checkLabel(checkCount, check.busy)}
         </button>
       )}
       <button

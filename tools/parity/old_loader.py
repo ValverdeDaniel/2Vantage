@@ -14,7 +14,9 @@ The rows are written the way the old app writes them, through its own writers wh
 - a renewal through `renewal_pairs.add_renewal`, a copy through `plan_copy.duplicate_plan`;
 - each value as a hand edit does (edited_value over an empty read value);
 - links, typed enrollment and stars through `plan_links`, `enrollment` and `stars`;
-- one recommendation per current plan, the reasons and the line counts, through `composition.merge_config`.
+- one recommendation per current plan, the reasons and the line counts, through `composition.merge_config`;
+- the intake answers (slice 39, GD6) as the old form's hand edit stores them (CaseField.edited_value), each cleaned by
+  the old app's own `intake_writes.clean_value`, so the old form shows what 2Vantage's one cleaner stores.
 Then every row is read back and checked against the spec; a difference stops the load.
 """
 
@@ -24,6 +26,7 @@ from pathlib import Path
 
 from benefits.demo_data import seed_case_fields
 from benefits.market.intake import ensure_intake_fields
+from benefits.market.intake_writes import clean_value
 from benefits.models import BenefitFieldDef, BenefitsCase, Plan, PlanValue
 from benefits.pipeline import composition, current_plans, enrollment, plan_links, stars
 from benefits.pipeline.plan_copy import duplicate_plan
@@ -173,6 +176,27 @@ def apply_marks(spec, case, made):
     case.save(update_fields=['proposal_config'])
 
 
+def intake_answers(spec):
+    """The spec's intake answers the old form can hold (the profile's `intake_left_out` stay out)."""
+    left_out = spec['parity'].get('intake_left_out', {})
+    return {key: raw for key, raw in spec.get('intake', {}).get('answers', {}).items() if key not in left_out}
+
+
+def load_intake(spec, case):
+    """Each answer as the old form's typing writes it: the edited layer, cleaned by the old app's own cleaner."""
+    fields = {field.key: field for field in case.case_fields.all()}
+    for key, raw in intake_answers(spec).items():
+        field = fields.get(key)
+        if field is None:
+            raise ParityError(f'{spec["key"]}: the old form has no question {key}')
+        text, refused = clean_value(field, ', '.join(raw) if isinstance(raw, list) else raw)
+        if refused:
+            raise ParityError(f'{spec["key"]}: the old cleaner refuses {key}: {refused}')
+        if field.effective_value != text:
+            field.edited_value = text
+            field.save(update_fields=['edited_value'])
+
+
 def check(spec, case, made):
     """Read every loaded row back and compare it with the spec. Returns the differences, in words."""
     names = {plan.pk: ref for ref, plan in made.items()}
@@ -194,6 +218,11 @@ def check(spec, case, made):
             wrong.append(f'{plan["ref"]}: enrollment {row.enrollment} != {plan.get("enrollment")}')
         if row.is_shortlisted != (plan['ref'] in spec['starred']):
             wrong.append(f'{plan["ref"]}: starred {row.is_shortlisted}')
+    fields = {field.key: field for field in case.case_fields.all()}
+    for key, raw in intake_answers(spec).items():
+        text, _ = clean_value(fields[key], ', '.join(raw) if isinstance(raw, list) else raw)
+        if fields[key].effective_value != text:
+            wrong.append(f'intake.{key}: {fields[key].effective_value!r} != {text!r}')
     case.refresh_from_db()
     stored = case.proposal_config.get('tier_counts_by_line') or {}
     typed = {plan['ref']: plan.get('enrollment') for plan in spec['plans']}
@@ -206,6 +235,7 @@ def check(spec, case, made):
 def load(spec, user):
     with transaction.atomic():
         case = make_case(spec, user)
+        load_intake(spec, case)
         made = {}
         for plan in spec['plans']:
             made[plan['ref']] = make_plan(spec, plan, case, user, made)

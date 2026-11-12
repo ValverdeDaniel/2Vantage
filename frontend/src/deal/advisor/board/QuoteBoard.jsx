@@ -10,6 +10,7 @@ import { errorText } from '../../../lib/errors';
 import ConfirmDialog from '../../../ui/ConfirmDialog';
 import cx from '../../../ui/cx';
 import { useToast } from '../../../ui/useToast';
+import ReviewBulkBar from '../../../valuereview/ReviewBulkBar';
 import BoardHead from './BoardHead';
 import FilterCard from './FilterCard';
 import { emptyNote, hitsOn } from './finder';
@@ -25,6 +26,7 @@ import useBoardActions from './useBoardActions';
 import useBoardConfig from './useBoardConfig';
 import useBoardFilters from './useBoardFilters';
 import useBoardGrid from './useBoardGrid';
+import useBoardReview from './useBoardReview';
 import useCellWrites from './useCellWrites';
 import useFindFlash from './useFindFlash';
 import useTicks from './useTicks';
@@ -35,7 +37,8 @@ import useTicks from './useTicks';
  * Transpose. Above them the filter card (slice 10): the finder, the filters and the saved setups, one config kept in
  * the URL (useBoardConfig) that narrows the quotes before they are drawn. The config and ✎ Edit carry across line
  * switches; ticks do not. While ✎ Edit is on and a column sort is set, the rows hold their order until the person
- * changes the sort or a filter (F33).
+ * changes the sort or a filter (F33). Under the board header, the review strip: "N AI values to review" on the ticked,
+ * filtered or line's plans, with Approve, Ignore and Needs checking (F65; slice 17).
  */
 export default function QuoteBoard({ deal, meta, lines, line, onLine, data, prefs, onDialog }) {
   const toast = useToast();
@@ -98,6 +101,16 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
   const here = hitsOn(filters.finder, line);
   const showPlan = useFindFlash({ drawn, rowsLayout: shown === 'rows', win, scrollRef, soleHit: here.length === 1 ? here[0] : null });
 
+  const review = useBoardReview({
+    dealId: deal.id,
+    comparison: data,
+    meta,
+    lineLabel: lineLabel(line),
+    drawn,
+    ticked: drawn.filter((plan) => ticks.ids.has(plan.id)),
+    filtering: Boolean(filters.active || filters.finder.active),
+  });
+
   const runOnTicks = (promise) =>
     promise.then((answer) => {
       if (answer) ticks.clear();
@@ -137,6 +150,7 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
     sort,
     sortBy: (key) => set((now) => ({ sort: nextSort(now.sort, key) })),
     ticks,
+    review, // the flags chip's menu (F63)
     // Drawn only when no quote is (F17): why nothing shows.
     emptyNote: quotes.length
       ? null
@@ -189,6 +203,12 @@ export default function QuoteBoard({ deal, meta, lines, line, onLine, data, pref
               downloadTemplate: () => downloadFile(templateUrl(deal.id, line)).catch((e) => toast.error(errorText(e))),
             },
           }}
+        />
+        <ReviewBulkBar
+          counts={review.strip.counts}
+          target={review.strip.target}
+          busy={review.busy}
+          onAction={review.strip.onAction}
         />
         <SelectBar
           count={ticks.count}

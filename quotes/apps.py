@@ -6,10 +6,10 @@ class QuotesConfig(AppConfig):
 
     def ready(self):
         from ai import registry as ai_registry
-        from deals import activity, providers
+        from deals import activity, providers, stored_counts
         from intake import providers as intake_providers
 
-        from . import locate_hooks, revert
+        from . import flags, locate_hooks, revert
         from .selectors.intake_facts import quote_lines
         from .selectors.sales import client_has_sold
         from .services import saved_views
@@ -20,3 +20,4 @@ class QuotesConfig(AppConfig):
         intake_providers.fill('quote_lines', quote_lines)  # line states, lines off the proposal, from_plans (B24)
         # "Check this file" (E59): which plan values came from a file, and where the locator's answers go.
         ai_registry.register_locate('quotes', locate_hooks.queries, locate_hooks.save)
+        stored_counts.register('plan flags', flags.rebuild)  # Plan.flags against a rebuild (O.3.7, Q.3 #9)

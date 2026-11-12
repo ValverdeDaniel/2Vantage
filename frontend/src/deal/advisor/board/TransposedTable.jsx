@@ -99,7 +99,7 @@ export default function TransposedTable({ board, drawn, sections, ui, sizes, cli
                     return (
                       <td key={plan.id} className={cx(current, col.numeric && 'bb-mono')} data-plan-id={plan.id} {...hover}>
                         <div className="bnf-clip">
-                          <DerivedValue col={col} plan={plan} />
+                          <DerivedValue col={col} plan={plan} ui={ui} />
                         </div>
                       </td>
                     );

@@ -1,6 +1,7 @@
 """Revert for quotes' Activity rows (plan.md §3.7, O.3.2; F.6 "Revert works per key"): plan values, typed enrollment,
 a plan's own details, and the multi-row rules: stars and Clear shortlist, recommendations, roles and links, the order
-and slot picks, removals (Restore, F60), moves to another line (F59) and merges (F142).
+and slot picks, removals (Restore, F60), moves to another line (F59) and merges (F142). A review's marks (action
+`marked`) go back through `services.review.revert`, on the values still as the review left them (E88).
 
 Registered as `deals.activity.reverters['quotes']` in QuotesConfig.ready(). Runs inside `deals.activity.revert`'s
 transaction, after the Deal lock: it locks the change's plans (removed ones too) and every live plan on the lines they
@@ -19,6 +20,7 @@ from deals.values import source
 from . import columns, fields, presented
 from .models import Package, Plan
 from .selectors.state import line_data, replaced_ids
+from .services import review
 from .services.batch import write_replaces
 
 ENROLLMENT = 'enrollment.'
@@ -183,6 +185,8 @@ def _renews_last(item):
 
 
 def revert(row, user):
+    if row.action == review.MARKED:  # a review's marks go back by their own rule (E88)
+        return review.revert(row, user)
     ids = {_plan_id(entry['t']) for entry in row.changes}
     if None in ids:
         raise activity.Refused(activity.NO_REVERTER)

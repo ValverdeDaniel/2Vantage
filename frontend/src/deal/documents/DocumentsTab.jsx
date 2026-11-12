@@ -11,34 +11,31 @@ import {
 } from '../../api/documents';
 import { labelOf, useMeta } from '../../api/meta';
 import { downloadFile } from '../../lib/download';
-import { errorText, formErrorText } from '../../lib/errors';
+import { errorText } from '../../lib/errors';
 import ConfirmDialog from '../../ui/ConfirmDialog';
 import cx from '../../ui/cx';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import { useToast } from '../../ui/useToast';
-import DocumentViewer from '../../viewer/DocumentViewer';
-import FileBar from '../../viewer/FileBar';
 import AddFilesRow from './AddFilesRow';
-import CheckStrip from './CheckStrip';
-import { locWords } from './checkWords';
 import FileAsList from './FileAsList';
-import FileControls from './FileControls';
-import FilePanel from './FilePanel';
-import FileTabs from './FileTabs';
+import HistoryCard from './HistoryCard';
 import RemovedFiles from './RemovedFiles';
+import ScannedData from './ScannedData';
 import { chooseFile, inUploadOrder, proposalFiles } from './stationFiles';
 import { sourceDocument, viewerFind } from './sourceTarget';
 import useCheckFile from './useCheckFile';
 import useFileDrop from './useFileDrop';
 import useStationState, { ALL_PROPOSALS } from './useStationState';
+import ViewerPane from './ViewerPane';
 
 /*
  * The Documents tab (plan.md §8.16; Part E): every file on the deal, one on screen at a time, where a value opens with
- * its figure boxed (E1–E32). Slice 15 builds the file row, the File panel, Remove and "Show removed files", "File as"
- * by drop, the viewers and ↗'s deep links; slice 16 "Check this file" (the locator, a job in the worker) and what it
- * found on the file bar; the Scanned data panel beside the file (List, Grid, review) is slices 17 and 23's, Re-read
- * and the Claude drawer slices 19 and 20's, the pop-out window slice 65's.
+ * its figure boxed (E1–E32), and beside it the Scanned data panel, where people check what was read from it (E34–E58;
+ * slice 17). Slice 15 builds the file row, the File panel, Remove and "Show removed files", "File as" by drop, the
+ * viewers and ↗'s deep links; slice 16 "Check this file" (the locator, a job in the worker); slice 17 the List with
+ * its strip, keys and Undo, side by side with the file at 1,100 px, and the Change history card. The Grid, Find and
+ * Review mode are slice 23's, Re-read and the Claude drawer slices 19 and 20's, the pop-out window slice 65's.
  */
 export default function DocumentsTab({ deal }) {
   const toast = useToast();
@@ -63,15 +60,13 @@ export default function DocumentsTab({ deal }) {
   const files = useMemo(() => inUploadOrder(documents.data), [documents.data]);
   const removed = removedQuery.data || [];
   const source = value.data?.source || null;
-  const choice = chooseFile({
-    asked: station.doc,
-    files,
-    removed,
-    sourceDoc: sourceDocument(source),
-    allKey: ALL_PROPOSALS,
-  });
+  const choice = chooseFile({ asked: station.doc, files, removed, sourceDoc: sourceDocument(source), allKey: ALL_PROPOSALS });
   const shown = choice.file;
-  const checking = choice.all ? proposalFiles(files).map((file) => file.id) : shown ? [shown.id] : [];
+  const proposals = proposalFiles(files);
+  // The List covers 📚 All proposals while the viewer shows the one file a value opened (D-164).
+  const listAll = choice.all || (station.list === ALL_PROPOSALS && proposals.length > 1);
+  const scopeFiles = listAll ? proposals : shown ? [shown] : [];
+  const checking = scopeFiles.map((file) => file.id);
   const check = useCheckFile(deal.id, checking);
   const showsValue = Boolean(shown && source && sourceDocument(source) === shown.id);
   const find = showsValue
@@ -108,8 +103,8 @@ export default function DocumentsTab({ deal }) {
     );
   }
 
-  const bucketLabel = (key) => labelOf(meta.document_buckets, key);
-  const proposals = proposalFiles(files);
+  const bucket = listAll ? 'proposal' : shown?.bucket;
+  const fileName = (id) => [...files, ...removed].find((file) => file.id === id)?.display_name || '';
 
   async function download() {
     try {
@@ -151,10 +146,7 @@ export default function DocumentsTab({ deal }) {
     }
   }
 
-  const isRemoved = Boolean(shown?.archived_at);
-  const removedList = (
-    <RemovedFiles files={removed} busy={restore.isPending} onOpen={station.select} onRestore={putBack} />
-  );
+  const listing = Boolean(shown && bucket === 'proposal');
   return (
     <div className="bb-tab-page">
       {station.back && (
@@ -183,70 +175,63 @@ export default function DocumentsTab({ deal }) {
         className={cx('bb-policy-cols bnf-docs-cols', expanded && 'bnf-docs-expanded', drop.dropping && 'is-dropping')}
         {...drop.props}
       >
-        <div className="bnf-docs-stack">
-          <div className="bb-panel bb-policy-doc">
-            {shown ? (
-              <>
-                <FileTabs
-                  files={files}
-                  shown={shown}
-                  allOn={choice.all}
-                  proposals={proposals}
-                  bucketLabel={bucketLabel}
-                  onSelect={station.select}
-                  onAll={() => station.select(ALL_PROPOSALS)}
-                  onDownload={download}
-                />
-                {removedList}
-                <FileControls
-                  file={shown}
-                  editing={editing}
-                  expanded={expanded}
-                  onEdit={() => setEditing(true)}
-                  onRemove={() => setRemoving(shown)}
-                  onExpand={() => setExpanded((v) => !v)}
-                  check={check}
-                  checkCount={checking.length}
-                />
-                <CheckStrip check={check} count={checking.length} />
-                {editing && !isRemoved && (
-                  <FilePanel
-                    key={shown.id}
-                    file={shown}
-                    meta={meta}
-                    saving={update.isPending}
-                    error={update.error ? formErrorText(update.error) : ''}
-                    onSave={save}
-                    onCancel={() => {
-                      update.reset();
-                      setEditing(false);
-                    }}
-                  />
-                )}
-                <FileBar
-                  document={shown}
-                  bucket={isRemoved ? 'Removed' : bucketLabel(shown.bucket)}
-                  page={(viewed.id === shown.id && viewed.page) || find.page || 1}
-                  what={showsValue ? value.data.what : ''}
-                  note={showsValue ? locWords(source.loc) : null}
-                />
-                <DocumentViewer
-                  document={shown}
-                  find={find}
-                  jumpKey={station.jumpKey}
-                  onPageChange={(page) => setViewed({ id: shown.id, page })}
-                  onDownload={download}
-                />
-              </>
-            ) : (
-              <>
-                <div className="bb-subtitle">No documents yet — drop the carrier files anywhere on this tab.</div>
-                {removedList}
-              </>
-            )}
-          </div>
+        <div className={cx('bnf-docs-stack', listing && 'bnf-docs-side')}>
+          <ViewerPane
+            meta={meta}
+            removedList={
+              <RemovedFiles files={removed} busy={restore.isPending} onOpen={station.select} onRestore={putBack} />
+            }
+            station={{
+              files,
+              shown,
+              allOn: listAll,
+              proposals,
+              editing,
+              expanded,
+              update,
+              check,
+              checking,
+              find,
+              jumpKey: station.jumpKey,
+              value: showsValue ? value.data : null,
+              viewedPage: viewed.id === shown?.id ? viewed.page : null,
+            }}
+            on={{
+              select: station.select,
+              all: () => station.select(ALL_PROPOSALS),
+              download,
+              edit: () => setEditing(true),
+              remove: () => setRemoving(shown),
+              expand: () => setExpanded((v) => !v),
+              save,
+              cancelEdit: () => {
+                update.reset();
+                setEditing(false);
+              },
+              page: (page) => setViewed({ id: shown.id, page }),
+            }}
+          />
+          {shown && (
+            <ScannedData
+              key={checking.join(',')}
+              deal={deal}
+              meta={meta}
+              scope={{
+                ids: checking,
+                files: scopeFiles,
+                bucket,
+                label: labelOf(meta.document_buckets, bucket),
+                name: shown.display_name,
+              }}
+              expanded={expanded}
+              activeRef={station.ref}
+              onOpen={(row) => station.show(row.doc, row.ref, { list: listAll ? ALL_PROPOSALS : '' })}
+              check={shown.archived_at ? null : check}
+            />
+          )}
         </div>
       </div>
+      <HistoryCard dealId={deal.id} fileName={fileName} />
       <ConfirmDialog
         open={Boolean(removing)}
         title="Remove this file?"

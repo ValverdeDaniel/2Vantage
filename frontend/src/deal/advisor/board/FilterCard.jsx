@@ -1,5 +1,6 @@
 import cx from '../../../ui/cx';
 import { removeRule } from './boardConfig';
+import BudgetHints from './BudgetHints';
 import FilterControls from './FilterControls';
 import FilterNotes from './FilterNotes';
 import FinderBox from './FinderBox';
@@ -43,6 +44,7 @@ export default function FilterCard({ meta, line, lineLabel, view, filters, curre
             onPickLine={onPickLine}
           />
           <FilterControls board={board} line={line} config={config} set={set} filters={filters} currents={currents} />
+          <BudgetHints board={board} line={line} config={config} set={set} currents={currents} />
           <FilterNotes
             unpriced={filters.unpriced}
             uncompared={filters.uncompared}

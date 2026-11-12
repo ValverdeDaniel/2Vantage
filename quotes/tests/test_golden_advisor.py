@@ -148,3 +148,42 @@ def test_F19_F140_GD1_every_plan_carries_its_total_and_its_numbers(gd1, admin_ap
     assert a['facts']['numbers']['deductible_single'] == 3300 and a['facts']['numbers']['rate_ee'] == 512.34
     assert 'pcp_copay' not in a['facts']['numbers']  # "Deductible, then 20%" is no number
     assert all(plan['premium']['monthly'] is not None for plan in plans)
+
+
+def test_17_GD1_stored_flags_equal_a_rebuild_and_the_board(gd1, admin_api):
+    """Slice 17 (Q.9 row 17, Q.3 #9): GD1's stored open-warning counts equal a fresh rebuild, and the board's own count
+    on every plan. GD1's file values were typed with their file, so nothing on it needs review yet (OQ28)."""
+    from quotes import flags
+
+    assert flags.rebuild([gd1.deal.id]) == []
+    plans = admin_api.get(f'/api/deals/{gd1.deal.id}/plans/', {'line': 'medical'}).json()['plans']
+    stored = dict(Plan.objects.filter(deal=gd1.deal).values_list('id', 'flags'))
+    assert {plan['id']: plan['facts']['flags'] for plan in plans} == {plan['id']: stored[plan['id']] for plan in plans}
+
+
+def test_17_GD1_a_flag_on_a_value_from_the_cigna_file_shows_on_both_screens_and_undoes_once(gd1, admin_api):
+    """Slice 17's done-when, server half: ⚑ on a value from the Cigna workbook makes the station's strip read "1 AI
+    value to review · 1 need checking" and the Advisor's count 1 on that plan; the review's one Activity row holds
+    marks, never the value, and Undo puts it back once."""
+    from deals.models import Activity
+    from documents.models import Document
+
+    cigna = Document.objects.get(deal=gd1.deal, kind='quote')
+    base = f'/api/deals/{gd1.deal.id}/plans/'
+    rows = admin_api.get(f'{base}sources/', {'documents': cigna.id}).json()
+    assert rows['warnings']['open'] == 0 and rows['rows']
+    assert {row['bucket'] for row in rows['rows']} <= {'unchecked', 'found', 'absent'}
+    target = next(row for row in rows['rows'] if row['plan_id'] == gd1.refs['CG2'] and row['key'] == 'rate_ee')
+    answer = admin_api.post(f'{base}marks/', {'action': 'check', 'refs': [target['ref']]}, format='json').json()
+    assert answer['changed'] == 1
+    assert [(plan['id'], plan['flags']) for plan in answer['plans']] == [(gd1.refs['CG2'], 1)]
+    strip = admin_api.get(f'{base}sources/', {'documents': cigna.id}).json()['warnings']
+    assert strip == {'open': 1, 'check': 1, 'unflagged': 0}
+    board = {plan['id']: plan for plan in admin_api.get(base, {'line': 'medical'}).json()['plans']}
+    assert board[gd1.refs['CG2']]['facts']['flags'] == 1 == Plan.objects.get(pk=gd1.refs['CG2']).flags
+    assert board[gd1.refs['CG2']]['cells']['rate_ee']['s'] == 'to_check'
+    row = Activity.objects.get(pk=answer['activity_id'])
+    assert target['value'] not in repr(row.changes) and row.action == 'marked'
+    assert admin_api.post(f'/api/activity/{row.id}/revert/').status_code == 200
+    assert Plan.objects.get(pk=gd1.refs['CG2']).flags == 0
+    assert admin_api.post(f'/api/activity/{row.id}/revert/').status_code == 409

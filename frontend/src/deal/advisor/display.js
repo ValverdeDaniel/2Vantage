@@ -1,27 +1,8 @@
 // How Advisor values and figures read on screen. Display only — every figure comes from the server (§3.9).
-import { formatMoney, formatPercent, formatRate } from '../../lib/format';
+import { formatMoney, formatPercent } from '../../lib/format';
 
-const NUMBER = /^-?\d+(\.\d+)?$/;
-
-/** A stored value as the member reads it: amounts $3,300, percent 20%, rates $512.34, choices by label. */
-export function displayValue(field, raw) {
-  if (raw === undefined || raw === null || raw === '') return '';
-  const numeric = NUMBER.test(String(raw));
-  switch (field?.type) {
-    case 'amount':
-      return numeric ? formatMoney(raw) : raw;
-    case 'percent':
-      return numeric ? `${raw}%` : raw;
-    case 'rate':
-      return numeric ? formatRate(raw) : raw;
-    case 'rate4':
-      return numeric ? `$${raw}` : raw;
-    case 'choice':
-      return field.choices?.find((choice) => choice.key === raw)?.label ?? raw;
-    default:
-      return String(raw);
-  }
-}
+// A stored value as the member reads it; shared with the Documents station's List since slice 17.
+export { displayValue } from '../../lib/fieldValue';
 
 /** '+$17,808 (+8.6%)' */
 export function changeText(change) {

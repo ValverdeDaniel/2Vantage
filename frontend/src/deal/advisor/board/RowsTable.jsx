@@ -49,7 +49,7 @@ export default function RowsTable({ board, drawn, ui, win, bodyRef }) {
               } else if (col.kind === 'plan') {
                 content = <PlanCell plan={plan} board={board} ui={ui} />;
               } else {
-                content = <DerivedValue col={col} plan={plan} />;
+                content = <DerivedValue col={col} plan={plan} ui={ui} />;
               }
               return (
                 <td key={col.key} className={col.numeric ? 'bb-mono' : undefined}>

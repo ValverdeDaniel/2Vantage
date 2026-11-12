@@ -7,13 +7,34 @@ import { dealKey, invalidateDeal } from './deals';
 
 export const intakeKey = (dealId) => dealKey(dealId, 'intake');
 
-/** GET deals/{id}/intake/ → {answers, sources, hidden, coverage: [row], intent: card}. */
+/**
+ * GET deals/{id}/intake/ → {answers, sources, hidden, needed, status, issues, readiness, notes, coverage: [row],
+ * intent: card}. A deal with no Intake row reads as empty.
+ */
 export function useIntake(dealId) {
   return useQuery({
     queryKey: intakeKey(dealId),
     queryFn: async () => (await api.get(`deals/${dealId}/intake/`)).data,
     staleTime: 0,
   });
+}
+
+/**
+ * PATCH deals/{id}/intake/ — the form's answers, all or nothing (B4). body: {answers: {key: text | list | null},
+ * expect?: {key: value seen}, relay?: bool} → {answers (changed; null cleared), sources (changed), hidden, needed,
+ * status, issues, readiness, notes, effective_date, activity_id}. 400 {answers: {key: sentence}}; 409 {detail, keys}.
+ */
+export async function patchAnswers(dealId, body) {
+  return (await api.patch(`deals/${dealId}/intake/`, body)).data;
+}
+
+/**
+ * POST deals/{id}/intake/marks/ — review marks on answers (B10, B11). body: {action: approve | ignore | check | clear,
+ * refs?: ["intake:<key>"]} (no refs: the shown answers' open warnings) → {action, changed, activity_id, sources:
+ * {key: entry}, status, review: {open, check, unflagged}}.
+ */
+export async function postMarks(dealId, body) {
+  return (await api.post(`deals/${dealId}/intake/marks/`, body)).data;
 }
 
 /**

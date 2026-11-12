@@ -19,7 +19,7 @@ from rest_framework.exceptions import ValidationError
 from deals import activity, lines
 from deals.values import apply as apply_values
 
-from .. import columns, fields, signals
+from .. import columns, fields, flags, signals
 from ..models import Package, Plan
 from . import locks
 from .batch import Batch
@@ -124,7 +124,9 @@ def move_line(user, deal, plan_ids, to_line):
         if left.get(plan.id):
             extra[plan.id][columns.PACKAGES] = [left[plan.id], []]
     changed, changes = batch.write()
-    Plan.objects.bulk_update(moving, ['values', 'sources', 'enrollment', 'enrollment_on'])
+    for plan in moving:
+        flags.stamp(plan)  # its open warnings, over the new line's fields (O.3.7)
+    Plan.objects.bulk_update(moving, ['values', 'sources', 'enrollment', 'enrollment_on', 'flags'])
     for entry in changes:
         entry['k'].update(extra.get(int(entry['t'].partition(':')[2]), {}))
     label = lines.label(to_line)

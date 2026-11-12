@@ -4,6 +4,8 @@ from django.db.models import Q
 
 from deals.models import Deal
 
+from . import flags as open_flags
+
 
 class LivePlans(models.Manager):
     """The default manager hides removed plans (§6.7, O.3.7; F60), so every read, related managers included
@@ -54,6 +56,10 @@ class Plan(models.Model):
     # A priced version and how it was made (F76–F84; slice 35).
     derived_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='versions')
     derived = models.JSONField(default=dict, blank=True)
+    # Whether the carrier's quoted rates already include the bundling discount (F78; the old `bundling_state`): a
+    # bundled version of an `included` quote would discount it twice, so it is refused.
+    BUNDLING = [('', 'Not confirmed'), ('unbundled', 'Confirmed unbundled'), ('included', 'Rates already include it')]
+    bundling = models.CharField(max_length=10, choices=BUNDLING, blank=True, default='')
     flags = models.PositiveIntegerField(default=0)  # open warnings, a stored count (O.3.7; slice 17)
     source_document = models.ForeignKey(
         'documents.Document', null=True, blank=True, on_delete=models.SET_NULL, related_name='+'
@@ -84,6 +90,15 @@ class Plan(models.Model):
 
     def __str__(self):
         return f'{self.carrier} {self.name}'
+
+    def save(self, *args, **kwargs):
+        """Every save of the values or sources rewrites `flags`, the stored count of open warnings, in the same
+        transaction (O.3.7, Q.3 #9; quotes/flags.py). Writes that `bulk_update` stamp it themselves."""
+        written = kwargs.get('update_fields')
+        if written is None or {'values', 'sources', 'line'} & set(written):
+            if open_flags.stamp(self) and written is not None:
+                kwargs['update_fields'] = [*written, 'flags']
+        super().save(*args, **kwargs)
 
 
 class Package(models.Model):

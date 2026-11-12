@@ -1,20 +1,26 @@
-"""Revert of an intake Activity row (plan.md §3.7, O.3.2): a coverage row's fields, a row added or removed, the lines
-to quote and the intent confirmation. Registered as `activity.reverters['intake']` in IntakeConfig.ready().
+"""Revert of an intake Activity row (plan.md §3.7, O.3.2): the answers (and the deal's effective date, their door), a
+coverage row's fields, a row added or removed, the lines to quote and the intent confirmation. Registered as
+`activity.reverters['intake']` in IntakeConfig.ready().
 
 `deals.activity.revert` has already locked the Deal; this locks the Intake row and the coverage rows the change names,
 by id. It refuses after a later write to the same key, and after any later write to a row this change added or
 removed (putting it back would drop that write). The lines to quote go back through `deals.services.set_lines`, their
-one writer. Returns the changes it wrote, which the revert row records.
+one writer, and the effective date through `set_effective_date`. An answer goes back through `values.apply`: one that
+goes back to what was read gets its read source back. Returns the changes it wrote, which the revert row records.
 """
 
 import datetime
 
 from deals import activity
-from deals.models import Activity
-from deals.services import set_lines
+from deals.models import Activity, Deal
+from deals.services import set_effective_date, set_lines
+from deals.values import apply as apply_values
+from deals.values import source
 
+from . import flags, form
 from .models import CurrentCoverage
-from .services import rows
+from .services import marks, rows
+from .signals import announce
 
 LABELS = {
     'requested_lines': 'The lines to quote',
@@ -31,6 +37,10 @@ TOUCHED_SINCE = 'This coverage line was changed after this, so this change canno
 
 
 def _label(key):
+    if key in form.BY_KEY:
+        return form.BY_KEY[key]['label']
+    if key == form.GUIDANCE:
+        return 'Client guidance'
     return LABELS.get(key, key.replace('_', ' ').capitalize())
 
 
@@ -88,7 +98,45 @@ def _put_back(row_id, diff, deal_id):
     return activity.change(target, changed)
 
 
+def _answers_back(deal_id, intake, diff, user):
+    """The answers' "before" back, through `values.apply`: an added answer is cleared, and one that goes back to
+    what was read takes its read source (None)."""
+    wanted = {}
+    for key, (before, _after) in diff.items():
+        if before is None:
+            wanted[key] = ''
+        elif (intake.sources.get(key) or {}).get('read_value') == before:
+            wanted[key] = None
+        else:
+            wanted[key] = before
+    answers, sources = dict(intake.answers), dict(intake.sources)
+    changed = apply_values(answers, sources, wanted, source('typed', user))
+    if changed:
+        intake.answers, intake.sources = answers, sources
+        flags.stamp(Deal.objects.get(pk=deal_id), intake)
+        intake.save(update_fields=['answers', 'sources', 'flags', 'updated_at'])
+    return changed
+
+
+def _date_back(deal_id, before, user):
+    """The deal's effective date back, with the answer's source entry following it."""
+    changed = set_effective_date(deal_id, datetime.date.fromisoformat(before) if before else None)
+    if changed:
+        intake = rows.lock_intake(deal_id)
+        sources = dict(intake.sources)
+        if before:
+            sources[form.EFFECTIVE_DATE] = source('typed', user)
+        else:
+            sources.pop(form.EFFECTIVE_DATE, None)
+        intake.sources = sources
+        flags.stamp(Deal.objects.get(pk=deal_id), intake)
+        intake.save(update_fields=['sources', 'flags', 'updated_at'])
+    return changed
+
+
 def revert(row, user):
+    if row.action == marks.MARKED:
+        return marks.revert(row, user)  # review marks: back where the answer is still as the row left it (E88)
     _refuse_later(row)
     deal_id = row.deal_id
     kinds = {entry['t'].partition(':')[0] for entry in row.changes}
@@ -100,19 +148,32 @@ def revert(row, user):
     written = []
     for entry in sorted(row.changes, key=lambda e: e['t']):
         kind, _, ident = entry['t'].partition(':')
-        if kind == 'deal' and 'requested_lines' in entry['k']:
-            diff = set_lines(deal_id, entry['k']['requested_lines'][0])
+        if kind == 'deal':
+            diff = {}
+            if 'requested_lines' in entry['k']:
+                diff.update(set_lines(deal_id, entry['k']['requested_lines'][0]))
+            if 'effective_date' in entry['k']:
+                diff.update(_date_back(deal_id, entry['k']['effective_date'][0], user))
             if diff:
                 written.append(activity.change(entry['t'], diff))
         elif kind == 'intake':
             intake = rows.lock_intake(deal_id)
-            was = entry['k']['intent_confirmed'][0]
-            if intake.intent_confirmed != was:
-                written.append(activity.change(entry['t'], {'intent_confirmed': [intake.intent_confirmed, was]}))
-                intake.intent_confirmed = was
-                intake.save(update_fields=['intent_confirmed', 'updated_at'])
+            diff = {}
+            if 'intent_confirmed' in entry['k']:
+                was = entry['k']['intent_confirmed'][0]
+                if intake.intent_confirmed != was:
+                    diff['intent_confirmed'] = [intake.intent_confirmed, was]
+                    intake.intent_confirmed = was
+                    intake.save(update_fields=['intent_confirmed', 'updated_at'])
+            answered = {key: pair for key, pair in entry['k'].items() if key != 'intent_confirmed'}
+            if answered:
+                diff.update(_answers_back(deal_id, intake, answered, user))
+            if diff:
+                written.append(activity.change(entry['t'], diff))
         elif kind == 'coverage':
             change = _put_back(int(ident), entry['k'], deal_id)
             if change and change['k']:
                 written.append(change)
+    if written:
+        announce(deal_id)  # the lines to quote or a coverage row came back: census's required columns follow
     return written

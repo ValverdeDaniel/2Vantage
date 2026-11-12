@@ -1,0 +1,140 @@
+{
+  "key": "GD4",
+  "about": "Census by plan name: 100 employees and 60 dependents with waivers, whose medical elections name three current plans, one alias and an unmatched variant; the same census on Warner Pacific's template.",
+  "client": "Golden Census by Plan (synthetic)",
+  "status": "prospect",
+  "effective_date": "2027-01-01",
+  "lines": ["medical", "dental", "vision"],
+  "plans": [
+    {
+      "ref": "P1", "line": "medical", "role": "current", "carrier": "Aetna", "name": "Choice POS II 2000", "links": [],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "POS",
+        "deductible_single": "2000",
+        "oop_max_single": "6000",
+        "pcp_copay": "25",
+        "rate_ee": "640.00",
+        "rate_es": "1344.00",
+        "rate_ec": "1152.00",
+        "rate_fam": "1920.00"
+      }
+    },
+    {
+      "ref": "P2", "line": "medical", "role": "current", "carrier": "Aetna", "name": "Open Access HDHP 3300", "links": [],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "HDHP",
+        "deductible_single": "3300",
+        "oop_max_single": "6600",
+        "pcp_copay": "Deductible, then 20%",
+        "rate_ee": "520.00",
+        "rate_es": "1092.00",
+        "rate_ec": "936.00",
+        "rate_fam": "1560.00"
+      }
+    },
+    {
+      "ref": "P3", "line": "medical", "role": "current", "carrier": "Aetna", "name": "Managed Choice 5000", "links": [],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "PPO",
+        "deductible_single": "5000",
+        "oop_max_single": "8000",
+        "pcp_copay": "40",
+        "rate_ee": "455.00",
+        "rate_es": "955.50",
+        "rate_ec": "819.00",
+        "rate_fam": "1365.00"
+      }
+    },
+    {
+      "ref": "DN", "line": "dental", "role": "current", "carrier": "Guardian", "name": "Dental PPO 1500", "links": [],
+      "values": {"den_annual_max": "1500", "den_deductible": "50", "den_preventive": "0", "rate_ee": "38.20", "rate_es": "76.90", "rate_ec": "92.15", "rate_fam": "130.60"}
+    },
+    {
+      "ref": "VS", "line": "vision", "role": "current", "carrier": "VSP", "name": "Choice 10/25", "links": [],
+      "values": {"vis_exam_copay": "10", "vis_frame_allowance": "150", "rate_ee": "7.10", "rate_es": "13.40", "rate_ec": "14.05", "rate_fam": "20.75"}
+    }
+  ],
+  "starred": [],
+  "recommended": [],
+  "packages": [],
+  "reasons": {},
+  "census": {
+    "file": "Golden Census by Plan census (synthetic).xlsx",
+    "warner_file": "Golden Census by Plan census on the Warner template (synthetic).xlsx",
+    "warner_header_row": 3,
+    "warner_first_data_row": 7,
+    "medical_effective": "2026-01-01",
+    "dental_plan": "Dental PPO 1500",
+    "vision_plan": "Choice 10/25",
+    "groups": [
+      {"n": 18, "medical_plan": "Choice POS II 2000", "tier": "EE", "aged_65": ["1958-06-01"], "hours": {"24": 4}},
+      {"n": 6, "medical_plan": "Choice POS II 2000", "tier": "ES"},
+      {"n": 4, "medical_plan": "Choice POS II 2000", "tier": "EC", "children": 2},
+      {"n": 5, "medical_plan": "Choice POS II 2000", "tier": "FAM", "canary": true, "spouse_dobs": ["", "1959-05-05"]},
+      {"n": 4, "medical_plan": "Aetna POS 2000", "tier": "EE", "why": "an alias of Choice POS II 2000"},
+      {"n": 1, "medical_plan": "Aetna POS 2000", "tier": "ES"},
+      {"n": 1, "medical_plan": "Aetna POS 2000", "tier": "EC"},
+      {"n": 15, "medical_plan": "Open Access HDHP 3300", "tier": "EE", "aged_65": ["1960-11-30"], "hours": {"30": 2}},
+      {"n": 3, "medical_plan": "Open Access HDHP 3300", "tier": "ES", "spouse_dobs": ["1962-01-01"]},
+      {"n": 3, "medical_plan": "Open Access HDHP 3300", "tier": "EC"},
+      {"n": 2, "medical_plan": "Open Access HDHP 3300", "tier": "FAM"},
+      {"n": 2, "medical_plan": "Open Access HDHP 3300 (2025 rates)", "tier": "EE", "why": "a variant nothing matches"},
+      {"n": 1, "medical_plan": "Open Access HDHP 3300 (2025 rates)", "tier": "ES"},
+      {"n": 1, "medical_plan": "Open Access HDHP 3300 (2025 rates)", "tier": "FAM"},
+      {"n": 12, "medical_plan": "Managed Choice 5000", "tier": "EE", "aged_65": ["1961-12-31"]},
+      {"n": 2, "medical_plan": "Managed Choice 5000", "tier": "ES", "spouse_dobs": ["1962-01-02"]},
+      {"n": 2, "medical_plan": "Managed Choice 5000", "tier": "EC"},
+      {"n": 3, "medical_plan": "Managed Choice 5000", "tier": "FAM"},
+      {"n": 6, "medical_plan": "", "tier": "Waived", "dental": "EE", "vision": "Waived", "waiver_reason": "Covered on a spouse's plan"},
+      {"n": 6, "medical_plan": "", "tier": "Waived", "dental": "Waived", "vision": "Waived", "waiver_reason": "Medicare", "aged_65": ["1955-02-02"]},
+      {"n": 3, "medical_plan": "", "tier": "", "dental": "", "vision": "", "why": "elections not given"}
+    ],
+    "canaries": {
+      "first_name": "Quillonia",
+      "last_name": "Vexcanary",
+      "dob": "1971-08-19",
+      "address1": "17 Canarywood Lane",
+      "phone": "555-0199-77",
+      "email": "quillonia@canary.test",
+      "spouse_first_name": "Zephyrine"
+    }
+  },
+  "parity": {
+    "old_app": "891f1b3",
+    "case": {
+      "stage": "intake"
+    },
+    "client_book": null,
+    "values_layer": "edited",
+    "values_left_out": {
+      "funding": "The old app keeps funding on the deal's coverage line, not on a plan."
+    },
+    "links": {},
+    "copies": {},
+    "recommended_by_current": {},
+    "recommended_by_line": {},
+    "line_counts": {},
+    "figures_left_out": {
+      "P1": "Census by plan name is not expressible in the old app (C41): it prices a line with several current plans only from typed per-plan counts.",
+      "P2": "Census by plan name is not expressible in the old app (C41).",
+      "P3": "Census by plan name is not expressible in the old app (C41)."
+    },
+    "left_out": [
+      {
+        "what": "Census by plan name (each current plan priced from its own members)",
+        "why": "Not expressible in the old app (C41): it never matched census plan texts to plans."
+      },
+      {
+        "what": "The census roster and its two files",
+        "why": "The loader loads plans only; the roster's screens are compared from slice 41 (the roster grid)."
+      },
+      {
+        "what": "Funding on every plan",
+        "why": "The old app keeps funding on the deal's coverage line (CoverageLine.funding)."
+      }
+    ]
+  }
+}

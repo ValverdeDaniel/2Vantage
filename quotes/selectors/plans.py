@@ -2,9 +2,11 @@
 
 The comparison is compact (F.6, C23): a cell carries only what it has to say, as `{s, o, d, m}`: its status
 (`missing` or `to_check`; blank and ok are left out), its origin when not typed, the index of its document in the
-payload's `documents` list (listed once), and its review mark. A value's full source comes on ↗ (`plans/{id}/source/`).
+payload's `documents` list (listed once), and its review mark `m` (`mark_word`: ⚑ check always; ignored or approved
+only where they change what the value shows, E92). A value's full source comes on ↗ (`plans/{id}/source/`).
 """
 
+from documents import review_rules
 from documents.models import Document
 
 from .. import facts
@@ -26,6 +28,19 @@ class Documents:
         return [{'id': doc_id, 'name': names.get(doc_id, '')} for doc_id in self.index]
 
 
+def mark_word(entry):
+    """The review mark a cell shows (F64; the old reviewMarkClass): 'check' (⚑ Needs checking), 'ignored' or
+    'approved' on a value whose doubt they settle (`review_rules.shows_approval`), else None."""
+    state = review_rules.mark_state(entry)
+    if state == review_rules.CHECKING:
+        return state
+    if not review_rules.shows_approval(entry):
+        return None
+    if state == review_rules.IGNORED:
+        return state
+    return 'approved' if review_rules.is_approved(entry) else None
+
+
 def cells(plan, status, documents):
     """{key: {s?, o?, d?, m?}} for the keys with something to say."""
     out = {}
@@ -37,7 +52,7 @@ def cells(plan, status, documents):
             cell['o'] = source['origin']
         if source.get('doc'):
             cell['d'] = documents.at(source['doc'])
-        mark = (source.get('mark') or {}).get('state')
+        mark = mark_word(source)
         if mark:
             cell['m'] = mark
         if cell:

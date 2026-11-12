@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'documents',
     'ai',  # jobs and the worker (slice 16); Claude from slice 18
     'intake',  # coverage, intent and the lines to quote (slice 11); the form from slice 39
+    'census',  # import, matching, validation, rollups and CensusFacts (slice 12); the roster grid from slice 41
     'quotes',
     'proposals',
     'golden',  # seed only, last in the chain (§3.3)
@@ -172,7 +173,7 @@ LOGGING = {
         **{name: {'level': 'WARNING'} for name in ('anthropic', 'httpx', 'httpcore')},
         **{
             name: {'level': 'INFO'}
-            for name in ('accounts', 'deals', 'documents', 'ai', 'intake', 'quotes', 'proposals')
+            for name in ('accounts', 'deals', 'documents', 'ai', 'intake', 'census', 'quotes', 'proposals')
         },
     },
 }

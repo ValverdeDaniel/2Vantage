@@ -25,6 +25,7 @@ from deals.services import set_lines
 
 from .. import coverage
 from ..models import CurrentCoverage, Intake
+from ..signals import announce
 from . import rows
 
 Changed = namedtuple('Changed', 'lines rows activity')  # lines: [before, after] or None; rows: {target: diff}
@@ -137,6 +138,7 @@ def set_intent(user, deal_id, *, line=None, lines=None, has_today=None, this_yea
     changes += [activity.change(t, diff) for t, diff in entries.items()]
     summary = _summary(keys, has_today, this_year, shop, remove)
     row = activity.record(deal, user, rows.AREA, 'intent', summary, changes=changes)
+    announce(deal_id)
     return Changed(lines_diff.get('requested_lines'), entries, row)
 
 

@@ -681,6 +681,7 @@ A fact read by an app MUST live in that app or one to its left. So the firm's re
 |---|---|---|
 | `intake.providers`: `headcount`, `census_state`, `questionnaire_items`, `quote_lines` | quotes, census, questionnaire | the checklist tier, "Census OK", form rows, line states and the lines off the proposal; `quote_lines` also gives each line's current carrier and funding (`current`), which a coverage row shows read-only (§6.5; slice 11) |
 | `census.providers.carrier_required` | rfp | carrier-required census columns |
+| `intake.signals.coverage_changed` | census | sent inside intake's write when the lines to quote or a coverage row changed; census rewrites `CensusFacts` in that transaction, because the required columns follow the lines and medical's in-force answer (§5.3.3; slice 12) |
 | `quotes.providers.disclosure_state` | questionnaire | the stop-loss workbook's Binding Notes (G117) |
 | `quotes.signals.sold_changed`, `plans_changed` | commission, proposals | booking a sale; clearing the Plans card marks |
 | `rfp.checks.providers` | review | the export check and its `?ack=` digest |
@@ -834,7 +835,7 @@ docker compose exec backend pytest census                       # one app (≤ 1
 docker compose exec backend ruff check .
 docker compose exec backend lint-imports                        # the chain contract (slice 6)
 docker compose exec backend python manage.py makemigrations --check --dry-run
-docker compose exec backend python manage.py rebuild_facts      # rewrites stored counts, reports differences (slice 12)
+docker compose exec backend python manage.py rebuild_facts      # rewrites stored counts, reports differences (17, 12)
 docker compose exec frontend npm run lint
 docker compose exec frontend npm run build
 docker compose exec frontend npm test                           # Vitest (slice 6)
@@ -1048,11 +1049,18 @@ Rules:
   (O.3.1, L.6).
 - Values are stored as strings, normalized by the field's type on write (§5).
 - **Status is computed on read:** `missing` (required and blank, with no client answer pending) · `blank` (optional
-  and blank) · `to_check` (an open warning: a person marked it "check", or Claude doubted it and no one has approved
-  or ignored it; `documents.review_rules.open_warning` is the one rule, OQ28) · `ok` (everything else).
+  and blank) · `to_check` (an open warning: a person marked it "check", or Claude read it and doubted it (`low`) or
+  the locator could not find it in its file (`loc` absent or weak), and no one has approved or ignored it;
+  `documents.review_rules.open_warning` is the one rule, OQ28) · `ok` (everything else). Only Claude's values need a
+  person's look (OQ28, answered 2026-11-11): a typed or imported value the file does not print is never `to_check`,
+  though the station lists it under "Not in the file". An open warning never blocks anything: it is a count ("N to
+  review") and a colour.
 - **Stored counts** are one exception (OQ9 c): `census.CensusFacts`, and `flags` (open warnings) on Plan, Intake
   and Questionnaire. The owner rewrites them in the same transaction as the write; `manage.py rebuild_facts` and a test
-  rebuild them and compare (O.3.7, Q.3 #9). The client status is the other (§5.1, OQ2): a hand conversion has no
+  rebuild them and compare (O.3.7, Q.3 #9). `rebuild_facts [--deal ID] [--fix]` lives in the composition root
+  (`backend/`): it checks census's facts (slice 12) and every count an owner registers in `deals.stored_counts` from
+  `AppConfig.ready()` (slice 17: `Plan.flags`, which `Plan.save()` stamps; `Intake.flags`), and exits 1 on a
+  difference it did not fix. The client status is the other (§5.1, OQ2): a hand conversion has no
   sale to compute it from.
 - **Concurrent writes.** Two requests that each read a row's dictionary, set one key and write the whole dictionary back
   would erase each other's key, and a transaction at Postgres's default isolation does not prevent it. A service that
@@ -2209,12 +2217,14 @@ approval (§5.8).
 #### 5.3.2 Importing a census file — `census/importer.py`, `census/pivot.py`, `census/matching.py`
 
 1. **Read the file.** `.csv`: decode UTF-8 (with or without BOM), else Latin-1. `.xlsx`/`.xlsm`: the chosen worksheet
-   (default the first), read-only, cached values (formulas never run). `.xls`: the chosen sheet via xlrd. Every cell
-   becomes text: dates `MM/DD/YYYY`, whole-number floats without `.0`, everything else trimmed text. Anything else →
-   400 `"<name>" is not a spreadsheet or CSV census file.`
+   (default the first; when the first has no header row, the first sheet that has one), read-only, cached values
+   (formulas never run). `.xls`: the chosen sheet via xlrd. Every cell becomes text: dates `MM/DD/YYYY`, whole-number
+   floats without `.0`, everything else trimmed text. Anything else → 400 `This file is not a spreadsheet or CSV census
+   file.` (the words never name the file: a census file's name may carry a person's, §3.8; slice 12).
 2. **Find the header row:** the first of the top 10 rows with at least 3 cells that are non-empty and not made only of
-   `0-9 / . , $ -`. None → 400 `Could not find a header row in "<name>".` Drop trailing blank header cells. Data rows
-   start on the row below by default; fully blank rows are dropped; each kept row remembers its sheet row number.
+   `0-9 / . , $ -`. None → 400 `Could not find a header row in this file.` Drop trailing blank header cells. Data rows
+   start on the row below by default; fully blank rows are dropped; each kept row remembers its sheet row number. A row
+   with nothing in any mapped column is no one (Warner's template numbers its empty rows down column A).
    **The user may override the sheet, the header row and the first data row** in the mapping dialog (a census
    returned on Warner's own template has its header on row 3 and data from row 7, §9.8; rows 4–6 are not people).
 3. **Reshape a one-row-per-benefit file** (`census/pivot.py`; C13). The file's shape is scored: at 0.80 or more it is
@@ -2328,7 +2338,8 @@ once approved (L.6). Intake reads Census OK through `intake.providers.census_sta
 
 #### 5.3.6 Enrollment rollup — `census/rollup.py`
 For each requested line with a composite basis (and always for medical): count employees by their value in the line's
-tier column (§4.1): `EE`, `ES`, `EC`, `FAM`, `waived`, `blank`. Dependents are never counted. Worksite tier-rated
+tier column (§4.1): `EE`, `ES`, `EC`, `FAM`, `waived`, `blank` (and `unknown` for a word that is none of them, so the
+buckets add up to the employees). Dependents are never counted. Worksite tier-rated
 lines have no tier column of their own, so they count `medical_tier`, shown as "Borrowed from medical" (C39, F86). For
 volume lines: the sum of the volume column over employees (§4.1; C42). **Enrolled employees** (`rollup.enrolled`;
 C43): employees whose value in the line's own tier column is a tier code (`Waived` and blank never count); a line with
@@ -2524,9 +2535,11 @@ figures, "EE $2,500 / PP $5,000"). This replaces v1.1's one-plan "5182 / 5183" e
 rides with copies (J14). `codes` identify a plan for re-reads and SBCs, and the finder searches them (F143).
 
 **Plan value status:** `missing` when the field is required (§4.3) and blank; `to_check` while
-`documents.review_rules.open_warning` holds: a value Claude doubted or the locator could not find, until a person
-approves or ignores it, or a value marked ⚑ Needs checking (OQ28 default; E.6). Otherwise per §3.7. A plan's open
-warnings are counted in `Plan.flags`, rewritten in the same transaction (O.3.7).
+`documents.review_rules.open_warning` holds: a value Claude read and doubted, or the locator could not find in its
+file, until a person approves or ignores it, or a value marked ⚑ Needs checking (OQ28, answered; E.6). Otherwise per
+§3.7. A plan's open warnings are counted in `Plan.flags`, rewritten in the same transaction (O.3.7): `Plan.save()`
+stamps it, and the writes that `bulk_update` (moves, marks, the locator's answers) stamp it themselves (slice 17).
+Nothing waits on them: Issue, exports and edits go ahead with values still to review (OQ28).
 
 **Full rules:** Part F (F34, F35, F43–F61, F76–F84, F119–F124, F137–F144), Part J (J1–J15, J52, J56, J159, J161),
 O.3.6, O.6 #4, #9, #15, #26 (as OQ13 settles it), #27, #32 and #33; OQ102 (the "+ Plan" prompt for options or
@@ -3251,7 +3264,7 @@ for that carrier (D119, OQ4; slice 24).
 
 ### 6.5 intake
 
-Not built (slices 11, 39 and 40). B.6 and O.2.
+Built in slices 11 and 39 (slice 40 adds the BOR, the checklist and readiness). B.6 and O.2.
 
 **Intake** — one per deal, created on the first write
 
@@ -3272,7 +3285,9 @@ Not built (slices 11, 39 and 40). B.6 and O.2.
 | `updated_at` | DateTime | |
 
 `answers` holds §4.5's questions and `client_guidance`; a multi answer is a list (B3). `target_effective_date` writes
-`Deal.effective_date` (B1). Nothing is prefilled when the row is created (M.5 B34).
+`Deal.effective_date` (B1) and lives only there: `answers` never holds it, `sources` keeps its entry, and the payload
+reads it from the deal (slice 39). Nothing is prefilled when the row is created (M.5 B34). `flags` counts the open
+warnings (`documents.review_rules.open_warning`) on the shown answers; `rebuild_facts` checks it (`intake/flags.py`).
 
 **CurrentCoverage**
 
@@ -3298,7 +3313,11 @@ coverage subcards and the intent card edit these rows through one service (B14, 
 
 ### 6.6 census
 
-Not built (slices 12 and 51). C.5, L.6 and O.2.
+C.5, L.6 and O.2. Built in slice 12 (all four models; `CensusImport.job` waits for slice 51). The default manager
+hides removed people and people a client added who are still pending (`client['*'].status == 'pending'`, L.6);
+`all_objects` serves matching and history. `CensusFacts` holds `employees`, `dependents`, `errors`, `warnings`,
+`required_total`, `required_filled`, `missing` (blanks by column), `pending_answers`, `pending_people`, `rollup` and
+`last_import_at`; `census.facts.compute` rebuilds it and `manage.py rebuild_facts [--fix]` (backend) compares.
 
 **Member** — one row per person
 
@@ -3382,7 +3401,7 @@ the writes in a `services/` package (F.6, OQ9 b and d).
 | `pair_of` | Plan, null | The other half of a pair printed as one column (D-219, O.6 #4; slice 33) |
 | `derived_from`, `derived` | FK self, null, SET_NULL; JSON | A priced version and how it was made: `{kind: concession, bundle, holiday or duplicate; label, note, ops: [{key, op, value}], credit: {annual} or {months}, requires: [plan ids], conditional, by, at}` (F76–F84; slice 35) |
 | `bundling` | Char: blank, `included` or `unbundled` | F.6; slice 35 |
-| `flags` | stored count | Open warnings, rewritten with each write (O.3.7; slice 17) |
+| `flags` | stored count | Open warnings (`review_rules.open_warning`, OQ28), rewritten with each write: `Plan.save()` stamps it, bulk writes stamp it themselves; `rebuild_facts` checks it (O.3.7; built in slice 17) |
 | `source_document` | FK Document, null, SET_NULL | The file it was read from, if any |
 | `notes` | Text, blank | Internal |
 | `sort_order` | PositiveInt | One sequence per line, read through `order.layout`; stop-loss reorders like every line (F43, F120, OQ13; slice 7) |
@@ -3796,12 +3815,14 @@ Payloads come from `ai/selectors.py`; `useAiState` is the only poller (O.4). Cli
 
 ### 7.6 Intake — `intake/`
 
-Not built (slices 11, 39 and 40).
+Built: slices 11 and 39 (the GET, the answers PATCH, coverage and the intent doors). Slice 40 adds the BOR and the
+checklist. The GET answers `{answers, sources, hidden, needed, status, issues, readiness, notes, coverage, intent}`;
+`answers.target_effective_date` is read from `Deal.effective_date`, its one home (B1).
 
 | Method | Path | Auth | Request | Response |
 |---|---|---|---|---|
 | GET | `deals/{id}/intake/` | user | — | intake payload; a deal with no row reads as empty (M.5 B34) |
-| PATCH | `deals/{id}/intake/` | user | `{"answers": {key: raw value}}` | `200 {answers (changed), sources (changed), hidden, issues, readiness}` · `400 {"answers": {key: "error"}}` — nothing saved if any key fails; unknown key → 400 |
+| PATCH | `deals/{id}/intake/` | user | `{"answers": {key: raw value \| list \| null}, "expect"?: {key: value seen}, "relay"?: bool}` | `200 {answers (changed; null = cleared), sources (changed), hidden, needed, status, issues, readiness {needed, answered, pct}, notes {multi_state, census}, effective_date, activity_id}` · `400 {"answers": {key: "error"}}` — nothing saved if any key fails; unknown key → 400 · `409 {detail, keys}` when an `expect`ed answer changed since. `relay` saves with origin `relay` ("These came from the client"). Built in slice 39 |
 | POST / DELETE | `deals/{id}/intake/sign/` | user | `{name}` | `200 bor` / `204` |
 | GET / POST | `deals/{id}/coverage/` | user | `{line, carrier, funding, effective_date, renewal_date, in_force, rate_guarantee_through, notes, on_proposal, commission, commission_source}` and the renewal letter's facts (B14, J65) | list / `201 coverage row` |
 | PATCH / DELETE | `coverage/{id}/` | user | same | row / `204` · `400 {"carrier": ["Edit carrier and funding on the current plans in the Advisor."]}` when the line has current plans (§6.5) |
@@ -3828,7 +3849,12 @@ here, through `set_intent` (B17); `PATCH deals/{id}/` stops taking it in slice 1
 
 ### 7.7 Census — `census/`
 
-Not built (slices 12 and 41).
+Built in slice 12: the census page (GET, with `derived: {fte, aged_65, as_of, hours_threshold}` and `imports`), the
+imports door, the import GET / PATCH (also `reformat: false`, "Use the original file instead"), apply with
+`?dry_run=1` and discard. The dry run answers `{added, changed, removed, kept, cells_changed, counts, masked_ssns}`,
+people as `{id?, name, kind, columns | why | restored}`; a real apply `{stats, summary, import, activity_id}`. Opening
+an import reads the file's samples, so it writes a `viewed` row. Members, clear, template, export, sources and marks:
+slice 41.
 
 | Method | Path | Auth | Request | Response |
 |---|---|---|---|---|
@@ -3837,7 +3863,7 @@ Not built (slices 12 and 41).
 | PATCH | `census/members/{id}/` | user | `{"values": {key: raw}}` | `200` the changed member and its issues only (C6) |
 | DELETE | `census/members/{id}/` | user | — | `204`: a soft removal, dependents too (C7, O.6 #13) |
 | POST | `deals/{id}/census/clear/` | user | `{confirm: true}` | `204` — soft-removes every member |
-| POST | `deals/{id}/census/imports/` | user | `{document_id}` — a file just uploaded, or a client upload already on the deal | `201 import` (proposed mapping, and the pivot recipe when the file has one row per benefit, C13) · `400 {"detail": "Could not find a header row in …"}` |
+| POST | `deals/{id}/census/imports/` | user | `{document_id}` — a file just uploaded, or a client upload already on the deal | `201 import` (proposed mapping, and the pivot recipe when the file has one row per benefit, C13; a file applied before starts from its last choices) · `400 {"detail": "Could not find a header row in this file."}` |
 | GET / PATCH | `census/imports/{id}/` | user | `{"sheet_name": "Census", "header_row": 3, "first_data_row": 7, "mapping": [{"column": 0, "field": "first_name"}]}` | import, with up to 3 sample values per column read from the file for this response only (§5.3.2). Changing the sheet or header row re-proposes the mapping |
 | POST | `census/imports/{id}/apply/` | user | `?dry_run=1` | dry run `{added, changed, removed, kept, cells_changed}` (C17) · real `{stats, summary}` |
 | POST | `census/imports/{id}/discard/` | user | — | `204` |
@@ -3899,7 +3925,7 @@ the design; a path with no plan id sits under `deals/{id}/`.
 | `plans/board-export/` | GET `?line=&plans=<ids in the order drawn>&columns=<keys>&orientation=rows\|cols`: the board as Excel, equal to the screen; every figure from the comparison payload; current plans ride along; unknown ids and keys dropped; written with XlsxWriter through `xlsx_safe`; printing `sl_lasers` writes a `downloaded` row | F93, J167 | built; 9 |
 | `plans/find/` | GET: the finder's index, every line in one query: `{plans: [{id, line, current, carrier, texts}]}` (texts: name, plan number, carrier, network, plan type, codes; `carrier` is the key `deals.carriers.match` gives). The browser's pure `finder` matches the words and folds the carrier aliases `/api/meta/` serves ("UHC"), so typing never waits on the server and "Also matches N on Dental" needs no second read | F14–F17, OQ14 | built; 10 |
 | `saved-views/`, `saved-views/{id}/` | Saved board and stop-loss setups, Mine and Shared. GET `?view=&line=`: mine and the shared ones offered on that line; POST `{name, description, view, line, shared, config}` → 201; GET/PATCH/DELETE `{id}`: others' private views answer 404, Update and Delete are for the owner or an admin (403 with the sentence). The config goes through `board.clean_config` (an unknown key or value is a 400 naming it) | F28, F29 | built (quotes view); 10, 36 |
-| `plans/sources/`, `plans/marks/` | The station's values and marks (F.6's `plans/review/`) | E.6, F63–F67 | 17 |
+| `plans/sources/`, `plans/marks/` | The station's values and marks (F.6's `plans/review/`). GET `sources/?documents=1,2&bucket=&page=` (no `documents`: every value with a file) → `{rows: [{ref, plan_id, key, label, sub, value, bucket, where, doc, origin, low, loc, mark, confirmed (each with by_name), open, potential, dealt, hint, what}], page, pages, total, page_size: 200, counts: {bucket: {open, done}}, all: {open, done}, warnings: {open, check, unflagged}, quality: {high, low, missing}, headline: {label, tone}}`, worst first (`review_rules.review_bucket`), dealt values last in their bucket, then board order. POST `marks/` `{action: approve\|ignore\|check\|clear, refs: ["plan:41:rate_ee"] \| plan_ids \| document_ids}`: refs name exactly those values; plans and files take only their open warnings (for clear, their marks); nothing named takes the whole deal; → `{action, changed, activity_id, truncated, values: [{ref, plan_id, key, cell: {s?, m?}, mark, confirmed, open, potential, dealt, bucket}], plans: [{id, flags, incomplete}]}` (no `values` past 2,000: refetch). One Activity row (`marked`, never merged) with each value's marks before and after under `mark.<key>`, never the value; Revert (Undo) restores the values still as it left them and is refused, naming them, when none is | E.6, F63–F67 | built; 17 |
 | `plans/{id}/source/?key=` | One value's full source, for ↗: `{plan_id, key, label, value, hint, what, source: {origin, doc, page, cell, line, loc, low, mark, confirmed}}`; read only | F.6, E18 | built; 15 |
 | `plans/as-quoted/?document=&line=` | "As quoted", from `QuoteLayout` | F42, E42 | 21 |
 | `plans/{id}/sbc/` | Attach SBC: a staged read of design values | D47 | 22 |
@@ -4932,7 +4958,10 @@ AI door hides and the manual flow is unchanged (D26). Slices 16–24 build it; 3
   plan; then it waits. Everyone else's reads wait as a staged change set. Intake, census and questionnaire reads always
   wait in their owner's review, and SBC reads always wait (OQ33).
 - **A person applies every re-check**, and Claude never confirms its own value (D-119; OQ28). A value needs review when
-  Claude doubted it or the locator could not find it: `review_rules.open_warning`, the old meaning (OQ28).
+  Claude doubted it or the locator could not find it: `review_rules.open_warning`, the old meaning (OQ28, answered
+  2026-11-11: "only the values claude doubted need approval, but even unapproved values shouldn't stop the user from
+  continuing. just give a little flag saying X number of things should be reviewed"). Nothing waits on a review: the
+  Advisor's flags chip, its review strip and the station's strip say "N AI values to review", and that is all.
 - **The person loading a document says what it is** (document role: current plans, renewal, alternates). The reader
   uses that role; it never decides by itself that a plan is current.
 - **Every value keeps its place.** A landed value gets `origin: ai` with its document, page or cell, the printed line,
@@ -5048,6 +5077,9 @@ finding, when allowed → landing (§10.5).
   something changed since, it says so and offers **Undo anyway**. A plan the run created stays when someone starred,
   recommended, sold, packaged, linked or typed into it. A census import is undone through its `CensusImport`.
 - **Try again** with the next model, and **Check again** (D76).
+- **Review never gates** (OQ28): a landed value Claude doubted, or one the locator cannot find, is counted and
+  coloured until a person approves or ignores it; Issue, the exports, the Advisor's edits and every other door go ahead
+  with values still to review.
 
 ### 10.6 Work with Claude: chats and tools
 
@@ -5092,6 +5124,16 @@ Part E (E.6); the screens are §8.16.
   for the value a ↗ opened.
 - **"As in the file"** shows a scanned quote's columns and printed rows from `QuoteLayout` (E42, F42; O.3.5).
 - This replaces v1.1's "Values from this document" panel and its `confirmed_by/at`.
+- **Built in slice 17:** `documents/review_rules.py` (`apply_mark`, `is_approved`, `is_dealt`, `open_warning`,
+  `potential_error`, `shows_approval`, `review_bucket`, `origin_bucket`, `quality_headline`, `warning_counts`; the
+  eight buckets served on `/api/meta/` as `review_buckets`); `Plan.flags` stamped on every write and checked by
+  `manage.py rebuild_facts` (registered in `deals.stored_counts`); quotes' `plans/sources/` and `plans/marks/`
+  (§7.8). The station's Scanned data panel shows the List (the Grid is slice 23's) with the quality headline, the file
+  strip, the bucket chips, the bulk bar (which takes "Check this file"), the A, I, C, U and F keys, ↶ Undo and the
+  Change history card over Activity; the Advisor shows the flags chip with its menu and the review strip. Which values need review follows OQ28: a typed or imported
+  value the locator cannot find is no open warning (the old app located only what was read; only Claude's values need
+  approval), but it is a potential error and the List puts it under "Not in the file". This also supersedes E.4's
+  "'Not in the file' stays out of those counts": for Claude's values it is counted, as §10.1 says.
 
 ### 10.8 Member data, PHI and the BAA
 
@@ -5865,8 +5907,8 @@ An app imports only from apps to its left (lint-imports); a fact read by an app 
 To reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
 AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client,
 never business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far: accounts,
-deals, documents, ai, intake, quotes, proposals, golden. The chain orders imports, not screens: the deal sidebar keeps
-old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review & requests, Intake, Census,
+deals, documents, ai, intake, census, quotes, proposals, golden. The chain orders imports, not screens: the deal sidebar
+keeps old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review & requests, Intake, Census,
 Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close: Advisor, Proposal · Shared: Documents.
 Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry the Advisor and Proposal.
 Tab folders take the app's name except advisor/ (quotes) and proposal/ (proposals); from slice 4 a tab folder's
@@ -6056,7 +6098,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | OQ26 | Do the wrap, POP and sold-paperwork file types wait for close-out and implementation? | Open. Default: yes | Open | 15 |
 | OQ27 | Are invoices PHI, given that list bills name members? | Open. Default: no | Open | 15 |
 | **Slice 17: DOC-3** | | | | |
-| OQ28 | What needs approval: values Claude doubted or the locator missed (the old app), or every value Claude read? Does Claude never confirm its own value (D-119)? | Open. Default: the old meaning; a person always applies | Open | 17 |
+| OQ28 | What needs approval: values Claude doubted or the locator missed (the old app), or every value Claude read? Does Claude never confirm its own value (D-119)? | "only the values claude doubted need approval, but even unapproved values shouldn't stop the user from continuing. just give a little flag saying X number of things should be reviewed" (2026-11-11). Applied: the old meaning, one rule (`review_rules.open_warning`): a value Claude read and doubted, or that the locator could not find in its file, until a person approves or ignores it, plus anything a person flagged ⚑; a typed value the file does not print is not one (§3.7, §10.7). Nothing is blocked by unreviewed values; the Advisor and the station show "N AI values to review". A person always applies; Claude never confirms its own value (D-119) | Answered | 17 |
 | **Slice 18: AI-1** | | | | |
 | OQ29 | The BAA and the key: only the Foobalabs key, and real files only after Anthropic confirms coverage in writing? | Open. Default: synthetic files until then. The question's part about statements does not apply while OQ6 is No | Open | 18; 47 |
 | OQ30 | With no census, should Claude propose a quote's printed tier counts, unticked: as the line's figure, or per current plan when printed per plan? | Open. Default: yes | Open | 18 |
