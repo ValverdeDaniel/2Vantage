@@ -53,8 +53,8 @@ export default function PlanHeaderCell({ plan, byId, actions, isFirst, isLast })
       },
     {
       key: 'copy',
-      label: 'Copy as alternate',
-      onSelect: () => run(actions.copy.mutateAsync(plan.id), 'Copied as an alternate'),
+      label: 'Duplicate',
+      onSelect: () => run(actions.copy.mutateAsync(plan.id), 'Duplicated, with its rates'),
     },
     { key: 'links', label: 'Change role & links…', onSelect: () => actions.editLinks(plan) },
     { key: 'delete', label: 'Delete…', danger: true, onSelect: () => setConfirmDelete(true) },
@@ -118,18 +118,20 @@ export default function PlanHeaderCell({ plan, byId, actions, isFirst, isLast })
         >
           {plan.starred ? '★' : '☆'}
         </button>
-        {plan.role !== 'current' && (
-          <label className="bnf-filter-check">
-            <input
-              type="checkbox"
-              checked={plan.recommended}
-              onChange={(event) =>
-                run(actions.recommend.mutateAsync({ planId: plan.id, recommended: event.target.checked }))
-              }
-            />
-            Rec.
-          </label>
-        )}
+        {/* Any plan may be recommended (OQ37); on a current plan it reads as the old app's "Keep this plan". */}
+        <label
+          className="bnf-filter-check"
+          title={plan.role === 'current' ? 'Recommend keeping this plan' : 'Recommend this plan'}
+        >
+          <input
+            type="checkbox"
+            checked={plan.recommended}
+            onChange={(event) =>
+              run(actions.recommend.mutateAsync({ planId: plan.id, recommended: event.target.checked }))
+            }
+          />
+          {plan.role === 'current' ? 'Keep this plan' : 'Rec.'}
+        </label>
         <label className="bnf-filter-check">
           <input
             type="checkbox"
@@ -149,15 +151,16 @@ export default function PlanHeaderCell({ plan, byId, actions, isFirst, isLast })
         title={`Delete ${plan.carrier} ${plan.name}?`}
         message={
           plan.role === 'current'
-            ? 'Its renewal becomes an alternate, and alternates stop replacing it.'
-            : 'This removes the plan and its values from the deal.'
+            ? 'Its renewal becomes an alternate, and alternates stop replacing it. ' +
+              'Revert in the Activity log brings it all back.'
+            : 'The plan leaves the board. Revert in the Activity log brings it back.'
         }
         confirmLabel="Delete"
         tone="danger"
         busy={actions.remove.isPending}
         onCancel={() => setConfirmDelete(false)}
         onConfirm={() =>
-          run(actions.remove.mutateAsync(plan.id), 'Plan deleted').finally(() => setConfirmDelete(false))
+          run(actions.remove.mutateAsync(plan.id), 'Plan removed').finally(() => setConfirmDelete(false))
         }
       />
     </th>

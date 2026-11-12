@@ -1,6 +1,7 @@
 """The Q.3 contracts for quotes (plan.md §12.3): GETs that write nothing, the permission matrix, and the write path of
 every multi-plan door (one Activity row with before and after; the same call again changes nothing; Revert once, then
-refused after a later write). The write path of plan values, details and enrollment is in test_revert.py.
+refused after a later write). The write path of plan values, details and enrollment is in test_revert.py; removal,
+moves and merges in test_removal.py, test_moves.py and test_merge.py.
 """
 
 import pytest
@@ -43,6 +44,9 @@ def samples(world):
         'api/deals/<int:pk>/plans/links/': deal,
         'api/deals/<int:pk>/plans/order/': deal,
         'api/deals/<int:pk>/plans/slot/': deal,
+        'api/deals/<int:pk>/plans/move-line/': deal,
+        'api/deals/<int:pk>/plans/delete/': deal,
+        'api/deals/<int:pk>/plans/clear/': deal,
         'api/deals/<int:pk>/plans/enrollment/': deal,
         'api/deals/<int:pk>/plans/packages/': {**deal, **line},
         'api/deals/<int:pk>/plans/template/': deal,
@@ -78,6 +82,9 @@ def matrix(world):
         ('POST', 'api/deals/<int:pk>/plans/links/', ok(), {'plan_id': alternate.id, 'replaces_ids': []}),
         ('POST', 'api/deals/<int:pk>/plans/order/', ok(), {**medical, 'move': {'plan_id': second.id, 'step': -1}}),
         ('POST', 'api/deals/<int:pk>/plans/slot/', ok(), {**medical, 'plan_id': second.id, 'at': alternate.id}),
+        ('POST', 'api/deals/<int:pk>/plans/move-line/', ok(), {'plan_ids': [second.id], 'line': 'dental'}),
+        ('POST', 'api/deals/<int:pk>/plans/delete/', ok(), {'plan_ids': [second.id]}),
+        ('POST', 'api/deals/<int:pk>/plans/clear/', ok(), medical),
         (
             'POST',
             'api/deals/<int:pk>/plans/enrollment/',
@@ -89,9 +96,8 @@ def matrix(world):
         ('GET', 'api/deals/<int:pk>/plans/template/', ok()),
         ('POST', 'api/deals/<int:pk>/plans/import/', ok(400)),  # no file: refused after the permission check
         ('PATCH', 'api/plans/<int:plan_id>/', ok(), {'values': {'rate_ee': '500'}}),
-        ('DELETE', 'api/plans/<int:plan_id>/', ok(204)),
         ('POST', 'api/plans/<int:plan_id>/renewal/', ok(201)),
-        ('POST', 'api/plans/<int:plan_id>/copy/', ok(201)),
+        ('POST', 'api/plans/<int:plan_id>/copy/', ok(201), {'name': 'HMO 1500 negotiated'}),
         ('POST', 'api/plans/<int:plan_id>/sold/', ok(), {'sold': True}),
         ('POST', 'api/plans/<int:plan_id>/recommend/', ok(), {'recommended': True}),
         ('PATCH', 'api/packages/<int:package_id>/', ok(), {'name': 'Keep all'}),

@@ -1,9 +1,10 @@
 """`deal_state`: every line of a deal worked out in one grouped read (plan.md §5.4, §5.5; J.4, F.5 #37, Q.7).
 
-A fixed number of queries whatever the plan count: the deal's live plans, their `replaces` links (from the link table,
-never a prefetch of whole plans), and the member-built packages with their plans. Each line becomes a `LineState`:
-its plans in `order.layout`'s order, the pure `LineData`, each plan's priced result, the packages of §5.5 and the
-recommendation. The comparison, the line counts, the proposal and (later) the client files all read it.
+A fixed number of queries whatever the plan count: the deal's live plans (removed plans never count, F60), their
+`replaces` links (from the link table, never a prefetch of whole plans), and the member-built packages with their live
+plans. Each line becomes a `LineState`: its plans in `order.layout`'s order, the pure `LineData`, each plan's priced
+result, the packages of §5.5 and the recommendation. The comparison, the line counts, the proposal and (later) the
+client files all read it.
 """
 
 from collections import namedtuple
@@ -60,12 +61,13 @@ def line_data(line, plans):
 
 
 def member_packages(deal, line_keys=None):
-    """{line: [(package id, name, [plan ids])]} in the packages' order, in two queries."""
+    """{line: [(package id, name, [live plan ids])]} in the packages' order, in two queries. A removed plan keeps its
+    membership, hidden, so Restore brings it back into its packages (F60)."""
     packages = Package.objects.filter(deal=deal)
     if line_keys:
         packages = packages.filter(line__in=line_keys)
     rows = list(packages.values_list('id', 'line', 'name'))
-    links = Package.plans.through.objects.filter(package__deal=deal)
+    links = Package.plans.through.objects.filter(package__deal=deal, plan__removed_at__isnull=True)
     if line_keys:
         links = links.filter(package__line__in=line_keys)
     plan_ids = {}

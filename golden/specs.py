@@ -13,7 +13,7 @@ A spec (`specs/gdN.json`) is the one description of a golden deal. `seed.py` bui
         ref         the plan's name in the keys and in other plans' links ("A", "CG1N")
         line, role, carrier, name
         links       refs of current plans: a renewal's one current plan, or the plans an alternate replaces
-        copy_of     optional: made as "Copy as alternate" of that ref, then given `name` and `values`
+        copy_of     optional: a Duplicate of that ref (`copy_plan`, rates kept), named `name`, then given `values`
         values      {field key: raw text}, as a person types them (quotes/fields.py)
         enrollment  optional: typed counts by tier, e.g. {"EE": 10, "ES": 3, "EC": 2, "FAM": 5}, switched on
     starred, recommended    refs

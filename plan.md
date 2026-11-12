@@ -2393,9 +2393,11 @@ value over a read one keeps its link to the file and the read value (F141, §3.7
   except the rate and contribution groups (§4.3 `rates`, `contrib`, and `lf`), with their sources copied. `funding`
   is in the info group, so it is copied.
 - **Copy** (`copy_plan`; F81, D-049): a standalone peer with every value, rates included, and its sources, without
-  marks, confirmations or a read value; the user names it. It is an `alternate` replacing what the original replaces
-  (a current plan's copy replaces that plan; a renewal's copy replaces its current plan). A star, a recommendation and
-  a sale never ride. It replaces v1.1's rate-less "Copy as alternate" (F77).
+  marks, confirmations or a read value; the user names it (unnamed: "<name> — copy", as in the old app). It is an
+  `alternate` replacing what the original replaces (a current plan's copy replaces that plan; a renewal's copy replaces
+  its current plan), arrives right behind its original (the old app's "side by side"), and records
+  `derived_from` with `derived.kind` "duplicate". A star, a recommendation and a sale never ride. It replaces v1.1's
+  rate-less "Copy as alternate" (F77).
 - **Priced versions** (`plans/priced/`; F76–F84; kept by OQ7): a concession (% or $ off or up, or set to, on all rates
   or per rate), a bundle (per line, naming the quote that must sell) or a premium holiday (a $ credit a year, or free
   months) is a copy of a quote with its rates, then the operations, with `derived_from` and a `derived` record. This
@@ -2403,16 +2405,22 @@ value over a read one keeps its link to the file and the read value (F141, §3.7
   original on every screen (F120), prices its original's people (§5.5; F87), takes no option number, and never becomes
   current. Its dry run equals the commit (F76). Bundle templates wait (F79).
 - **Move to another line** (`move_line`; F59): the plan keeps its id; values outside the new line's fields are dropped
-  (kept in Activity); its star, links, enrollment and packages clear; a current plan joins the end of the target's
-  current plans; option numbers renumber (J159). Refused, in words, for sold plans, priced versions and copies,
-  originals that have them, and plans a bundle requires.
+  (kept in Activity); its star, recommendation, links, enrollment and packages clear (a renewal arrives as an
+  alternate); the plans it leaves lose their link to it, as when a plan stops being current; a current plan joins the
+  end of the target's current plans; option numbers renumber (J159). Refused, in words, for sold plans, priced
+  versions and copies, originals that have them, and plans a bundle requires. Revert puts it all back.
 - **Delete** (F60): soft (`Plan.removed_at`), with Restore. Deleting a current plan turns its renewal into an
   alternate and removes it from every `replaces` list; these are real writes in the same Activity row, and Revert
-  undoes them together. Restore refuses, in words, when a rule now blocks it. A sold plan cannot be deleted: "Unmark
-  sold first" (H.6). **Clear line** soft-deletes every plan on the line except current and sold ones (F61).
+  undoes them together. Restore is that Revert (the old app restored a version); it refuses, in words, when a rule now
+  blocks it. A removed plan keeps its package memberships, hidden, so Restore brings them back. A sold plan cannot be
+  deleted: in a batch it stays and is named, "… is sold, so it stays. Unmark sold first." (H.6; the old app's
+  `kept_reason`), and a call that names only sold plans is refused with that sentence. **Clear line** soft-deletes
+  every plan on the line except current and sold ones (F61).
 - **Merge** (F142; O.6 #32): one quotes service joins two columns that are one plan (a rate page's row and an SBC's
-  column); Claude's `merge_plans` tool and the reader's combine call it. Pairing is not merging: a pair's halves stay
-  two plans.
+  column); Claude's `merge_plans` tool and the reader's combine call it. As in the old app, the kept plan takes each
+  value it lacks with its source (a named key takes the merged value even where it has one), and the merged plans'
+  codes and file; the merged plans are then removed, in one revertible Activity row. A sold plan on either side, or a
+  plan of another line, is refused in words. Pairing is not merging: a pair's halves stay two plans.
 
 **Stars and the presented set** (F50–F55, F119, J1–J3; OQ11 default).
 - ★ means **on the proposal** (D-210). `quotes/presented.py: presented(line)` is the one membership rule: the line's
@@ -3094,7 +3102,7 @@ Earlier years' notes wait with renewals (A37, M78).
 | `actor_kind` | Char: `user`, `client`, `claude` or `system` | |
 | `actor_label` | Char(200), blank | e.g. "Client via link to J. Smith" |
 | `area` | Char(20) | The writing app: v1.1's `deal`, `intake`, `census`, `documents`, `quotes`, `commission`, `proposal`, `rfp`, `review`, plus `client` (the status, §5.1), `questionnaire` and each new app that writes. Revert calls the area's reverter |
-| `action` | Char(20) | v1.1's `created`, `updated`, `deleted`, `imported`, `approved`, `rejected`, `sent`, `sold`, `lost`, `reopened`, `issued`, `downloaded`; plus `viewed` (E99), `archived`, `restored`, `opened`, `returned`, `signed`, `read`, `staged`, `failed`, `logged`, `marketed` (M.6) and the status moves `converted`, `prospect`, `status` (§5.1) |
+| `action` | Char(20) | v1.1's `created`, `updated`, `deleted`, `imported`, `approved`, `rejected`, `sent`, `sold`, `lost`, `reopened`, `issued`, `downloaded`; plus `viewed` (E99), `archived`, `restored`, `opened`, `returned`, `signed`, `read`, `staged`, `failed`, `logged`, `marketed` (M.6), the status moves `converted`, `prospect`, `status` (§5.1), and quotes' `removed`, `moved` and `merged` (F59, F60, F142; revertible, unlike `deleted`) |
 | `summary` | Char(300) | No PHI (§3.8) |
 | `changes` | JSON list | Before and after per key: `[{"t": "plan:41", "k": {"rate_ee": ["612.50", "640.00"]}}]`. Census rows, sensitive questionnaire slots and lasers keep keys only; commission values are hidden below the all tier. List reads defer it |
 | `document_id` | Integer, null | The file a `downloaded` or `viewed` row is about, never its name (E99). A plain integer, because documents sits to the right |
@@ -3355,7 +3363,7 @@ Gone: `enrollment_on`, replaced by `LineEnrollment.on` (O.6 #10; slice 13), and 
 | `deal` | FK Deal, CASCADE, `related_name='packages'` | |
 | `line` | Char(20) | §4.1 |
 | `name` | Char(100) | Unique per `(deal, line)` |
-| `plans` | ManyToMany Plan, `related_name='packages'` | Plans of the same deal and line; deleting a plan removes it from its packages |
+| `plans` | ManyToMany Plan, `related_name='packages'` | Plans of the same deal and line; a removed plan's membership is hidden and comes back with Restore; a move to another line takes it out |
 | `sort_order` | PositiveInt | |
 | `created_by` | FK User, null, SET_NULL | |
 | `created_at`, `updated_at` | DateTime | |
@@ -3828,7 +3836,7 @@ the design; a path with no plan id sits under `deals/{id}/`.
 | `plans/` | GET `?line=`: the comparison (below) · POST: create a plan | F.6 | built |
 | `plans/{id}/` | PATCH only `carrier`, `name`, `plan_number`, `client_name`, `notes` and `values`, with `expect`; role, links and stars have their own doors | F71, J14 | built; 7 |
 | `plans/{id}/renewal/` | POST: Create renewal | §5.4 | built |
-| `plans/{id}/copy/` | POST: `copy_plan`, keeping the rates | F81 | built; 8 |
+| `plans/{id}/copy/` | POST `{name?}`: `copy_plan`, keeping the rates → the copy (201) | F81 | built; 8 |
 | `plans/{id}/recommend/` | POST `{recommended}`, within `room()` | §5.4, OQ37 | built; 7 |
 | `plans/{id}/sold/` | POST `{sold}` → `{plan, deal}`; refused on a lost deal; runs `sale_changed` (§5.1) | F123, H124 | built; 6, 7 |
 | `plans/star/` | POST: stars, with the 16-column cap, the reason, the auto-link and the lock | F50, F51 | built; 7 |
@@ -3839,7 +3847,7 @@ the design; a path with no plan id sits under `deals/{id}/`.
 | `plans/role/`, `plans/links/` | Role and links; a plan made current loses its star and links (its recommendation means "Keep this plan", OQ37) | F52, F53 | 7 |
 | `plans/slot/` | `put_in_slot`, for Pages' picks | F48, J5–J13 | 7, 14 |
 | `plans/shortlist/clear/` | Clear the stars on one line | F55 | 7 |
-| `plans/move-line/`, `plans/delete/`, `plans/clear/` | Move to another line keeping the id; soft delete with restore; clear a line | F59–F61 | 8 |
+| `plans/move-line/`, `plans/delete/`, `plans/clear/` | Move to another line keeping the id, `{plan_ids, line}` → `{line, plans, activity_id}`; soft delete, `{plan_ids}`, and clear a line, `{line}`, each → `{removed, kept, note, plans, activity_id}` (Restore is Revert of `activity_id`). `plans/{id}/` takes no DELETE | F59–F61 | built; 8 |
 | `plans/board-export/` | The board as Excel, equal to the screen | F93, J167 | 9 |
 | `plans/find/` | The finder: names, numbers, carriers, codes and aliases | F14–F17, OQ14 | 10 |
 | `saved-views/`, `saved-views/{id}/` | Saved board and stop-loss setups, Mine and Shared; others' private views answer 404 | F28, F29 | 10, 36 |

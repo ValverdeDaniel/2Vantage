@@ -60,7 +60,7 @@ def _words(plan):
     return f'{plan.carrier} {plan.name}'
 
 
-def _no_longer_current(rows, plan):
+def no_longer_current(rows, plan):
     """Its renewal becomes an alternate and it leaves every `replaces` list (§5.4)."""
     for other in rows.values():
         if other.role == 'renewal' and other.renews_id == plan.id:
@@ -120,7 +120,7 @@ def set_role(user, deal, plan_ids, role, renews_id=None, replaces_ids=()):
         if role == 'current':
             _turn_current(rows, plan)
         if plan.role == 'current':
-            _no_longer_current(rows, plan)
+            no_longer_current(rows, plan)
         plan.role, plan.renews_id, plan.replaces_ids = role, renews, replaces
         if role == 'renewal':
             renewals.append(plan)

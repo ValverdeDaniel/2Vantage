@@ -1,9 +1,12 @@
-"""GD1 on the Advisor's slice-7 rules, read-only (plan.md §13.6 row 7's "done when"; Q.9 row 7). The deal comes from
-the root conftest's `gd1` fixture; tests that write use factory deals (test_marks, test_roles, test_ordering)."""
+"""GD1 on the Advisor's rules (plan.md §13.6 rows 7 and 8, "done when"; Q.9 rows 7 and 8). The deal comes from the
+root conftest's `gd1` fixture, built once for the module. Slice 7's tests only read it; slice 8's write through the
+services, and their writes roll back with each test's transaction, so GD1 stays as built."""
 
 import pytest
 
-from quotes import order, presented
+from deals import activity
+from quotes import order, presented, services
+from quotes.models import Plan
 from quotes.selectors import line_state
 
 pytestmark = pytest.mark.django_db
@@ -40,3 +43,57 @@ def test_F120_GD1_a_rate_edit_would_move_nothing(gd1):
     for plan in data.plans:
         plan.values = {**plan.values, 'rate_ee': str(10_000 - plan.id)}
     assert [p.id for p in order.layout(data)] == before
+
+
+RATES = ('rate_ee', 'rate_es', 'rate_ec', 'rate_fam')
+
+
+def figures(deal, line='medical'):
+    results = line_state(deal, line).results
+    return {pid: (r['monthly'], r['annual'], r['change']) for pid, r in results.items()}
+
+
+def test_F60_GD1_deleting_a_current_plan_turns_its_renewal_into_an_alternate_and_revert_restores_both(gd1, user):
+    refs, deal = gd1.refs, gd1.deal
+    before = figures(deal)
+    replacing_a = set(Plan.objects.filter(replaces=refs['A']).values_list('id', flat=True))
+    removal = services.delete_plans(user, deal, [refs['A']])
+    renewal = Plan.objects.get(pk=refs['A2'])
+    assert (renewal.role, renewal.renews_id) == ('alternate', None)
+    assert not Plan.objects.filter(replaces=refs['A']).exists()
+    assert refs['A'] not in figures(deal)
+    activity.revert(removal.row.id, user)
+    renewal = Plan.objects.get(pk=refs['A2'])
+    assert (renewal.role, renewal.renews_id) == ('renewal', refs['A'])
+    assert set(Plan.objects.filter(replaces=refs['A']).values_list('id', flat=True)) == replacing_a
+    assert figures(deal) == before  # every figure on the key is back
+
+
+def test_F59_GD1_a_plan_moved_to_dental_keeps_its_id(gd1, user):
+    refs, deal = gd1.refs, gd1.deal
+    changed, _row = services.move_line(user, deal, [refs['U3']], 'dental')
+    moved = Plan.objects.get(pk=refs['U3'])
+    assert moved.line == 'dental' and refs['U3'] in [plan.id for plan in changed]
+    assert refs['U3'] in [plan.id for plan in line_state(deal, 'dental').plans]
+    with pytest.raises(activity.Refused) as refused:
+        services.move_line(user, deal, [refs['CG1']], 'dental')  # CG1N, the negotiated option, is its copy
+    assert refused.value.sentence.endswith(
+        'has priced versions or copies, priced on its Medical rates. Remove them before moving it.'
+    )
+
+
+def test_F81_GD1_a_copy_keeps_its_rates(gd1, user):
+    original = Plan.objects.get(pk=gd1.refs['CG2'])
+    made = services.copy_plan(user, original.id)
+    assert {key: made.values.get(key) for key in RATES} == {key: original.values.get(key) for key in RATES}
+    assert all(made.values.get(key) for key in RATES)
+    assert figures(gd1.deal)[made.id][:2] == figures(gd1.deal)[original.id][:2]  # the same rates, the same people
+
+
+def test_F60_H6_GD1_a_sold_plan_cannot_be_deleted(gd1, user):
+    plan_id = gd1.refs['U1']
+    services.set_sold(user, plan_id, True)
+    with pytest.raises(activity.Refused) as refused:
+        services.delete_plans(user, gd1.deal, [plan_id])
+    assert refused.value.sentence.endswith('is sold, so it stays. Unmark sold first.')
+    assert Plan.objects.filter(pk=plan_id).exists()

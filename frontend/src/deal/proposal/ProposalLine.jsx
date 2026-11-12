@@ -151,7 +151,8 @@ export default function ProposalLine({ line, reasons, save, recommend }) {
             {options.map((plan) => (
               <RecOption key={plan.id} plan={plan} onChange={setRecommended} />
             ))}
-            {current && !options.some((plan) => plan.recommended) && (
+            {/* The server's coverage (§5.4): a recommended current plan ("Keep this plan", OQ37) answers for itself. */}
+            {current && line.recommendation.missing.includes(current.name) && (
               <div className="bnf-pp-rec-status is-open">⚠ Nothing recommended for {current.name}</div>
             )}
           </div>

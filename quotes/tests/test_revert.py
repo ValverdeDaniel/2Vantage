@@ -124,12 +124,12 @@ def test_A34_a_sold_plan_refuses_revert_with_a_sentence(api, plan):
     assert fresh(plan).values['rate_ee'] == '640'
 
 
-def test_A34_adding_and_removing_plans_are_not_reverted_here(api, user, deal, plan):
+def test_A34_adding_a_plan_is_not_reverted_nor_an_edit_to_a_removed_plan(api, user, deal, plan):
     added = Activity.objects.filter(deal=deal, action='created', area='quotes').latest('id')
     assert revert(api, added.id).json()['detail'] == activity.NOTHING_TO_PUT_BACK
     alternate = services.create_plan(user, deal, line='medical', role='alternate', carrier='Cigna', name='Open Access')
     edited, _ = services.update_plan(user, alternate.id, {'values': {'rate_ee': '500'}})
-    services.delete_plan(user, alternate.id)
+    services.delete_plans(user, deal, [alternate.id])
     assert 'has been removed' in revert(api, edited.activity_id).json()['detail']
 
 

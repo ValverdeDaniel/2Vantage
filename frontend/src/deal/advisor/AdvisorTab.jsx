@@ -69,14 +69,10 @@ export default function AdvisorTab({ deal }) {
   const actions = {
     ...mutations,
     editLinks: (plan) => setPlanDialog({ plan }),
+    // One step within the plan's group (F43); a step out of it answers 409 with the reason, shown as a toast.
     move: (plan, direction) => {
-      const peers = comparison.data.plans.filter((p) => p.role === plan.role).map((p) => p.id);
-      const index = peers.indexOf(plan.id);
-      const target = index + direction;
-      if (target < 0 || target >= peers.length) return;
-      [peers[index], peers[target]] = [peers[target], peers[index]];
       mutations.order
-        .mutateAsync({ line, role: plan.role, plan_ids: peers })
+        .mutateAsync({ line, move: { plan_id: plan.id, step: direction } })
         .catch((error) => toast.error(errorText(error)));
     },
   };

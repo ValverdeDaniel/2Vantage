@@ -7,7 +7,7 @@ an unlinked alternate on a one-plan line under that plan), the groups in slot or
 last. Inside a group the hand order (`sort_order`) holds, each priced version right behind its original; copies are
 peers. Values never sort it, so a rate edit moves nothing. Stop-loss is ordered like every line (OQ13).
 
-The moves (`move`, `swap`, `last`, `lead`, `reset`) return the line's new hand order, every plan id once;
+The moves (`move`, `swap`, `last`, `lead`, `behind`, `reset`) return the line's new hand order, every plan id once;
 `numbering` turns it into the `sort_order` values that change, and `layout` reads it back (a quote whose links change
 in the same write, as in a slot pick, lands in its new group at its new place). A move a line refuses raises
 `Refused` with the sentence.
@@ -125,6 +125,18 @@ def last(line, plan_id):
     beside a current plan, F46)."""
     units = _units(line)
     units.append(units.pop(_unit_at(line, units, plan_id)))
+    return _flat(line.current, line, units)
+
+
+def behind(line, plan_id, original_id):
+    """Where a copy arrives (F81; the old app's "side by side", D-049): right behind its original's quote, in the
+    group they share; last in its group when the original is a current plan, or not on the line."""
+    units = _units(line)
+    unit = units.pop(_unit_at(line, units, plan_id))
+    original = line.by_id.get(original_id)
+    root = line.root(original) if original else None
+    at = next((i for i, other in enumerate(units) if root and other.ids[0] == root.id), None)
+    units.insert(len(units) if at is None else at + 1, unit)
     return _flat(line.current, line, units)
 
 

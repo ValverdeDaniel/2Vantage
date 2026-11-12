@@ -42,9 +42,9 @@ def remove(spec, user):
 
 
 def _plan(user, deal, plan, refs):
-    if plan.get('copy_of'):  # the negotiated option is made the way a member would: Copy as alternate, then rates
-        copy = plans.copy_as_alternate(user, refs[plan['copy_of']])
-        plans.update_plan(user, copy.id, {'name': plan['name'], 'values': plan['values']})
+    if plan.get('copy_of'):  # the negotiated option is made the way a member would: Duplicate and name it, then rates
+        copy = plans.copy_plan(user, refs[plan['copy_of']], plan['name'])
+        plans.update_plan(user, copy.id, {'values': plan['values']})
         return copy.id
     links = [refs[ref] for ref in plan['links']]
     created = plans.create_plan(

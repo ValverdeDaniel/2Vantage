@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import arrange_views, mark_views, template_views, views
+from . import arrange_views, mark_views, move_views, template_views, views
 
 urlpatterns = [
     path('deals/<int:pk>/plans/lines/', views.LinesView.as_view()),
@@ -11,6 +11,9 @@ urlpatterns = [
     path('deals/<int:pk>/plans/links/', arrange_views.LinksView.as_view()),
     path('deals/<int:pk>/plans/order/', arrange_views.OrderView.as_view()),
     path('deals/<int:pk>/plans/slot/', arrange_views.SlotView.as_view()),
+    path('deals/<int:pk>/plans/move-line/', move_views.MoveLineView.as_view()),
+    path('deals/<int:pk>/plans/delete/', move_views.DeleteView.as_view()),
+    path('deals/<int:pk>/plans/clear/', move_views.ClearView.as_view()),
     path('deals/<int:pk>/plans/enrollment/', views.EnrollmentView.as_view()),
     path('deals/<int:pk>/plans/packages/', views.PackagesView.as_view()),
     path('deals/<int:pk>/plans/template/', template_views.TemplateDownloadView.as_view()),

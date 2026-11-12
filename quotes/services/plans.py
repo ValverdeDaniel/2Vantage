@@ -1,11 +1,11 @@
-"""Creating, editing and removing plans (plan.md §5.4, §7.8; F71, F141).
+"""Creating and editing plans (plan.md §5.4, §7.8; F71, F141).
 
 - `create_plan`: under the Deal lock, last on its line (a renewal first in its plan's group, F120).
 - `update_plan` (PATCH): only the carrier, name, plan number, client name, notes and values; roles, links, stars,
   recommendations, order and the sale each have their own door (F71, J14). `expect` holds the values the person last
   saw: a stored value that differs refuses the whole write (409 naming the keys; J74, O.6 #33). Locks only its plan.
-- Copies (Create renewal, Copy as alternate) are `copies.py`.
-- `delete_plan`: a hard delete until slice 8's soft delete; its renewal becomes an alternate.
+- Copies (Create renewal, Duplicate) are `copies.py`; removing plans `removal.py`; moving them `moves.py`; merging
+  two into one `merge.py`.
 Values only ever change through `deals.values.apply`; every write records Activity with before and after.
 """
 
@@ -56,7 +56,8 @@ def _text(name, value, label, limit=200, required=True):
 
 
 def next_number(deal, line):
-    top = Plan.objects.filter(deal=deal, line=line).aggregate(top=Max('sort_order'))['top']
+    """The number after every plan the line has had, removed ones included, so a restored plan keeps its place."""
+    top = Plan.all_objects.filter(deal=deal, line=line).aggregate(top=Max('sort_order'))['top']
     return 0 if top is None else top + 1
 
 
@@ -198,32 +199,3 @@ def update_plan(user, plan_id, data, source_origin='typed', document=None, cells
         plan.activity_id = row.id
         signals.changed(plan.deal_id, [plan.line])
     return plan, list(changed)
-
-
-@transaction.atomic
-def delete_plan(user, plan_id):
-    """Removes a plan (a hard delete until slice 8). Its renewal becomes an alternate, recorded in the same row."""
-    deal = locks.plan_deal(plan_id)
-    rows, _data = locks.line(deal, Plan.objects.values_list('line', flat=True).get(pk=plan_id))
-    plan = rows[plan_id]
-    changes = [
-        activity.change(
-            f'plan:{plan.id}',
-            {
-                **{f'plan.{k}': [getattr(plan, k), None] for k in ('role', 'carrier', 'name')},
-                **{k: [v, None] for k, v in plan.values.items()},
-            },
-        )
-    ]
-    for renewal in [row for row in rows.values() if row.role == 'renewal' and row.renews_id == plan.id]:
-        Plan.objects.filter(pk=renewal.id).update(role='alternate', renews=None)
-        changes.append(
-            activity.change(
-                f'plan:{renewal.id}',
-                {'plan.role': ['renewal', 'alternate'], 'plan.renews_id': [plan.id, None]},
-            )
-        )
-    label = f'{plan.carrier} {plan.name}'
-    plan.delete()
-    activity.record(deal, user, 'quotes', 'deleted', f'Removed {label}', changes=changes)
-    signals.changed(deal.id, [plan.line])

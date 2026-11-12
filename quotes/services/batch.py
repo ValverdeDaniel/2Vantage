@@ -11,6 +11,16 @@ from .. import columns
 from ..models import Plan
 
 
+def write_replaces(plan):
+    """Save `plan.replaces_ids` as its `replaces` set, through the link table: the related manager sees live plans
+    only, so its `set()` would keep a link to a plan removed in the same write."""
+    links = Plan.replaces.through.objects
+    wanted = set(plan.replaces_ids)
+    links.filter(from_plan_id=plan.id).exclude(to_plan_id__in=wanted).delete()
+    have = set(links.filter(from_plan_id=plan.id).values_list('to_plan_id', flat=True))
+    links.bulk_create([links.model(from_plan_id=plan.id, to_plan_id=pid) for pid in sorted(wanted - have)])
+
+
 class Batch:
     def __init__(self, plans, keys):
         self.keys = tuple(keys)
@@ -41,5 +51,5 @@ class Batch:
         Plan.objects.bulk_update(changed, [*columns.fields_of(written), 'updated_at'])
         for plan in changed:
             if columns.REPLACES in diffs[plan.id]:
-                plan.replaces.set(plan.replaces_ids)
+                write_replaces(plan)
         return changed, [activity.change(f'plan:{plan.id}', diffs[plan.id]) for plan in changed]

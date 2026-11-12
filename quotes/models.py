@@ -6,7 +6,9 @@ from deals.models import Deal
 
 
 class LivePlans(models.Manager):
-    """The default manager hides removed plans (§6.7; soft delete arrives in slice 8)."""
+    """The default manager hides removed plans (§6.7, O.3.7; F60), so every read, related managers included
+    (`deal.plans`, `package.plans`, `plan.replaces`), sees live plans only. `Plan.all_objects` serves links and
+    history: Revert's restore, and telling a removed plan from one that was never on the deal."""
 
     def get_queryset(self):
         return super().get_queryset().filter(removed_at__isnull=True)
@@ -59,11 +61,12 @@ class Plan(models.Model):
     notes = models.TextField(blank=True)
     # One sequence per line, read only through `order.layout` (F43, F120, OQ13).
     sort_order = models.PositiveIntegerField(default=0)
-    removed_at = models.DateTimeField(null=True, blank=True)  # soft delete (F60; slice 8)
+    removed_at = models.DateTimeField(null=True, blank=True)  # soft delete, undone by Revert (F60)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    objects = LivePlans()
+    objects = LivePlans()  # first, so it is the default manager
+    all_objects = models.Manager()  # noqa: DJ012 (ruff reads a second manager as a field)
 
     class Meta:
         indexes = [models.Index(fields=['deal', 'line', 'role', 'sort_order'])]

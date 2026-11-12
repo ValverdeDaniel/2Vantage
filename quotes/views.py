@@ -1,5 +1,6 @@
 """Advisor API: plans, line counts, the comparison, enrollment and packages (plan.md §7.8). Thin: parse → service or
-selector → respond. Marks are in `mark_views.py`, roles, links, order and slots in `arrange_views.py`."""
+selector → respond. Marks are in `mark_views.py`, roles, links, order and slots in `arrange_views.py`, moving and
+removing plans in `move_views.py`."""
 
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -51,11 +52,6 @@ class PlanView(APIView):
         plan, _ = services.update_plan(request.user, plan_id, changes)
         return Response({**selectors.plan_payload(plan), 'activity_id': plan.activity_id})
 
-    def delete(self, request, plan_id):
-        get_object_or_404(Plan, pk=plan_id)
-        services.delete_plan(request.user, plan_id)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class RenewalView(APIView):
     def post(self, request, plan_id):
@@ -66,8 +62,9 @@ class RenewalView(APIView):
 
 class CopyView(APIView):
     def post(self, request, plan_id):
+        """{name?}: Duplicate, keeping the rates (F81); unnamed, the copy is "<name> — copy"."""
         get_object_or_404(Plan, pk=plan_id)
-        plan = services.copy_as_alternate(request.user, plan_id)
+        plan = services.copy_plan(request.user, plan_id, request.data.get('name') or '')
         return Response(selectors.plan_payload(plan), status=status.HTTP_201_CREATED)
 
 

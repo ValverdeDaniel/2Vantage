@@ -113,14 +113,11 @@ def test_two_concurrent_writes_to_different_keys_both_survive(user):
     assert Plan.objects.get(pk=plan.id).values == {'pcp_copay': '25', 'er_copay': '300'}
 
 
-def test_create_renewal_and_copy_as_alternate_copy_design_not_rates(api, deal):
+def test_create_renewal_copies_the_design_not_the_rates(api, deal):
     current = add(api, deal, values={'deductible_single': '3300', 'funding': 'fully_insured', 'rate_ee': '500'})
     renewal = api.post(f'/api/plans/{current["id"]}/renewal/').json()
     assert renewal['role'] == 'renewal' and renewal['renews_id'] == current['id']
     assert renewal['values'] == {'deductible_single': '3300', 'funding': 'fully_insured'}
-    copy = api.post(f'/api/plans/{renewal["id"]}/copy/').json()
-    assert copy['role'] == 'alternate' and copy['replaces_ids'] == [current['id']]
-    assert 'rate_ee' not in copy['values']
 
 
 def test_OQ12_sold_and_recommended_any_number(api, deal):
@@ -181,6 +178,6 @@ def test_member_built_packages(api, deal):
         f'/api/deals/{deal.id}/plans/packages/', {'line': 'medical', 'name': 'Keep', 'plan_ids': []}, format='json'
     )
     assert duplicate.status_code == 400
-    api.delete(f'/api/plans/{a["id"]}/')
+    api.post(f'/api/deals/{deal.id}/plans/delete/', {'plan_ids': [a['id']]}, format='json')
     packages = api.get(f'/api/deals/{deal.id}/plans/packages/?line=medical').json()
     assert packages == [{'id': created.json()['id'], 'name': 'Keep', 'plan_ids': []}]

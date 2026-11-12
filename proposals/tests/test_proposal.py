@@ -1,5 +1,6 @@
 """Proposal selection and configuration (plan.md §7.9, §8.12)."""
 
+from deals import activity
 from quotes import services as plans
 
 
@@ -113,3 +114,17 @@ def test_OQ37_a_recommended_current_plan_prints_keep_this_plan(api, user, deal):
     group = medical(api, deal)['preview']['summary']['groups'][0]
     assert group['options'][0]['plan_id'] == a.id and group['options'][0]['note'] == 'Keep this plan'
     assert body['issue_blockers'] == [] and body['can_issue'] is True
+
+
+def test_F60_a_removed_plan_leaves_the_proposal_and_restore_brings_it_back(api, user, deal):
+    a, renewal, x, y, z = setup_line(user, deal)
+    plans.star(user, deal, [x.id, y.id], True)
+    plans.set_recommended(user, y.id, True)
+    removal = plans.delete_plans(user, deal, [y.id])
+    line = medical(api, deal)
+    assert y.id not in line['plan_ids'] and y.id not in {plan['id'] for plan in line['available']}
+    assert y.id not in {column['plan_id'] for column in line['preview']['columns']}
+    assert line['recommendation']['covered'] is False  # the removed pick no longer answers for HDHP
+    activity.revert(removal.row.id, user)
+    line = medical(api, deal)
+    assert y.id in line['plan_ids'] and line['recommendation']['covered'] is True

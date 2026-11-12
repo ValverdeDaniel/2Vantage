@@ -53,7 +53,7 @@ export function useComparison(dealId, line) {
 function useAdvisorMutation(dealId, mutationFn, { header = false } = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (variables) => mutationFn(variables, queryClient),
+    mutationFn,
     onSuccess: () => invalidateDeal(queryClient, dealId, { header }),
   });
 }
@@ -110,16 +110,29 @@ export function useSetLinks(dealId) {
   });
 }
 
+/**
+ * (planId | [planIds]) → {removed, kept: [{id, name, reason}], note, plans, activity_id}: a soft delete (F60); Revert of
+ * its Activity row restores the plans. Sold plans stay and are named in `note`; when every plan named is sold the
+ * door answers 409 with that sentence.
+ */
 export function useDeletePlan(dealId) {
-  return useAdvisorMutation(dealId, async (planId) => api.delete(`plans/${planId}/`));
+  return useAdvisorMutation(
+    dealId,
+    async (planIds) =>
+      (await api.post(`deals/${dealId}/plans/delete/`, { plan_ids: [].concat(planIds) })).data,
+  );
 }
 
 export function useCreateRenewal(dealId) {
   return useAdvisorMutation(dealId, async (planId) => (await api.post(`plans/${planId}/renewal/`)).data);
 }
 
+/** (planId | {planId, name}) → the copy: Duplicate, keeping the rates (F81); unnamed, it is "<name> — copy". */
 export function useCopyPlan(dealId) {
-  return useAdvisorMutation(dealId, async (planId) => (await api.post(`plans/${planId}/copy/`)).data);
+  return useAdvisorMutation(dealId, async (arg) => {
+    const { planId, name } = typeof arg === 'object' ? arg : { planId: arg };
+    return (await api.post(`plans/${planId}/copy/`, name ? { name } : {})).data;
+  });
 }
 
 export function useSetSold(dealId) {
@@ -163,19 +176,10 @@ export function useSaveEnrollment(dealId) {
 
 /**
  * The order door (F43–F48): {line, move: {plan_id, step, among?}} | {line, swap: [a, b]} | {line, reset: true}
- * → {line, order, activity_id}. The earlier shape {line, role, plan_ids} (one role's ids with two neighbours swapped)
- * is read as the left one of the pair stepping right; a step out of its group answers 409 with the reason.
+ * → {line, order, activity_id}; a step out of its group answers 409 with the reason.
  */
 export function useOrderPlans(dealId) {
-  return useAdvisorMutation(dealId, async (body, queryClient) => {
-    if (body.move || body.swap || body.reset) return (await api.post(`deals/${dealId}/plans/order/`, body)).data;
-    const shown = queryClient.getQueryData(advisorKey(dealId, body.line))?.plans ?? [];
-    const before = shown.filter((plan) => plan.role === body.role).map((plan) => plan.id);
-    const at = before.findIndex((id, index) => id !== body.plan_ids[index]);
-    if (at < 0) return null;
-    const move = { plan_id: before[at], step: 1 };
-    return (await api.post(`deals/${dealId}/plans/order/`, { line: body.line, move })).data;
-  });
+  return useAdvisorMutation(dealId, async (body) => (await api.post(`deals/${dealId}/plans/order/`, body)).data);
 }
 
 /** ({line, planId, at} | {line, planId, beside?}) → {line, plans, order, activity_id}: a pick on Pages (F45, F46). */
