@@ -77,3 +77,15 @@ export function useMoveLine(dealId) {
       (await api.post(`deals/${dealId}/plans/move-line/`, { plan_ids: planIds, line })).data,
   );
 }
+
+/**
+ * Two plans printed as one column (D-219, J15; slice 33): ({firstId, secondId}) pairs them, the column keeping the
+ * first's id, place and number; ({planId, split: true}) takes the pair holding it apart. → {plans, activity_id};
+ * refusals (another carrier, another kind, already paired) are 409 sentences.
+ */
+export function usePairPlans(dealId) {
+  return useAdvisorMutation(dealId, async ({ firstId, secondId, planId, split }) => {
+    const body = split ? { plan_ids: [planId], split: true } : { plan_ids: [firstId, secondId] };
+    return (await api.post(`deals/${dealId}/plans/pair/`, body)).data;
+  });
+}

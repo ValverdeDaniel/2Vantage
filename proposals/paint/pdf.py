@@ -147,14 +147,62 @@ def _text(c, it, _pictures):
         used += max(1, len(para['lines'])) * leading
 
 
+def _origin(it):
+    """Where reportlab's Table was translated to ([x, y] from the page's bottom-left), when the frame still sits there
+    and every cell knows its own origin (`layout.grid.origin`); else None."""
+    origin = it.get('origin')
+    if not origin or any('at' not in cell['text'] for cell in it['cells']):
+        return None
+    sits = abs(it['x'] - origin[0]) < 1e-6 and abs(_fy(it['y']) - it['h'] - origin[1]) < 1e-6
+    return origin if sits else None
+
+
+def _cell_words(c, it, origin):
+    """A cell's paragraphs drawn as reportlab's Table drew its Paragraphs: through the table's translation, then each
+    paragraph's own (the cell's left, the paragraph's bottom), its lines from there. The device position of a glyph is
+    then the sum the old file's was, so one on a pixel's edge rounds the same way (GD5's label column; slice 33)."""
+    left, y = it['at']
+    drop = it.get('drop', tokens.BASELINE_DROP)
+    for para in it['paragraphs']:
+        leading = para['leading']
+        tall = max(1, len(para['lines'])) * leading
+        y -= tall
+        c.saveState()
+        c.translate(left, y)
+        first = tall - drop * _first_size(para)
+        for number, segments in enumerate(para['lines']):
+            if not segments:
+                continue
+            baseline = first - number * leading
+            room, wide = it['w'], line_width(segments)
+            x = {'c': (room - wide) / 2, 'r': room - wide}.get(para['align'], 0)
+            for seg in segments:
+                c.setFont(seg['font'], seg['size'])
+                c.setFillColor(HexColor(seg['color']))
+                c.drawString(x, baseline, seg['text'])
+                if seg.get('link'):
+                    at_x, at_y = origin[0] + left + x, origin[1] + y + baseline
+                    c.linkURL(seg['link'], (at_x, at_y - 2, at_x + seg['w'], at_y + seg['size']), relative=0)
+                x += seg['w']
+        c.restoreState()
+
+
 def _table(c, it, pictures):
     for cell in it['cells']:
         if cell.get('fill'):
             _rect(c, {'x': cell['x'], 'y': cell['y'], 'w': cell['w'], 'h': cell['h'], 'fill': cell['fill']}, pictures)
     for rule in it['rules']:
         _line(c, rule, pictures)
+    origin = _origin(it)
+    if origin is None:
+        for cell in it['cells']:
+            _text(c, cell['text'], pictures)
+        return
+    c.saveState()
+    c.translate(*origin)
     for cell in it['cells']:
-        _text(c, cell['text'], pictures)
+        _cell_words(c, cell['text'], origin)
+    c.restoreState()
 
 
 def _bar_label(value, money):

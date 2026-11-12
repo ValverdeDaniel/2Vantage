@@ -9,7 +9,8 @@
 - `saved_views`: the Advisor's saved board setups (firm rows, not plans; F28);
 - `priced`: priced versions, with their dry run (`price`, ✎ `reprice`; F76–F84);
 - `review`: approve, ignore, needs checking and clear on plan values (`mark_values`; E85–E89, F63–F67);
-- `numbers`: option numbers, stamped at Issue (`stamp_option_numbers`; J159).
+- `numbers`: option numbers, stamped at Issue (`stamp_option_numbers`; J159);
+- `pairs`: two plans printed as one column, and Split (`pair_plans`, `split_pair`; D-219, J15; slice 33).
 `locks` (the Deal, then plans by id) and `batch` (one bulk_update, before and after) serve them. Every write records
 Activity with before and after, writes nothing when nothing changes, and returns only what changed.
 """
@@ -24,6 +25,8 @@ from .moves import move_line
 from .numbers import stamp_option_numbers
 from .ordering import arrange, put_in_slot
 from .packages import create_package, delete_package, update_package
+from .pairs import pair as pair_plans
+from .pairs import split as split_pair
 from .plans import clean_values, create_plan, update_plan
 from .removal import clear_line, delete_plans
 from .roles import ROLES, set_links, set_role
@@ -44,6 +47,7 @@ __all__ = [
     'delete_plans',
     'merge_plans',
     'move_line',
+    'pair_plans',
     'priced',
     'put_in_slot',
     'review',
@@ -53,6 +57,7 @@ __all__ = [
     'set_recommended',
     'set_role',
     'set_sold',
+    'split_pair',
     'stamp_option_numbers',
     'star',
     'update_package',

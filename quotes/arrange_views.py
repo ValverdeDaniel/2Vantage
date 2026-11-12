@@ -99,3 +99,19 @@ class SlotView(APIView):
             beside=parse.optional_id(data.get('beside'), 'beside'),
         )
         return _changed(changed, row, line=line, order=new_order)
+
+
+class PairView(APIView):
+    def post(self, request, pk):
+        """{plan_ids: [first, second]}: print the second as one column with the first (D-219, J15); {plan_ids: [id],
+        split: true}: take the pair holding it apart. A refusal answers 409 with its sentence; a pair made again
+        writes nothing (no plans, no row)."""
+        deal = get_object_or_404(Deal, pk=pk)
+        ids = parse.plan_ids(request.data.get('plan_ids'))
+        if request.data.get('split') is True:
+            if len(ids) != 1:
+                raise ValidationError({'plan_ids': ['Give the one plan whose pair to split.']})
+            return _changed(*services.split_pair(request.user, deal, ids[0]))
+        if len(ids) != 2:
+            raise ValidationError({'plan_ids': ['Give the two plans to print as one column.']})
+        return _changed(*services.pair_plans(request.user, deal, ids[0], ids[1]))

@@ -146,6 +146,7 @@ def test_J42_J155_the_builder_ledger_reads_the_firm_pages(api, gd1):
 
 def test_J127_J131_GD1_a_negotiated_renewal_prints_the_first_offer_then_the_set_and_what_we_negotiated(api, gd1, user):
     five_off = {'kind': 'concession', 'all': {'op': 'pct_off', 'value': 5}}
+    plans.star(user, gd1.deal, [gd1.refs['FB1'], gd1.refs['FB2']], False)  # room for the versions (slice 33's pair)
     renewals = [gd1.refs[ref] for ref in ('A2', 'B2', 'C2')]
     versions = priced.price(user, gd1.deal, renewals, five_off).plans
     plans.set_recommended(user, next(v.id for v in versions if v.derived_from_id == gd1.refs['C2']), True)

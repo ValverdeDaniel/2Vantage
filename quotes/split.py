@@ -19,6 +19,7 @@ import re
 
 from ai import codes
 
+from . import pairs as printed
 from .fields import BY_KEY, TIER_RATE_KEYS
 from .reader.match import match
 from .reader.merge import norm
@@ -147,3 +148,26 @@ def prepare(found, deal_plans):
             names = [f'{plan["carrier"]} {plan["name"]}' for plan in (first, second)]
             findings.append({'text': FRESH.format(a=names[0], b=names[1]), 'hard': False})
     return out, aliases, findings
+
+
+def unpaired(line, ids):
+    """[(the plan priced for employees only, the plan priced for the dependent tiers only)] among `ids` on `line` (a
+    `shapes.LineData`): one carrier, one kind (current or not), neither in a pair yet nor a renewal following one, each
+    plan in one at most, in the line's order (the old proposal check `split_plan`; slice 33)."""
+    taken = {pid for pair in printed.stored(line) for pid in pair}
+    shown = [p for p in line.plans if p.id in set(ids) and p.id not in taken and not printed.follows(line, p.id)]
+
+    def employee_only(plan):
+        return _priced(plan.values, 'rate_ee') and not any(_priced(plan.values, key) for key in DEPENDENT)
+
+    def dependents_only(plan):
+        return not _priced(plan.values, 'rate_ee') and any(_priced(plan.values, key) for key in DEPENDENT)
+
+    out, used = [], set()
+    for first in (p for p in shown if employee_only(p)):
+        for second in (p for p in shown if dependents_only(p) and p.id not in used):
+            if norm(first.carrier) == norm(second.carrier) and (first.role == 'current') == (second.role == 'current'):
+                out.append((first, second))
+                used.add(second.id)
+                break
+    return out

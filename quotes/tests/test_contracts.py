@@ -46,6 +46,7 @@ def samples(world):
         'api/deals/<int:pk>/plans/links/': deal,
         'api/deals/<int:pk>/plans/order/': deal,
         'api/deals/<int:pk>/plans/slot/': deal,
+        'api/deals/<int:pk>/plans/pair/': deal,  # slice 33: one column with… · Split (J15)
         'api/deals/<int:pk>/plans/move-line/': deal,
         'api/deals/<int:pk>/plans/delete/': deal,
         'api/deals/<int:pk>/plans/clear/': deal,
@@ -98,6 +99,7 @@ def matrix(world):
         ('POST', 'api/deals/<int:pk>/plans/links/', ok(), {'plan_id': alternate.id, 'replaces_ids': []}),
         ('POST', 'api/deals/<int:pk>/plans/order/', ok(), {**medical, 'move': {'plan_id': second.id, 'step': -1}}),
         ('POST', 'api/deals/<int:pk>/plans/slot/', ok(), {**medical, 'plan_id': second.id, 'at': alternate.id}),
+        ('POST', 'api/deals/<int:pk>/plans/pair/', ok(), {'plan_ids': [current.id, world['other'].id]}),  # slice 33
         ('POST', 'api/deals/<int:pk>/plans/move-line/', ok(), {'plan_ids': [second.id], 'line': 'dental'}),
         ('POST', 'api/deals/<int:pk>/plans/delete/', ok(), {'plan_ids': [second.id]}),
         ('POST', 'api/deals/<int:pk>/plans/clear/', ok(), medical),
@@ -250,3 +252,14 @@ def test_Q3_order_rows_record_only_sort_order(user, world):
     assert {key for entry in row.changes for key in entry['k']} == {'plan.sort_order'}
     passed = {f'plan:{world["second"].id}', f'plan:{world["alternate"].id}'}
     assert {entry['t'] for entry in row.changes} == passed  # the plan and the one it passed; nothing else
+
+
+def test_J15_Q3_pair_write_path(user, world):
+    deal, first, second = world['deal'], world['current'], world['other']
+    write_path_contract(
+        user,
+        second,
+        call=lambda: services.pair_plans(user, deal, first.id, second.id),
+        read=lambda plan: plan.pair_of_id,
+        later=lambda: services.split_pair(user, deal, second.id),
+    )

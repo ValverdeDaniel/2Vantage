@@ -101,6 +101,7 @@ def base(plan):
         'derived_from': plan.derived_from_id,
         'derived': plan.derived or None,
         'bundling': plan.bundling,  # the carrier's rates already include the bundle, or not (F78; slice 35)
+        'pair_of': plan.pair_of_id,  # the first half of the pair it prints as one column with (D-219; slice 33)
     }
 
 

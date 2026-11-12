@@ -108,8 +108,12 @@ def _put_back(plan, keys, user):
 
 def _broken(line_key, rows, held_before):
     """Why the line's live plans, as the revert would leave them, break §5.4's rules; None when they hold."""
-    renewed, numbered = {}, {}
+    renewed, numbered, paired = {}, {}, {}
     for plan in rows.values():
+        if plan.pair_of_id is not None:  # D-219: a plan is the first half of one pair at most (slice 33)
+            if plan.pair_of_id in paired or plan.pair_of_id == plan.id:
+                return f'{plan.carrier} {plan.name} would print as one column with a plan already paired.'
+            paired[plan.pair_of_id] = plan
         if plan.option_number and plan.option_number in numbered:  # J159: a move back meets a number given since
             other = numbered[plan.option_number]
             return (
@@ -130,7 +134,7 @@ def _broken(line_key, rows, held_before):
         if any(rows.get(pid) is None or rows[pid].role != 'current' for pid in plan.replaces_ids):
             return f'{plan.carrier} {plan.name} would replace a plan that is no longer current.'
     data = line_data(line_key, list(rows.values()))
-    if presented.has_stars(data) and len(presented.held(data)) > max(presented.MAX_COLUMNS, held_before):
+    if presented.has_stars(data) and presented.columns(data) > max(presented.MAX_COLUMNS, held_before):
         return f'the {lines.label(line_key)} proposal would hold more than {presented.MAX_COLUMNS} plans.'
     return None
 
@@ -220,7 +224,7 @@ def revert(row, user):
         raise activity.Refused(activity.NO_REVERTER)
     _refuse_later(row, plans, keys)
     line_keys = {plan.line for plan in everything.values()}
-    held = {key: len(presented.held(line_data(key, list(_live_on(everything, key).values())))) for key in line_keys}
+    held = {key: presented.columns(line_data(key, list(_live_on(everything, key).values()))) for key in line_keys}
     written = [(entry['t'], _put_back(plans[_plan_id(entry['t'])], entry['k'], user)) for entry in row.changes]
     for line_key in sorted(line_keys | {plan.line for plan in plans.values()}):
         why = _broken(line_key, _live_on(everything, line_key), held.get(line_key, 0))

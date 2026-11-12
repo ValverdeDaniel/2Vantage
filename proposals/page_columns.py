@@ -13,6 +13,7 @@ from quotes import math as m
 from quotes import presented
 
 from . import formatting as fmt
+from . import page_pairs
 from . import pages as splitter
 
 UNKNOWN_CARRIER = 'Unknown carrier'
@@ -139,13 +140,15 @@ def replacing(plan, kind, data, numbers, results, rows):
 
 
 def take_off(plan, data, label, row):
-    """What ✕ does (J13): {unstar, unrecommend, star: [ids], why}. On a starred line it unstars the plan (and drops its
-    recommendation, after a confirm); on a line with nothing starred it stars every other quote, which past the line's
-    room it cannot: `why` says so and names the fix (J.5 B5, F.5 #4)."""
-    out = {'unstar': plan.starred, 'unrecommend': plan.recommended, 'star': [], 'why': None}
+    """What ✕ does (J13): {unstar, unrecommend, star: [ids], also: [ids], why}. On a starred line it unstars the plan
+    (and drops its recommendation, after a confirm), and a pair printed as one column takes both halves off (`also`,
+    D-219); on a line with nothing starred it stars every other quote, which past the line's room it cannot: `why`
+    says so and names the fix (J.5 B5, F.5 #4)."""
+    also = [pid for pid in getattr(row, 'pair', ()) if pid != plan.id]
+    out = {'unstar': plan.starred, 'unrecommend': plan.recommended, 'star': [], 'also': also, 'why': None}
     if presented.has_stars(data):
         return out
-    others = [p.id for p in data.plans if p.role != 'current' and p.id != plan.id and not p.recommended]
+    others = [p.id for p in data.plans if p.role != 'current' and p.id not in (plan.id, *also) and not p.recommended]
     if len(others) > presented.room(data):
         out['why'] = (
             f'Nothing on {label} is starred, so every quote prints. Taking {words(row)} off would star the other '
@@ -185,7 +188,8 @@ def chips(plan, kind, numbers, data, row):
 
 def facts(plan, data, results, rows, ctx):
     """Everything one plan's column (or picker row) says. `ctx`: {numbers (current slots), options, first_page,
-    arrows, label, on}."""
+    arrows, label, on, line (the line unfolded: both halves of a pair), folded (the first halves of the pairs printed
+    as one column)}. A folded column keeps its first half's own name; `pair` says what it is printed with (F137)."""
     row = rows[plan.id]
     kind = kind_of(plan, data)
     numbers = ctx['numbers']
@@ -201,7 +205,7 @@ def facts(plan, data, results, rows, ctx):
         'option': option,
         'predicted': option is not None and not row.option_number,  # until Issue stamps it (§5.4, J102)
         'carrier': row.carrier,
-        'name': row.client_name or row.name,
+        'name': getattr(row, 'own_name', None) or row.client_name or row.name,
         'client_name': row.client_name,  # "Name on client documents" (J14), edited under ⋯ More
         'words': words(row),
         'chips': chips(plan, kind, numbers, data, row),
@@ -221,4 +225,5 @@ def facts(plan, data, results, rows, ctx):
         'monthly_note': note,
         'change': change(plan, results),
         'page': ctx['first_page'].get(plan.id),
+        'pair': page_pairs.facts(ctx['line'], plan.id, ctx['folded']) if 'line' in ctx else None,
     }

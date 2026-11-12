@@ -15,6 +15,8 @@ The rows are written the way the old app writes them, through its own writers wh
 - each value as a hand edit does (edited_value over an empty read value);
 - links, typed enrollment and stars through `plan_links`, `enrollment` and `stars`;
 - one recommendation per current plan, the reasons and the line counts, through `composition.merge_config`;
+- a plan's number (`plan_number`, slice 33) as its value, and each pair printed as one column (`pairs`, D-219, GD1's
+  Florida Blue 05182 and 05183) through the old builder's own writer, `plan_merge.set_pair`;
 - the intake answers (slice 39, GD6) as the old form's hand edit stores them (CaseField.edited_value), each cleaned by
   the old app's own `intake_writes.clean_value`, so the old form shows what 2Vantage's one cleaner stores;
 - a census roster (slice 41, GD4) as the old import writes a spreadsheet's people (`old_census.py`, beside this file);
@@ -34,6 +36,7 @@ from benefits.market.intake_writes import clean_value
 from benefits.models import BenefitFieldDef, BenefitsCase, Plan, PlanValue
 from benefits.pipeline import composition, current_plans, enrollment, plan_links, stars
 from benefits.pipeline.plan_copy import duplicate_plan
+from benefits.pipeline.plan_merge import clean_merged, set_pair
 from benefits.pipeline.renewal_pairs import add_renewal
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -96,7 +99,16 @@ def new_plan(case, plan):
 
 def typed_values(spec, plan):
     left_out = spec['parity'].get('values_left_out', {})
-    return {key: str(raw).strip() for key, raw in plan['values'].items() if key not in left_out}
+    typed = {key: str(raw).strip() for key, raw in plan['values'].items() if key not in left_out}
+    if plan.get('plan_number'):  # a column in 2Vantage, a plan value in the old app
+        typed['plan_number'] = str(plan['plan_number']).strip()
+    return typed
+
+
+def apply_pairs(spec, case, made):
+    """Each pair printed as one column (slice 33), as the old Plans card's "One column with…" stores it."""
+    for first, second in spec.get('pairs', []):
+        set_pair(case, made[first].pk, made[second].pk)
 
 
 def hand_edit(made, values):
@@ -253,6 +265,11 @@ def check(spec, case, made):
     for line in spec['parity'].get('line_figures', []):
         if stored.get(line) != spec['line_enrollment'][line]:
             wrong.append(f'{line}: line figure {stored.get(line)} != {spec["line_enrollment"][line]}')
+    merged = (case.proposal_config.get('composition') or {}).get('lines') or {}
+    for first, second in spec.get('pairs', []):
+        line = next(plan['line'] for plan in spec['plans'] if plan['ref'] == first)
+        if [made[first].pk, made[second].pk] not in clean_merged((merged.get(line) or {}).get('merged')):
+            wrong.append(f'{first} + {second}: not printed as one column on {line}')
     return wrong
 
 
@@ -288,6 +305,7 @@ def load(spec, user):
         for plan in spec['plans']:
             made[plan['ref']] = make_plan(spec, plan, case, user, made)
         apply_marks(spec, case, made)
+        apply_pairs(spec, case, made)
         wrong = check(spec, case, made) + census_wrong
         if wrong:
             raise ParityError(f'{spec["key"]} did not load as its spec says:\n  ' + '\n  '.join(wrong))

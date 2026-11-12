@@ -127,6 +127,16 @@
    "annual": 125544,
    "change": null
   },
+  "FB1": {
+   "monthly": 4604,
+   "annual": 55248,
+   "change": null
+  },
+  "FB2": {
+   "monthly": 10653,
+   "annual": 127836,
+   "change": null
+  },
   "DN": {
    "monthly": 2202,
    "annual": 26424,
@@ -254,6 +264,17 @@
      "delta": -132,
      "pct": -3.2
     }
+   }
+  }
+ },
+ "pairs": {
+  "FB1+FB2": {
+   "note": "Florida Blue 05182 (8 x 575.50 = 4,604) and 05183 (2 x 1,237.40 + 1 x 1,078.85 + 4 x 1,774.95 = 10,653.45, so 10,653) printed as one column: their package, against B (the same people, EE 8, ES 2, EC 1, FAM 4).",
+   "monthly": 15257,
+   "annual": 183084,
+   "change": {
+    "delta": -20652,
+    "pct": -10.1
    }
   }
  },

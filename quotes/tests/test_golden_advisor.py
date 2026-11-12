@@ -12,11 +12,11 @@ from quotes.selectors import line_state
 pytestmark = pytest.mark.django_db
 
 
-def test_F50_GD1_medical_has_room_for_three_more_columns(gd1):
+def test_F50_J15_GD1_medical_has_room_for_two_more_columns_its_pair_counting_once(gd1):
     data = line_state(gd1.deal, 'medical').data
-    assert presented.room(data) == 3
+    assert presented.room(data) == 2  # 15 plans held; Florida Blue's 05182 and 05183 print as one column (slice 33)
     assert presented.refusal(data, 'Medical', 4) == (
-        'The Medical proposal holds 16 plans (3 current, 4 recommended, 6 starred): 4 ticked, only 3 more fit. '
+        'The Medical proposal holds 16 plans (3 current, 4 recommended, 7 starred): 4 ticked, only 2 more fit. '
         'Unstar some or tick fewer.'
     )
 
@@ -33,7 +33,8 @@ def test_F119_OQ11_GD1_presents_its_picks_and_only_the_picked_renewal(gd1):
 def test_F120_GD1_layout_groups_quotes_under_the_plans_they_replace(gd1):
     refs = gd1.refs
     plans = line_state(gd1.deal, 'medical').plans
-    expected = ['A', 'B', 'C', 'A2', 'CG1', 'CG1N', 'CG2', 'U1', 'D1', 'D2', 'B2', 'CG3', 'U2', 'U5', 'C2', 'CG4', 'U3']
+    expected = ['A', 'B', 'C', 'A2', 'CG1', 'CG1N', 'CG2', 'U1', 'D1', 'D2', 'B2', 'CG3', 'U2', 'U5', 'FB1', 'FB2']
+    expected += ['C2', 'CG4', 'U3']  # both halves of the Florida Blue pair stay plans on working screens (D-219)
     assert [plan.id for plan in plans] == [refs[ref] for ref in expected]  # U5 replaces B and C: under B
 
 

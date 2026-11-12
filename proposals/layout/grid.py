@@ -55,3 +55,28 @@ def share(heights, spanned, fuzz=1e-6):
 def middle(height, content, top, bottom):
     """How far below its cell's top a cell's words start: centred between its top and bottom padding."""
     return (height - content + top - bottom) / 2
+
+
+def row_positions(heights):
+    """reportlab's `_rowpositions` (`_calc_height`): each row's top from the table's bottom, summed up from the last
+    row with its compensated addition, so every figure is the float reportlab drew with (the last entry is 0)."""
+    out, height, carry = [], 0, 0
+    for row in reversed(heights):
+        out.append(height)
+        step = row - carry
+        total = height + step
+        carry = (total - height) - step
+        height = total
+    out.append(height)
+    out.reverse()
+    return out
+
+
+def origin(colpos, positions, number, down, pad, content):
+    """[x, y] of a cell's words from the table's bottom-left as reportlab's `_drawCell` worked them (ALIGN LEFT, VALIGN
+    MIDDLE): the column's left plus the left padding, and the top of the words centred between the paddings. Its
+    Paragraphs are drawn down from there, each one translated to its own bottom, as the old files drew them."""
+    left, _right, top, bottom = pad
+    rowpos = positions[min(number + down, len(positions) - 1)]
+    rowheight = positions[number] - rowpos
+    return [colpos + left, rowpos + (rowheight + bottom - top + content) / 2.0]

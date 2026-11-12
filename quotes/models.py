@@ -57,6 +57,10 @@ class Plan(models.Model):
     # plans or priced versions (§5.4; J159, OQ35, OQ36). Written only by `services.numbers`; a move to another line
     # clears it (it starts again there).
     option_number = models.PositiveIntegerField(null=True, blank=True)
+    # One plan filed under two plan numbers, printed as one column (D-219, J15, O.6 #4; slice 33): set on the second
+    # half, naming the first, under whose id, place and option number client files print the pair. Written only by
+    # `services.pairs`; a live plan is the first of one pair at most, and both halves stay plans of their own.
+    pair_of = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
     # A priced version and how it was made (F76–F84; slice 35).
     derived_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='versions')
     derived = models.JSONField(default=dict, blank=True)
@@ -90,6 +94,11 @@ class Plan(models.Model):
                 fields=['deal', 'line', 'option_number'],
                 condition=Q(option_number__isnull=False),
                 name='option_number_unique_per_line',
+            ),
+            models.UniqueConstraint(
+                fields=['pair_of'],
+                condition=Q(pair_of__isnull=False, removed_at__isnull=True),
+                name='one_pair_per_first_plan',
             ),
         ]
         ordering = ['sort_order', 'id']

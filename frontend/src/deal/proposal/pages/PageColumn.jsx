@@ -5,8 +5,10 @@ import PlanLinkPicker from './PlanLinkPicker';
  * One column's head on a page (plan.md §8.14; F37, F39, F43, F45, F52, J5, J10, J13, J50; the old ProposalPages.jsx
  * `head` at 7385bb3): its place, CURRENT k / RENEWAL / PRICED, "repeated", ‹ › and ✕, Today / Option n / the priced
  * label, the name (an option's or a renewal's opens the plan picker; a current plan's and a priced version's are plain
- * text), "Replacing:", and in the builder ⋯ More (`menu`, J14). Every word and every allowance is the server's (proposals/page_columns.py); a plan shown
- * again keeps its tools where it first shows. Stop-loss columns are like any line's (OQ13).
+ * text), "Replacing:", and in the builder ⋯ More (`menu`, J14, J15). A pair printed as one column shows its first
+ * plan's name with "+ <the other> (one column)" (F137; slice 33). Every word and every allowance is the server's
+ * (proposals/page_columns.py); a plan shown again keeps its tools where it first shows. Stop-loss columns are like any
+ * line's (OQ13).
  */
 
 const CHIP = { current: 'bnf-chip-current', renewal: 'bnf-chip-renewal', priced: 'bnf-chip-concession' };
@@ -19,6 +21,7 @@ export default function PageColumn({ column, currents, busy, open, onPick, onMov
     <>
       <span className="bnf-pg-carrier">{plan.carrier}</span>
       <span className={plan.pickable ? 'bnf-pg-plan' : undefined}>{plan.name}</span>
+      {plan.pair?.folded && <span className="bnf-pg-merged">+ {plan.pair.with} (one column)</span>}
     </>
   );
   return (

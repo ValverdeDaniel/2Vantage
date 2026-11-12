@@ -62,6 +62,7 @@ def _plan(user, deal, plan, refs, printed=None):
         role=plan['role'],
         carrier=plan['carrier'],
         name=plan['name'],
+        plan_number=plan.get('plan_number', ''),
         values=plan['values'] if with_cells else {k: v for k, v in plan['values'].items() if k not in from_file},
         renews_id=links[0] if plan['role'] == 'renewal' else None,
         replaces_ids=links if plan['role'] == 'alternate' else [],
@@ -116,6 +117,8 @@ def build(spec, user):
         plans.set_recommended(user, refs[ref], True)
     for package in spec['packages']:
         plans.create_package(user, deal, package['line'], package['name'], [refs[ref] for ref in package['plans']])
+    for first, second in spec.get('pairs', []):  # one plan under two numbers, printed as one column (D-219; slice 33)
+        plans.pair_plans(user, deal, refs[first], refs[second])
     proposals.set_config(user, deal, {'reasons': spec['reasons']})
     _after(user, deal, spec, refs)
     deal.refresh_from_db()

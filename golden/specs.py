@@ -13,6 +13,7 @@ A spec (`specs/gdN.json`) is the one description of a golden deal. `seed.py` bui
     plans           in creation order; each:
         ref         the plan's name in the keys and in other plans' links ("A", "CG1N")
         line, role, carrier, name
+        plan_number optional: the carrier's plan number ("05182")
         links       refs of current plans: a renewal's one current plan, or the plans an alternate replaces
         copy_of     optional: a Duplicate of that ref (`copy_plan`, rates kept), named `name`, then given `values`
         values      {field key: raw text}, as a person types them (quotes/fields.py)
@@ -30,6 +31,9 @@ A spec (`specs/gdN.json`) is the one description of a golden deal. `seed.py` bui
                     shopped before Confirm], `bor_signer`, `ticks` [checklist items ticked]
     starred, recommended    refs
     packages        [{line, name, plans: [refs]}]: member-built packages
+    pairs           optional: [[first ref, second ref]]: one plan filed under two numbers, printed as one column
+                    under the first (D-219, slice 33; GD1's Florida Blue 05182 and 05183); the old app's
+                    `composition.lines[line].merged`
     reasons         {line: the proposal's reason}
     parity          the parity profile: how the deal maps onto old Vantage's records (below)
 

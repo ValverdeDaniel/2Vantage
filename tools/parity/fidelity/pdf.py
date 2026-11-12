@@ -27,9 +27,12 @@ BOX_TOLERANCE = 0.5  # points
 NUDGE = (5.0, 2.0)
 LINE_GAP = 2.0  # points between baselines that still read as one line
 PAGE_NUMBER_BOX = (60.0, 24.0)  # the footer corner a page number sits in: points from the right and the bottom
-# A masked line is left out of the page picture with what is drawn just around its words: the Draft mark's badge
-# reaches 12 pt past its words on each side and 5 pt above and below them.
-MASK_MARGIN = (14.0, 7.0)
+# A masked line is left out of the page picture whole, with what is drawn just around its words: the Draft mark's
+# badge (layout.furniture.draft_items, the old `proposal_furniture` one) is a 22 pt box 12 pt wider than its words on
+# each side, its top 5 pt over the line's, which pdftotext's word box starts 2.7 pt lower (the font's ascent): 7.7 pt
+# above the words and 4.2 pt below them. Each side gets 1.5 pt more for the anti-aliased edge, so a page that has the
+# badge (a draft) and one that has none (an issued file, slice 32) agree. (left, top, right, bottom) in points.
+MASK_MARGIN = (14.0, 9.5, 14.0, 7.0)
 _PAGE = re.compile(r'<page width="([\d.]+)" height="([\d.]+)">(.*?)</page>', re.S)
 _WORD = re.compile(r'<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="([\d.]+)">(.*?)</word>', re.S)
 
@@ -86,13 +89,16 @@ def _tokens(page):
 
 
 def _masked_boxes(page):
-    """The boxes (points, with MASK_MARGIN) of the lines `_tokens` masks: what the page picture leaves out."""
+    """One box (points, with MASK_MARGIN) round each line `_tokens` masks, its words and the gaps between them: what
+    the page picture leaves out."""
     boxes = []
+    left, top, right, bottom = MASK_MARGIN
     for line in _numbered(page)['lines']:
         text = ' '.join(word for word, _box in line)
-        if mask.line(text) != ' '.join(text.split()):
-            mx, my = MASK_MARGIN
-            boxes.extend(paper.on_sheet(page, (b[0] - mx, b[1] - my, b[2] + mx, b[3] + my)) for _word, b in line)
+        if line and mask.line(text) != ' '.join(text.split()):
+            x0, y0 = min(b[0] for _word, b in line), min(b[1] for _word, b in line)
+            x1, y1 = max(b[2] for _word, b in line), max(b[3] for _word, b in line)
+            boxes.append(paper.on_sheet(page, (x0 - left, y0 - top, x1 + right, y1 + bottom)))
     return boxes
 
 

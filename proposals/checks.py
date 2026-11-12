@@ -9,9 +9,9 @@ the builder card that fixes it ({card}) or a deal tab ({tab}). Most serious firs
 The checks read one fact sheet per line, which `builder` builds from quotes' `deal_state` and intake's intent (no
 query here), and the deal cards' facts (`deal_checks`). Built in slice 25: nothing_presented, line_off, oversize,
 unstarred, no_enrollment, no_prices, current_unrated, not_linked, link_needs_enrollment, no_recommendation,
-no_reasons, missing_values; slice 26: no_next_steps, summary_counts_hidden_carriers, medicare_not_shown. split_plan
-waits for the pair fold (slice 33); history_unfigured for past plan years (J44, deferred); demo_firm_pages is dropped
-(J23).
+no_reasons, missing_values; slice 26: no_next_steps, summary_counts_hidden_carriers, medicare_not_shown; slice 33:
+split_plan (the pair fold, J15). history_unfigured waits for past plan years (J44, deferred); demo_firm_pages is
+dropped (J23).
 """
 
 from . import ready as gate
@@ -150,6 +150,22 @@ def _blank_rows(line):
     )
 
 
+def _split_plan(line):
+    """One carrier's plan priced for employees only beside one priced for the dependent tiers only, not yet printed
+    as one column (D-219; the old `split_plan`): the first such pair, in the old words."""
+    if not line.get('split'):
+        return None
+    first, second = line['split'][0]
+    return _item(
+        'split_plan',
+        'info',
+        f'{first} carries only the employee-only rate and {second} only the dependent tiers: one plan filed as two. '
+        'Pick "One column with" on the Plans card to print them as one; both stay in the data.',
+        line,
+        card='quotes',
+    )
+
+
 def _line_checks(line, cap, any_reasons, deal_words):
     label = line['label']
     if line['off']:
@@ -177,7 +193,7 @@ def _line_checks(line, cap, any_reasons, deal_words):
                 card='quotes',
             )
         )
-    out.extend(item for item in (_enrollment(line), *_currents(line)) if item)
+    out.extend(item for item in (_enrollment(line), _split_plan(line), *_currents(line)) if item)
     out.extend(item for item in (_recommendation(line, any_reasons, deal_words), _blank_rows(line)) if item)
     return out
 

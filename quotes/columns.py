@@ -31,6 +31,7 @@ COLUMNS = {
     'plan.derived': 'derived',  # a priced version's record, re-priced by ✎ (F82; slice 35)
     'plan.bundling': 'bundling',  # the quote's rates already include the bundle (F78; slice 35)
     'plan.option_number': 'option_number',  # "Option n", cleared by a move to another line (J159; slice 25)
+    'plan.pair_of': 'pair_of_id',  # the first half of a pair printed as one column (D-219, J15; slice 33)
 }
 REPLACES = 'plan.replaces_ids'
 PACKAGES = 'plan.package_ids'

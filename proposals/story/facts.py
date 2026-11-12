@@ -79,6 +79,7 @@ def _lines(deal, stored):
         row = intent_rows.get(key) or {}
         is_kept = line_states.get(key) == intent.PRESENTED
         incumbent = line_block.incumbent(row if is_kept else None)
+        state = laid.state  # each pair printed as one column (D-219, J15)
         entries.append((key, state, laid, line_states.get(key, ''), intent_rows.get(key)))
         spec = config.line_spec(stored, key)
         ctx = {'config': stored, 'marks': {}, 'state': line_states.get(key, ''), 'off': None, 'spec': spec}

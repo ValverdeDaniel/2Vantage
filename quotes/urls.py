@@ -24,6 +24,7 @@ urlpatterns = [
     path('deals/<int:pk>/plans/links/', arrange_views.LinksView.as_view()),
     path('deals/<int:pk>/plans/order/', arrange_views.OrderView.as_view()),
     path('deals/<int:pk>/plans/slot/', arrange_views.SlotView.as_view()),
+    path('deals/<int:pk>/plans/pair/', arrange_views.PairView.as_view()),  # one column with… · Split (J15; s33)
     path('deals/<int:pk>/plans/move-line/', move_views.MoveLineView.as_view()),
     path('deals/<int:pk>/plans/delete/', move_views.DeleteView.as_view()),
     path('deals/<int:pk>/plans/clear/', move_views.ClearView.as_view()),

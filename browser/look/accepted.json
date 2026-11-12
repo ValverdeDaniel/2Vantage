@@ -3906,6 +3906,28 @@
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
+    },
+    {
+      "screen": "gd1.pages",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "J15",
+      "why": "GD1's Florida Blue 05182 and 05183 print as one column on both apps (D-219, slice 33); its benefit cells read what the client files print, \"EE $2,500 / PP $5,000\" (OQ42's default), where the old screen's money formatter read \"$2,500 / $5,000\".",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.builder",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "J15",
+      "why": "GD1's Florida Blue 05182 and 05183 print as one column on both apps (D-219, slice 33); its benefit cells read what the client files print, \"EE $2,500 / PP $5,000\" (OQ42's default), where the old screen's money formatter read \"$2,500 / $5,000\".",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
     }
   ]
 }

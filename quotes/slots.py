@@ -102,7 +102,7 @@ def _add(line, label, picked, current, beside):
         raise Refused('Add a plan beside a current plan on this line.')
     stars_on = []
     if not _on(line)(picked):
-        refusal = presented.refusal(line, label, 1)
+        refusal = presented.refusal(line, label, presented.added(line, [picked.id]))
         if refusal:
             raise Refused(refusal)
         stars_on = [picked.id]

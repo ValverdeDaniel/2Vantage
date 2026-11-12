@@ -13,6 +13,7 @@ from proposals.tests import sheet_eval
 from proposals.workbook import build, facts, write
 from proposals.workbook.model import BLANK, FORMULA, NUMBER, TEXT
 from proposals.workbook.tabs import rates
+from quotes import packages as pk
 from quotes import selectors
 
 pytestmark = pytest.mark.django_db
@@ -50,6 +51,10 @@ def test_J147_GD1_rates_tabs_equal_the_key_three_ways(gd1, golden_keys, gd1_book
         for col, plan in zip(g['cols'], line.presented, strict=True):
             figures = key[by_id[plan.id]]
             app = state[line.key].results[plan.id]
+            if by_id[plan.id] == 'FB1':  # Florida Blue's pair, one column priced as its package (J15; slice 33)
+                figures = golden_keys['GD1']['pairs']['FB1+FB2']
+                found = state[line.key]
+                app = pk.folded(found.data, found.results, [(plan.id, gd1.refs['FB2'])])[plan.id]
             for row, field in ((rows['tm'], 'monthly'), (rows['ta'], 'annual')):
                 stored = _result(sheet, row, col['rate'])
                 assert stored == figures[field] == app[field], (line.key, by_id[plan.id], field)

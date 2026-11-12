@@ -6,10 +6,12 @@ prints only with its own star or a recommendation, as in the old app (OQ11 defau
 off the proposal presents nothing (J2; intake's intent arrives in slice 11, so `off` is the caller's).
 
 `room(line)` is how many more columns stars and recommendations can add: 16 a line, counting every column the line
-presents once it has stars (current, recommended and starred plans). A pair printed as one column will count once
-(slice 33). With no stars a line presents every plan and may pass 16; the PDF and PowerPoint then refuse (J3).
-Pure, over `shapes.LineData`.
+presents once it has stars (current, recommended and starred plans). A pair printed as one column counts once
+(`pairs.found`; D-219, slice 33), so `added` is the columns a write would add, not the plans. With no stars a line
+presents every plan and may pass 16; the PDF and PowerPoint then refuse (J3). Pure, over `shapes.LineData`.
 """
+
+from . import pairs
 
 MAX_COLUMNS = 16
 
@@ -34,12 +36,25 @@ def is_held(plan):
     return plan.role == 'current' or plan.recommended or plan.starred
 
 
+def columns(line):
+    """The columns a starred line holds: its held plans, a pair printed as one counted once."""
+    return pairs.columns(line, [plan.id for plan in held(line)])
+
+
 def room(line):
-    return max(0, MAX_COLUMNS - len(held(line)))
+    return max(0, MAX_COLUMNS - columns(line))
+
+
+def added(line, ids):
+    """How many columns holding the plans `ids` as well would add (a half whose partner is held adds none)."""
+    now = {plan.id for plan in held(line)}
+    return pairs.columns(line, now | set(ids)) - pairs.columns(line, now)
 
 
 def _held_words(line):
     plans = held(line)
+    seconds = {second for _first, second in pairs.found(line, [plan.id for plan in plans])}
+    plans = [plan for plan in plans if plan.id not in seconds]
     current = sum(1 for p in plans if p.role == 'current')
     recommended = sum(1 for p in plans if p.role != 'current' and p.recommended)
     starred = len(plans) - current - recommended

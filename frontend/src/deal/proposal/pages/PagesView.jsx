@@ -115,7 +115,19 @@ export default function PagesView({
               openId={picker?.spot?.plan_id ?? null}
               actions={actions}
               recommend={recommend}
-              menu={withMenu ? (plan) => <PlanMenu plan={plan} busy={writes.busy} onRename={writes.rename} /> : null}
+              menu={
+                withMenu
+                  ? (plan) => (
+                      <PlanMenu
+                        plan={plan}
+                        busy={writes.busy}
+                        onRename={writes.rename}
+                        onPair={writes.pairWith}
+                        onSplit={writes.split}
+                      />
+                    )
+                  : null
+              }
             />
           ))}
           {foldable && (

@@ -1,5 +1,5 @@
 import { useSetRecommended, useUpdatePlan } from '../../../api/quotes';
-import { useOrderPlans, usePutInSlot, useSetLinks, useStar } from '../../../api/quotesBoard';
+import { useOrderPlans, usePairPlans, usePutInSlot, useSetLinks, useStar } from '../../../api/quotesBoard';
 import { errorText } from '../../../lib/errors';
 import { useToast } from '../../../ui/useToast';
 
@@ -8,8 +8,8 @@ import { useToast } from '../../../ui/useToast';
  * the old AdvisorTab's placeOnPage / moveOnPage / takeOffPage at 7385bb3): a pick (`plans/slot/` `at`), "＋ Add a plan"
  * (`beside`), the arrows (`plans/order/` passing the plans the pages do not show), "Replacing:" (`plans/links/`) and ✕
  * (`plans/star/`, and `recommend/` for a recommended plan, as the server's `remove` says); in the builder, "Our
- * recommendation" (`recommend/`, J52) and ⋯ More's name on client documents (PATCH `client_name`, J14). Every write
- * refetches the
+ * recommendation" (`recommend/`, J52), ⋯ More's name on client documents (PATCH `client_name`, J14) and its "⧉ One
+ * column with… · Split" (`plans/pair/`, J15; slice 33; ✕ on a pair takes both halves off). Every write refetches the
  * deal's queries, the pages among them; a refusal shows the server's sentence.
  */
 export default function usePageWrites(dealId, line, payload) {
@@ -21,6 +21,7 @@ export default function usePageWrites(dealId, line, payload) {
     star: useStar(dealId),
     recommend: useSetRecommended(dealId),
     rename: useUpdatePlan(dealId),
+    pair: usePairPlans(dealId),
   };
   const failed = (error) => {
     toast.error(errorText(error));
@@ -40,12 +41,17 @@ export default function usePageWrites(dealId, line, payload) {
       doors.recommend.mutateAsync({ planId: plan.plan_id, recommended: !plan.recommended }).catch(failed),
     rename: (plan, name) =>
       doors.rename.mutateAsync({ planId: plan.plan_id, changes: { client_name: name } }).catch(failed),
+    pairWith: (plan, otherId) =>
+      doors.pair.mutateAsync({ firstId: plan.plan_id, secondId: otherId }).catch(failed),
+    split: (plan) => doors.pair.mutateAsync({ planId: plan.plan_id, split: true }).catch(failed),
     takeOff: async (plan) => {
-      const { unstar, unrecommend, star } = plan.remove;
+      const { unstar, unrecommend, star, also = [] } = plan.remove;
       try {
         if (unrecommend) await doors.recommend.mutateAsync({ planId: plan.plan_id, recommended: false });
         if (star.length) await doors.star.mutateAsync({ planIds: star, starred: true });
-        else if (unstar) await doors.star.mutateAsync({ planIds: [plan.plan_id], starred: false });
+        else if (unstar || also.length) {
+          await doors.star.mutateAsync({ planIds: [plan.plan_id, ...also], starred: false });
+        }
       } catch (error) {
         failed(error);
       }

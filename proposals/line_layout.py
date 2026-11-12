@@ -6,6 +6,10 @@ the plans the line presents (quotes' `presented()`, in `order.layout`'s order), 
 splitter, under the deal's chosen layout), and each plan's number in the order the client first reads it
 (`quotes.labels.numbers`: a stored number stays, the others follow the highest stored on the line). `reading_ids`
 gives Issue every presented plan in that order, line by line (slice 32 passes it to `stamp_option_numbers`).
+
+A pair printed as one column (D-219, J15; slice 33) is folded before the pages count columns (`pair_fold`): `Laid`
+carries the folded line state (`state`), which every reader of the laid-out line uses for its plans and figures, and
+`pairs` {first id: second id}. The second half gets no column, so no option number; the column keeps the first's.
 """
 
 from collections import namedtuple
@@ -20,9 +24,10 @@ from quotes.models import Plan
 from . import config as settings
 from . import page_columns as cols
 from . import pages as splitter
+from . import pair_fold
 from .models import ProposalConfig
 
-Laid = namedtuple('Laid', 'rows shown numbers pages options')
+Laid = namedtuple('Laid', 'rows shown numbers pages options state pairs')
 
 
 def tops(deal, line_keys):
@@ -53,16 +58,19 @@ def options(pages, data, rows, top):
 
 def lay_out(state, off, layout, top):
     """The line's `Laid`: model rows by id, the presented plans, the current plans' slot numbers (Current 1, 2…), the
-    pages and the option numbers. `off` is the intent's reason for keeping the line off (it presents nothing)."""
+    pages, the option numbers, the line's state with its pairs folded, and the pairs. `off` is the intent's reason for
+    keeping the line off (it presents nothing)."""
+    ids = [plan.id for plan in presented.presented(state.data, off=bool(off))]
+    state, pairs = pair_fold.fold(state, ids)
     data = state.data
     rows = {plan.id: plan for plan in state.plans}
-    shown = presented.presented(data, off=bool(off))
+    shown = [data.by_id[pid] for pid in ids if pid in data.by_id]
     numbers = {plan.id: n for n, plan in enumerate(data.current, start=1)}
     captions = {plan.id: f'Replacing: {cols.words(rows[plan.id])}' for plan in data.current}
     picks = [plan.id for plan in shown if plan.recommended]
     columns = [cols.column(plan, data) for plan in shown]
     pages = splitter.sequence(columns, captions, layout=layout, picks=picks)
-    return Laid(rows, shown, numbers, pages, options(pages, data, rows, top))
+    return Laid(rows, shown, numbers, pages, options(pages, data, rows, top), state, pairs)
 
 
 def reading_ids(deal):

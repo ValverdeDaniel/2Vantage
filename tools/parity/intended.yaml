@@ -473,9 +473,9 @@ intended:
     file: workbook
     where: "Medical!*"
     kind: "column-added, value, print"
-    match: "HMO 1000|^\\|+$|→ \\|+$|Option 9 → Option 10|column breaks|print area"
-    old: "the Aetna HMO renewal not presented; Cigna LocalPlus 1000 is Option 9"
-    new: "the recommended Aetna HMO renewal presented (Option 9); Cigna LocalPlus 1000 is Option 10; the print area and breaks take its pair"
+    match: "HMO 1000|^\\|+$|→ \\|+$|Option 10 → Option 11|column breaks|print area"
+    old: "the Aetna HMO renewal not presented; Cigna LocalPlus 1000 is Option 10 (Option 9 is the Florida Blue pair)"
+    new: "the recommended Aetna HMO renewal presented (Option 10); Cigna LocalPlus 1000 is Option 11; the print area and breaks take its pair"
     why: "F119 (C3): recommended plans are presented; option numbers follow the reading order (J159)."
     signed_by: null
     signed_on: null
@@ -594,6 +594,40 @@ intended:
     old: "14 slides"
     new: "18: Vision — your options and Vision — VSP, the premium chart slide, and Medical — your options (continued)"
     why: "F119 (recommended plans are presented), F52 (U5 replaces B and C) and J128 (the chart prints with 2+ at-a-glance rows, which J165 gives medical); the package summary runs on as the old one did (J132)."
+    signed_by: null
+    signed_on: null
+  # ---- GD1's Florida Blue pair (slice 33): 05182 and 05183 print as one column in both apps (D-219, J15) ----------
+  - item: J15
+    deal: GD1
+    file: workbook
+    where: "Cover!G16"
+    kind: value
+    match: "^16 plans · (.*) → 15 plans · \\1$"
+    old: "16 plans: the old executive summary was built before the pair fold, so it counted 05182 and 05183 apart"
+    new: "15 plans: the summary reads the line as the files print it, the pair one plan"
+    why: "J15 (D-219): every client file prints the pair as one; the old summary's count was the one place it did not (D-219's own note)."
+    signed_by: null
+    signed_on: null
+  - item: J15
+    deal: GD1
+    file: "proposal-pdf, paper"
+    where: "page * «Executive summary»"
+    kind: words
+    match: "^16 → 15$"
+    old: "16 plans looked at, 05182 and 05183 counted apart (the old summary was built before the pair fold)"
+    new: "15 plans: the pair is one plan"
+    why: "J15 (D-219): the summary reads the folded line, as every other page does."
+    signed_by: null
+    signed_on: null
+  - item: J15
+    deal: GD1
+    file: deck
+    where: "slide * «Executive summary»"
+    kind: text
+    match: "^16 plans · (.*) → 15 plans · \\1$"
+    old: "16 plans · …, 05182 and 05183 counted apart"
+    new: "15 plans · …, the pair one plan"
+    why: "J15 (D-219): the summary reads the folded line, as every other slide does."
     signed_by: null
     signed_on: null
   - item: J165

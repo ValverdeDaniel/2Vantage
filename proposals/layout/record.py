@@ -42,6 +42,8 @@ class Recorder:
 
     def put(self, item, height):
         top = tokens.PAGE_H - (self.oy + height)
+        if item['t'] == 'table':  # where reportlab's Table was translated to: the PDF draws its cells from there
+            item = {**item, 'origin': [self.ox, self.oy]}
         self.page['frames'].append(items.shifted(item, self.ox, top))
 
     def mark(self, flowable):

@@ -29,6 +29,8 @@ class PlanData:
     version_of: int | None = None
     # A premium holiday's credit, {annual} or {months} (F80); None for every other plan.
     credit: dict | None = None
+    # The first half of the pair this plan is the second half of (D-219; slice 33): `pairs.found` reads it.
+    pair_of: int | None = None
 
     @property
     def label(self):

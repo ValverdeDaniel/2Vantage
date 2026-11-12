@@ -210,8 +210,8 @@ def read_deal(deal):
         state = states[key]
         laid = line_layout.lay_out(state, None, layout, tops.get(key, 0))
         hidden = set(config.get(stored, f'markets.lines.{key}.hidden') or ())
-        out_lines.append(_line(key, stored, state, laid, hidden))
-        entries.append((key, state, laid, line_states.get(key, ''), intent_rows.get(key)))
+        out_lines.append(_line(key, stored, laid.state, laid, hidden))  # each pair as one column (D-219, J15)
+        entries.append((key, laid.state, laid, line_states.get(key, ''), intent_rows.get(key)))
     new_business = rules.deal_type(deal) == rules.NEW_BUSINESS
     on = [entry[0] for entry in entries]
     cards = deal_cards.cards(

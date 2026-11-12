@@ -13,6 +13,10 @@ A row: {kind: head | band | row | cost | total | plain, cells: [cell], fill?, ru
 A cell: {runs, align: l | c | r, span?, rowspan?, leading?, paras?, pad?, fill?}: `paras` ([{runs, align, leading}])
 is a cell of several paragraphs, `pad` its own (left, right, top, bottom); a cell of no runs (`blank`) is the old
 tables' empty '' cell, one 12 pt line. Rows of kind `row` are the benefit rows `rows_over` counts.
+
+Each cell's words also record where reportlab's Table put their origin (`at`: [left, top of the words] from the
+table's bottom-left, `grid.origin`), so the PDF draws them through the same two translations the old file did (the
+table's, then the cell's) and a glyph on a device pixel's edge lands where the old one did (slice 33).
 """
 
 from reportlab.platypus import Flowable
@@ -152,6 +156,7 @@ class Table(Flowable):
         heights = [height for height, _cells in measured]
         lefts = [sum(self.widths[:n]) for n in range(len(self.widths) + 1)]
         tops = [sum(heights[:n]) for n in range(len(heights) + 1)]
+        bottoms = grid.row_positions(heights)
         rule_x = lefts[self.rule['col']]
         for number, (row, (_height, placed)) in enumerate(zip(self.rows, measured, strict=True)):
             y = tops[number]
@@ -170,6 +175,7 @@ class Table(Flowable):
                     'wrap': True,
                     'paragraphs': spot['paras'],
                     'drop': tokens.PARAGRAPH_DROP,
+                    'at': grid.origin(lefts[col], bottoms, number, down, spot['pad'], spot['content']),
                 }
                 found = {
                     't': 'cell',

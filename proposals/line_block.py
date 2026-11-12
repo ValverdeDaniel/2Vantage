@@ -10,7 +10,7 @@ is quotes' (`deal_state`'s results; rule 5); every name is the client's (`client
 
 from deals import lines
 from intake import coverage as intent
-from quotes import fields, presented, priced_kinds
+from quotes import fields, presented, priced_kinds, split
 from quotes import math as m
 from quotes.math import enrollment as counts
 
@@ -213,6 +213,8 @@ def facts(line, state, laid, ctx):
         ],
         'reasons': bool(config.get(ctx['config'], f'reasons.{line}')),
         'blank_rows': _blank_rows(line, spec, shown, laid.rows),
+        # One plan filed as two, not yet printed as one column (D-219; slice 33): [(employee-only, dependents) names].
+        'split': [(a.name, b.name) for a, b in split.unpaired(data, [p.id for p in shown])],
     }
 
 

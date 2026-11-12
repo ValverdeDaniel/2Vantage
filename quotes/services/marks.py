@@ -57,7 +57,8 @@ def _star_line(user, deal, line_key, ids, starred, reason, now):
                 f'{_words(plan)} is a current plan — it is always on the proposal, so it takes no star.'
             )
     fresh = [plan for plan in targets if not plan.starred]
-    refusal = presented.refusal(data, lines.label(line_key), sum(1 for plan in fresh if not plan.recommended))
+    adding = presented.added(data, [plan.id for plan in fresh if not plan.recommended])  # a pair counts once
+    refusal = presented.refusal(data, lines.label(line_key), adding)
     if refusal:
         raise activity.Refused(refusal)
     batch = Batch(fresh, STAR_KEYS)
@@ -119,7 +120,8 @@ def set_recommended(user, plan_id, recommended):
     if bool(recommended) == plan.recommended:
         return plan
     if recommended and not presented.is_held(plan):  # a current or starred plan already has its column
-        refusal = presented.refusal(data, lines.label(plan.line), 1, 'unstar one before recommending another')
+        adding = presented.added(data, [plan.id])
+        refusal = presented.refusal(data, lines.label(plan.line), adding, 'unstar one before recommending another')
         if refusal:
             raise activity.Refused(refusal)
     batch = Batch([plan], ('plan.recommended',))

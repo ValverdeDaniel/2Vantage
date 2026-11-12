@@ -56,6 +56,7 @@ def plan_data(plan):
         sort_order=plan.sort_order,
         version_of=version_of(plan),
         credit=(plan.derived.get('credit') or None) if version_of(plan) else None,
+        pair_of=plan.pair_of_id,
     )
 
 

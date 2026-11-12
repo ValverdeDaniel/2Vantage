@@ -1,6 +1,6 @@
 {
   "key": "GD1",
-  "about": "Three current medical plans with renewals; alternates from two carriers; a consolidation; plans bought together; two picks for one plan; dental and vision.",
+  "about": "Three current medical plans with renewals; alternates from two carriers; a consolidation; plans bought together; two picks for one plan; one plan filed under two numbers (Florida Blue 05182 and 05183), paired to print as one column (D-219); dental and vision.",
   "client": "Golden Manufacturing (synthetic)",
   "status": "prospect",
   "effective_date": "2027-01-01",
@@ -326,6 +326,42 @@
       "enrollment": {"EE": 4, "ES": 2, "EC": 1, "FAM": 2}
     },
     {
+      "ref": "FB1", "line": "medical", "role": "alternate", "carrier": "Florida Blue", "name": "BlueOptions HSA Compatible 05182", "plan_number": "05182", "links": ["B"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "HDHP",
+        "network": "BlueOptions",
+        "deductible_single": "2500",
+        "coinsurance": "10",
+        "oop_max_single": "5000",
+        "deductible_single_oon": "5000",
+        "oop_max_single_oon": "10000",
+        "rate_ee": "575.50"
+      },
+      "enrollment": {"EE": 8, "ES": 0, "EC": 0, "FAM": 0}
+    },
+    {
+      "ref": "FB2", "line": "medical", "role": "alternate", "carrier": "Florida Blue", "name": "BlueOptions HSA Compatible 05183", "plan_number": "05183", "links": ["B"],
+      "values": {
+        "funding": "fully_insured",
+        "plan_type": "HDHP",
+        "network": "BlueOptions",
+        "deductible_single": "5000",
+        "deductible_family": "5000",
+        "coinsurance": "10",
+        "oop_max_single": "6850",
+        "oop_max_family": "10000",
+        "deductible_single_oon": "10000",
+        "deductible_family_oon": "10000",
+        "oop_max_single_oon": "20000",
+        "oop_max_family_oon": "20000",
+        "rate_es": "1237.40",
+        "rate_ec": "1078.85",
+        "rate_fam": "1774.95"
+      },
+      "enrollment": {"EE": 0, "ES": 2, "EC": 1, "FAM": 4}
+    },
+    {
       "ref": "DN", "line": "dental", "role": "current", "carrier": "Guardian", "name": "Dental PPO 1500", "links": [],
       "values": {
         "den_annual_max": "1500",
@@ -397,7 +433,8 @@
       }
     }
   ],
-  "starred": ["CG1", "CG1N", "CG3", "CG4", "U1", "U2", "U5", "D1", "D2", "DNA", "VSA"],
+  "starred": ["CG1", "CG1N", "CG3", "CG4", "U1", "U2", "U5", "D1", "D2", "FB1", "FB2", "DNA", "VSA"],
+  "pairs": [["FB1", "FB2"]],
   "recommended": ["CG1", "CG1N", "U2", "C2", "DNA", "VS2"],
   "packages": [
     {"line": "medical", "name": "UHC consolidated", "plans": ["U1", "U5"]},

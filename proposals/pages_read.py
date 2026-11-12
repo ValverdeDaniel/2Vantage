@@ -69,12 +69,12 @@ def _off(deal, line, state):
 
 def payload(deal, line, preset):
     state = quotes.line_state(deal, line)
-    data, results = state.data, state.results
     label = lines.label(line)
     off = _off(deal, line, state) if state.plans else None
     layout = line_layout.layout_of(line_layout.stored_config(deal))
     laid = line_layout.lay_out(state, off, layout, line_layout.tops(deal, [line]).get(line, 0))
     rows, shown, numbers, pages = laid.rows, laid.shown, laid.numbers, laid.pages
+    data, results = laid.state.data, laid.state.results  # a pair printed as one column is one column here (J15)
     on = {plan.id for plan in shown}
     ctx = {
         'numbers': numbers,
@@ -83,6 +83,8 @@ def payload(deal, line, preset):
         'arrows': cols.arrows(shown, data),
         'label': label,
         'on': on,
+        'line': state.data,  # both halves of a pair, for its control (J15)
+        'folded': set(laid.pairs),
     }
     others = [cols.facts(plan, data, results, rows, ctx) for plan in data.plans if plan.id not in on]
     starred = presented.has_stars(data)

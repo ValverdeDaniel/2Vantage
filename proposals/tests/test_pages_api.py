@@ -36,7 +36,8 @@ def column(body, built, ref):
     return next(entry for entry in body['plans'] if entry['plan_id'] == built.refs[ref])
 
 
-GD1_PAGES = [['A', 'CG1', 'CG1N', 'U1', 'D1', 'D2'], ['B', 'CG3', 'U2', 'U5'], ['C', 'C2', 'CG4']]
+# FB1 is Florida Blue's 05182 and 05183 printed as one column (D-219, J15; slice 33): FB2 has no column of its own.
+GD1_PAGES = [['A', 'CG1', 'CG1N', 'U1', 'D1', 'D2'], ['B', 'CG3', 'U2', 'U5', 'FB1'], ['C', 'C2', 'CG4']]
 
 
 def test_F37_J49_GD1_medical_prints_a_page_per_current_plan(api, gd1):
@@ -63,7 +64,7 @@ def test_F39_J159_GD1_columns_say_today_option_n_and_renewal(api, gd1, golden_ke
     assert a['replacing']['text'] == 'What they have today'
     assert a['monthly'] == f'${plans["A"]["monthly"]:,}'
     numbered = [column(body, gd1, ref)['option'] for page in GD1_PAGES for ref in page if ref not in ('A', 'B', 'C')]
-    assert numbered == list(range(1, 11))  # reading order; renewals numbered, current plans not
+    assert numbered == list(range(1, 12))  # reading order; renewals numbered, current plans not
     c2 = column(body, gd1, 'C2')
     assert (c2['kind'], c2['chips'][0]['text'], c2['chips'][0]['of'], c2['pickable']) == ('renewal', 'RENEWAL', 3, True)
     assert c2['replacing'] == {
@@ -95,14 +96,17 @@ def test_F45_J10_GD1_a_pick_puts_the_plan_in_the_slot_with_its_star_and_link(api
     assert picked.starred and list(picked.replaces.values_list('id', flat=True)) == [refs['B']]
     assert not left.starred
     body = read(api, gd1.deal)
-    assert page_refs(body, gd1)[1] == ['B', 'CG2', 'U2', 'U5']  # CG3's place on B's page
+    assert page_refs(body, gd1)[1] == ['B', 'CG2', 'U2', 'U5', 'FB1']  # CG3's place on B's page
     assert refs['CG3'] in {entry['plan_id'] for entry in body['others']}
 
 
 def test_F45_J10_GD1_two_plans_on_the_proposal_trade_places_and_links(api, gd1):
     refs = gd1.refs
     post(api, gd1.deal, 'slot', {'line': 'medical', 'plan_id': refs['U1'], 'at': refs['CG3']})
-    assert page_refs(read(api, gd1.deal), gd1)[:2] == [['A', 'CG1', 'CG1N', 'CG3', 'D1', 'D2'], ['B', 'U1', 'U2', 'U5']]
+    assert page_refs(read(api, gd1.deal), gd1)[:2] == [
+        ['A', 'CG1', 'CG1N', 'CG3', 'D1', 'D2'],
+        ['B', 'U1', 'U2', 'U5', 'FB1'],
+    ]
 
 
 def test_J10_GD1_the_plan_picked_over_loses_its_recommendation(api, gd1):
@@ -165,7 +169,13 @@ def test_OQ13_F45_a_stop_loss_column_takes_a_slot_pick_with_the_slots_star_and_l
 
 def test_J13_take_off_on_a_starred_line_unstars_and_says_the_recommendation(api, gd1):
     body = read(api, gd1.deal)
-    assert column(body, gd1, 'CG1')['remove'] == {'unstar': True, 'unrecommend': True, 'star': [], 'why': None}
+    assert column(body, gd1, 'CG1')['remove'] == {
+        'unstar': True,
+        'unrecommend': True,
+        'star': [],
+        'also': [],
+        'why': None,
+    }
     assert column(body, gd1, 'A')['remove'] is None
 
 

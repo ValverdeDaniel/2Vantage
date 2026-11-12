@@ -171,3 +171,46 @@ def recommendation(line, results, member_packages=()):
     ]
     plan_ids = [p.id for p in line.plans if p.recommended]
     return {'plan_ids': plan_ids, 'covered': covered, 'missing': missing, 'packages': packages}
+
+
+def _change(result, bases, results, line, keys):
+    """A column's change against its bases, by `evaluate`'s rule: shown only for the same people, else whose people
+    it is part of."""
+    if not bases or result['annual'] is None or any(results[pid]['annual'] is None for pid in bases):
+        return None, None
+    base_figures = [_people(results[pid]) for pid in bases]
+    base_people = m.total(base_figures, keys) if all(base_figures) else None
+    if m.same_people(_people(result), base_people):
+        return m.change(result['annual'], sum(m.decimal(results[pid]['annual']) for pid in bases)), None
+    return None, ' + '.join(line.by_id[pid].label for pid in bases)
+
+
+def folded(line, results, found):
+    """{plan id: result} with each pair (`pairs.found`) printed as one column (plan.md §5.5; D-219, J15, O.3.6): the
+    first half's result becomes `package()` of the two halves (their total, people and reason), the second half's goes,
+    and every column measured against a half is measured against the pair, its change worked out again."""
+    gone = {second: first for first, second in found}
+    if not gone:
+        return results
+    keys = m.enrollment_keys(line.rate_basis)
+    out = {pid: dict(result) for pid, result in results.items() if pid not in gone}
+    for first, second in found:
+        priced = package([first, second], line, results)
+        unpriced = [results[pid]['reason'] for pid in (first, second) if results[pid]['monthly'] is None]
+        sources = {results[pid]['enrollment_source'] for pid in (first, second)} - {None}
+        out[first].update(
+            monthly=priced['monthly'],
+            annual=priced['annual'],
+            enrollment_used=priced['enrollment'],
+            enrollment_source=sources.pop() if len(sources) == 1 else results[first]['enrollment_source'],
+            reason=unpriced[0] if unpriced else None,
+            quoted=all(results[pid]['quoted'] for pid in (first, second)),
+            credit=None,
+        )
+    firsts = {first for first, _second in found}
+    for pid, result in out.items():
+        bases = list(dict.fromkeys(gone.get(base, base) for base in result['base_ids']))
+        if pid in firsts or bases != list(result['base_ids']) or firsts & set(bases):
+            result['base_ids'] = bases
+            result['change'], result['part_of'] = _change(result, bases, out, line, keys)
+    return out

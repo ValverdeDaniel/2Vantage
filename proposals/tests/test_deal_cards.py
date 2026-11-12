@@ -67,6 +67,7 @@ def test_J63_GD1_markets_checked_lists_the_quoting_carriers_with_no_rfp_sent(api
         ('Aetna', None),
         ('Cigna', True),
         ('UnitedHealthcare', True),
+        ('Florida Blue', True),  # the pair's carrier (slice 33)
     ]
     assert all(not row['asked'] for row in medical['rows'])
     api.patch(f'/api/deals/{gd1.deal.id}/proposal/', {'markets.on': True}, format='json')

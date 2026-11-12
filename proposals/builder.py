@@ -73,10 +73,10 @@ def laid_lines(deal, stored, stored_marks):
             'spec': config.line_spec(stored, line),
             'incumbent': line_block.incumbent(intent_rows.get(line) if kept else None),
         }
-        blocks.append(line_block.block(line, state, laid, ctx))
-        sheets.append(line_block.facts(line, state, laid, ctx))
+        blocks.append(line_block.block(line, laid.state, laid, ctx))
+        sheets.append(line_block.facts(line, laid.state, laid, ctx))
         if line not in off:
-            entries.append((line, state, laid, line_states.get(line, ''), intent_rows.get(line)))
+            entries.append((line, laid.state, laid, line_states.get(line, ''), intent_rows.get(line)))
     return blocks, sheets, entries
 
 
