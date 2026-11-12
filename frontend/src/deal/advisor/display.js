@@ -39,18 +39,8 @@ export function enrollmentText(enrollment, keys) {
 
 export const SOURCE_WORDS = { typed: 'typed', 'from current plan': 'from current', 'from replaced plan': 'from replaced' };
 
-export const ORIGIN_ICON = { typed: '✎', import: '⤓', client: '☺', ai: '✦' };
-
 export function enrollmentKeys(rateBasis) {
   if (rateBasis === 'composite') return ['EE', 'ES', 'EC', 'FAM'];
   return rateBasis === 'pepm' || rateBasis === 'stop_loss' ? ['lives'] : ['volume'];
 }
 
-/** "Renewal of HDHP 3300" · "Alternate → HDHP 3300 + PPO 1500" · "Added plan" · "Current". */
-export function roleText(plan, byId) {
-  if (plan.role === 'current') return 'Current';
-  if (plan.role === 'renewal') return `Renewal of ${byId[plan.renews_id]?.name ?? '—'}`;
-  const names = (plan.replaces_ids ?? []).map((id) => byId[id]?.name).filter(Boolean);
-  if (names.length) return `Alternate → ${names.join(' + ')}`;
-  return (plan.base_ids ?? []).length ? `Alternate → ${byId[plan.base_ids[0]]?.name ?? ''}` : 'Added plan';
-}

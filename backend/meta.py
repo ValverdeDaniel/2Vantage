@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 
 from deals import carriers, lifecycle, lines, stages
 from documents import kinds
-from quotes import fields
+from quotes import board_presets, fields
 
 
 def _pairs(choices):
@@ -24,5 +24,6 @@ class MetaView(APIView):
                 **kinds.meta(),  # document_kinds (with their flags), document_buckets, document_roles
                 'plans': fields.meta(),
                 'carriers': carriers.meta(),
+                'board': board_presets.meta(),  # the Advisor's columns, sorts, sliders and budget rungs (F31)
             }
         )

@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from deals import lines
+from deals import activity, lines
 from deals.downloads import file_response
 from deals.models import Deal
 from documents import services as documents
@@ -24,6 +24,8 @@ class TemplateDownloadView(APIView):
         if line and line not in lines.BY_KEY:
             raise ValidationError({'line': ['Unknown line.']})
         content = template.export(deal, line)
+        # The internal spreadsheet (J98): every plan and field, sl_lasers included, so every download is logged (§9.3).
+        activity.log_access(deal, request.user, 'downloaded', 'the plan template', None, area='quotes')
         suffix = f' - {lines.label(line)}' if line else ''
         return file_response(io.BytesIO(content), f'{deal.client.name} - Plan template{suffix}.xlsx')
 

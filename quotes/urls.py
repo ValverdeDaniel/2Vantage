@@ -18,6 +18,7 @@ urlpatterns = [
     path('deals/<int:pk>/plans/packages/', views.PackagesView.as_view()),
     path('deals/<int:pk>/plans/template/', template_views.TemplateDownloadView.as_view()),
     path('deals/<int:pk>/plans/import/', template_views.TemplateImportView.as_view()),
+    path('deals/<int:pk>/plans/board-export/', views.BoardExportView.as_view()),  # ⤓ Export (F93; slice 9)
     path('plans/<int:plan_id>/', views.PlanView.as_view()),
     path('plans/<int:plan_id>/source/', source_views.PlanSourceView.as_view()),  # ↗ open in file (slice 15, E18)
     path('plans/<int:plan_id>/renewal/', views.RenewalView.as_view()),

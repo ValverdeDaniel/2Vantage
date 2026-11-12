@@ -2,14 +2,18 @@
 selector → respond. Marks are in `mark_views.py`, roles, links, order and slots in `arrange_views.py`, moving and
 removing plans in `move_views.py`."""
 
+import io
+
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from deals import activity, lines
+from deals.downloads import file_response
 from deals.models import Deal
 
-from . import parse, selectors, services
+from . import board_export, parse, selectors, services
 from .models import Package, Plan
 
 
@@ -89,6 +93,23 @@ class PackagesView(APIView):
             request.user, deal, parse.line(request), data.get('name'), data.get('plan_ids')
         )
         return Response(_package(package), status=status.HTTP_201_CREATED)
+
+
+class BoardExportView(APIView):
+    def get(self, request, pk):
+        """⤓ Export (F93, J167): `?line=&plans=<ids in the order drawn>&columns=<keys>&orientation=rows|cols` → the
+        board as Excel. Unknown plans and columns are dropped; a file that prints `sl_lasers` is a logged download."""
+        deal = get_object_or_404(Deal.objects.select_related('client'), pk=pk)
+        line = parse.line(request)
+        raw_ids = [part for part in (request.query_params.get('plans') or '').split(',') if part.strip()]
+        plan_ids = [parse.plan_id(part.strip(), 'plans') for part in raw_ids]
+        keys = [part.strip() for part in (request.query_params.get('columns') or '').split(',') if part.strip()]
+        transposed = request.query_params.get('orientation') == 'cols'
+        content, printed = board_export.export(deal, line, plan_ids, keys, transposed)
+        if 'sl_lasers' in printed:  # claimant data on an internal file (§4.3, J98)
+            activity.log_access(deal, request.user, 'downloaded', 'the quote board with lasers', None, area='quotes')
+        name = f'{deal.client.name} - {lines.label(line)} quote comparison.xlsx'
+        return file_response(io.BytesIO(content), name)
 
 
 class PackageView(APIView):

@@ -37,7 +37,54 @@ export const WALKS = {
       });
       await step("the Advisor shows the deal's current medical plans", async () => {
         const currents = spec.plans.filter((p) => p.line === 'medical' && p.role === 'current');
-        for (const plan of currents) await page.getByText(plan.name, { exact: false }).first().waitFor();
+        // Visible text only: the board's "Replacing:" pickers list the current plans in their (hidden) options too.
+        for (const plan of currents) {
+          await page.getByText(plan.name, { exact: false }).filter({ visible: true }).first().waitFor();
+        }
+      });
+    },
+  },
+  10: {
+    title: "Transpose the table: GD1's medical board as plans-as-columns, header frozen, kept per browser (F34, F35)",
+    deal: 'GD1',
+    async run(ctx) {
+      const { page, step, spec } = ctx;
+      await signIn(ctx);
+      await openDeal(ctx);
+      await step('the Advisor opens on the medical board', async () => {
+        await page.getByRole('link', { name: 'Advisor', exact: true }).click();
+        await page.getByRole('button', { name: /^Medical/ }).click();
+        await page.getByRole('button', { name: '⇄ Transpose' }).waitFor();
+      });
+      const currents = spec.plans.filter((p) => p.line === 'medical' && p.role === 'current');
+      await step('⇄ Transpose turns the plans into columns (every column of the line as a row)', async () => {
+        await page.getByRole('button', { name: 'All columns' }).click();
+        await page.getByRole('button', { name: '⇄ Transpose' }).click();
+        await page.getByRole('columnheader', { name: /Benefit/ }).waitFor();
+        for (const plan of currents) {
+          await page.getByRole('columnheader', { name: new RegExp(plan.name, 'i') }).first().waitFor();
+        }
+        await page.getByRole('cell', { name: /^Monthly total/ }).waitFor();
+      });
+      await step('the header row stays put while the table scrolls under it', async () => {
+        const head = page.getByRole('columnheader', { name: /Benefit/ });
+        const row = page.getByRole('cell', { name: /^Plan Type/ });
+        await row.hover();
+        const before = [await head.boundingBox(), await row.boundingBox()];
+        await page.mouse.wheel(0, 300);
+        await page.waitForTimeout(400);
+        const after = [await head.boundingBox(), await row.boundingBox()];
+        if (Math.abs(after[0].y - before[0].y) > 1) throw new Error(`the header moved ${before[0].y} → ${after[0].y}`);
+        if (after[1].y >= before[1].y) throw new Error('the table did not scroll');
+      });
+      await step('the choice is kept in this browser', async () => {
+        await page.reload();
+        await page.getByRole('columnheader', { name: /Benefit/ }).waitFor();
+      });
+      await step('⇄ Transpose again puts the plans back in rows', async () => {
+        await page.getByRole('button', { name: '⇄ Transpose' }).click();
+        await page.getByRole('columnheader', { name: /Monthly total/i }).waitFor();
+        await page.getByRole('row', { name: new RegExp(currents[0].name) }).first().waitFor();
       });
     },
   },

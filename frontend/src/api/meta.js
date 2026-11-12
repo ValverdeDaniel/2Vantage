@@ -9,7 +9,8 @@ export async function getMeta() {
   return data;
 }
 
-/** {lines, tiers, stages, relationships, funding, document_kinds, document_roles, plans, carriers} */
+/** {lines, tiers, stages, relationships, funding, document_kinds, document_roles, plans, carriers, board} — `board` is
+ *  the Advisor's columns per line and preset, sorts, the transpose limit, sliders, budget rungs and compliance words. */
 export function useMeta() {
   return useQuery({ queryKey: META_KEY, queryFn: getMeta, staleTime: Infinity, gcTime: Infinity });
 }

@@ -97,3 +97,29 @@ def test_F60_H6_GD1_a_sold_plan_cannot_be_deleted(gd1, user):
         services.delete_plans(user, gd1.deal, [plan_id])
     assert refused.value.sentence.endswith('is sold, so it stays. Unmark sold first.')
     assert Plan.objects.filter(pk=plan_id).exists()
+
+
+def test_F93_GD1_the_board_export_equals_the_board(gd1, admin_api):
+    """Slice 9's done-when: the export matches the screen — the Primary preset's columns, GD1's medical plans in the
+    client's order, and every figure as the comparison payload gives it."""
+    import io
+
+    from openpyxl import load_workbook
+
+    from quotes import board_export, board_presets
+    from quotes.selectors import comparison
+
+    keys = board_presets.columns('primary', 'medical')
+    response = admin_api.get(
+        f'/api/deals/{gd1.deal.id}/plans/board-export/', {'line': 'medical', 'columns': ','.join(keys)}
+    )
+    assert response.status_code == 200
+    sheet = load_workbook(io.BytesIO(b''.join(response.streaming_content))).active
+    cells = [[cell.value for cell in row] for row in sheet.iter_rows(min_row=5)]
+    payload = comparison(gd1.deal, 'medical')
+    _payload, plans, header, rows = board_export.table(gd1.deal, 'medical', None, keys)
+    assert cells[0] == [label for label, _key, _kind in header]
+    assert [plan['id'] for plan in plans] == [plan['id'] for plan in payload['plans']]
+    assert [row[: len(header)] for row in cells[1:]] == rows
+    total = [key for _label, key, _kind in header].index('total')
+    assert [row[total] for row in cells[1:]] == [plan['premium']['monthly'] for plan in payload['plans']]

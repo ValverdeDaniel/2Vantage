@@ -74,6 +74,9 @@ def base(plan):
         'values': plan.values,
         'enrollment': plan.enrollment,
         'enrollment_on': plan.enrollment_on,
+        # A copy or priced version names its original; the board's chips and arrows read both (F62, F43).
+        'derived_from': plan.derived_from_id,
+        'derived': plan.derived or None,
     }
 
 

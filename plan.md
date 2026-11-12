@@ -3850,7 +3850,7 @@ the design; a path with no plan id sits under `deals/{id}/`.
 | `plans/slot/` | `put_in_slot`, for Pages' picks | F48, J5–J13 | 7, 14 |
 | `plans/shortlist/clear/` | Clear the stars on one line | F55 | 7 |
 | `plans/move-line/`, `plans/delete/`, `plans/clear/` | Move to another line keeping the id, `{plan_ids, line}` → `{line, plans, activity_id}`; soft delete, `{plan_ids}`, and clear a line, `{line}`, each → `{removed, kept, note, plans, activity_id}` (Restore is Revert of `activity_id`). `plans/{id}/` takes no DELETE | F59–F61 | built; 8 |
-| `plans/board-export/` | The board as Excel, equal to the screen | F93, J167 | 9 |
+| `plans/board-export/` | GET `?line=&plans=<ids in the order drawn>&columns=<keys>&orientation=rows\|cols`: the board as Excel, equal to the screen; every figure from the comparison payload; current plans ride along; unknown ids and keys dropped; written with XlsxWriter through `xlsx_safe`; printing `sl_lasers` writes a `downloaded` row | F93, J167 | built; 9 |
 | `plans/find/` | The finder: names, numbers, carriers, codes and aliases | F14–F17, OQ14 | 10 |
 | `saved-views/`, `saved-views/{id}/` | Saved board and stop-loss setups, Mine and Shared; others' private views answer 404 | F28, F29 | 10, 36 |
 | `plans/sources/`, `plans/marks/` | The station's values and marks (F.6's `plans/review/`) | E.6, F63–F67 | 17 |

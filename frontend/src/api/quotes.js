@@ -1,33 +1,13 @@
-// The Advisor (plan.md §7.8). Query keys: ['deal', id, 'advisor', 'lines'] · ['deal', id, 'advisor', line].
+// The Advisor's plans (plan.md §7.8). Query keys: ['deal', id, 'advisor', 'lines'] · ['deal', id, 'advisor', line].
+// The board's marks and arrangement (stars, roles, links, order, delete, clear, move) are in quotesBoard.js.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from './client';
 import { dealKey, invalidateDeal } from './deals';
 
 export const advisorKey = (dealId, ...rest) => dealKey(dealId, 'advisor', ...rest);
 
-/**
- * The comparison is compact (F.6): each cell carries only its flags, `{s: status, o: origin, d: document index,
- * m: mark}`, and the documents are listed once. The screens read `plan.status` and `plan.sources`, so they are
- * rebuilt here from the cells (display only; nothing is computed).
- */
-export function expandComparison(data) {
-  const documents = data.documents ?? [];
-  return {
-    ...data,
-    plans: data.plans.map((plan) => {
-      const status = {};
-      const sources = {};
-      Object.entries(plan.cells ?? {}).forEach(([key, cell]) => {
-        if (cell.s) status[key] = cell.s;
-        if (key in (plan.values ?? {})) {
-          sources[key] = { origin: cell.o ?? 'typed', doc: documents[cell.d]?.id, mark: cell.m };
-        }
-      });
-      return { ...plan, status, sources };
-    }),
-  };
-}
-
+/** [{line, label, requested, current, renewal, alternate, starred, recommended, recommendation_covered, columns,
+ *  room, sold_plans}] in the deal's line order (F5). */
 export function useAdvisorLines(dealId) {
   return useQuery({
     queryKey: advisorKey(dealId, 'lines'),
@@ -36,21 +16,54 @@ export function useAdvisorLines(dealId) {
   });
 }
 
+/**
+ * One line's comparison, as the server sends it (F.6, C23): {line, rate_basis, groups, plans, documents, room,
+ * packages, member_packages, recommendation, warnings}, the plans in `order.layout`'s order, each with its compact
+ * `cells` ({key: {s: status, o: origin, d: index into documents, m: mark}}), `premium`, `change`, `facts`,
+ * `closeness`, `presented` and `base_ids`. A value's full source comes on ↗ (plans/{id}/source/).
+ */
 export function useComparison(dealId, line) {
   return useQuery({
     queryKey: advisorKey(dealId, line),
-    queryFn: async () => expandComparison((await api.get(`deals/${dealId}/plans/`, { params: { line } })).data),
+    queryFn: async () => (await api.get(`deals/${dealId}/plans/`, { params: { line } })).data,
     enabled: Boolean(line),
     staleTime: 0,
     placeholderData: (previous) => (previous?.line === line ? previous : undefined),
   });
 }
 
+/** Refetch the Advisor's own queries (the board after a burst of cell writes; F71). */
+export function refreshAdvisor(queryClient, dealId) {
+  return queryClient.invalidateQueries({ queryKey: advisorKey(dealId) });
+}
+
+/** Write one plan value into the cached comparison at once (a typed cell, or its restore after a failure). */
+export function setCachedValue(queryClient, dealId, line, planId, key, value) {
+  queryClient.setQueryData(advisorKey(dealId, line), (data) =>
+    data
+      ? {
+          ...data,
+          plans: data.plans.map((plan) =>
+            plan.id === planId ? { ...plan, values: { ...plan.values, [key]: value ?? '' } } : plan,
+          ),
+        }
+      : data,
+  );
+}
+
 /**
- * Every Advisor write refetches the Advisor (premiums, packages and the recommendation all move together) and,
- * when it can move the stage (sold), the deal header too. Proposal queries refetch on open (staleTime 0).
+ * PATCH plans/{id}/ (F71, J74): only carrier, name, plan_number, client_name, notes and values, with `expect` (the
+ * values the person last saw; a stored value that differs answers 409 naming the keys). → plan + activity_id.
  */
-function useAdvisorMutation(dealId, mutationFn, { header = false } = {}) {
+export async function patchPlan(planId, body) {
+  return (await api.patch(`plans/${planId}/`, body)).data;
+}
+
+/**
+ * Every other Advisor write refetches the deal's queries (premiums, packages and the recommendation move together)
+ * and, when it can move the stage (sold), the deal header too. Proposal queries refetch on open (staleTime 0).
+ */
+export function useAdvisorMutation(dealId, mutationFn, { header = false } = {}) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn,
@@ -65,9 +78,8 @@ export function useCreatePlan(dealId) {
 const LINK_KEYS = ['role', 'renews_id', 'replaces_ids'];
 
 /**
- * ({planId, changes}). PATCH takes only carrier, name, plan_number, client_name, notes, values and `expect` (F71);
- * a role and its links go through their own doors (F52, F53): `plans/role/` when the role changes (a plan already in
- * that role is left as it is), then `plans/links/` (which changes nothing when the role door already set them).
+ * ({planId, changes}) for the plan dialog: details through PATCH; a role and its links through their own doors
+ * (F52, F53): `plans/role/` when the role changes, then `plans/links/`.
  */
 export function useUpdatePlan(dealId) {
   return useAdvisorMutation(dealId, async ({ planId, changes }) => {
@@ -81,46 +93,9 @@ export function useUpdatePlan(dealId) {
         answer = (await api.post(`deals/${dealId}/plans/links/`, { plan_id: planId, ...links })).data;
       }
     }
-    if (Object.keys(rest).length) answer = (await api.patch(`plans/${planId}/`, rest)).data;
+    if (Object.keys(rest).length) answer = await patchPlan(planId, rest);
     return answer;
   });
-}
-
-/** ({planIds, role, renewsId?, replacesIds?}) → {plans, activity_id}: Mark current, Remove current (F53). */
-export function useSetRole(dealId) {
-  return useAdvisorMutation(
-    dealId,
-    async ({ planIds, role, renewsId, replacesIds }) =>
-      (
-        await api.post(`deals/${dealId}/plans/role/`, {
-          plan_ids: planIds,
-          role,
-          renews_id: renewsId,
-          replaces_ids: replacesIds,
-        })
-      ).data,
-  );
-}
-
-/** ({planId, replacesIds} | {planId, renewsId}) → {plans, activity_id}: "Replacing:" and "Several…" (F52). */
-export function useSetLinks(dealId) {
-  return useAdvisorMutation(dealId, async ({ planId, replacesIds, renewsId }) => {
-    const body = renewsId !== undefined ? { renews_id: renewsId } : { replaces_ids: replacesIds ?? [] };
-    return (await api.post(`deals/${dealId}/plans/links/`, { plan_id: planId, ...body })).data;
-  });
-}
-
-/**
- * (planId | [planIds]) → {removed, kept: [{id, name, reason}], note, plans, activity_id}: a soft delete (F60); Revert of
- * its Activity row restores the plans. Sold plans stay and are named in `note`; when every plan named is sold the
- * door answers 409 with that sentence.
- */
-export function useDeletePlan(dealId) {
-  return useAdvisorMutation(
-    dealId,
-    async (planIds) =>
-      (await api.post(`deals/${dealId}/plans/delete/`, { plan_ids: [].concat(planIds) })).data,
-  );
 }
 
 export function useCreateRenewal(dealId) {
@@ -143,26 +118,11 @@ export function useSetSold(dealId) {
   );
 }
 
+/** ({planId, recommended}); any plan may be recommended (OQ37: on a current plan it reads "Keep this plan"). */
 export function useSetRecommended(dealId) {
   return useAdvisorMutation(
     dealId,
     async ({ planId, recommended }) => (await api.post(`plans/${planId}/recommend/`, { recommended })).data,
-  );
-}
-
-/** ({planIds, starred}) → {plans, activity_id}; past 16 columns a line answers 409 with the sentence (F50). */
-export function useStar(dealId) {
-  return useAdvisorMutation(
-    dealId,
-    async ({ planIds, starred }) => (await api.post(`deals/${dealId}/plans/star/`, { plan_ids: planIds, starred })).data,
-  );
-}
-
-/** (line) → {plans, activity_id}: every star on that line comes off (F55). */
-export function useClearShortlist(dealId) {
-  return useAdvisorMutation(
-    dealId,
-    async (line) => (await api.post(`deals/${dealId}/plans/shortlist/clear/`, { line })).data,
   );
 }
 
@@ -171,23 +131,6 @@ export function useSaveEnrollment(dealId) {
   return useAdvisorMutation(
     dealId,
     async (plans) => (await api.post(`deals/${dealId}/plans/enrollment/`, { plans })).data,
-  );
-}
-
-/**
- * The order door (F43–F48): {line, move: {plan_id, step, among?}} | {line, swap: [a, b]} | {line, reset: true}
- * → {line, order, activity_id}; a step out of its group answers 409 with the reason.
- */
-export function useOrderPlans(dealId) {
-  return useAdvisorMutation(dealId, async (body) => (await api.post(`deals/${dealId}/plans/order/`, body)).data);
-}
-
-/** ({line, planId, at} | {line, planId, beside?}) → {line, plans, order, activity_id}: a pick on Pages (F45, F46). */
-export function usePutInSlot(dealId) {
-  return useAdvisorMutation(
-    dealId,
-    async ({ line, planId, at, beside }) =>
-      (await api.post(`deals/${dealId}/plans/slot/`, { line, plan_id: planId, at, beside })).data,
   );
 }
 
@@ -208,6 +151,17 @@ export function useDeletePackage(dealId) {
 
 export function templateUrl(dealId, line) {
   return `deals/${dealId}/plans/template/${line ? `?line=${encodeURIComponent(line)}` : ''}`;
+}
+
+/**
+ * ⤓ Export (F93, J167): the board as it stands, as Excel. `plans` are the ids in the order drawn, `columns` the
+ * column keys in theirs, `orientation` 'rows' or 'cols'; the server works out every figure again.
+ */
+export function boardExport(dealId, { line, plans, columns, orientation }) {
+  return {
+    url: `deals/${dealId}/plans/board-export/`,
+    params: { line, plans: plans.join(','), columns: columns.join(','), orientation },
+  };
 }
 
 /** ({file, dryRun}) → {create, update, cells_changed, errors}; a refused import answers 400 with the same shape. */
