@@ -186,3 +186,17 @@ def test_Q3_enrollment_write_path(user, deal, plan):
         read=lambda p: p.enrollment,
         later=enroll({'EE': 11, 'ES': 3, 'EC': 2, 'FAM': 5}),
     )
+
+
+def test_rule10_lasers_enter_activity_as_their_key_only(api, user, deal):
+    """Lasers are claimant data (PHI, rule 10, plan.md §3.8): an edit records `sl_lasers` by key alone, never its
+    before or after, while the other keys of the same edit keep theirs; a row with a hidden key cannot be reverted."""
+    stop_loss = services.create_plan(user, deal, line='stop_loss', role='current', carrier='Sun Life', name='Spec')
+    body = patch(api, stop_loss, {'sl_lasers': 'ZZQ-LASER-ONE ZZQ-LASER-TWO', 'sl_spec_deductible': '50000'})
+    row = Activity.objects.get(pk=body['activity_id'])
+    assert 'ZZQ-LASER' not in str(row.changes)
+    hidden = [entry['k'] for entry in row.changes if isinstance(entry['k'], list)]
+    assert hidden == [['sl_lasers']]
+    kept = [entry['k'] for entry in row.changes if isinstance(entry['k'], dict)]
+    assert kept and all('sl_lasers' not in keys for keys in kept)
+    assert revert(api, row.id).status_code == 409

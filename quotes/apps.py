@@ -16,6 +16,7 @@ class QuotesConfig(AppConfig):
         from .services import enrollment, read_apply, saved_views
 
         activity.reverters['quotes'] = revert.revert  # O.1's seam: Revert in the Activity drawer and Undo
+        activity.key_only_values.add('sl_lasers')  # lasers are PHI: Activity keeps their key only (§3.8; s36)
         activity.reverters[saved_views.AREA] = saved_views.revert  # an Update of a saved board setup (F28)
         activity.reverters[enrollment.AREA] = revert_enrollment.revert  # a typed-enrollment save (F85, F88, F91)
         activity.reverters[read_apply.AREA] = revert_read.revert  # a used quote read: ↶ Undo this run (D73)

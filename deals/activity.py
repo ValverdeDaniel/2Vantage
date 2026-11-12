@@ -39,6 +39,10 @@ STILL_CHANGING = 'This change was extended while you were reverting it. Open the
 # {area: fn(activity, user) -> changes it wrote}. The function locks its rows by id, refuses with `Refused`
 # (sold plans, signed forms, later writes) and writes the "before" values back through its own services.
 reverters = {}
+# Value keys whose values never enter Activity, only their keys (§3.8, rule 4: lasers): filled by the owning app in
+# AppConfig.ready() (quotes: `sl_lasers`, slice 36). A diff that holds one keeps its other keys' before and after, and
+# the hidden key rides beside them as a key-only entry, so the row cannot be reverted (KEYS_ONLY).
+key_only_values = set()
 
 
 class Refused(APIException):
@@ -68,13 +72,17 @@ def change(target, diff):
 def _clean(changes, keys_only):
     out = []
     for entry in changes or []:
-        keys = entry['k']
+        keys, hidden = entry['k'], []
         if isinstance(keys, dict):
             keys = {key: list(pair) for key, pair in keys.items() if pair[0] != pair[1]}
+            hidden = sorted(key for key in keys if key in key_only_values)
+            keys = {key: pair for key, pair in keys.items() if key not in key_only_values}
         if keys_only or isinstance(keys, list):
             keys = sorted(set(keys))
         if keys:
             out.append({'t': str(entry['t']), 'k': keys})
+        if hidden:
+            out.append({'t': str(entry['t']), 'k': hidden})
     return out
 
 
