@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from ai import client as ai_client
 from ai import selectors as ai_selectors
 from census import fields as census_fields
+from commission import vocab as commission_vocab
 from deals import carriers, comp, contacts, lifecycle, lines, rules, stages
 from deals.models import Note
 from documents import kinds, review_rules
@@ -39,6 +40,7 @@ class MetaView(APIView):
                 'board': board_presets.meta(),  # the Advisor's columns, sorts, sliders and budget rungs (F31)
                 'enrollment': quote_enrollment.meta(),  # enrollment sources in words, keys by basis (F86, F92)
                 'commission_types': comp.meta(),  # pct, flat, pepm (§4.6)
+                'commission': commission_vocab.meta(),  # roles, kinds, bases, sources, scopes (H10–H24; slice 48)
                 'contact_roles': contacts.meta(),  # the seven roles, client side or not (§4.6, OQ106; slice 38)
                 'note_kinds': _pairs(Note.KINDS),  # note, call, email, meeting, internal (A37; slice 38)
                 'deal_types': _pairs(rules.DEAL_TYPES),  # New business, Renewal (M14)

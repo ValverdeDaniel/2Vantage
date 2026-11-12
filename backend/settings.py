@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'census',  # import, matching, validation, rollups and CensusFacts (slice 12); the roster grid from slice 41
     'quotes',
     'questionnaire',  # the carrier forms (slice 42): Florida Blue 51+, Warner 51+, the SIIA disclosure; PDFs slice 43
+    'commission',  # rates, splits, Producers & partners and Settings (slice 48); booking and the Book from slice 49
     'rfp',  # RfpRequest and asked_by_line (slice 26); the RFP tab from slices 44–46
     'proposals',
     'review',  # requests, client links and the tab's counts (slice 53); the portal from slice 54
@@ -187,7 +188,18 @@ LOGGING = {
         **{name: {'level': 'WARNING'} for name in ('anthropic', 'httpx', 'httpcore', 'httpx2', 'httpcore2')},
         **{
             name: {'level': 'INFO'}
-            for name in ('accounts', 'deals', 'documents', 'ai', 'intake', 'census', 'quotes', 'rfp', 'proposals')
+            for name in (
+                'accounts',
+                'deals',
+                'documents',
+                'ai',
+                'intake',
+                'census',
+                'quotes',
+                'commission',
+                'rfp',
+                'proposals',
+            )
         },
     },
 }

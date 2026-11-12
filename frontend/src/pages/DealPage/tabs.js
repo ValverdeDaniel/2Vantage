@@ -8,6 +8,7 @@ export const TAB_COMPONENTS = {
   census: lazy(() => import('../../deal/census')),
   questionnaire: lazy(() => import('../../deal/questionnaire')), // shown in the sidebar only while the deal has a form (G7)
   rfp: lazy(() => import('../../deal/rfp')), // the RFP tab (K1; slices 44–46)
+  commission: lazy(() => import('../../deal/commission')), // rates, expected revenue and the split (H1–H24; slice 48)
   advisor: lazy(() => import('../../deal/advisor')),
   proposal: lazy(() => import('../../deal/proposal')),
   documents: lazy(() => import('../../deal/documents')),

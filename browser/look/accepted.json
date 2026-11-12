@@ -261,7 +261,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -316,7 +316,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -371,7 +371,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -426,7 +426,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -481,7 +481,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -825,7 +825,7 @@
       "signed_on": null,
       "check": "pixels",
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44, Commission 48 (OQ9); Intake joins with slice 11."
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44 (OQ9); Intake joins with slice 11."
     },
     {
       "screen": "gd1.intake",
@@ -1064,7 +1064,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Questionnaire 42, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Questionnaire 42, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1152,7 +1152,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Questionnaire 42, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Questionnaire 42, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1229,7 +1229,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Questionnaire 42, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Questionnaire 42, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1372,7 +1372,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1570,7 +1570,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, RFP 44, Commission 48 (OQ9); GD3 has no medical form, so no Questionnaire tab in either app.",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, RFP 44 (OQ9); GD3 has no medical form, so no Questionnaire tab in either app.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1669,7 +1669,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Census 12, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1867,7 +1867,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Questionnaire 42, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Questionnaire 42, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1977,7 +1977,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2395,7 +2395,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, Commission 48 (OQ9); RFP joins with slice 44 under 1 · Get to Market, in the old place.",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53 (OQ9); RFP joins with slice 44 under 1 · Get to Market, in the old place.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2516,7 +2516,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2813,7 +2813,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Commission 48 (OQ9); Review & requests is built (slice 53) and sits first in 1 · Get to Market, in the old place.",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60 (OQ9); Review & requests is built (slice 53) and sits first in 1 · Get to Market, in the old place.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -3044,7 +3044,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -3154,7 +3154,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A21",
-      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, RFP 44, Commission 48 (OQ9).",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60, Review & requests 53, RFP 44 (OQ9).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -3221,6 +3221,105 @@
       "selector": ".btn-secondary",
       "item": "M112",
       "why": "The first secondary button is the header strip's Activity (M112), not the viewer's ↻ Refresh, which keeps the old look; body, nav and the tab title sit where the header strip and the shorter sidebar (A21) put them.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.commission",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A6",
+      "why": "The top bar keeps Benefits, Commissions and Admin; Dashboard, P&C, Joint Ventures and the other old links are modules out of scope (A2, A22, A40), and the Calendar link waits with the Radar (I88).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.commission",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "M112",
+      "why": "The header strip on every tab (client name and status, stage pill with Stage ▾, effective date, owner, Potential deal size, Agent of record, Lines, Activity, Mark as lost…, Archive… ⓘ) is new against the old app, on the old Overview header classes.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.commission",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "A24",
+      "why": "The journey stepper, the sidebar badges (Commission's \"1\" for a missing primary, H9, with them) and \"Deal readiness\" meters (A21, A23) are pending slice 61; the client block for slice 67 (A20).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.commission",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A21",
+      "why": "The sidebar leaves out tabs not built yet: Overview pending slice 62, Agenda 60 (OQ9); Commission joins with slice 48 under 1 · Get to Market, in the old place.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.commission",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H10",
+      "why": "With no split saved, the deal's owner is the primary (\"default: the deal owner, 100 %\", their 40.0 % share, House 60.0 %), before the house at 100 %; so the \"No primary producer set\" nudges show only when the deal and client have no owner.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.commission",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H6",
+      "why": "Expected / yr is worked out on the Renewal package (every renewal plan, \"$597,720/yr premium · Renewal · 3 plans\"), then Current, then the starred plan as an estimate, never on the line's first plan alone.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.commission",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H7",
+      "why": "The note under the total names the enrollment it used and where it came from (\"Based on 46 enrolled on Medical (typed for the current plan it renews)\"): each line prices on its own basis package's people.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.commission",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "H4",
+      "why": "The in-force column takes the incumbent carrier from the current plans when intake has no coverage row, so it reads \"set on Intake\" with the carrier instead of \"no incumbent\" (review 25).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.commission",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "H20",
+      "why": "Every 2Vantage deal has a client, so the split editor always offers \"Applies to\" (this client, all deals, by default; or this deal only) and saves in one PUT (\"Save for this client\").",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

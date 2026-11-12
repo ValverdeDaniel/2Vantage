@@ -13,6 +13,7 @@ root_packages =
     census
     quotes
     questionnaire
+    commission
     rfp
     proposals
     review
@@ -26,6 +27,7 @@ layers =
     review
     proposals
     rfp
+    commission
     questionnaire
     quotes
     census

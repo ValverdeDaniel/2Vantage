@@ -3569,8 +3569,12 @@ modules under `questionnaire/forms/`, and the bundled blanks sit in `assets/ques
 
 ### 6.9 commission
 
-Not built (slices 48 and 49). H.6. v1.1's `Commission` (rates and a split list totalling 100) is replaced. The ledger
-models (`Statement`, `Receipt`, `GapNote`, `Alias`) are not built while OQ6 is No (slice 50 waits).
+H.6. v1.1's `Commission` (rates and a split list totalling 100) is replaced. The ledger models (`Statement`,
+`Receipt`, `GapNote`, `Alias`) are not built while OQ6 is No (slice 50 waits).
+Built in slice 48 (`commission.0001`): `Party`, `Settings` (without `gap_grace_days`, which waits with the ledger, OQ6),
+`Commission` and `ClientSplit`, with no `choices` (rule 1: `commission/vocab.py`). A split row stored names its `party`
+by id; the API also takes `user` for a producer with a login and no Party yet, whose Party the save creates. `Record`
+joins with slice 49.
 
 - **Comp** (`deals/comp.py`): `{type, value}`, with exact decimal strings (H1).
 - **Row**: `{party, role, amount, renewal_amount, basis, expires_after_years, works_it}`. `role` is primary,
@@ -4149,8 +4153,12 @@ review's (§7.14). Full list: Part G, G.6.
 
 ### 7.10 Commission — `commission/`
 
-Not built (slices 48 and 49). Any deal user reads and edits rates; only the all tier or the deal's owner saves a split
-(OQ70); the Book's figures follow the viewer's tier (H.6).
+Any deal user reads and edits rates and previews a split; only the all tier or the deal's owner saves a split (OQ70;
+on the client page the client's owner); the Book's figures follow the viewer's tier (H.6). Built in slice 48: the deal
+endpoints but `book/` and `disclosure.pdf` (slice 49), the client split with its own `POST
+clients/{id}/commission/split/preview/` (percentages only: no revenue at the client level), parties (GET: a commission
+tier, the own tier without the percentages; writes: the all tier) and settings (the all tier; the PATCH also takes the
+agency's `default_commission`, H100). Split errors are keyed `rows.<i>.<field>`, `rows.primary` and `rows.split_total`.
 
 | Method | Path | What it does |
 |---|---|---|
@@ -6410,13 +6418,13 @@ An app imports only from apps to its left (lint-imports); a fact read by an app 
 reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
 AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client, never
 business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far: accounts, deals,
-documents, ai, intake, census, quotes, questionnaire, rfp, proposals, review, golden. The chain orders imports, not
-screens: the deal sidebar keeps old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to Market: Review &
-requests, Intake, Census, Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close: Advisor,
-Proposal · Shared: Documents. Quotes never wait for intake, census or a questionnaire: typed summary tier counts carry
-the Advisor and Proposal. Tab folders take the app's name except advisor/ (quotes) and proposal/ (proposals); from slice
-4 a tab folder's index.js exports only what others mount. Other pages live in pages/ (home; Archived, slice 38; client
-page, 67).
+documents, ai, intake, census, quotes, questionnaire, commission, rfp, proposals, review, golden. The chain orders
+imports, not screens: the deal sidebar keeps old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to
+Market: Review & requests, Intake, Census, Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close:
+Advisor, Proposal · Shared: Documents. Quotes never wait for intake, census or a questionnaire: typed summary tier
+counts carry the Advisor and Proposal. Tab folders take the app's name except advisor/ (quotes) and proposal/
+(proposals); from slice 4 a tab folder's index.js exports only what others mount. Other pages live in pages/ (home;
+Archived, slice 38; Commissions, 48; client page, 67).
 
 ## Rules
 1. Vocabularies are Python constants (deals/lines.py, deals/stages.py, documents/kinds.py, quotes/fields.py; from their

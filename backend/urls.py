@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/', include('census.urls')),
     path('api/', include('quotes.urls')),
     path('api/', include('questionnaire.urls')),
+    path('api/', include('commission.urls')),
     path('api/', include('rfp.urls')),
     path('api/', include('proposals.urls')),
     path('api/', include('review.urls')),

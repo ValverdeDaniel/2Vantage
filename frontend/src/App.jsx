@@ -9,6 +9,8 @@ import Loading from './ui/Loading';
 const LoginPage = lazy(() => import('./auth/LoginPage'));
 const HomePage = lazy(() => import('./pages/HomePage/HomePage'));
 const ArchivedPage = lazy(() => import('./pages/ArchivedPage/ArchivedPage'));
+// Producers & partners and Settings (H95–H101; slice 48); the Book and By person join with slice 49.
+const CommissionsPage = lazy(() => import('./pages/CommissionsPage/CommissionsPage'));
 const NewDealPage = lazy(() => import('./pages/NewDealPage/NewDealPage')); // A14, D43 (slice 20)
 const DealRedirect = lazy(() => import('./pages/DealPage/DealRedirect'));
 const DealPage = lazy(() => import('./pages/DealPage/DealPage'));
@@ -40,6 +42,7 @@ export default function App() {
           >
             <Route index element={<HomePage />} />
             <Route path="archived" element={<ArchivedPage />} />
+            <Route path="commissions" element={<CommissionsPage />} />
             <Route path="deals/new" element={<NewDealPage />} />
             <Route path="deals/:dealId" element={<DealRedirect />} />
             <Route path="deals/:dealId/:tab" element={<DealPage />} />

@@ -8,6 +8,7 @@ import { asQuoted21 } from './asQuoted21.mjs';
 import { boardClaude24 } from './boardClaude24.mjs';
 import { builder25 } from './builder25.mjs';
 import { builder26 } from './builder26.mjs';
+import { commission48 } from './commission48.mjs';
 import { census41 } from './census41.mjs';
 import { deck30 } from './deck30.mjs';
 import { documents23 } from './documents23.mjs';
@@ -249,5 +250,6 @@ export const WALKS = {
   s43: { ...questionnaire43, run: (ctx) => questionnaire43.run(ctx, { signIn, openDeal }) }, // slice 43's done-when
   s44: { ...rfp44, run: (ctx) => rfp44.run(ctx, { signIn, openDeal }) }, // slice 44's done-when (re-seed GD2 after)
   s45: { ...rfp45, run: (ctx) => rfp45.run(ctx, { signIn, openDeal }) }, // slice 45's done-when (GD4; files to $WALK_FILES)
+  s48: { ...commission48, run: (ctx) => commission48.run(ctx, { signIn, openDeal }) }, // slice 48's done-when (re-seed GD1 after)
   s53: { ...review53, run: (ctx) => review53.run(ctx, { signIn, openDeal }) }, // slice 53's done-when (re-seed GD4 after)
 };

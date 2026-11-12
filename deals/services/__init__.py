@@ -2,9 +2,11 @@
 `clients` (create, edit; delete for the seeders only), `deals` (edits and stage moves, `advance`, lost and reopen;
 `set_effective_date`, the door of intake's target effective date), `facts` (`set_owner`, the header facts), `lines`
 (the lines to quote, written only through intake's `set_intent`), `status` (the client status door, `sale_changed` and
-the `client` reverter), `archive` (Archive and Restore), `notes` and `contacts`. Other apps import from here.
+the `client` reverter), `archive` (Archive and Restore), `notes`, `contacts` and `agency` (the agency's default
+commission rate, H100; slice 48). Other apps import from here.
 """
 
+from .agency import set_default_commission
 from .archive import set_archived
 from .clients import create_client, delete_client, update_client
 from .contacts import create_contact, delete_contact, update_contact
@@ -27,6 +29,7 @@ __all__ = [
     'reopen',
     'sale_changed',
     'set_archived',
+    'set_default_commission',
     'set_effective_date',
     'set_facts',
     'set_lines',
