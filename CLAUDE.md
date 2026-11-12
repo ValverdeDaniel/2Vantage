@@ -10,7 +10,7 @@ docker compose up --build -d                    # frontend :4001, backend :8004,
 docker compose exec backend python manage.py migrate
 docker compose exec backend python manage.py seed_golden   # golden deals to click through (golden app from slice 3)
 docker compose restart worker                   # job worker: manage.py run_worker, its own service (slice 16)
-docker compose exec backend pytest [<app>]      # Fast lane: one app ≤10 s, everything ≤60 s
+docker compose exec backend pytest [<app>]      # Fast lane, one app (≤10 s); everything: pytest -n 8 --dist loadfile
 docker compose exec backend ruff check . && docker compose exec backend lint-imports   # chain contract: .importlinter
 docker compose exec backend python manage.py makemigrations --check --dry-run
 docker compose exec frontend npm run lint && docker compose exec frontend npm run build

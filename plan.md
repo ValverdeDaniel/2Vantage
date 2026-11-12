@@ -554,7 +554,7 @@ the rest). "Slice N" says when a piece arrives (§13). Untagged text in §3 is t
 | Data fetching | TanStack Query 5, axios 1 | built | |
 | Styles and fonts | The old app's stylesheets; IBM Plex Sans and IBM Plex Mono, 400–700 | slice 2 | §3.9; O.5, A.6 |
 | Viewers | pdfjs-dist 5 (legacy build, bundled worker); tesseract.js | slice 15 (OCR: 65) | One pdf.js build serves the Documents viewer and the Export viewer (E22, J105). tesseract.js is served from `/static` and only draws on scanned pages (E25) |
-| Tests | pytest 8, pytest-django; Vitest | built (Vitest: 6) | §12, Part Q. pytest-xdist joins once the serial run passes 45 s (Q.2). Vitest covers pure frontend modules only |
+| Tests | pytest 8, pytest-django; Vitest | built (Vitest: 6) | §12, Part Q. pytest-xdist joined in slice 39, when the serial run passed 45 s (Q.2): the whole suite runs `pytest -n 8 --dist loadfile`. Vitest covers pure frontend modules only |
 | Lint | ruff; import-linter (`lint-imports`); ESLint 9 with react-hooks; stylelint | built (import-linter: 6; stylelint: 2) | import-linter holds the chain contract (§3.3); stylelint refuses undefined custom properties (§3.9) |
 | Acceptance harnesses | `browser/`: playwright-core driving the installed Chrome. `tools/parity/`: a tools image with headless LibreOffice, poppler and the Python readers | slice 3 | The Look, Walk, Recalc and Fidelity lanes (§12; Q.2, Q.5). Never in the app image |
 | Production serving | WhiteNoise 6.12; django-storages[google] 1.14 (Cloud Storage) | slice 69, staging (§11; built, Google Cloud not connected) | WhiteNoise serves `.mjs` as JavaScript, which pdf.js needs (E.6); Google's libraries load only when a bucket is named |
@@ -5310,6 +5310,13 @@ The whole suite runs in **under 60 seconds** and any single app in **under 10 se
 are excluded). A slow test is fixed before new features land. Lint stays within 30 seconds and Vitest within 10; the
 other lanes' budgets are in §12.1. When the serial Fast run passes 45 seconds, pytest-xdist is added, and the 10
 seconds per app still holds (V.4 #5).
+
+**Built (slice 39, 2026-11-12).** The serial run reached 77 s, so pytest-xdist 3.8.0 joined: the whole suite runs
+`docker compose exec backend pytest -n 8 --dist loadfile` (about 45 s with other lanes testing beside it; `loadfile`
+keeps a module's golden fixtures on one worker). One app still runs serially, because each worker's start costs about
+8 s on the Windows bind mount (a serial start about 4 s). `pytest quotes` (345 tests) is about 20 s, over its 10 s
+budget: its test count, not slow tests, sets it. §3.4's advice to move the repository out of the OneDrive-synced
+folder is the first remedy; splitting the quotes suite by marker is the second.
 
 **The app's own budgets** (Q.7). In the Fast lane, every list or summary read runs the same number of queries at two
 sizes (Q.3 #4). In the Perf lane, Q.7's time and size budgets hold on GD-Big: for example, the Advisor's comparison
