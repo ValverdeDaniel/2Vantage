@@ -6,9 +6,10 @@ import SplitChips from '../../ui/SplitChips';
  * The Overview's commission card (plan.md §8.6; M81; old Vantage 891f1b3 `CommissionSummaryCard.jsx`): what the deal
  * is expected to earn a year and on what basis, what was booked at the sale (holes, the house's share) as the viewer's
  * tier allows, who gets what as chips, the no-producer nudge, and Open Commission tab →, which owns the editing. All
- * of it is `commission.summary.card`, money rounded on the server. Received figures wait for the ledger (OQ6).
+ * of it is `commission.summary.card`, money rounded on the server. Received figures wait for the ledger (OQ6). The
+ * client page mounts it with its own link (`to`, `linkLabel`: "Open Commissions tab →" to the client's tab; slice 68).
  */
-export default function CommissionCard({ dealId, commission, meta }) {
+export default function CommissionCard({ dealId, commission, meta, to = null, linkLabel = 'Open Commission tab →' }) {
   const roles = meta?.commission?.roles || [];
   const chips = (commission.chips || []).map((chip, index) => ({
     ...chip,
@@ -56,8 +57,8 @@ export default function CommissionCard({ dealId, commission, meta }) {
         )}
       </div>
       <div className="bnf-com-actions">
-        <Link className="btn btn-secondary btn-sm" to={`/deals/${dealId}/commission`}>
-          Open Commission tab →
+        <Link className="btn btn-secondary btn-sm" to={to || `/deals/${dealId}/commission`}>
+          {linkLabel}
         </Link>
       </div>
     </div>

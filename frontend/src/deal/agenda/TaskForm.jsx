@@ -5,9 +5,21 @@ import Button from '../../ui/Button';
 /*
  * A task added by hand (I27, I33): the old "Add a task" form (891f1b3 `shared/DealAgendaTab.jsx`: title, date, For,
  * Add; `bnf-event-form bnf-ag-addform`), its date starting on the agency's today and its For choice remembered after
- * each add. Editing opens the same form on a task, with its note (I33, new). People come from `GET users/` (I29).
+ * each add. Editing opens the same form on a task, with its note (I33, new). People come from `GET users/` (I29). The
+ * client page's Agenda (slice 68) puts its deal pick after the date (`extra`), as the old client form put "On", in the
+ * old client form's classes (`className`).
  */
-export default function TaskForm({ today, task, busy, onSave, onCancel, remembered = '' }) {
+export default function TaskForm({
+  today,
+  task,
+  busy,
+  onSave,
+  onCancel,
+  remembered = '',
+  placeholder = 'Add a task… (“send the renewal to HR”)',
+  extra = null,
+  className = 'bnf-event-form bnf-ag-addform',
+}) {
   const users = useUsers().data || [];
   const empty = { title: '', due: today, assigned_to: remembered, note: '' };
   const [draft, setDraft] = useState(
@@ -26,15 +38,16 @@ export default function TaskForm({ today, task, busy, onSave, onCancel, remember
   }
 
   return (
-    <form className="bnf-event-form bnf-ag-addform" onSubmit={submit}>
+    <form className={className} onSubmit={submit}>
       <input
         className="bnf-event-title"
-        placeholder="Add a task… (“send the renewal to HR”)"
+        placeholder={placeholder}
         value={draft.title}
         onChange={set('title')}
         aria-label="Task"
       />
       <input type="date" value={draft.due} onChange={set('due')} aria-label="Due" />
+      {extra}
       <select value={draft.assigned_to} onChange={set('assigned_to')} aria-label="For">
         <option value="">For the deal&apos;s owner</option>
         {users.map((person) => (

@@ -4061,8 +4061,8 @@ date
 `new_client,existing_client` (§8.3). The home page's Work queue and its stats are agenda's (§7.15; O.6 #3).
 
 **The client page** (slice 67; §8.5) reads `clients/{id}/` and `clients/{id}/activity/` here, `clients/{id}/overview/`
-from overview (§7.16), `clients/{id}/agenda/` from agenda (§7.15, slice 68) and `clients/{id}/commission/split/` from
-commission (§7.10).
+from overview (§7.16), `clients/{id}/agenda/` from agenda (§7.15, slice 68), and `clients/{id}/commission/split/` and
+`clients/{id}/commission/records/` from commission (§7.10, slice 68).
 
 **Deal header:** `{id, client: {id, name, relationship, client_since}, effective_date, stage, deal_type, lost_reason,
 lost_at, requested_lines, owner, deal_size, agent_of_record, agent_default, archived: {at, by} | null, created_at,
@@ -4351,6 +4351,7 @@ agency's `default_commission`, H100). Split errors are keyed `rows.<i>.<field>`,
 | POST | `deals/{id}/commission/book/` | Booking (all tier; H25–H37, H120) |
 | GET | `deals/{id}/commission/disclosure.pdf` | The CAA disclosure (all tier; H108) |
 | GET / PUT | `clients/{id}/commission/split/` | The client split; PUT by the all tier or the client's owner (H106; on the client page from slice 68) |
+| GET | `clients/{id}/commission/records/` | The client page's Commissions tab (CL25; slice 68): the Book's records of one client by plan year in the viewer's tier — `{client_id, tier: all \| own, rows: [record], totals: {records, live, expected, holes, house?, pool?, next_12}, years: [{key, label, deal_id, records: [id], expected, house?, holes, change_pct, disclosure}]}`, each year's sums the server's (rule 5), voids left out; 403 for the none tier, as the Book |
 | GET / POST | `commissions/records/` | The Book, filterable by `?client=` / Add to book (H58) |
 | GET | `commissions/records/export/` | The Book export (H52) |
 | GET / PATCH | `commissions/records/{id}/` | One record |
@@ -4696,7 +4697,7 @@ a nudge row through review's `set_nudge` and `finish_nudge`, I37). The client's 
 | GET | `deals/{id}/journey/` | `{deal_id, today, next_step, waiting, journey: {modules: [{key, label, pct, steps: [{key, label, tab, state: done, current or todo}]}], complete}, progress, badges, meters, ready}`: the stepper (the current dot owns the next step; never "skipped", M40), the sidebar's badges, Deal readiness meters and ready chip; the shell's one read, from every app's `summary.facts` inside one batch scope, so its queries never grow with the deal (M.6, O.6 #3; slice 61) |
 | GET | `work-queue/` | `?include=closed` → `{today, rows, owners, client_names, cards: {prospects: {count, deal_size, unsized}}}`: every live deal's row (its next step, `client_status`, `type`, `due_in`, `held`, `finished`, `lost`, `progress_pct`, open `steps`, `response`), open hand tasks and nudges; finished and lost deals' rows only with `include=closed` (I80); the same queries for 1 deal or 300 (slice 61) |
 | GET | `work-queue/stats/` | `{actions_week, sales_month}`, each `{total, change_pct, series}` (slice 61) |
-| GET | `clients/{id}/agenda/` | `{today, counts, deals: [{deal, next_step, waiting, rows}]}`, from one `facts_for` (slice 68) |
+| GET | `clients/{id}/agenda/` | `{today, counts: {overdue, soon, total}, deals: [{deal: {id, stage, effective_date, link}, next_step, waiting, rows}]}` (`agenda.client_agenda`, slice 68): one panel per deal still being worked (not lost, not a year past its effective date; soonest effective date first), its rows the deal's own Agenda's (`selectors.rows_of`); `counts` is the rollup of the open rows (Up next and Waiting on) by their day, which the client Overview's Agenda tile reads too; from one `facts_for`, the same queries for one deal or many; 404 past bigint |
 
 Task and mark writes from the client page use the deal endpoints. `POST agenda/check/` waits with Plan my day (OQ8).
 Full list: Part I, I.6.
@@ -4707,8 +4708,8 @@ Built in slice 62: `GET deals/{id}/overview/` with the blocks O2 draws (`overvie
 one batch scope, the same queries at any size). Slice 63 adds Card 1, Card 2, the outreach and the side cards' blocks
 (pure `overview/gtm.py` and `overview/outreach.py`, the reads in `overview/market.py`) and the Timeline's read
 (`overview/feed.py`). Slice 67 adds the client page's two reads (`overview/client_payload.py`, pure
-`overview/client_rules.py`, the Agenda tile's read `overview/client_agenda.py`, Coverage in force `overview/in_force.py`,
-the client feed in `overview/feed.py`).
+`overview/client_rules.py`, the Agenda tile's read — agenda's `client_agenda.counts_for` from slice 68 — Coverage in
+force `overview/in_force.py`, the client feed in `overview/feed.py`).
 
 | Method | Path | Auth | Response |
 |---|---|---|---|
@@ -4951,6 +4952,21 @@ Agenda and Commissions.
   the deal's notepad). Ways in: Clients rows, the deal header's client name, the deal sidebar's client block (New and
   Existing clients), the Overview's client box; the client dialog is gone. E71: the page tells a file's window which
   client it shows.
+- **Built in slice 68** (`pages/ClientPage/agenda/`, `commissions/`; `agenda/client_agenda.py`,
+  `commission/client_book.py`): the sidebar's rollup chip (N overdue / N due soon / on track) and the nav's Upkeep ·
+  Agenda (rose overdue badge) and Revenue · Commissions (an amber 1 while the client has no owner); the Overview's
+  Agenda tile reads the client Agenda's own rollup (`overview/client_agenda.py` is gone). **Agenda** (CL24): Add a task
+  on a deal (the deal's own task form and door; the deal pick, "On the deal renewing …", only with two or more deals
+  still being worked), one panel per deal ("Deal renewing <date> · <stage>", "Next: …", Up next, Waiting on and Later
+  with the deal tab's buttons and doors, "All of this deal's tasks ▸"), Done (the ticked tasks and nudges, ↺), the
+  `?focus=` flash; the old Coming up, its category chips, "On the client" and the reminders' Later and Done rows wait
+  (I104–I108). **Commissions** (CL25): Export (the Book's workbook on this client) and "Open in Commissions ↗" once
+  something is booked, the own tier's "Your share" banner, the tiles (Expected / yr, House share and Producer pool for
+  the all tier, Next 12 months) and "Booked, by plan year" (head row: Plan year, Comp disclosure ⤓ for the all tier,
+  holes, expected and the change on the year before; rows: line with "year ↗", carrier, premium, rate, expected, who
+  gets what), all in the viewer's tier and hidden for the none tier; then "Who gets what on this client" (H106's
+  SplitEditor in client scope) beside "How this client books". "set ▸" and the commission card's "Open Commissions
+  tab →" open it. Received, gaps, the month strip and the client statement wait (OQ6; H103, H105).
 
 ### 8.6 Overview (`overview`)
 

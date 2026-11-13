@@ -1,5 +1,5 @@
 """The client page's pure rules (overview/client_rules.py; plan.md §8.5; CL14, CL18, G116): the deals' order, the deal
-in flight, the Effective tile, the Agenda rollup, a deal's sale and the History chips. No database."""
+in flight, the Effective tile, a deal's sale and the History chips. No database."""
 
 from datetime import date, datetime, timedelta
 from types import SimpleNamespace
@@ -30,12 +30,6 @@ def test_CL18_the_effective_tile_counts_days_to_or_since():
     assert client_rules.effective(TODAY + timedelta(days=50), TODAY) == {'date': TODAY + timedelta(days=50), 'days': 50}
     assert client_rules.effective(TODAY - timedelta(days=3), TODAY)['days'] == -3
     assert client_rules.effective(None, TODAY) is None
-
-
-def test_CL18_the_agenda_rollup_is_overdue_before_today_and_soon_within_thirty_days():
-    days = [TODAY - timedelta(days=1), TODAY, TODAY + timedelta(days=30), TODAY + timedelta(days=31), None]
-    assert client_rules.agenda_rollup(days, TODAY) == {'overdue': 1, 'soon': 2, 'total': 5}
-    assert client_rules.agenda_rollup([], TODAY) == {'overdue': 0, 'soon': 0, 'total': 0}
 
 
 def test_CL14_a_deals_year_is_its_effective_dates_else_the_year_it_was_made():

@@ -12,6 +12,8 @@ POST commissions/records/{id}/rebook/ → {record, changed, activity_id} (H36)
 GET  commissions/people/ ?year → book.people (H68); …/people/{party id | house}/ → its records; …/people/export/
 GET  commissions/clients/ ?q → [{id, name, relationship, archived}]: Add to book's search, archived clients and clients
      with no deal included (H58, H112; the all tier)
+GET  clients/{id}/commission/records/ → client_book.client_book: the client page's Commissions tab, the client's
+     records by plan year in the viewer's tier (CL25; slice 68); 404 for an unknown client
 """
 
 from django.http import Http404, HttpResponse
@@ -25,10 +27,10 @@ from deals import activity
 from deals.models import Activity, AgencySettings, Client
 from deals.selectors import activity_row
 
-from . import book, exports, record_read, services, visibility
+from . import book, client_book, exports, record_read, services, visibility
 from .models import Record
 from .people_views import AllTier
-from .views import MAX_ID, body
+from .views import MAX_ID, body, client_or_404
 
 XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
@@ -182,3 +184,13 @@ class ClientPickView(APIView):
             [{'id': r['id'], 'name': r['name'], 'relationship': r['relationship'], 'archived': bool(r['archived_at'])}
              for r in rows]
         )  # fmt: skip
+
+
+class ClientRecordsView(APIView):
+    """GET clients/{id}/commission/records/ → {client_id, tier, rows, totals, years} (CL25; slice 68): the Book's
+    records of one client by plan year, in the viewer's tier; 403 for the none tier, as the Book."""
+
+    permission_classes = [IsAuthenticated, HasCommissions]
+
+    def get(self, request, pk):
+        return Response(client_book.client_book(client_or_404(pk), _viewer(request)))

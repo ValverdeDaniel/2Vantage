@@ -7,9 +7,7 @@ reads what they take, once.
   is_past`: lost, or a year past its effective date; old `_current_case`). None when every deal is past.
 - `year_of(deal)`: the deal's year, its effective date's, else the year it was made.
 - `effective(day, today)`: the Effective tile and the sidebar's date: {date, days} (negative days: since), or None.
-- `agenda_rollup(days, today)`: the Agenda tile (CL18): open agenda items by the day they fall due, with Agenda's own
-  severity (`agenda.rules.severity`: overdue before today, due soon within its window), as the old client page's
-  `agendaRollup` counted its reminders (error = overdue, warn = soon, every item in the total).
+  (The Agenda tile's rollup is the client Agenda's own, `agenda.client_agenda.counts_for`, from slice 68.)
 - `sold_of(plans)`: a deal's sale, {carriers, at}, from its live plans, or None.
 - `chips(...)`: G116's artifact chips on a History row: Intake (answers on file), Census (employees on the roster),
   each carrier form (armed or started; "✓" once signed) and the files (old `ArtifactChips.jsx`).
@@ -17,12 +15,10 @@ reads what they take, once.
 
 from datetime import date
 
-from agenda.rules import severity
 from deals import rules as deal_rules
 
 # The chip each kind of carrier form wears (old ArtifactChips' KIND_LABELS).
 FORM_CHIPS = {'medical': 'Questionnaire', 'stop_loss': 'Stop-loss'}
-OVERDUE, SOON = 'error', 'warn'
 
 
 def newest_first(deals):
@@ -48,13 +44,6 @@ def effective(day, today):
     if day is None:
         return None
     return {'date': day, 'days': (day - today).days}
-
-
-def agenda_rollup(days, today):
-    """{overdue, soon, total}: `days` holds one entry per open agenda item, its due day or None (no day, never
-    overdue)."""
-    found = [severity(day, today) for day in days]
-    return {'overdue': found.count(OVERDUE), 'soon': found.count(SOON), 'total': len(found)}
 
 
 def sold_of(plans):

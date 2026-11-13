@@ -6,6 +6,8 @@
 - `next_step(deal)`, `waiting(deal)`: the Overview's light reads (slice 62), from the same steps.
 - `marks_for(deal_ids)`, `next_of(deal_id, facts, marked)`: the pieces the shell's `journey/` read and the Work queue
   (slice 61) share with the tab, so a deal's next step reads the same words everywhere (I68).
+- `tasks_for(deal_ids)`, `rows_of(...)`: a deal's rows; the client's Agenda (`client_agenda`, slice 68) builds each of
+  its deals' rows the same way, so the two read alike.
 `today` is the agency's date (`deals.clock.today()`), so a Later picked at 21:00 Eastern means the agency's tomorrow.
 """
 
@@ -68,12 +70,26 @@ def step_payload(deal_id, step, marked, facts):
     }
 
 
+def tasks_for(deal_ids):
+    """{deal_id: [Task]} for the deals (deleted ones hidden), with the people their rows name, in one query."""
+    found = {}
+    tasks = Task.objects.filter(deal_id__in=list(deal_ids)).select_related('assigned_to', 'done_by', 'created_by')
+    for task in tasks.order_by('due', 'id'):
+        found.setdefault(task.deal_id, []).append(task)
+    return found
+
+
+def rows_of(deal_id, facts, marked, tasks, today, viewer):
+    """The deal's Agenda rows in the tab's order (`payload.arrange`): its marked steps, its tasks and its nudges. The
+    deal's own tab and the client's Agenda (slice 68) build them here, so both read the same rows."""
+    step_rows = [payload.step_row(step, deal_id) for step in marked]
+    task_rows = [payload.task_row(task, today, viewer) for task in tasks]
+    nudge_rows = [payload.nudge_row(nudge, deal_id, today) for nudge in facts.get('nudges') or []]
+    return payload.arrange(step_rows, task_rows, nudge_rows)
+
+
 def deal_agenda(deal, viewer):
     facts, unmarked, marked, today = marked_steps(deal.id)
-    tasks = Task.objects.filter(deal=deal).select_related('assigned_to', 'done_by', 'created_by')
-    step_rows = [payload.step_row(step, deal.id) for step in marked]
-    task_rows = [payload.task_row(task, today, viewer) for task in tasks]
-    nudge_rows = [payload.nudge_row(nudge, deal.id, today) for nudge in facts.get('nudges') or []]
     milestones = journey.journey(facts, unmarked)
     return {
         'today': today.isoformat(),
@@ -84,7 +100,7 @@ def deal_agenda(deal, viewer):
         'waiting': rows.waiting(marked, today),
         'journey': milestones,
         'progress': journey.progress(milestones),
-        'rows': payload.arrange(step_rows, task_rows, nudge_rows),
+        'rows': rows_of(deal.id, facts, marked, tasks_for([deal.id]).get(deal.id, []), today, viewer),
     }
 
 

@@ -49,6 +49,7 @@ import { home61 } from './home61.mjs';
 import { overview62 } from './overview62.mjs';
 import { overview63 } from './overview63.mjs';
 import { clientpage67 } from './clientpage67.mjs';
+import { clientpage68 } from './clientpage68.mjs';
 
 const signIn = async ({ page, step, base, user }) => {
   await step('the sign-in page asks for a username and password', async () => {
@@ -293,5 +294,6 @@ export const WALKS = {
   s62: { ...overview62, run: (ctx) => overview62.run(ctx, { signIn, openDeal }) }, // slice 62's done-when (fresh GD2; re-seed GD2 after)
   s63: { ...overview63, run: (ctx) => overview63.run(ctx, { signIn, openDeal }) }, // slice 63's done-when (fresh GD2; re-seed GD2 after)
   s67: { ...clientpage67, run: (ctx) => clientpage67.run(ctx, { signIn, openDeal }) }, // slice 67's done-when (fresh GD2, GD6; re-seed both after)
+  s68: { ...clientpage68, run: (ctx) => clientpage68.run(ctx, { signIn }) }, // slice 68's done-when (fresh GD1-sold; re-seed GD1-sold after)
   catchup: { ...catchup, run: (ctx) => catchup.run(ctx, { signIn, openDeal }) }, // nudge Later/✓, Card 1's form ask (fresh GD3; re-seed GD3 after)
 };

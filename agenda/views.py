@@ -9,11 +9,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from deals import clock
-from deals.models import Deal
+from deals.models import Client, Deal
 from deals.selectors import note_row
 from deals.views import MAX_ID
 
-from . import payload, selectors, services, shell
+from . import client_agenda, payload, selectors, services, shell
 from .models import Task
 from .queue import feed, stats
 
@@ -43,6 +43,17 @@ class DealAgendaView(APIView):
     def get(self, request, pk):
         deal = get_object_or_404(Deal, pk=_deal_id(pk))
         return Response(selectors.deal_agenda(deal, request.user))
+
+
+class ClientAgendaView(APIView):
+    """GET clients/{id}/agenda/ → {today, counts, deals: [{deal, next_step, waiting, rows}]}: the client page's Agenda
+    tab (CL24; slice 68). Its writes are the deals' own doors (marks, tasks, nudges)."""
+
+    def get(self, request, pk):
+        if pk > MAX_ID:
+            raise Http404
+        client = get_object_or_404(Client, pk=pk)
+        return Response(client_agenda.client_agenda(client, request.user))
 
 
 class DealJourneyView(APIView):

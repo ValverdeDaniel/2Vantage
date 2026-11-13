@@ -1,6 +1,8 @@
 """The Perf lane for the shell and the Work queue (plan.md §12.1, Q.7; Q.9 row 61): the journey on GD-Big ≤100 ms, the
-Work queue with 300 open deals ≤1 s. `pytest -m perf agenda` (kept out of the Fast lane by pytest.ini's addopts); run
-with `-s` to see the measured figures. The 300 deals are bulk-made as `create_client` leaves them: synthetic names."""
+Work queue with 300 open deals ≤1 s; the client's Agenda on GD-Big's client ≤300 ms, Q.7's agenda-read budget (slice
+68; its queries stay fixed at any size, test_client_agenda). `pytest -m perf agenda` (kept out of the Fast lane by
+pytest.ini's addopts); run with `-s` to see the measured figures. The 300 deals are bulk-made as `create_client`
+leaves them: synthetic names."""
 
 import time
 
@@ -28,6 +30,12 @@ def test_Q7_the_journey_of_GD_Big_stays_within_100_ms(api, gd_big):
     took, response = timed(lambda: api.get(f'/api/deals/{gd_big.id}/journey/'))
     print(f'\njourney, GD-Big (600 plans): {took * 1000:.0f} ms')
     assert response.status_code == 200 and took <= 0.1
+
+
+def test_Q9_68_the_client_agenda_of_GD_Big_stays_within_300_ms(api, gd_big):
+    took, response = timed(lambda: api.get(f'/api/clients/{gd_big.client_id}/agenda/'))
+    print(f'\nclient agenda, GD-Big (600 plans): {took * 1000:.0f} ms, {len(response.content) / 1000:.1f} kB')
+    assert response.status_code == 200 and took <= 0.3
 
 
 def test_Q7_the_work_queue_of_300_open_deals_stays_within_1_s(api, user):

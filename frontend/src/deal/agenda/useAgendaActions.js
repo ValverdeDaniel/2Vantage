@@ -8,11 +8,12 @@ import { useToast } from '../../ui/useToast';
  * then", "Marked done", "Task done"…) and the API's own sentence on a refusal (I8). Done anyway and Delete ask first
  * (I19, OQ93): `confirm` holds the open question for the tab's ConfirmDialog. `form` is the one row form open
  * ({rowId, type: later | follow_up | edit}). A nudge row's Later and ✓ go to review's reminder through the Agenda's
- * nudge door (I37), with the old task toasts (old 891f1b3 kept a nudge as a task).
+ * nudge door (I37), with the old task toasts (old 891f1b3 kept a nudge as a task). `clientId`: the client page's
+ * Agenda acting on one of its deals (slice 68), whose page refetches after each write too.
  */
-export default function useAgendaActions(dealId) {
+export default function useAgendaActions(dealId, { clientId } = {}) {
   const toast = useToast();
-  const writes = useAgendaWrites(dealId);
+  const writes = useAgendaWrites(dealId, { clientId });
   const [busy, setBusy] = useState(null);
   const [form, setForm] = useState(null);
   const [confirm, setConfirm] = useState(null);

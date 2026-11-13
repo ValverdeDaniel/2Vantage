@@ -38,6 +38,7 @@ def samples(world):
     return {
         'api/deals/<int:pk>/agenda/': {'pk': deal.id},
         'api/deals/<int:pk>/journey/': {'pk': deal.id},
+        'api/clients/<int:pk>/agenda/': {'pk': deal.client_id},
         'api/work-queue/': {'query': {'include': 'closed'}},
         'api/work-queue/stats/': {},
         'api/deals/<int:pk>/agenda/marks/': {'pk': deal.id},
@@ -60,6 +61,7 @@ def test_Q3_3_the_permission_matrix(actors, no_csrf_api, world):
     matrix = [
         ('GET', 'api/deals/<int:pk>/agenda/', everyone),
         ('GET', 'api/deals/<int:pk>/journey/', everyone),
+        ('GET', 'api/clients/<int:pk>/agenda/', everyone),
         ('GET', 'api/work-queue/', everyone),
         ('GET', 'api/work-queue/stats/', everyone),
         ('POST', 'api/deals/<int:pk>/agenda/marks/', everyone, {'step_key': 'import_census', 'kind': 'done'}),
@@ -79,6 +81,8 @@ def test_Q3_3_the_permission_matrix(actors, no_csrf_api, world):
     [
         ('get', '/api/deals/{big}/agenda/'),
         ('get', '/api/deals/{big}/journey/'),
+        ('get', '/api/clients/{big}/agenda/'),
+        ('get', '/api/clients/999999/agenda/'),
         ('post', '/api/deals/{big}/agenda/marks/'),
         ('delete', '/api/deals/{big}/agenda/marks/import_census/'),
         ('post', '/api/deals/{big}/agenda/follow-ups/'),

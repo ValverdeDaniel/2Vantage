@@ -10,6 +10,7 @@ urlpatterns = [
     path('deals/<int:pk>/commission/disclosure.pdf', views.DealDisclosureView.as_view()),
     path('clients/<int:pk>/commission/split/', views.ClientSplitView.as_view()),
     path('clients/<int:pk>/commission/split/preview/', views.ClientSplitPreviewView.as_view()),
+    path('clients/<int:pk>/commission/records/', record_views.ClientRecordsView.as_view()),
     path('commissions/parties/', people_views.PartiesView.as_view()),
     path('commissions/parties/<int:pk>/', people_views.PartyView.as_view()),
     path('commissions/settings/', people_views.SettingsView.as_view()),

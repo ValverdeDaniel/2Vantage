@@ -13,7 +13,8 @@ deal per client; a client with none answers every block, empty.
  convert: {allowed, sentence} | null (a prospect's Convert to client, the status door's own answer),
  facts: {deal_id, legal_name, fein, sic_code, situs_state, employees: {value, from, from_label, estimate},
          funding: {value, from}} | null,
- tiles: {effective: {date, days} | null, agenda: {overdue, soon, total}, expected_revenue (whole dollars) | null},
+ tiles: {effective: {date, days} | null, agenda: {overdue, soon, total} (the client Agenda's own rollup,
+         `agenda.client_agenda.counts_for`, slice 68), expected_revenue (whole dollars) | null},
  in_force: {kind, rows} (`in_force.py`), commission: `commission.summary.card` | null,
  outreach: the deal in flight's outreach strip and "Who we've asked" (`payload.outreach_for`) | null,
  history: [{deal_id, year, stage, current, effective_date, sold: {carriers, at} | null, expected | null,
@@ -25,6 +26,7 @@ which the page reads beside this one (§7.3).
 
 from django.db.models import Count
 
+from agenda import client_agenda
 from agenda.facts import facts_for
 from commission import summary as commission_summary
 from deals import batch, clock
@@ -39,7 +41,7 @@ from quotes.math import round_money
 from quotes.selectors.headcount import WHERE
 from quotes.selectors.state import scope_plans
 
-from . import client_agenda, client_rules, rules
+from . import client_rules, rules
 from .in_force import in_force
 from .payload import outreach_for
 
@@ -56,7 +58,6 @@ def client_payload(client, viewer, now=None):
     anchor = current or (deals[0] if deals else None)
     with batch.scope(ids):
         found = facts_for(ids, now, lost_too=True) if ids else {}
-        live = [deal.id for deal in deals if deal.stage != 'lost']
         commission = commission_summary.card(anchor, viewer) if anchor else None
         sold = {deal.id: client_rules.sold_of(scope_plans(deal.id)) for deal in deals}
         history = _history(deals, current, found, sold, anchor, commission)
@@ -72,7 +73,7 @@ def client_payload(client, viewer, now=None):
             'facts': _facts(anchor) if anchor else None,
             'tiles': {
                 'effective': client_rules.effective(anchor.effective_date if anchor else None, today),
-                'agenda': client_rules.agenda_rollup(client_agenda.open_days(found, live, now, today), today),
+                'agenda': client_agenda.counts_for(deals, found, viewer, now, today),
                 'expected_revenue': round_money(commission['expected']) if commission else None,
             },
             'in_force': in_force(anchor),

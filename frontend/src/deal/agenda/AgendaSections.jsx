@@ -7,11 +7,15 @@ import TaskForm from './TaskForm';
 /*
  * One deal's Agenda sections (I4–I7): Up next, Waiting on, Later, Blocked and Done, each with its ▾/▸ toggle, count and
  * one-line description; Done starts collapsed and an empty collapsed section is hidden (I5). `focus` (`?focus=task:12`
- * or a step id) scrolls to its row and flashes it for 2.2 s (I7). Old Vantage 891f1b3 `DealAgendaSections`.
+ * or a step id) scrolls to its row and flashes it for 2.2 s (I7). `only` picks the sections shown, as the old
+ * `sections` prop did: the client page's deal panels show Up next, Waiting on and Later (CL24). Old Vantage 891f1b3
+ * `DealAgendaSections`.
  */
-export default function AgendaSections({ payload, meta, focus, actions }) {
-  const sections = sectionsOf(payload, meta);
-  const focusSection = (payload?.rows || []).find((entry) => entry.id === focus)?.section;
+export default function AgendaSections({ payload, meta, focus, actions, only = null }) {
+  const sections = sectionsOf(payload, meta).filter((section) => !only || only.includes(section.key));
+  const shownKeys = sections.map((section) => section.key);
+  const focused = (payload?.rows || []).find((entry) => entry.id === focus)?.section;
+  const focusSection = shownKeys.includes(focused) ? focused : undefined;
   const [open, setOpen] = useState(() => {
     const shown = sections.map((section) => section.key).filter((key) => !isCollapsed(meta, key));
     return new Set(focusSection ? [...shown, focusSection] : shown);

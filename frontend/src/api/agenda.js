@@ -2,8 +2,11 @@
 // deal tab). Every write invalidates only the agenda, the shell's journey, the Overview, the activity and the Work
 // queue (I8, ch. 13), never the Advisor's queries; the tab redraws from its own refetch. From slice 61: the shell's
 // one read ['deal', id, 'journey'], and the home page's feed ['work-queue', include] and stats ['work-queue-stats'].
+// From slice 68 the client page's Agenda writes through the same doors and names its client, whose page (['client', id,
+// …]: its Agenda, rollup, tile and activity) then refetches too.
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from './client';
+import { clientKey } from './clientPage';
 import { dealKey } from './deals';
 
 export const agendaKey = (dealId) => dealKey(dealId, 'agenda');
@@ -62,23 +65,25 @@ export function useAgenda(dealId) {
   });
 }
 
-function settle(queryClient, dealId) {
+function settle(queryClient, dealId, clientId) {
   const id = Number(dealId);
   for (const area of ['agenda', 'journey', 'overview', 'activity']) {
     queryClient.invalidateQueries({ queryKey: dealKey(id, area) });
   }
   queryClient.invalidateQueries({ queryKey: WORK_QUEUE_KEY });
+  if (clientId) queryClient.invalidateQueries({ queryKey: clientKey(clientId) });
 }
 
 /**
  * The Agenda's writes, each one request and one transaction (I.5 bug 8): {later, doneAnyway, clearMark, followUp,
  * addTask, updateTask, deleteTask, nudge}. Each is a mutateAsync; a refusal throws the API's 400/409 with its sentence.
  * `nudge` is Later ({linkId, kind: 'later', until, note}) or ✓ ({linkId, kind: 'done'}) on a nudge row, which the
- * server hands to review's set_nudge / finish_nudge (I37) → {nudge: row | null}.
+ * server hands to review's set_nudge / finish_nudge (I37) → {nudge: row | null}. `clientId`: the client page writing
+ * (slice 68), whose queries refetch after each write too.
  */
-export function useAgendaWrites(dealId) {
+export function useAgendaWrites(dealId, { clientId } = {}) {
   const queryClient = useQueryClient();
-  const write = (call) => ({ mutationFn: call, onSuccess: () => settle(queryClient, dealId) });
+  const write = (call) => ({ mutationFn: call, onSuccess: () => settle(queryClient, dealId, clientId) });
   const marks = `deals/${dealId}/agenda/marks/`;
   const later = useMutation(
     write(async ({ stepKey, until, note }) => (await api.post(marks, { step_key: stepKey, kind: 'later', until, note }))

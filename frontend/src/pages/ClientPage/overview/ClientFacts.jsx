@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { labelOf, relationshipLabel, relationships } from '../../../api/meta';
 import { errorText } from '../../../lib/errors';
 import FactRow from '../../../ui/FactRow';
+import { clientPath } from '../clientTabs';
 import SelectRow from './SelectRow';
 
 // The Status select: every status in meta order, the current one first-class and each move the status door offers
@@ -31,8 +32,8 @@ function contactOptions(client) {
 
 /**
  * The header card's facts (plan.md §8.5; CL16, H41; old ClientHeaderCard.jsx's snapshot grid at 891f1b3): Client name
- * (deals' PATCH), Status (a select on the status door, rule 6), Primary producer (read-only, "set ▸" to the split on
- * the deal's Commission tab until the client's own Commissions tab, slice 68), Main contact (a select that sets the
+ * (deals' PATCH), Status (a select on the status door, rule 6), Primary producer (read-only, "set ▸" to the client's
+ * split on its Commissions tab, slice 68), Main contact (a select that sets the
  * primary) and its details, Employees (the one headcount, with where it came from), Funding (the incumbent's), then
  * Legal name, FEIN, SIC code and Situs state read-only from the deal's intake, with "edit in intake ↗". The old Service
  * owner, Lines of business and External ref are dropped (CL28).
@@ -40,7 +41,6 @@ function contactOptions(client) {
 export default function ClientFacts({ client, overview, meta, writes }) {
   const [errors, setErrors] = useState({});
   const facts = overview.facts;
-  const dealId = overview.deal_id;
   const settle = (row) => ({
     onSuccess: () => setErrors((current) => ({ ...current, [row]: '' })),
     onError: (error) => setErrors((current) => ({ ...current, [row]: errorText(error) })),
@@ -69,12 +69,12 @@ export default function ClientFacts({ client, overview, meta, writes }) {
         />
         <FactRow
           label="Primary producer"
-          hint="synced from who-gets-what — change it on the Commission tab"
+          hint="synced from who-gets-what — change it on the Commissions tab"
           value={client.owner?.name || ''}
           readOnly
           after={
-            !client.owner && dealId ? (
-              <Link className="bnf-override-link" to={`/deals/${dealId}/commission`}>
+            !client.owner ? (
+              <Link className="bnf-override-link" to={clientPath(client.id, 'commissions')}>
                 {' '}
                 set ▸
               </Link>

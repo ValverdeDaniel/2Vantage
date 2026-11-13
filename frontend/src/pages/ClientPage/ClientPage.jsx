@@ -7,13 +7,20 @@ import ErrorBoundary from '../../ui/ErrorBoundary';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import { useDocWindowPresence } from '../../viewer/docWindowLink';
+import ClientAgendaTab from './agenda/ClientAgendaTab';
 import ClientSidebar from './ClientSidebar';
 import { clientPath, clientTabFor } from './clientTabs';
+import ClientCommissionsTab from './commissions/ClientCommissionsTab';
 import ClientNotesTab from './notes/ClientNotesTab';
 import ClientOverviewTab from './overview/ClientOverviewTab';
 
-const TABS = { overview: ClientOverviewTab, notes: ClientNotesTab };
-const LABELS = { overview: 'Overview', notes: 'Notes' };
+const TABS = {
+  overview: ClientOverviewTab,
+  agenda: ClientAgendaTab,
+  commissions: ClientCommissionsTab,
+  notes: ClientNotesTab,
+};
+const LABELS = { overview: 'Overview', agenda: 'Agenda', commissions: 'Commissions', notes: 'Notes' };
 
 function MissingClient() {
   return (
@@ -32,7 +39,7 @@ function MissingClient() {
 }
 
 /**
- * The client page (plan.md §8.5; CL13–CL23; old Vantage 891f1b3 `radar/ClientWorkspace.jsx`): the old client
+ * The client page (plan.md §8.5; CL13–CL25; old Vantage 891f1b3 `radar/ClientWorkspace.jsx`): the old client
  * workspace (`bb-workspace`) — its sidebar with the Plan year block, then one section at a time. The section is in the
  * path (`/clients/:clientId/:tab`); an unknown or unbuilt one opens the Overview. It reads deals' client detail and
  * the client's Overview, and says which client it is to a file's own window (E71). The page opens for every status

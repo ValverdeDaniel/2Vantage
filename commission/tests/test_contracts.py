@@ -74,6 +74,7 @@ def samples(deal, party, record=None):
         'api/deals/<int:pk>/commission/split/preview/': {'pk': deal.id},
         'api/clients/<int:pk>/commission/split/': {'pk': deal.client_id},
         'api/clients/<int:pk>/commission/split/preview/': {'pk': deal.client_id},
+        'api/clients/<int:pk>/commission/records/': {'pk': deal.client_id},
         'api/commissions/parties/': {},
         'api/commissions/parties/<int:pk>/': {'pk': party.id},
         'api/commissions/settings/': {},
@@ -124,6 +125,7 @@ def matrix(user):
         ('GET', 'api/commissions/people/export/', A_TIER),
         ('GET', 'api/commissions/people/<str:key>/', A_TIER),
         ('GET', 'api/commissions/clients/', ALL_TIER),
+        ('GET', 'api/clients/<int:pk>/commission/records/', A_TIER),  # the client page's Commissions tab (slice 68)
     ]
 
 
@@ -141,6 +143,7 @@ def test_Q3_ids_past_bigint_answer_404(admin_api):
     assert admin_api.put(f'/api/deals/{big}/commission/split/', {}, format='json').status_code == 404
     assert admin_api.post(f'/api/deals/{big}/commission/split/preview/', {}, format='json').status_code == 404
     assert admin_api.get(f'/api/clients/{big}/commission/split/').status_code == 404
+    assert admin_api.get(f'/api/clients/{big}/commission/records/').status_code == 404
     assert admin_api.patch(f'/api/commissions/parties/{big}/', {}, format='json').status_code == 404
 
 

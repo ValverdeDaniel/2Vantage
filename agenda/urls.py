@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path('deals/<int:pk>/agenda/', views.DealAgendaView.as_view()),
     path('deals/<int:pk>/journey/', views.DealJourneyView.as_view()),
+    path('clients/<int:pk>/agenda/', views.ClientAgendaView.as_view()),
     path('work-queue/', views.WorkQueueView.as_view()),
     path('work-queue/stats/', views.WorkQueueStatsView.as_view()),
     path('deals/<int:pk>/agenda/marks/', views.MarksView.as_view()),

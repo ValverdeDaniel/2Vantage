@@ -3,6 +3,7 @@ import { useJourney } from '../../../api/agenda';
 import { clientFeedKey, useClientWrites } from '../../../api/clientPage';
 import { AskedList, CommissionCard, OutreachStrip, Timeline, WaitingBanner } from '../../../deal/overview';
 import { errorText } from '../../../lib/errors';
+import { clientPath } from '../clientTabs';
 import { ArchiveConfirm, ArchivedBanner } from './ArchiveRows';
 import ClientHeaderCard from './ClientHeaderCard';
 import ClientTiles from './ClientTiles';
@@ -90,7 +91,13 @@ export default function ClientOverviewTab({ client, overview, meta }) {
         </div>
         <div className="bb-overview-side">
           {overview.commission && dealId && (
-            <CommissionCard dealId={dealId} commission={overview.commission} meta={meta} />
+            <CommissionCard
+              dealId={dealId}
+              commission={overview.commission}
+              meta={meta}
+              to={clientPath(client.id, 'commissions')}
+              linkLabel="Open Commissions tab →"
+            />
           )}
           <LatestNotes clientId={client.id} dealId={dealId} inFlight={Boolean(current)} />
           <HistoryCard history={overview.history} meta={meta} />

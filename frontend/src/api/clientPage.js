@@ -1,5 +1,6 @@
-// The client page (plan.md §7.3, §7.16, §8.5; slice 67). Query keys ['client', id] (deals' client detail),
-// ['client', id, 'overview'] and ['client', id, 'activity'] (the Timeline's feed), each staleTime 0 like a deal tab.
+// The client page (plan.md §7.3, §7.15, §7.16, §8.5; slices 67–68). Query keys ['client', id] (deals' client detail),
+// ['client', id, 'overview'], ['client', id, 'activity'] (the Timeline's feed) and ['client', id, 'agenda'] (slice 68;
+// its writes are the deals' own doors, `useAgendaWrites(dealId, {clientId})`), each staleTime 0 like a deal tab.
 // The page writes nothing of its own: the client's name and brief go through deals' PATCH, the status through the
 // status door, the main contact through the contact's PATCH and archive through deals' archive door (rule 6). After
 // a write every client query refetches, and the deal the page works in, whose header shows the client too.
@@ -39,6 +40,19 @@ export function useClientOverview(clientId) {
   return useQuery({
     queryKey: clientKey(clientId, 'overview'),
     queryFn: async () => (await api.get(`clients/${clientId}/overview/`)).data,
+    staleTime: 0,
+    enabled: Boolean(clientId),
+  });
+}
+
+/**
+ * GET clients/{id}/agenda/ → {today, counts: {overdue, soon, total}, deals: [{deal: {id, stage, effective_date, link},
+ * next_step, waiting, rows}]}: one panel per deal still being worked, each with the rows its own Agenda shows (CL24).
+ */
+export function useClientAgenda(clientId) {
+  return useQuery({
+    queryKey: clientKey(clientId, 'agenda'),
+    queryFn: async () => (await api.get(`clients/${clientId}/agenda/`)).data,
     staleTime: 0,
     enabled: Boolean(clientId),
   });

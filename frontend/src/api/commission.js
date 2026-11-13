@@ -1,13 +1,16 @@
 // Commission (plan.md §7.10; H3–H24, H95–H101, H106). Query keys: ['deal', id, 'commission'] (staleTime 0, a deal
-// tab), ['client', id, 'commission'] for the client-scope split (slice 68 mounts it), ['commissions', area] for the
-// /commissions page. Every write answers what the screen redraws, which the caller writes into the cache. The browser
+// tab), ['client', id, 'commission'] for the client-scope split and ['client', id, 'commission', 'records'] for the
+// client's booked records (the client page's Commissions tab, slice 68), ['commissions', area] for the /commissions
+// page. Every write answers what the screen redraws, which the caller writes into the cache. The browser
 // does no money math: the shares, dollars and house % all come from the server (rule 5).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from './client';
+import { clientKey } from './clientPage';
 import { dealKey } from './deals';
 
 export const commissionKey = (dealId) => dealKey(dealId, 'commission');
-export const clientSplitKey = (clientId) => ['client', Number(clientId), 'commission'];
+export const clientSplitKey = (clientId) => clientKey(clientId, 'commission');
+export const clientBookKey = (clientId) => clientKey(clientId, 'commission', 'records');
 export const PARTIES_KEY = ['commissions', 'parties'];
 export const SETTINGS_KEY = ['commissions', 'settings'];
 
@@ -62,6 +65,11 @@ export function useSaveSplit(target) {
         queryClient.invalidateQueries({ queryKey: dealKey(target.dealId, 'activity') });
       } else {
         queryClient.setQueryData(clientSplitKey(target.clientId), data);
+        // The client's owner may have changed (H22): the client page's sidebar, facts, badges and Overview read again.
+        queryClient.invalidateQueries({ queryKey: clientKey(target.clientId), exact: true });
+        for (const area of ['overview', 'activity']) {
+          queryClient.invalidateQueries({ queryKey: clientKey(target.clientId, area) });
+        }
       }
     },
   });
@@ -73,6 +81,21 @@ export function useClientSplit(clientId) {
     queryKey: clientSplitKey(clientId),
     queryFn: async () => (await api.get(`clients/${clientId}/commission/split/`)).data,
     staleTime: 0,
+  });
+}
+
+/**
+ * GET clients/{id}/commission/records/ → {client_id, tier: all | own, rows: [record], totals: {records, live, expected,
+ * holes, house?, pool?, next_12}, years: [{key, label, deal_id, records: [id], expected, house?, holes, change_pct,
+ * disclosure}]}: the client's booked records by plan year in the viewer's tier (CL25); 403 for the none tier, so the
+ * page asks only with a tier (`enabled`).
+ */
+export function useClientBook(clientId, { enabled = true } = {}) {
+  return useQuery({
+    queryKey: clientBookKey(clientId),
+    queryFn: async () => (await api.get(`clients/${clientId}/commission/records/`)).data,
+    staleTime: 0,
+    enabled: Boolean(clientId) && enabled,
   });
 }
 
