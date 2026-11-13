@@ -85,6 +85,16 @@ def overview(deal, viewer, now=None):
         }
 
 
+def outreach_for(deal, now):
+    """The Activity card's outreach strip and "Who we've asked" for one deal (M68, M69), read as `overview` reads them:
+    the client page shows its deal in flight's (plan.md §8.5; old ActivityFeed's `outreach`; slice 67)."""
+    found, requests = review_summary.collect([deal.id], now)
+    review = found.get(deal.id) or {}
+    last = rules.last_contact([review.get('last_sent_at'), _last_issue(deal), _last_note(deal)])
+    labels = dict(review_words.LINK_STATES)
+    return outreach_block(review, requests.get(deal.id), batch.client_contacts(deal.id), last, now, labels)
+
+
 def _cards(deal, review, commission, issued_at):
     """Card 1 and its asks, Card 2, the enrollment check and Coverage notes (M42–M67, M80, M108–M111)."""
     refusal = deal_rules.client_asks_open(deal)

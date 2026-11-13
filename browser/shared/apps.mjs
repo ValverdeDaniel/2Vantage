@@ -64,6 +64,20 @@ export async function dealId(sess, client) {
   return hit.deal.id;
 }
 
+// The golden deal's client's id in each app (the client page's screens, slice 67), found by the client's name: the old
+// client book's row (a deal is on it once sold or linked, tools/parity/old_loader.py's variants), 2Vantage's client row.
+export async function clientId(sess, client) {
+  if (sess.app.name === 'old') {
+    const hit = (await sess.get('/api/benefits/clients/')).find((row) => row.name === client);
+    if (!hit) throw new Error(`Old Vantage has no client "${client}": bash tools/parity/parity.sh load`);
+    return hit.id;
+  }
+  const body = await sess.get(`/api/clients/?q=${encodeURIComponent(client)}`);
+  const hit = (body.results || body).find((row) => row.name === client);
+  if (!hit) throw new Error(`2Vantage has no "${client}": docker compose exec backend python manage.py seed_golden`);
+  return hit.id;
+}
+
 // Put the session into a browser context before its first page loads.
 export async function signIn(context, sess) {
   if (sess.app.name === 'old') {

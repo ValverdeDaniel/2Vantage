@@ -7,11 +7,11 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from deals.models import Deal
+from deals.models import Client, Deal
 from deals.selectors import activity_feed, activity_row
 from deals.views import MAX_ID, Pages
 
-from . import feed, payload
+from . import client_payload, feed, payload
 
 
 class DealOverviewView(APIView):
@@ -36,3 +36,29 @@ class DealFeedView(APIView):
         page = pager.paginate_queryset(activity_feed(deal), request, view=self)
         found = feed.details(page)
         return pager.get_paginated_response([{**activity_row(row), 'detail': found.get(row.id, '')} for row in page])
+
+
+class ClientOverviewView(APIView):
+    """GET clients/{id}/overview/ → the client page's Overview (`client_payload.client_payload`; §8.5, CL14–CL22);
+    404 for an unknown or oversized id. An archived client's page still opens (M9)."""
+
+    def get(self, request, pk):
+        if pk > MAX_ID:
+            raise Http404
+        client = get_object_or_404(Client, pk=pk)
+        return Response(client_payload.client_payload(client, request.user))
+
+
+class ClientFeedView(APIView):
+    """GET clients/{id}/activity/?page= → {count, next, previous, results: [activity row + deal_id + detail]}: the
+    client page's Timeline (CL21), its deals' rows and its own, 25 a page, newest first, no downloads or views."""
+
+    def get(self, request, pk):
+        if pk > MAX_ID:
+            raise Http404
+        client = get_object_or_404(Client, pk=pk)
+        pager = Pages()
+        page = pager.paginate_queryset(feed.client_feed(client), request, view=self)
+        found = feed.details(page)
+        rows = [{**activity_row(row), 'deal_id': row.deal_id, 'detail': found.get(row.id, '')} for row in page]
+        return pager.get_paginated_response(rows)

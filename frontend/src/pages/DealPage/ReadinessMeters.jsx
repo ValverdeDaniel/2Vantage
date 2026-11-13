@@ -21,14 +21,18 @@ function Meter({ label, pct }) {
   );
 }
 
-export default function ReadinessMeters({ meters }) {
+const NAMES = { intake: 'Intake', proposal: 'Proposal', census: 'Census' };
+
+/** The meters under `label`, in `order`. The client page's Plan year block shows the same three as "This year at a
+ *  glance", Intake, Census and Proposal (plan.md §8.5; slice 67). */
+export default function ReadinessMeters({ meters, label = 'Deal readiness', order = ['intake', 'proposal', 'census'] }) {
   if (!meters) return null;
   return (
     <div className="bb-readiness bnf-readiness">
-      <div className="bb-readiness-label">Deal readiness</div>
-      <Meter label="Intake" pct={meters.intake} />
-      <Meter label="Proposal" pct={meters.proposal} />
-      <Meter label="Census" pct={meters.census} />
+      <div className="bb-readiness-label">{label}</div>
+      {order.map((key) => (
+        <Meter key={key} label={NAMES[key]} pct={meters[key]} />
+      ))}
     </div>
   );
 }

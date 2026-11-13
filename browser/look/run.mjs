@@ -10,7 +10,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { dealId, session, signIn } from '../shared/apps.mjs';
+import { clientId, dealId, session, signIn } from '../shared/apps.mjs';
 import { list, parseArgs, stamp } from '../shared/args.mjs';
 import { launch } from '../shared/chrome.mjs';
 import { FIXED_NOW, NEW, OLD, OUT, WIDTHS } from '../shared/config.mjs';
@@ -50,15 +50,16 @@ async function contextFor(app, signedIn) {
 }
 
 const ids = new Map();
-async function idFor(app, deal) {
-  const key = `${app}:${deal}`;
-  if (!ids.has(key)) ids.set(key, await dealId(sessions[app], spec(deal).client));
+async function idFor(app, deal, client = false) {
+  const key = `${app}:${deal}:${client}`;
+  const find = client ? clientId : dealId; // a client page's screen opens the deal's client (slice 67)
+  if (!ids.has(key)) ids.set(key, await find(sessions[app], spec(deal).client));
   return ids.get(key);
 }
 
 async function shoot(app, screen, width, dir) {
   const signedIn = screen.signedIn !== false;
-  const id = screen.deal ? await idFor(app, screen.deal) : null;
+  const id = screen.deal ? await idFor(app, screen.deal, Boolean(screen[app].client)) : null;
   return capture({ context: await contextFor(app, signedIn), app, screen, dealId: id, width, dir, dropped });
 }
 

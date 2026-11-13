@@ -5,9 +5,16 @@ first line — resolved when the page is read, never stored: Activity's summarie
 B10). A subject that is gone (a removed file, a deleted note) shows none. The details of one page are read together:
 one query per kind of subject, whatever the page holds.
 
-`details(rows)` → {activity id: detail} for one page of Activity rows. Slice 67's client feed reads the same.
+`details(rows)` → {activity id: detail} for one page of Activity rows.
+
+`client_feed(client)`: the client page's Timeline (plan.md §8.5; CL21; slice 67): every row of the client's deals,
+and the rows about the client itself that sit on no deal (`subject` "client:<id>": a client made with no deal, its
+status moves and its split while it has none), newest first, less the downloads and views, as the deal's feed reads.
 """
 
+from django.db.models import Q
+
+from deals import activity
 from deals.contacts import label as role_label
 from deals.models import Activity, Note
 from documents.models import Document
@@ -68,3 +75,14 @@ def details(rows):
                 found = (notes if head == 'note' else people if head == 'link' else {}).get(int(tail), '')
         out[row.id] = found
     return out
+
+
+def client_feed(client):
+    """The client's rows, as `deals.selectors.activity_feed` reads a deal's: `changes` left in the database."""
+    return (
+        Activity.objects.filter(Q(deal__client_id=client.id) | Q(deal__isnull=True, subject=f'client:{client.id}'))
+        .exclude(action__in=activity.ACCESS)
+        .defer('changes')
+        .select_related('actor', 'reverted_by')
+        .order_by('-updated_at', '-id')
+    )

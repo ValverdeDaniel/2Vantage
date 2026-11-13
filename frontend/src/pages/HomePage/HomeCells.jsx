@@ -7,8 +7,9 @@ import { SortTh } from './QueueCells';
 // Cells both home tables share (HomeCells.jsx at 891f1b3): the avatar with the name and its sub-line, the
 // Potential deal size, the Client column's sort header; the Archive cells are in ArchiveCells.jsx.
 
-/** The client's avatar, the name as the link that opens the deal (the old name button's look), and a sub-line (I76). */
-export function AccountCell({ name, sub, to }) {
+/** The client's avatar, the name as the link that opens the deal (the old name button's look), and a sub-line (I76).
+ *  `title` names where it goes (the Clients rows open the client page, slice 67). */
+export function AccountCell({ name, sub, to, title = 'Open this deal — see everything on it' }) {
   return (
     <div className="bb-th-account bb-account-cell">
       <div className="bb-avatar" aria-hidden="true">
@@ -18,7 +19,7 @@ export function AccountCell({ name, sub, to }) {
         <Link
           to={to}
           className="bb-account-name bnf-wq-namebtn"
-          title="Open this deal — see everything on it"
+          title={title}
           onClick={(event) => event.stopPropagation()}
         >
           {name}

@@ -3,7 +3,7 @@
 #
 #   bash tools/parity/parity.sh export        export 891f1b3 from git into the export folder (outside the repo)
 #   bash tools/parity/parity.sh up            build and start the project, wait for the old API
-#   bash tools/parity/parity.sh load [GD1,…]  load the golden specs into the old app (default: every spec)
+#   bash tools/parity/parity.sh load [GD1,…]  load the golden specs and variants into the old app (default: all)
 #   bash tools/parity/parity.sh tools <cmd>   run a command in the tools image (no network)
 #   bash tools/parity/parity.sh down          stop it (keeps its database)
 #   bash tools/parity/parity.sh reset         stop it and drop its database and media volumes
@@ -28,11 +28,24 @@ wait_for_api() {
   return 1
 }
 
+# The golden variants (golden/variants/*.json; GD1-sold, slice 67) as one JSON array: only the specs are mounted.
+variants_json() {
+  local first=1
+  printf '['
+  for file in "$HERE/../../golden/variants/"*.json; do
+    [ -e "$file" ] || continue
+    [ "$first" = 1 ] || printf ','
+    first=0
+    cat "$file"
+  done
+  printf ']'
+}
+
 case "${1:-}" in
   export) bash "$HERE/export_old.sh" ;;
   up) "${COMPOSE[@]}" up -d --build && wait_for_api ;;
   load)
-    "${COMPOSE[@]}" exec -T -e PARITY_DEALS="${2:-}" backend \
+    "${COMPOSE[@]}" exec -T -e PARITY_DEALS="${2:-}" -e PARITY_VARIANTS_JSON="$(variants_json)" backend \
       python manage.py shell -c "exec(open('/parity/old_loader.py').read())"
     ;;
   tools) shift; "${COMPOSE[@]}" --profile tools run --rm tools "$@" ;;

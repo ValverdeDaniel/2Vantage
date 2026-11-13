@@ -11,6 +11,11 @@ import { markDates, MASK, settle } from './steady.mjs';
 
 export function urlFor(app, screen, dealId) {
   const side = screen[app];
+  // `client`: a section of the deal's client's page (slice 67); `dealId` is then the client's id.
+  if (side.client && app === 'old') {
+    return `${OLD.base}/benefits/clients/${dealId}${side.client === 'overview' ? '' : `?tab=${side.client}`}`;
+  }
+  if (side.client) return `${NEW.base}/clients/${dealId}/${side.client}`;
   if (app === 'old') {
     return side.tab ? `${OLD.base}/benefits/cases/${dealId}?tab=${side.tab}` : `${OLD.base}${side.path}`;
   }

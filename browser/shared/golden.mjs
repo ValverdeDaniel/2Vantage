@@ -8,7 +8,10 @@ import { REPO } from './config.mjs';
 const read = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 
 export function spec(key) {
-  return read(path.join(REPO, 'golden', 'specs', `${key.toLowerCase()}.json`));
+  const base = path.join(REPO, 'golden', 'specs', `${key.toLowerCase()}.json`);
+  // A variant (GD1-sold, slice 49) lives beside the specs; its client name is its own (golden/specs.py).
+  const variant = path.join(REPO, 'golden', 'variants', `${key.toLowerCase()}.json`);
+  return read(fs.existsSync(base) ? base : variant);
 }
 
 export function answerKey(key) {

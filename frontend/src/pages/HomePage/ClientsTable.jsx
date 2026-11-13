@@ -15,8 +15,8 @@ function statusLine(row, meta) {
  * Clients (CL12): the old client book's table (ClientsDashboard.jsx at 891f1b3; bnf-clients-*), New and Existing
  * clients. Columns Client, Potential deal size, Owner, Next action (its deal's next step from the work feed, slice 61:
  * a won client's commission step, or "Sold"; I122 as changed by OQ101 c, OQ91), Deals and Archive (slice 38); the
- * Radar's Reminders column is not built. Each row is one client with its one deal (version 1), and opens the deal
- * until slice 67 brings the client page. `nextByDeal`: {deal id: its feed row}.
+ * Radar's Reminders column is not built. Each row is one client with its one deal (version 1), and opens the client
+ * page (slice 67, as the old book's rows opened the client workspace). `nextByDeal`: {deal id: its feed row}.
  */
 export default function ClientsTable({ rows, meta, ordering, onSort, nextByDeal = {}, children }) {
   const navigate = useNavigate();
@@ -32,10 +32,10 @@ export default function ClientsTable({ rows, meta, ordering, onSort, nextByDeal 
       </div>
       {children}
       {rows.map((row) => {
-        const href = `/deals/${row.deal.id}`;
+        const href = `/clients/${row.id}/overview`;
         return (
           <div key={row.id} className="bb-transfer-row bnf-clients-row" onClick={() => navigate(href)}>
-            <AccountCell name={row.name} sub={statusLine(row, meta)} to={href} />
+            <AccountCell name={row.name} sub={statusLine(row, meta)} to={href} title="Open this client's page" />
             <DealCell value={row.deal.deal_size} />
             <div className="bnf-th-owner bb-account-sub">{personName(row.owner, '—')}</div>
             <ActionCell row={nextByDeal[row.deal.id]} />

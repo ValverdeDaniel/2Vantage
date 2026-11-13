@@ -21,7 +21,12 @@ The rows are written the way the old app writes them, through its own writers wh
   the old app's own `intake_writes.clean_value`, so the old form shows what 2Vantage's one cleaner stores;
 - a census roster (slice 41, GD4) as the old import writes a spreadsheet's people (`old_census.py`, beside this file);
 - a whole line's typed counts (slice 13, GD3's `line_figures`) as the old line counts (`tier_counts_by_line`);
-- for a deal with a Stop-Loss line (slice 36, GD5), the old app's own stop-loss figures, printed as an answer key.
+- for a deal with a Stop-Loss line (slice 36, GD5), the old app's own stop-loss figures, printed as an answer key;
+- a golden variant (slice 67: GD1-sold, the client page's Look) as its base deal under the variant's own client name,
+  then its plans sold through the old app's one sale writer, `sale.mark_plan_sold`, which also puts the deal on the
+  client book (an old Client and its plan year) and books the commission. parity.sh passes the variants
+  (golden/variants/*.json) in PARITY_VARIANTS_JSON; the old app holds one sold plan per line, so a line the variant
+  sells twice keeps the last plan sold, which the loader prints.
 Then every row is read back and checked against the spec; a difference stops the load.
 """
 
@@ -61,10 +66,24 @@ def parity_user():
     return user
 
 
+def wanted_keys():
+    return {key.strip().upper() for key in os.environ.get('PARITY_DEALS', '').split(',') if key.strip()}
+
+
+def all_specs():
+    return [json.loads(path.read_text(encoding='utf-8')) for path in sorted(SPEC_DIR.glob('gd*.json'))]
+
+
 def specs():
-    wanted = {key.strip().upper() for key in os.environ.get('PARITY_DEALS', '').split(',') if key.strip()}
-    found = [json.loads(path.read_text(encoding='utf-8')) for path in sorted(SPEC_DIR.glob('gd*.json'))]
-    return [spec for spec in found if not wanted or spec['key'] in wanted]
+    wanted = wanted_keys()
+    return [spec for spec in all_specs() if not wanted or spec['key'] in wanted]
+
+
+def variants():
+    """The golden variants parity.sh passes in (golden/variants/*.json), those PARITY_DEALS names or every one."""
+    wanted = wanted_keys()
+    found = json.loads(os.environ.get('PARITY_VARIANTS_JSON') or '[]')
+    return [variant for variant in found if not wanted or variant['key'].upper() in wanted]
 
 
 def make_case(spec, user):
@@ -297,6 +316,11 @@ def stop_loss_figures(spec, case):
 
 
 def load(spec, user):
+    return load_made(spec, user)[0]
+
+
+def load_made(spec, user):
+    """(case, {ref: plan}): `load`, with the plans it made."""
     with transaction.atomic():
         case = make_case(spec, user)
         load_intake(spec, case)
@@ -312,12 +336,37 @@ def load(spec, user):
     left_out = '; '.join(item['what'] for item in spec['parity'].get('left_out', []))
     print(f'{spec["key"]} {spec["client"]}: case {case.pk}, {len(made)} plans, checked. Left out: {left_out or "-"}')
     stop_loss_figures(spec, case)
+    return case, made
+
+
+def load_variant(variant, user):
+    """A variant (golden/specs.py's `variant_of`): its base deal under the variant's client name, then its sale through
+    the old sale writer, plan by plan in the variant's order. The agreed rates are 2Vantage's Commission tab's; the old
+    app books with its own defaults, which the loader leaves as they are and prints."""
+    from benefits.pipeline.sale import mark_plan_sold
+
+    base = next((spec for spec in all_specs() if spec['key'] == variant['variant_of']), None)
+    if base is None:
+        raise ParityError(f'{variant["key"]}: no base spec {variant["variant_of"]} in {SPEC_DIR}')
+    spec = {**base, 'key': variant['key'], 'client': variant['client']}
+    case, made = load_made(spec, user)
+    clients = set()
+    for ref in variant.get('sold', []):
+        client = mark_plan_sold(Plan.objects.get(pk=made[ref].pk), user)
+        if client is None:
+            raise ParityError(f'{variant["key"]}: the old sale of {ref} did not put the deal on the client book')
+        clients.add(client.pk)
+    case.refresh_from_db()
+    sold = [ref for ref, plan in made.items() if Plan.objects.filter(pk=plan.pk, is_sold=True).exists()]
+    print(f'{variant["key"]} {variant["client"]}: case {case.pk} on client {sorted(clients)}, stage {case.stage}, '
+          f'sold {sold} (the variant sells {variant.get("sold", [])}; the old app keeps one sold plan a line). '
+          f'Left out: the agreed rates {variant.get("rates", {})}')
     return case
 
 
 def main():
     user = parity_user()
-    loaded = [load(spec, user) for spec in specs()]
+    loaded = [load(spec, user) for spec in specs()] + [load_variant(variant, user) for variant in variants()]
     if not loaded:
         raise ParityError(f'No golden spec in {SPEC_DIR} (PARITY_DEALS={os.environ.get("PARITY_DEALS", "")!r})')
 

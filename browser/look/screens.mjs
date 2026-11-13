@@ -4,9 +4,10 @@
 //   deal      a golden deal key: the screen opens that deal, found in each app by its client's name
 //   signedIn  false for screens seen before sign-in (default true)
 //   widths    'default' (1440) or 'workspace' (1280, 1440 and 1920)
-//   old       { path } or, on a deal, { tab }: /benefits/cases/<id>?tab=<tab> in old Vantage
-//   new       the same for 2Vantage (/deals/<id>/<tab>), or { pending: <slice>, why } while the slice that builds
-//             it has not landed: the old side is captured and the key is reported "pending slice N"
+//   old       { path } or, on a deal, { tab }: /benefits/cases/<id>?tab=<tab> in old Vantage; or { client: <section> }:
+//             the deal's client's page, /benefits/clients/<id>[?tab=] (slice 67)
+//   new       the same for 2Vantage (/deals/<id>/<tab>, /clients/<id>/<section>), or { pending: <slice>, why } while
+//             the slice that builds it has not landed: the old side is captured and the key is reported "pending slice N"
 //   ready     a selector each app shows once the screen has drawn (optional; networkidle always applies)
 //   pick      (in old or new) a file tab, by its visible name, to click before the capture (Documents; optional)
 //   storage   localStorage entries both apps read as the page loads, e.g. a layout kept per browser (optional)
@@ -19,6 +20,8 @@ const WORKSPACE = [...SHELL, '.bb-nav', '.bb-nav-item.active', '.bnf-nav-group-l
 const OVERVIEW = [...WORKSPACE, '.bnf-ov-titlerow', '.bnf-ov-header', '.bnf-ov-name', '.bnf-cat-chip', '.bnf-ov-stage', '.bnf-ov-chips .bb-drop-meta', '.bnf-ov-clientbox', '.bnf-ov-nolink', '.bb-account-label', '.bb-account-value', '.bnf-ov-waiting', '.bnf-next-label', '.bnf-next-text', '.bb-stat-card', '.bb-stat-label', '.bb-stat-value',
   // Card 1, Card 2, the Activity card and the notes (slice 63)
   '.bnf-phase-card', '.bnf-req-head', '.bnf-req-title', '.bnf-phase-step-row', '.bnf-ov-event', '.bnf-ov-note-form'];
+// The client page (slice 67; CL13–CL23): its sidebar with the Plan year block, the Overview's blocks, the Notes tab.
+const CLIENT = [...WORKSPACE, '.bnf-cw-sidebar', '.bnf-cw-sidechips .bb-badge', '.bnf-cw-year-label', '.bnf-cw-year-sub', '.bnf-ov-titlerow', '.bnf-ov-header', '.bnf-ov-name', '.bnf-ov-clientbox', '.bb-account-label', '.bnf-cw-select', '.bb-stat-card', '.bb-stat-label', '.bb-stat-value', '.bnf-phase-card', '.bnf-cw-table th', '.bnf-cw-table td', '.bnf-ov-event', '.bnf-cw-history-row', '.bnf-cw-brief'];
 const AGENDA = [...WORKSPACE, '.bb-panel-title', '.bnf-event-title', '.bnf-ag-toggle', '.bnf-ag-count', '.bnf-ag-section-sub', '.bnf-ag-row', '.bnf-cal-label', '.bnf-agenda-detail', '.bnf-agenda-open', '.bnf-ag-btn'];
 
 export const SCREENS = [
@@ -77,6 +80,8 @@ export const SCREENS = [
   { key: 'gd4.documents', title: 'GD4 Documents: the census file beside its whole roster (slice 65; E43, OQ97)', deal: 'GD4', widths: 'workspace', old: { tab: 'documents' }, new: { tab: 'documents', pick: 'census (synthetic).xlsx' }, ready: '.bnf-scan-panel', styles: [...WORKSPACE, '.bb-doc-tab', '.bnf-doc-bucket', '.bnf-file-bar', '.bnf-scan-head', '.bb-col-header', '.bb-grid-row .bb-cell'] },
   { key: 'gd1.rfp', title: 'GD1 RFP: the census line, the coverage card, What we’re requesting, the checklist (slice 44; K1–K33), the packet (slices 45–46; K34–K56) and the emails (slice 46; K57–K68)', deal: 'GD1', widths: 'workspace', old: { tab: 'carriers' }, new: { tab: 'rfp' }, ready: '.bnf-rfp-request', styles: [...WORKSPACE, '.bnf-rfp-census-status', '.bnf-build-progress', '.bnf-bcard-head', '.bnf-rfp-group-label', '.bnf-rfp-chip', '.bnf-rfp-chip-on', '.bnf-rfp-chip-tag', '.bnf-rfp-fields input', '.bnf-rfp-notes textarea', '.bnf-rfp-grid th', '.bnf-rfp-section-title', '.bnf-rfp-doc', '.bnf-export-fmt', '.bnf-rfp-variants .bnf-rfp-chip', '.bnf-rfp-packet .bnf-export-name', '.bnf-rfp-drafts .bb-panel-sub'] },
   { key: 'gd1.commission', title: 'GD1 Commission: the rates grid with Expected / yr, Producers & splits with the live preview, How this books (slice 48; H1–H24); the booked block in 49', deal: 'GD1', widths: 'workspace', old: { tab: 'commission' }, new: { tab: 'commission' }, ready: '.bnf-com-grid', styles: [...WORKSPACE, '.bnf-com-grid-head', '.bnf-com-grid-row', '.bnf-com-comp', '.bnf-ov-comm-total', '.bnf-com-source .bb-badge', '.bnf-com-kind', '.bnf-com-preview', '.bnf-com-addrow .btn', '.bnf-com-howlist'] },
+  { key: 'gd1-sold.client', title: "GD1-sold's client page, Overview: the sidebar with its Plan year block, the title row, the header card with its client box and facts, the Waiting banner, the tiles, the Deal card, Coverage in force, Activity and the side cards with History (slice 67; CL13–CL22)", deal: 'GD1-sold', widths: 'workspace', old: { client: 'overview' }, new: { client: 'overview' }, ready: '.bnf-ov-header', styles: CLIENT },
+  { key: 'gd1-sold.client-notes', title: "GD1-sold's client page, Notes: the standing brief and the deal's notepad (slice 67; CL23)", deal: 'GD1-sold', old: { client: 'notes' }, new: { client: 'notes' }, ready: '.bnf-cw-brief', styles: CLIENT },
 ];
 
 // `--screens all`, a key, a prefix ("gd1" picks every gd1.* key) or a comma list of those.

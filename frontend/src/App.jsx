@@ -14,6 +14,7 @@ const CommissionsPage = lazy(() => import('./pages/CommissionsPage/CommissionsPa
 const NewDealPage = lazy(() => import('./pages/NewDealPage/NewDealPage')); // A14, D43 (slice 20)
 const DealRedirect = lazy(() => import('./pages/DealPage/DealRedirect'));
 const DealPage = lazy(() => import('./pages/DealPage/DealPage'));
+const ClientPage = lazy(() => import('./pages/ClientPage/ClientPage')); // §8.5; slices 67–68
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage/NotFoundPage'));
 // A deal's file in its own window, with no top bar (E69–E71; slice 65): the Documents tab's bundle.
 const DocumentWindowPage = lazy(() => import('./deal/documents').then((m) => ({ default: m.DocumentWindowPage })));
@@ -60,6 +61,8 @@ export default function App() {
             <Route path="deals/new" element={<NewDealPage />} />
             <Route path="deals/:dealId" element={<DealRedirect />} />
             <Route path="deals/:dealId/:tab" element={<DealPage />} />
+            {/* The client page: /clients/:id opens its Overview, as an unknown or unbuilt tab does. */}
+            <Route path="clients/:clientId/:tab?" element={<ClientPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

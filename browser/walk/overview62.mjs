@@ -88,14 +88,14 @@ export const overview62 = {
       }
     });
 
-    await step('Convert to client makes GD2 a New client; its box becomes a link that opens the client dialog (CL26)', async () => {
+    await step('Convert to client makes GD2 a New client; its box becomes a link that opens the client page (CL26; slice 67)', async () => {
       await tab(page).getByRole('button', { name: 'Convert to client', exact: true }).click();
-      await tab(page).getByRole('button', { name: `${spec.client} ↗` }).click();
-      const dialog = page.getByRole('dialog', { name: 'Edit client' });
-      await dialog.getByText('New client', { exact: true }).waitFor();
-      await dialog.getByRole('button', { name: 'Cancel' }).click();
+      await tab(page).getByRole('link', { name: `${spec.client} ↗` }).click();
+      await page.waitForURL(/\/clients\/\d+\/overview/);
+      await page.getByRole('region', { name: 'Overview' }).getByText('New client', { exact: true }).first().waitFor();
       const header = await api(page, base, `deals/${dealId}/`);
       if (header.client.relationship !== 'new_client') throw new Error(header.client.relationship);
+      await page.goto(`${base}/deals/${dealId}/overview`);
     });
 
     await step('a FEIN typed in the header lands in intake (M24, M25)', async () => {
@@ -113,7 +113,7 @@ export const overview62 = {
       if (!row) throw new Error(`${SOLD_CLIENT} is not seeded: run seed_golden GD1-sold`);
       await page.goto(`${base}/deals/${row.deal.id}`);
       await page.waitForURL(/\/overview/);
-      await tab(page).getByRole('button', { name: `${SOLD_CLIENT} ↗` }).waitFor();
+      await tab(page).getByRole('link', { name: `${SOLD_CLIENT} ↗` }).waitFor();
       if (await tab(page).getByText('Not on the client book yet').count()) throw new Error('a client reads as a prospect');
       await tab(page).locator('.bb-stat-card', { hasText: 'Expected revenue' }).getByText('$20,491').waitFor();
     });

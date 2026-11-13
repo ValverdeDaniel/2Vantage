@@ -47,7 +47,7 @@ export default function OverviewHeader({ deal, overview, meta }) {
             )}
           </div>
         </div>
-        <ClientBox deal={deal} client={overview.client} meta={meta} />
+        <ClientBox deal={deal} client={overview.client} />
       </div>
       <HeaderFacts deal={deal} overview={overview} meta={meta} />
     </div>

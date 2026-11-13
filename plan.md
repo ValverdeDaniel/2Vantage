@@ -4007,7 +4007,7 @@ account."]}`. The two Microsoft GETs write the session, as every sign-in does, a
 | POST | `clients/{id}/status/` | user | `{to}`: `new_client` (Convert to client), `prospect` (Back to prospect) or `existing_client` | client detail · `409 {"detail": "…"}` with §5.1's sentence, e.g. "A plan is marked sold — un-sell it first." (slice 6) |
 | POST | `clients/{id}/archive/` | user | `{archived: true\|false}` | the archive block `{client_id, archived: {at, by} \| null}` (M6, M7, M103; slice 38) |
 | GET | `archived/` | user | — | `[{id, name, relationship, client_since, archived: {at, by}, deal: {id, stage, effective_date} \| null, deal_count}]`, latest archived first (M105; slice 38) |
-| GET | `clients/{id}/activity/` | user | `?page=` | the client's feed: its deals' rows plus the status rows (slice 67) |
+| GET | `clients/{id}/activity/` | user | `?page=` | the client's feed (overview's, slice 67): its deals' rows (the status rows among them) and its rows on no deal (`subject` "client:<id>"), newest first, without downloads and views; each row is the deals feed's row plus `deal_id` and `detail` |
 | GET / POST | `clients/{id}/contacts/` | user | `{role, name, title, email, phone, is_primary}` | `{contacts, primary_id}` / `201 contact`, an HR admin when no role is sent (slice 38) |
 | PATCH / DELETE | `contacts/{id}/` | user | same fields | contact / `204` (slice 38) |
 | GET | `deals/{id}/` | user | — | deal header |
@@ -4686,13 +4686,15 @@ Full list: Part I, I.6.
 Built in slice 62: `GET deals/{id}/overview/` with the blocks O2 draws (`overview/payload.py`, pure `overview/rules.py`;
 one batch scope, the same queries at any size). Slice 63 adds Card 1, Card 2, the outreach and the side cards' blocks
 (pure `overview/gtm.py` and `overview/outreach.py`, the reads in `overview/market.py`) and the Timeline's read
-(`overview/feed.py`); the client read follows in 67.
+(`overview/feed.py`). Slice 67 adds the client page's two reads (`overview/client_payload.py`, pure
+`overview/client_rules.py`, the Agenda tile's read `overview/client_agenda.py`, Coverage in force `overview/in_force.py`,
+the client feed in `overview/feed.py`).
 
 | Method | Path | Auth | Response |
 |---|---|---|---|
 | GET | `deals/{id}/overview/` | user | M.6's payload. Slice 62: `{deal_id, identity: {name, legal_name, legal_name_default, type, type_label, stage, open_days, renews, owner}, client: {id, name, relationship, client_since, on_book, convert: {allowed, sentence} \| null}, renewal_offer: {premium_annual, pct_change, label} \| null, facts: {fein, sic_code, situs_state, employee_count, carrier and funding: {value, from: plans \| coverage \| null, coverage_id, editable}, agent_of_record: {value, default}, deal_size, in_force: [{line, label, comp_label}], contact}, tiles: {plans_quoted, last_contact_at, expected_revenue}}`. The Waiting banner and Intake complete read the shell's `journey/`, and the lost and archived banners the deal header, so neither is read twice. Slice 63: `asks: {refusal (client_asks_open's sentence) \| null, file_asks_ready: true}`, `get_to_market: {badge, badge_label, quotes_first, met, required, tier, tier_label, headcount: {value, from, estimate}, marketed_at, groups: [{key coverage \| intake \| census \| questionnaire \| stop_loss \| documents \| confirmations, title, met, count, …the group's rows}]}`, `quote_to_close: [{key, detail, at}]` (the journey's Quote to Close milestones), `enrollment_check: {intake, census, advisor, differ, warning}`, `outreach: {last_contact_at, last_response_at, open, oldest_days, answered, waiting, expired, links (≤ 50), links_total, never_asked}`, `commission` (`commission.summary.card`) and `coverage_notes: [{line, label, carrier, state_label, body}]`; 404 past bigint |
 | GET | `deals/{id}/overview/feed/?page=` | user | The Timeline (M70, M71; slice 63): `{count, next, previous, results: [deals' activity row + detail]}`, 25 a page, newest first, no downloads or views; `detail` is the file's name, the note's first line or the link's person and role, read with the page (a removed file or deleted note shows none) |
-| GET | `clients/{id}/overview/` | user | The client page's Overview: one batched `summary.facts(deal_ids)` per app, questionnaire's `summaries(deals)`, `commission.summary.card` and the intake and quotes facts, in a fixed number of queries (slice 67) |
+| GET | `clients/{id}/overview/` | user | The client page's Overview (slice 67): one batch scope over the client's deals — agenda's `facts_for` (every app's `summary.facts` at once), the forms stored on them (questionnaire's rows), their live files, the working deal's intake answers, `enrolled_headcount` and `incumbent`, `commission.summary.card`, quotes' line states and `outreach_for` — in a fixed number of queries. `{client_id, deal_id (the deal the page works in: in flight, else the newest), current: {deal_id, year, stage, effective_date, type, type_label, plans_quoted} \| null, last_sold: {deal_id, year, carriers, at} \| null, convert: {allowed, sentence} \| null, facts: {deal_id, legal_name, fein, sic_code, situs_state, employees: {value, from, from_label, estimate}, funding: {value, from}} \| null, tiles: {effective: {date, days} \| null, agenda: {overdue, soon, total}, expected_revenue}, in_force: {kind sold \| current \| null, rows: [{line, label, carrier, plan, funding, premium_month, commission, expected, renews}]}, commission \| null, outreach \| null, history: [{deal_id, year, stage, current, effective_date, sold, expected, chips: {intake, census, forms, documents}}]}`; 404 past bigint |
 
 Neither read writes anything or creates a row. The Overview's writes use their owners' endpoints: notes, contacts,
 lost and reopen, intake facts, uploads, tray asks, AI starts, marks, archive and revert (M.6). v1.1's `next_action`
@@ -4908,6 +4910,27 @@ Agenda and Commissions.
   Reads: `GET clients/{id}/overview/`, `…/agenda/` and `…/activity/`, and the client split (§7.10); keys
   `['client', id, …]` with `staleTime: 0`. The reads write nothing, and the overview read runs a fixed number of
   queries.
+- **Built in slice 67** (`pages/ClientPage/`, `api/clientPage.js`; `overview/client_payload.py`, `client_rules.py`,
+  `client_agenda.py`, `in_force.py`): the route (`/clients/:id` opens the Overview, as an unknown or unbuilt tab does);
+  the sidebar ("← Clients" / "← Prospects", Owner or "No primary producer", "Effective <date>", the status and Archived
+  chips, Overview · *Relationship:* Notes — Agenda and Commissions join with slice 68, with the rollup chip and their
+  badges) and the Plan year block over the deal the page works in (the deal in flight, else the newest), its nav with
+  the deal sidebar's labels and badges (the old "Year overview"/"Year agenda" labels wait, I9) and "This year at a
+  glance" (Intake, Census, Proposal); the Overview in the old order — title row (Convert to client for a prospect,
+  Archive client… with its confirm and banner), header card (status chip, Client since, Effective · in Nd, owner, the
+  client box, the facts with Client name, a Status select on the status door, Primary producer with "set ▸" to the
+  deal's Commission tab until slice 68, Main contact and its details, Employees, Funding, Legal name, FEIN, SIC and
+  Situs with "edit in intake ↗"), the Waiting banner of the deal in flight (else "Nothing due — no deal in flight."),
+  the tiles (Effective; Agenda: the open items of the client's live deals — Up next and Waiting on steps, open tasks
+  and nudges — overdue before today and soon within agenda's 30 days, by agenda's `severity`; Expected revenue), the
+  Deal card, Coverage in force (Renews: the current coverage on the effective date, the sold plans a year after; a
+  prospect's lines the Advisor's current plans hold join intake's rows), the Activity card (the deal in flight's
+  outreach strip and "Who we've asked" above the Timeline over `clients/{id}/activity/`), the commission card, Latest
+  notes (the deal's three newest) and History with G116's chips (Intake, Census N EE, each carrier form armed or
+  started, ✓ once signed, Docs N), each opening that tab of the deal page; the Notes tab (the standing brief on blur,
+  the deal's notepad). Ways in: Clients rows, the deal header's client name, the deal sidebar's client block (New and
+  Existing clients), the Overview's client box; the client dialog is gone. E71: the page tells a file's window which
+  client it shows.
 
 ### 8.6 Overview (`overview`)
 

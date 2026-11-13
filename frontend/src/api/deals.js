@@ -148,16 +148,6 @@ export function useDealActivity(dealId, { enabled = true } = {}) {
   });
 }
 
-/** The deal's client in full, with the status moves its dialog offers (each allowed or refused, with its sentence). */
-export function useDealClient(deal, { enabled = true } = {}) {
-  return useQuery({
-    queryKey: dealKey(deal.id, 'client'),
-    queryFn: () => getClient(deal.client.id),
-    staleTime: 0,
-    enabled,
-  });
-}
-
 /** Active users [{id, name}] for owner pickers. */
 export function useUsers() {
   return useQuery({ queryKey: USERS_KEY, queryFn: listUsers, staleTime: 5 * 60 * 1000 });
@@ -250,16 +240,6 @@ function setHeaderClient(queryClient, deal, client) {
         }
       : header,
   );
-}
-
-/** mutate({name, owner_id, notes}) for the deal's client; updates the header's client. */
-export function useUpdateClient(deal) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (changes) => updateClient(deal.client.id, changes),
-    onSuccess: (client) => setHeaderClient(queryClient, deal, client),
-    onSettled: () => invalidateDeal(queryClient, deal.id),
-  });
 }
 
 /** mutate(to) — Convert to client, Back to prospect, or a status fix (plan.md §5.1). A 409 reaches `error`. */

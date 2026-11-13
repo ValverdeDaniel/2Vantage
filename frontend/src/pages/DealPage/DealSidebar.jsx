@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { Link } from 'react-router';
 import { useJourney } from '../../api/agenda';
-import { labelOf, useMeta } from '../../api/meta';
+import { labelOf, PROSPECT, useMeta } from '../../api/meta';
 import { useDealForms } from '../../api/questionnaire';
 import { navGroups } from './nav';
 import NavBadges from './NavBadges';
@@ -14,8 +14,9 @@ const READY_CLASSES = { blocked: 'bnf-ready-blocked', ready: 'bnf-ready-ready', 
 /**
  * The deal workspace's 232 px sticky sidebar (A20, A21, A23; plan.md §8.4; CaseWorkspace.jsx at 891f1b3): "← Benefits",
  * the client's name, "Renews <effective date>" and the intake ready chip (B33), then the grouped nav in the old order
- * with its badges, and the Deal readiness meters (slice 61, from agenda's `journey/`). The client block waits for
- * slice 67.
+ * with its badges, and the Deal readiness meters (slice 61, from agenda's `journey/`). Between them, for a New or
+ * Existing client, the client block "<client> ↗" opens the client page (A20, CL26; slice 67), as the old block showed
+ * only for a deal linked to a client; the year strip waits with renewals.
  */
 export default function DealSidebar({ deal, tab }) {
   // The Questionnaire tab shows only while the deal has a form, armed or started (G7; slice 42), or while it is open.
@@ -39,6 +40,13 @@ export default function DealSidebar({ deal, tab }) {
           </span>
         )}
       </div>
+      {deal.client.relationship !== PROSPECT && (
+        <div className="bnf-case-client">
+          <Link className="bnf-case-client-link" to={`/clients/${deal.client.id}/overview`}>
+            {deal.client.name} ↗
+          </Link>
+        </div>
+      )}
       <nav className="bb-nav" aria-label="Deal sections">
         {navGroups(shown).map((group) => (
           <Fragment key={group.label || 'top'}>
