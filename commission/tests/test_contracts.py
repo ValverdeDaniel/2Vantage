@@ -1,6 +1,6 @@
 """The Q.3 contracts for commission (plan.md §12.3): the write paths, GETs write nothing, the permission matrix with the
-deal owner and the commission tiers (OQ70, H102), ids past bigint, the lock order, and reads that cost a fixed number
-of queries."""
+deal owner and the commission tiers (OQ70, H102), ids past bigint and the lock order. Reads that cost a fixed number of
+queries (Q.3 #4) are in test_scaling.py."""
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -11,7 +11,7 @@ from rest_framework.test import APIClient
 from accounts.models import Profile
 from commission import services
 from commission.models import ClientSplit, Commission, Party, Record, Settings
-from conftest import check_permissions, make_deal, sweep_gets, write_path_contract
+from conftest import check_permissions, sweep_gets, write_path_contract
 from deals.models import Client, Deal
 
 pytestmark = pytest.mark.django_db
@@ -223,42 +223,6 @@ def test_Q3_writes_lock_the_deal_then_the_client_then_commission(user, deal):
     assert tables(lambda: services.save_split(user, deal_id=deal.id, rows=rows))[:3] == [deal_t, client_t, row_t]
 
 
-def test_Q3_4_the_tab_reads_in_a_fixed_number_of_queries(api, user):
-    from quotes import services as quotes
-
-    def queries(deal):
-        with CaptureQueriesContext(connection) as captured:
-            assert api.get(f'/api/deals/{deal.id}/commission/').status_code == 200
-        return len(captured.captured_queries)
-
-    small = make_deal(user, requested_lines=('medical',))
-    big = make_deal(user, name='Bigger Co.', requested_lines=('medical', 'dental', 'vision', 'std', 'ltd', 'eap'))
-    for line in ('medical', 'dental', 'vision'):
-        for n in range(4):
-            quotes.create_plan(user, big, line=line, role='alternate', carrier='Cigna', name=f'P{n}', values={})
-    for n in range(5):
-        Party.objects.create(kind='partner', name=f'Partner {n}')
-        get_user_model().objects.create_user(f'producer{n}', f'p{n}@example.com', 'pw-Example-1')
-    services.update(user, big.id, {'rates': {'medical': '5', 'dental': '10'}})
-    assert queries(big) == queries(small)
-
-
-def test_Q3_4_the_roster_reads_in_a_fixed_number_of_queries(admin_api):
-    def queries():
-        with CaptureQueriesContext(connection) as captured:
-            assert admin_api.get('/api/commissions/parties/').status_code == 200
-        return len(captured.captured_queries)
-
-    one = get_user_model().objects.create_user('first', 'f@example.com', 'pw-Example-1')
-    Party.objects.create(kind='producer', name='First', user=one)
-    before = queries()
-    for n in range(8):
-        login = get_user_model().objects.create_user(f'more{n}', f'm{n}@example.com', 'pw-Example-1')
-        Profile.objects.create(user=login, commissions_access='all')
-        Party.objects.create(kind='producer' if n % 2 else 'partner', name=f'More {n}', user=login if n % 2 else None)
-    assert queries() == before
-
-
 def test_Q3_record_ids_past_bigint_answer_404_and_junk_answers_400(admin_api, record):
     big = 2**64
     assert admin_api.get(f'/api/commissions/records/{big}/').status_code == 404
@@ -290,16 +254,3 @@ def test_Q3_booking_locks_the_deal_then_its_records(user, deal, record):
         services.rebook(user, deal.id)
     locks = [q['sql'].split(' FROM ', 1)[1].split()[0] for q in queries.captured_queries if 'FOR UPDATE' in q['sql']]
     assert list(dict.fromkeys(locks))[:2] == [f'"{Deal._meta.db_table}"', f'"{Record._meta.db_table}"']
-
-
-def test_Q3_4_the_book_reads_in_a_fixed_number_of_queries(admin_api, admin_user):
-    def queries():
-        with CaptureQueriesContext(connection) as captured:
-            assert admin_api.get('/api/commissions/records/').status_code == 200
-        return len(captured.captured_queries)
-
-    services.add_to_book(admin_user, {'client_name': 'First Co.', 'line': 'medical', 'rate': '5'})
-    before = queries()
-    for n in range(6):
-        services.add_to_book(admin_user, {'client_name': f'More Co. {n}', 'line': 'dental', 'premium_annual': '100'})
-    assert queries() == before
