@@ -13,6 +13,9 @@ what they take, once.
   renewal blocks print them, one rule for both.
 - `last_contact(moments)`: the newest contact (M37): a link sent, a proposal issued, a call, email or meeting note (a
   logged follow-up is one). A draft link is no contact; the browser says "just now", never "0h ago".
+- `quote_to_close(quotes, issued_at, booking)`: Card 2's detail per Quote to Close milestone (M62, M65; slice 63); the
+  rows' states are the journey's, so the card and the stepper agree.
+- `coverage_notes(rows)`: the Coverage notes side card (M80): each intent row that carries a note, in the card's order.
 """
 
 from datetime import datetime
@@ -97,3 +100,51 @@ def last_contact(moments):
     """The newest of `moments` (datetimes or ISO text; None for a source with nothing), or None."""
     found = [moment for moment in (_moment(value) for value in moments) if moment is not None]
     return max(found, default=None)
+
+
+def _plural(count, word):
+    return f'{count} {word}' if count == 1 else f'{count} {word}s'
+
+
+def quote_to_close(quotes, issued_at, booking):
+    """[{key, detail, at}] in the journey's Quote to Close order (quotes in, proposal built, issued, sold, commission
+    entered), from quotes' facts (`quotes.summary.facts`), the newest issued proposal and the commission card's booking
+    state. The old card's words (891f1b3 `PhaseCards.jsx`): "N plans · X to review · Y missing" or "Waiting on carrier
+    responses"; "Secure link the client opens" became "Proposal issued <date>" (C22); the client-selected step and the
+    hand-off wait (M63, M64), so the old hand-off's "Unlocks once a plan is sold" now heads the commission step."""
+    count = quotes.get('quotes', 0) or 0
+    if count:
+        review, missing = quotes.get('to_review', 0), quotes.get('required_missing', 0)
+        first = f'{_plural(count, "plan")} · {review} to review · {missing} missing'
+    else:
+        first = 'Waiting on carrier responses'
+    sold = bool(quotes.get('sold_lines'))
+    if not sold:
+        commission = 'Unlocks once a plan is sold'
+    elif (booking or {}).get('state') == 'booked':
+        commission = 'Booked at sale'
+    else:
+        commission = 'Book it on the Commission tab'
+    return [
+        {'key': 'quotes_in', 'detail': first, 'at': None},
+        {'key': 'built', 'detail': 'Advisor picks the best-fit plans', 'at': None},
+        {'key': 'issued', 'detail': 'Proposal issued' if issued_at else '', 'at': issued_at},
+        {'key': 'sold', 'detail': 'Confirm the winning plan', 'at': None},
+        {'key': 'commission', 'detail': commission, 'at': None},
+    ]
+
+
+def coverage_notes(rows):
+    """[{line, label, carrier, state_label, body}] for the intent rows (intake's coverage card) whose note is not
+    blank; none at all hides the card (old `CoverageNotesCard`)."""
+    return [
+        {
+            'line': row['line'],
+            'label': row.get('label') or row['line'],
+            'carrier': row.get('carrier') or '',
+            'state_label': row.get('state_label') or '',
+            'body': row['notes'].strip(),
+        }
+        for row in rows
+        if (row.get('notes') or '').strip()
+    ]

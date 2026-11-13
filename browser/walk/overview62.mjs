@@ -52,7 +52,8 @@ export const overview62 = {
         if (y < last) throw new Error(`${name} stands above the block before it`);
         last = name === 'client box' ? last : y; // the client box sits beside the name, on the same row
       }
-      for (const label of ['Plans quoted', 'Last contact', 'Expected revenue']) await region.getByText(label, { exact: true }).waitFor();
+      // the tiles' own labels: the Activity card's outreach strip says "Last contact" too (slice 63)
+      for (const label of ['Plans quoted', 'Last contact', 'Expected revenue']) await region.locator('.bb-metric-row').getByText(label, { exact: true }).waitFor();
       await region.getByText('New business', { exact: true }).waitFor();
       await region.getByText(/^Open \d+ days?$/).waitFor();
     });

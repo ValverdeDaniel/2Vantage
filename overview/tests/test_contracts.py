@@ -14,7 +14,7 @@ BIG = 2**63
 
 
 def samples(deal):
-    return {'api/deals/<int:pk>/overview/': {'pk': deal.id}}
+    return {'api/deals/<int:pk>/overview/': {'pk': deal.id}, 'api/deals/<int:pk>/overview/feed/': {'pk': deal.id}}
 
 
 def test_Q3_2_overview_gets_write_nothing(api, user, deal):
@@ -24,11 +24,18 @@ def test_Q3_2_overview_gets_write_nothing(api, user, deal):
 
 
 def test_Q3_3_the_permission_matrix(actors, no_csrf_api, deal):
-    matrix = [('GET', 'api/deals/<int:pk>/overview/', {'signed_out': 401, 'producer': 200, 'admin': 200})]
+    matrix = [
+        ('GET', 'api/deals/<int:pk>/overview/', {'signed_out': 401, 'producer': 200, 'admin': 200}),
+        ('GET', 'api/deals/<int:pk>/overview/feed/', {'signed_out': 401, 'producer': 200, 'admin': 200}),
+    ]
     check_permissions(actors, ['overview'], matrix, samples(deal), no_csrf_api)
 
 
-@pytest.mark.parametrize('path', [f'/api/deals/{BIG}/overview/', '/api/deals/999999/overview/'])
+@pytest.mark.parametrize(
+    'path',
+    [f'/api/deals/{BIG}/overview/', '/api/deals/999999/overview/', f'/api/deals/{BIG}/overview/feed/',
+     '/api/deals/999999/overview/feed/'],
+)  # fmt: skip
 def test_Q3_ids_past_bigint_or_unknown_are_404_never_500(api, path):
     assert api.get(path).status_code == 404
 

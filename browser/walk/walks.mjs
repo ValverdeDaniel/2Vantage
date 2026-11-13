@@ -44,6 +44,7 @@ import { stopLoss36 } from './stopLoss36.mjs';
 import { voice66 } from './voice66.mjs';
 import { home61 } from './home61.mjs';
 import { overview62 } from './overview62.mjs';
+import { overview63 } from './overview63.mjs';
 
 const signIn = async ({ page, step, base, user }) => {
   await step('the sign-in page asks for a username and password', async () => {
@@ -284,4 +285,5 @@ export const WALKS = {
   s60: { ...agenda60, run: (ctx) => agenda60.run(ctx, { signIn, openDeal }) }, // slice 60's done-when (fresh GD3; re-seed GD3 after)
   s61: { ...home61, run: (ctx) => home61.run(ctx, { signIn, openDeal }) }, // slice 61's done-when (fresh GD2; re-seed GD2 after)
   s62: { ...overview62, run: (ctx) => overview62.run(ctx, { signIn, openDeal }) }, // slice 62's done-when (fresh GD2; re-seed GD2 after)
+  s63: { ...overview63, run: (ctx) => overview63.run(ctx, { signIn, openDeal }) }, // slice 63's done-when (fresh GD2; re-seed GD2 after)
 };

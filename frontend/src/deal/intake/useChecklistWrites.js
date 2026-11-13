@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { invalidateDeal } from '../../api/deals';
 import { useUploadDocument } from '../../api/documents';
-import { intakeKey, useChecklistItem } from '../../api/intake';
+import { useChecklistItem } from '../../api/intake';
 import { errorText } from '../../lib/errors';
 import { useToast } from '../../ui/useToast';
 
@@ -8,8 +9,8 @@ import { useToast } from '../../ui/useToast';
  * The checklist card's writes (plan.md §7.6; B27), one at a time (`busy`), with a toast in words on failure: the "On
  * file" / "Confirmed" tick, the requirement (Not needed, Still needed ▸ with the client's note, Undo) — both through
  * intake's checklist door, whose answer lands the card and the ready state at once — and ⬆ Attach, a file of the
- * item's kind through documents' one door (the card's state then comes with the intake payload). Saves stay quiet;
- * an upload says so.
+ * item's kind through documents' one door (the card's state then comes with the intake payload, and with the
+ * Overview's Card 1 and the shell's badges, so the whole deal refetches: slice 63). Saves stay quiet; an upload says so.
  */
 export default function useChecklistWrites(dealId) {
   const toast = useToast();
@@ -30,7 +31,7 @@ export default function useChecklistWrites(dealId) {
         {
           onSuccess: () => {
             toast.success(`${label} attached`);
-            queryClient.invalidateQueries({ queryKey: intakeKey(dealId) });
+            invalidateDeal(queryClient, dealId);
           },
           ...failed('Could not attach that file.'),
         },

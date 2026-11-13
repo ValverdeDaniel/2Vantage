@@ -4628,12 +4628,14 @@ Full list: Part I, I.6.
 ### 7.16 Overview — `overview/`
 
 Built in slice 62: `GET deals/{id}/overview/` with the blocks O2 draws (`overview/payload.py`, pure `overview/rules.py`;
-one batch scope, the same queries at any size). Card 1, Card 2, the outreach and the side cards add their blocks in
-slice 63; the client read follows in 67.
+one batch scope, the same queries at any size). Slice 63 adds Card 1, Card 2, the outreach and the side cards' blocks
+(pure `overview/gtm.py` and `overview/outreach.py`, the reads in `overview/market.py`) and the Timeline's read
+(`overview/feed.py`); the client read follows in 67.
 
 | Method | Path | Auth | Response |
 |---|---|---|---|
-| GET | `deals/{id}/overview/` | user | M.6's payload. Slice 62: `{deal_id, identity: {name, legal_name, legal_name_default, type, type_label, stage, open_days, renews, owner}, client: {id, name, relationship, client_since, on_book, convert: {allowed, sentence} \| null}, renewal_offer: {premium_annual, pct_change, label} \| null, facts: {fein, sic_code, situs_state, employee_count, carrier and funding: {value, from: plans \| coverage \| null, coverage_id, editable}, agent_of_record: {value, default}, deal_size, in_force: [{line, label, comp_label}], contact}, tiles: {plans_quoted, last_contact_at, expected_revenue}}`. The Waiting banner and Intake complete read the shell's `journey/`, and the lost and archived banners the deal header, so neither is read twice; `asks`, `get_to_market`, `quote_to_close`, `enrollment_check`, `outreach`, `commission` and `coverage_notes` join in slice 63; 404 past bigint |
+| GET | `deals/{id}/overview/` | user | M.6's payload. Slice 62: `{deal_id, identity: {name, legal_name, legal_name_default, type, type_label, stage, open_days, renews, owner}, client: {id, name, relationship, client_since, on_book, convert: {allowed, sentence} \| null}, renewal_offer: {premium_annual, pct_change, label} \| null, facts: {fein, sic_code, situs_state, employee_count, carrier and funding: {value, from: plans \| coverage \| null, coverage_id, editable}, agent_of_record: {value, default}, deal_size, in_force: [{line, label, comp_label}], contact}, tiles: {plans_quoted, last_contact_at, expected_revenue}}`. The Waiting banner and Intake complete read the shell's `journey/`, and the lost and archived banners the deal header, so neither is read twice. Slice 63: `asks: {refusal (client_asks_open's sentence) \| null, file_asks_ready: true}`, `get_to_market: {badge, badge_label, quotes_first, met, required, tier, tier_label, headcount: {value, from, estimate}, marketed_at, groups: [{key coverage \| intake \| census \| questionnaire \| stop_loss \| documents \| confirmations, title, met, count, …the group's rows}]}`, `quote_to_close: [{key, detail, at}]` (the journey's Quote to Close milestones), `enrollment_check: {intake, census, advisor, differ, warning}`, `outreach: {last_contact_at, last_response_at, open, oldest_days, answered, waiting, expired, links (≤ 50), links_total, never_asked}`, `commission` (`commission.summary.card`) and `coverage_notes: [{line, label, carrier, state_label, body}]`; 404 past bigint |
+| GET | `deals/{id}/overview/feed/?page=` | user | The Timeline (M70, M71; slice 63): `{count, next, previous, results: [deals' activity row + detail]}`, 25 a page, newest first, no downloads or views; `detail` is the file's name, the note's first line or the link's person and role, read with the page (a removed file or deleted note shows none) |
 | GET | `clients/{id}/overview/` | user | The client page's Overview: one batched `summary.facts(deal_ids)` per app, questionnaire's `summaries(deals)`, `commission.summary.card` and the intake and quotes facts, in a fixed number of queries (slice 67) |
 
 Neither read writes anything or creates a row. The Overview's writes use their owners' endpoints: notes, contacts,
@@ -4880,6 +4882,18 @@ the old order (M.6), except that the Waiting banner sits under the title (M33; O
   code, Funding, Situs state, Current carrier, Eligible employees, Agent of record, In-force commission, Potential deal
   size, Contact, email, phone) on `ui/FactRow.jsx`, each written through its owner; and the four tiles. Deals open
   here (`/deals/:id` → `/deals/:id/overview`).
+- **Built in slice 63** (`deal/overview/gtm/`, `feed/`, `notes/`; `overview/gtm.py`, `market.py`, `outreach.py`,
+  `feed.py`): Card 1 in the old `GetToMarketCard` frame — the badge, "Quotes came in first — intake, census and the RFP
+  still apply" (M43), "N of M requirements met · <tier>", the groups open until met (heads keyboard-operable), each
+  checklist row with intake's own controls (`controlsOf`, `useChecklistWrites`, `FormPicker`: On file / Confirmed, Not
+  needed / Still needed ▸ / Undo, ⬆ Attach through documents, the form pickers through the questionnaire's choice),
+  "＋ Ask" and "＋ Ask for their census file" into review's tray, the census's "＋ Ask ▸" to its Missing lane, the
+  enrollment check's warning (M67) and the typed-counts notice (M110); Card 2 on the journey's Quote to Close steps
+  (M62); the Activity card (the outreach strip, "Who we've asked", the Timeline from Activity with each row's detail);
+  Notes (five kinds, pin, edit, soft delete with an Undo toast); Coverage notes and the commission card. The Timeline
+  and the notes card are exported for the client page (`Timeline {dealId | path, queryKey}`, `NotesCard {dealId}`).
+  Not built: the old custom asks and "＋ Add request" (M58, M59: no slice stores a free-text ask yet, L121), the
+  questionnaire's own "＋ Ask" (the form to fill online, slice 58), "N from them" on a link.
 
 ### 8.7 Agenda (`agenda`)
 

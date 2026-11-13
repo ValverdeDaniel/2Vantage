@@ -17,7 +17,8 @@ from review import services as review_services
 
 pytestmark = pytest.mark.django_db
 
-BLOCKS = {'deal_id', 'identity', 'client', 'renewal_offer', 'facts', 'tiles'}
+BLOCKS = {'deal_id', 'identity', 'client', 'renewal_offer', 'facts', 'tiles', 'asks', 'get_to_market', 'quote_to_close',
+          'enrollment_check', 'outreach', 'commission', 'coverage_notes'}  # fmt: skip
 
 
 def overview(api, deal):
