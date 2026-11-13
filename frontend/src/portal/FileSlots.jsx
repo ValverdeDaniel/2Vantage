@@ -77,7 +77,7 @@ export function DocumentSlots({ documents, ...rest }) {
       <div className="bb-panel-title">Documents to upload</div>
       <div className="bb-panel-sub">Attach what’s still needed — anything we already have is marked received.</div>
       {documents.map((doc) => (
-        <div key={doc.slot} id={`bnf-sec-doc_${doc.slot}`}>
+        <div key={doc.slot} id={`bnf-sec-doc_${doc.slot}`} data-ask-ref={`doc:${doc.slot}`}>
           <Slot slot={doc.slot} label={doc.label} detail={doc.detail} note={doc.note} accept={doc.accept}
                 received={doc.received} icon="📄" {...rest} />
         </div>
@@ -89,7 +89,7 @@ export function DocumentSlots({ documents, ...rest }) {
 export function CensusFileCard({ token, censusFile, canTemplate, ...rest }) {
   if (!censusFile) return null;
   return (
-    <div id="bnf-sec-census" className="bb-portal-card">
+    <div id="bnf-sec-census" className="bb-portal-card" data-ask-ref="census:file">
       <div className="bb-panel-title">Your employee census</div>
       <div className="bb-panel-sub">
         Any layout works — we normalize it on our side. Or start from our template if it is easier.

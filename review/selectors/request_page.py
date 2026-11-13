@@ -10,7 +10,10 @@ each item stands, what is in the tray and where it goes, each item's thread, and
 - `people`: the who bar (L26): each link on a request still open that a person can still use (not past its ceiling),
   {link_id, request_id, name, security, sent, opens, days_left, expired, revoked, path};
 - an item and a column as `request_rail` builds them; `threads` the notes on the tab's items (L22);
-- `new`: the items with a client question or answer since this person's last look (`Seen`, L33; never looked: all).
+- `new`: the items with a client question or answer since this person's last look (`Seen`, L33; never looked: all);
+- `target` (`?request=<id>`, slice 57's Ask card, L42): the open request picked on the who bar — {request_id, names,
+  link_ids, asks, security, message, parts {intake, blocks, census, census_columns, census_file, documents_missing},
+  on_link [ref it carries now], drafted {ref: draft id named for it}}, or None.
 Staff only. A fixed number of queries per tab; writes nothing.
 """
 
@@ -20,9 +23,11 @@ from deals import clock, rules
 from intake.models import Intake
 
 from .. import tokens
-from ..models import ReviewNote, Seen
-from ..rules import policy
+from ..models import ASK_KINDS, ReviewNote, Seen
+from ..rules import ask_words, policy
 from ..rules import rail as rail_rules
+from ..rules import tray as tray_rules
+from ..services.deliver import carried
 from . import entries as entry_rows
 from . import notes as note_rows
 from . import open_requests, request_rail
@@ -108,7 +113,42 @@ def _new(notes, facts, seen, pane):
     return sorted(out | {ref for ref in facts.pending if _pane_of(ref) == pane and seen is None})
 
 
-def page(deal, pane, user, now=None):
+def _target(deal, found, request_id, notes, now):
+    """The request the Ask card is on (L42; slice 57): who holds it, what it asks (its parts and every ref it carries
+    now) and the drafts named for it; None when it is not an open request of this deal."""
+    if request_id not in found:
+        return None
+    request, links = found[request_id]
+    live = tray_rules.live_links(links, now)
+    if request.closed_at is not None or not live:
+        return None
+    asks = request.asks or {}
+    intake, census = asks.get('intake') or {}, asks.get('census') or {}
+    documents = asks.get('documents') or {}
+    drafted = {note_rows.ref_of(note): note.id for note in notes
+               if note.request_id == request_id and note.sent_at is None and note.kind in ASK_KINDS
+               and note.resolved_at is None}  # fmt: skip
+    return {
+        'request_id': request.id,
+        'names': open_requests.names(links, now),
+        'link_ids': [link.id for link in live],
+        'asks': ask_words.words(asks),
+        'security': tray_rules.weakest(links, now),
+        'message': request.message,
+        'parts': {
+            'intake': intake.get('scope') or ('blocks' if intake.get('blocks') else ''),
+            'blocks': intake.get('blocks') or [],
+            'census': census.get('scope', 'none'),
+            'census_columns': census.get('columns') or [],
+            'census_file': bool(census.get('file')),
+            'documents_missing': bool(documents.get('missing')),
+        },
+        'on_link': sorted(carried(deal, request, live[0], links)),
+        'drafted': drafted,
+    }
+
+
+def page(deal, pane, user, now=None, request_id=None):
     now = now or clock.now()
     found = open_requests.load(deal.id)
     facts, notes = _facts(deal, found, now)
@@ -134,5 +174,6 @@ def page(deal, pane, user, now=None):
         threads=note_rows.threads(deal.id, refs),
         seen_at=_iso(seen),
         new=_new(notes, facts, seen, pane),
+        target=_target(deal, found, request_id, notes, now) if request_id else None,
     )
     return answer

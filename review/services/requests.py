@@ -97,7 +97,8 @@ def plan(deal, data, now):
     return Plan(asks, who, message, floor, policy.stricter(pick, floor['level']), expires_on, data.get('blank') is True)
 
 
-def _link(request, person, planned, user, now):
+def make_link(request, person, planned, user, now):
+    """One person's link on `request` at the plan's level, saved; (link, path, pin or '')."""
     expires_at, ceiling_at = policy.first_life(now)
     if planned.expires_on:
         expires_at = policy.picked_expiry(planned.expires_on, ceiling_at, clock.agency_zone())
@@ -138,7 +139,7 @@ def create(user, deal_id, data, *, dry_run=False):
     request = ClientRequest.objects.create(
         deal=deal, asks=planned.asks, message=planned.message, created_by_id=common.user_id(user), created_at=now
     )
-    links = [_link(request, person, planned, user, now) for person in planned.people or [None]]
+    links = [make_link(request, person, planned, user, now) for person in planned.people or [None]]
     change = activity.change(common.request_target(request), ['asks', 'links', 'message'])
     row = activity.record(deal, user, common.AREA, 'created', _summary(planned, len(links)), changes=[change])
     return Created(request, links, row)

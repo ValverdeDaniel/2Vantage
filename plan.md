@@ -3020,6 +3020,36 @@ link until a person decides it again. The portal's page carries `follow_ups` (a 
 draft or a staff name) and takes a client's questions and last look (`questions/`, `seen/`). Activity rows for notes
 and the tray are key-only (a note's words never enter Activity, §3.8).
 
+**Built (slice 57):** the Ask card, the settings card, People & links, the full builder, edit mode, the comment margin,
+Next and the Missing lane, and the sections' own boards. **The Ask card** changes an open request in one locked write
+(`services/form.py`, its plan pure in `rules/form_plan.py`; Deal → request → links): what comes off first (a whole
+part, an item, a census column; an item only a scope carries — "the whole intake", "every blank", "whatever is
+missing" — is refused by name, L59), then the level, then what is switched on and what the drafts named for the
+request add (a tick on the Ask card is a tray draft named for its request, L42), then each person's settings (blank,
+the picked expiry, the reminder to nudge) and the note. A link already out never rises by itself: what is ticked
+needing more than its links have answers 409 `needs_level` until a person raises it, and a raise makes a PIN for each
+link that can still open, shown once; a level may fall once what needed it comes off. Asks that change bump
+`form_version`, close the sent asks the request no longer carries, and (if anything was added) give its live links
+their life again. A settings-only body leaves what a link asks alone. Its dry run (`form_preview.py`) reads the same
+plan and writes nothing. **Their form** (L30) is the portal's own builder fed the draft asks on stand-ins that are
+never saved (`selectors/drafted.py`), so the builder's and the Ask card's live numbers and the page in the middle read
+the one allowlist. **Link settings** that act at once are `PATCH links/{id}/` actions: `expiry`, `blank`, `address`
+(only before anyone opened it; key-only Activity) and `nudge` / `nudge_done` (`services/link_settings.py`;
+`set_nudge(user, link_id, day)` and `finish_nudge(user, link_id)` are the only writers of `ClientLink.nudge`, I36–I39:
+a day today or later and before the link runs out, on a link that is on, its request open and the deal still asking);
+blank, expiry and nudge rows are revertible. **Give someone else access** (`services/access.py`, L72) adds a link to
+the same request at its level. **Edit mode** (`services/enter.py`, L35) types answers through the owners' typed
+writes, origin `relay` ("These came from the client") or `typed`. **Next** (`rules/next.py`, L4) ranks: a link
+running out within 2 days unopened since our newest ask; a question older than 24 h; what blocks a carrier (intake
+required to market, required census blanks, and with quotes in on typed counts and no census, their census; once
+quotes are in the intake's required questions drop below the answers, B19); other links running out; newer
+questions; the oldest answer, then client files — up to 8. **Missing** (`selectors/missing.py`, L6) applies one rule
+to every owner: blank and no client answer waiting; "＋ Ask all" asks only what is not in the tray or out. **The
+sections' boards** (B37, C27, C30): the Intake board's rules and the note the client reads instead of our help text
+(`intake.services.set_rules`, `Intake.rules`), the Census board's per-column rules (`census.services.set_rules`,
+`CensusSettings.rules`; never Required for SSN), both revertible; census sends by contact are dropped (OQ88 default,
+L67, C29) and saved census filter setups wait (OQ7).
+
 **Full rules:** Part L (L.3; L.6: models, the owner contract, `rules/`, portal security) and O.3.4. **Slices:** 53–59.
 
 ### 5.9 Next step and agenda — `agenda/steps/`, `agenda/rows.py`
@@ -3762,7 +3792,8 @@ slice 29; slice 34's Firm pages drawer edits them (J155). **CoverImage** (≤ 24
 
 Built in slice 53 (all four models; services for requests and links); the portal with slice 54; notes, the tray
 and seen with slice 56 (`review/services/tray.py`, `send.py`, `notes.py`, `seen.py`, `questions.py`; no
-migration: the slice 53 rows and their one-open-draft constraint carry them).
+migration: the slice 53 rows and their one-open-draft constraint carry them); the Ask card, link settings, the nudge's
+writers and edit mode with slice 57 (`form.py`, `link_settings.py`, `access.py`, `enter.py`; no migration).
 L.6. v1.1's `ClientValue` goes: client answers wait on the owners' rows (§6, O.3.1).
 
 - **ClientRequest**: `deal`, `asks` (below), `message` (≤ 1,000), `created_by`/`at`, `closed_at`/`by`, `close_reason`,
@@ -4463,6 +4494,38 @@ deal; 400 by field; 409 with a sentence when the deal may no longer ask its clie
   and `draft_id`; `GET …/queue/?phase=going_back`. /api/meta/ `review` adds `note_kinds`, `rail_statuses`,
   `tray_sections`, `request_panes`, `note_limit`.
 
+Built in slice 57 (each 404 past bigint or on another deal; 400 by field; 409 with a sentence):
+- `POST …/review/requests/{rid}/form/` `{ids?, off?: {refs, columns, parts}, on?: {intake, census, columns,
+  census_file, documents_missing, blocks}, security?, message?, settings?: {link_id: {blank?, expires_on?, nudge_on?}}}`
+  → `{request, changed, pins: [{link_id, name, pin}] (this once), sent, closed, activity_id}`; 409 `{detail}` or
+  `{detail, needs_level}`. `?dry_run=1` → `{asks, adds, offs, floor, level, owed, refused, warnings, numbers: {intake,
+  blocks, people, values, census_file, documents, total}}`, writing nothing.
+- `POST …/review/requests/{rid}/people/` `{people}` → 201 `{request, links: [made], activity_id}`; `GET …/review/
+  requests/` → `{requests: [row]}` (People & links, every link ever made); the requests dry run adds `numbers`.
+- `PATCH links/{lid}/` adds `{action: expiry, day}`, `{action: blank, blank}`, `{action: address, email}`, `{action:
+  nudge, day | null}`, `{action: nudge_done}`; a recipient row adds `request_id, slides, nudge_on, nudge_done_at,
+  can_correct, pin_locked`.
+- `POST …/review/preview/` `{request_id, link_id?, ids?, off?, on?, blank?, message?}` | `{asks, blank?, message?}` →
+  `{page (§7.14's KEYS, preview true, nothing writable), why, new_refs}`; writes nothing.
+- `POST …/review/enter/` `{answers: {ref: value}, origin: typed | relay}` → `{saved, activity_ids}` (at most 500;
+  `intake:<question>`, `census:<member>:<column>`, never SSN); `GET …/review/census-blanks/?required=` → `{people:
+  [{id, title, kind, cells: [{ref, column, label, type, choices, required}]}], total, shown, truncated}` (`private,
+  no-store`).
+- `GET …/review/section/?surface=intake` → `{rows: [{key, ref, label, section, section_label, help, seed, rule, note,
+  needed, shown, value, filled, origin, status, differs, theirs, asked_in, asked_at, draft_id, question_open}],
+  documents, counts, asks_closed}`; `?surface=census` → `{columns: [{key, label, group, help, rule, required, quoted,
+  applies, filled, total, counts {missing, na, low, client, high}, origins, differs, in_cart, asked, questions,
+  askable}], people (census-blanks' shape), employees, dependents, file_hint, asks_closed}`; `&column=` → `{column,
+  people: [{member_id, ref, title, kind, value, origin, theirs, differs, missing, asked, in_cart}]}` (`private,
+  no-store`). `POST …/review/rules/` `{surface: intake, rules: {key: {state?: '' | required | waived, note?}}}` |
+  `{surface: census, rules: {column: auto | required | waived}}` → `{changed, activity_id, board}`.
+- `GET …/review/board/?scope=intake | census` (one section's own Board) adds `scope`, `next: [{kind, surface, label,
+  why, fix, rank, link_id?, request_id?, unopened?, since?}]` and `lanes.missing: [{key, section, count, label,
+  questions_open, items, fix, ask: {refs} | {census: {columns, scope}} | null, left}]`. `GET …/review/request/?request=`
+  adds `target: {request_id, names, link_ids, asks, security, message, parts, on_link, drafted}`. /api/meta/ `review`
+  adds `origins, next_kinds, rules, intake_rules, board_statuses, census_segments, census_groups, note_rule_limit,
+  enter_limit, file_hint`.
+
 | Method | Path | What it does |
 |---|---|---|
 | GET | `deals/{id}/review/badges/`, `…/board/?scope=` | Counts; lanes, Next and questions (L1, L2) |
@@ -4836,6 +4899,14 @@ with its thread; the client's open questions on the Board (L5); X (send back wit
 item's thread in the queue, with its Going back phase (L16, L22); "＋ Ask" outside the tab (B12, B27, L54). Their form
 beside the list (L30), the comment margin, edit mode, the Next line and banner (L3, L4, L25) and the Missing lane come
 with slice 57.
+Built in slice 57: Next → on the Board, the request page and each section bar (L3, L14, L25); the Missing lane with
+"＋ Ask all" (L6); a section's own Board (`?section=`, L12, L45), its Missing panel (`?lane=missing`) holding the Intake
+board of questions (B37) or the Census board of columns and its By person lens (C27, C30); on the request page the who
+bar picks a person (`?target=link:<id>`) and the Ask card shows what their link asks, with part switches and Update
+link (L36, L42), their form in the middle (L30) and the comment margin beside it (L31); with All people the middle
+holds Going out over our form; Edit opens the link's settings card (`?settings=<id>`, L39), "People & links (N) ▸" the
+drawer of every link (L38); ✎ Edit mode (`?edit=1`, L34, L35); "A new link…" (`?target=new`, `?preset=required |
+census-missing`, L40, L41) with "＋ Add a person to the deal" (L73), live numbers and their form.
 
 ### 8.9 Intake (`intake`)
 
@@ -7107,7 +7178,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | **Slice 56: REV-4** | | | | |
 | OQ87 | Does a new custom ask ("＋ Add request") wait in the tray rather than reach the portal at once? | Open. Default: yes (built in slice 56 as the rule for every ask: nothing reaches the portal until the tray is sent; "＋ Add request" itself, L121, is in no slice's row yet) | Open | 56 |
 | **Slice 57: REV-5** | | | | |
-| OQ88 | Keep census sends by contact (census columns assigned to contacts, one link each)? | Open. Default: drop it (L67). If kept, `CensusSettings.rules` stores the contacts and slice 57 sends the links | Open | 57 |
+| OQ88 | Keep census sends by contact (census columns assigned to contacts, one link each)? | Open. Default: drop it (L67). If kept, `CensusSettings.rules` stores the contacts and slice 57 sends the links. Built in slice 57 as the default: dropped (no assignee on the Census board) | Open | 57 |
 | **Slice 59: REV-7** | | | | |
 | OQ89 | After the PHI gate, are clients' census and intake files read automatically (staged)? Is a paper questionnaire read before signing? | Open. Default: census and intake files are read and staged; paper questionnaires are only filed | Open | 59 |
 | **Slice 60: AGD-1** | | | | |

@@ -21,6 +21,7 @@ from . import checklist as checklist_rules
 from . import flags, form
 from .models import CurrentCoverage
 from .services import approvals, bor, checklist, marketed, marks, rows
+from .services import rules as question_rules
 from .signals import announce
 
 LABELS = {
@@ -43,6 +44,7 @@ LABELS = {
 TOUCHED_SINCE = 'This coverage line was changed after this, so this change cannot be reverted.'
 APPROVE_AGAIN = 'Taking back an approval is not reverted: approve the answer again from the review queue.'
 DOORS = {'checklist': checklist.revert, 'bor': bor.revert, 'marketed': marketed.revert}  # slice 40's gate
+DOORS['rules'] = question_rules.revert  # the deal's own rule per question (B37; slice 57)
 
 
 def _label(key):
@@ -168,7 +170,7 @@ def _revert(row, user):
     _refuse_later(row)
     deal_id = row.deal_id
     kinds = {entry['t'].partition(':')[0] for entry in row.changes}
-    if kinds & {'intake', 'checklist', 'bor', 'marketed'}:
+    if kinds & {'intake', *DOORS}:
         rows.lock_intake(deal_id)  # lock order: the Deal (already), the Intake row, then coverage rows by id
     ids = [int(entry['t'].partition(':')[2]) for entry in row.changes if entry['t'].startswith('coverage:')]
     if ids:

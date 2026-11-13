@@ -5,13 +5,14 @@ import { expiryWords } from './portalModel';
  * The portal's frame (plan.md §8.20; L76, L78, L80): outside the app shell, no navbar and no Claude bubble. The old
  * top bar (`bb-portal-topbar`) with the agency's name and initial and "Secure link · expires in N days"; the preview
  * banner for View as client, and the thin note a signed-in person sees on a real link (old D-153 C0 #1: nothing they
- * type there is saved, since staff writes answer 403).
+ * type there is saved, since staff writes answer 403). `className` adds the request page's embed (`bnf-portal-embed`,
+ * their form beside the Ask card; slice 57).
  */
-export default function PortalShell({ agency, daysLeft = null, preview = false, staff = false, children }) {
+export default function PortalShell({ agency, daysLeft = null, preview = false, staff = false, className = '', children }) {
   const [noteOpen, setNoteOpen] = useState(true);
   const name = agency?.name || 'Benefits';
   return (
-    <div className={`bb-portal${preview || staff ? ' bnf-portal-readonly' : ''}`}>
+    <div className={`bb-portal${preview || staff ? ' bnf-portal-readonly' : ''}${className ? ` ${className}` : ''}`}>
       <div className="bb-portal-topbar">
         <div className="bb-portal-logo">{name.charAt(0)}</div>
         <div className="bb-portal-brand">{name}</div>

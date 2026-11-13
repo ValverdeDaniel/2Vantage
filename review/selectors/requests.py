@@ -6,9 +6,10 @@ A row: {id, created_at, created_by, message, asks [words], sections, state, firs
 closed_at, closed_by, close_reason, expiring, soonest_days, recipients [recipient]}. A recipient: {link_id,
 contact_id, name, email, role, security, blank, path, sent, sent_at, opened, opened_at, last_opened_at, opens,
 submitted_at, last_saved_at, expires_at, ceiling_at, days_left, expired, revoked, revoked_at, revoked_by, covered,
-state, in_progress, can_extend, can_restore}. `path` (`/portal/<token>`, for Copy link) rides only while the link
-can still open or be turned back on: never on a closed request's links or past the ceiling. Staff only: no portal
-payload reads these rows.
+state, in_progress, can_extend, can_restore, request_id, slides, nudge_on, nudge_done_at, can_correct (nobody opened
+it: its address can still change, L63), pin_locked} (the settings card's, slice 57). `path` (`/portal/<token>`, for
+Copy link) rides only while the link can still open or be turned back on: never on a closed request's links or past
+the ceiling. Staff only: no portal payload reads these rows.
 """
 
 from collections import defaultdict
@@ -76,6 +77,12 @@ def recipient(link, now, *, closed, covered):
         'in_progress': request_rules.in_progress(link, now, closed=closed),
         'can_extend': not closed and link.revoked_at is None and renewable,
         'can_restore': not closed and link.revoked_at is not None and renewable,
+        'request_id': link.request_id,
+        'slides': link.slides,
+        'nudge_on': (link.nudge or {}).get('on'),
+        'nudge_done_at': (link.nudge or {}).get('done_at'),
+        'can_correct': link.opened_at is None and link.submitted_at is None and not closed,
+        'pin_locked': link.security == policy.PIN and link.pin_tries >= policy.PIN_TRIES,
     }
 
 

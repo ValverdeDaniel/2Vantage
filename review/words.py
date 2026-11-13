@@ -125,3 +125,30 @@ RAIL_STATUSES = [
 ]
 TRAY_SECTIONS = [('census', 'Census'), ('intake', 'Intake'), ('documents', 'Documents')]
 REQUEST_PANES = [('intake', 'Intake'), ('census', 'Census'), ('documents', 'Documents')]
+
+# The sections' boards (slice 57; old 891f1b3 `CensusReviewFieldRow.jsx` REQ_BUTTONS, `censusReviewRows.js`
+# STATUS_TITLE, `IntakeReviewView.jsx` REQ_BUTTONS and its status chips).
+RULES = [('auto', 'Auto'), ('required', 'Required'), ('waived', 'Waived')]  # a census column's (C27, OQ17)
+INTAKE_RULES = [('', 'Auto'), ('required', 'Required'), ('waived', 'Waived')]  # an intake question's (B37)
+BOARD_STATUSES = [
+    ('gap', 'Needed, blank'),
+    ('pending', 'From the client'),
+    ('answered', 'Answered'),
+    ('optional', 'Blank (optional)'),
+    ('waived', 'Waived'),
+]
+CENSUS_SEGMENTS = [
+    ('missing', 'Missing — required on this deal'),
+    ('na', 'Blank — not required here'),
+    ('low', 'Read from a document, unverified'),
+    ('client', 'Supplied by the client, pending approval'),
+    ('high', 'Filled'),
+]
+
+# Next → (L3, L4; old 891f1b3 `DealReviewTab.jsx` KIND_WORDS): what kind of thing comes first.
+NEXT_KINDS = [
+    ('blocks_carrier', 'Blocks a carrier'),
+    ('link_expiring', 'Link running out'),
+    ('question', 'Client question'),
+    ('oldest', 'Waiting longest'),
+]

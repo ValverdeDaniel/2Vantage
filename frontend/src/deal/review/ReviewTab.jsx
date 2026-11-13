@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useMeta } from '../../api/meta';
 import { useReviewBoard } from '../../api/review';
 import InlineError from '../../ui/InlineError';
@@ -7,46 +7,46 @@ import Board from './board/Board';
 import RequestView from './newlink/RequestView';
 import QueueView from './queue/QueueView';
 import ReviewViews from './ReviewViews';
-import { viewOf } from './reviewModel';
+import { scopeOf, viewOf } from './reviewModel';
 import useLinkActions from './useLinkActions';
 
 /*
- * The deal's Review & requests tab (plan.md §8.8; Part L; old 891f1b3 `DealReviewTab.jsx`), slice 53's V1: the View
- * row with the tab's own counts (L1, L28), the Board with the readiness strip (L2) and the Waiting lane (L7, L8), and
- * the Request view with a minimal New link (L40). The view is `?view=` (board by default), written on a click. Slice 55
- * adds the Review view, the keyboard queue of what the client sent (L11, L15–L17, L20; B38, C32), and the To review lane.
- * Slice 56 turns the Request view into the request page (who has a link, the ask list, the request tray going out, each
- * item's thread) and puts the client's open questions on the Board (L5).
+ * The deal's Review & requests tab (plan.md §8.8; Part L; old 891f1b3 `DealReviewTab.jsx`): the View row with the tab's
+ * own counts (L1, L28); the Board (L2–L10), or one section's own Board with `?section=` (L12, L45; slice 57); the
+ * Request view — the request page, its Ask card and settings card, a new link (slices 56–57); and the Review view, the
+ * keyboard queue of what the client sent (L11, L15–L17, L20; slice 55). The view is `?view=` (board by default), written
+ * on a click; a row's `fix` ({tab, view?, section?, pane?}) lands here or on its tab.
  */
 export default function ReviewTab({ deal }) {
   const meta = useMeta().data?.review;
-  const board = useReviewBoard(deal.id);
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const view = viewOf(params);
+  const scope = view === 'board' ? scopeOf(params) : '';
+  const board = useReviewBoard(deal.id, scope);
   const actions = useLinkActions(deal.id);
 
+  const write = (change) => {
+    const next = new URLSearchParams(params);
+    Object.entries(change).forEach(([key, value]) => (value ? next.set(key, value) : next.delete(key)));
+    setParams(next, { replace: true });
+  };
   const pick = (next) => {
-    const nextParams = new URLSearchParams(params);
-    if (next === 'board') nextParams.delete('view');
-    else nextParams.set('view', next);
-    if (next !== 'queue') nextParams.delete('section');
-    if (next !== 'request') ['pane', 'show'].forEach((key) => nextParams.delete(key));
-    setParams(nextParams, { replace: true });
+    const clear = { view: next === 'board' ? '' : next, section: '', lane: '' };
+    if (next !== 'request') Object.assign(clear, { pane: '', show: '', target: '', settings: '', edit: '' });
+    write(clear);
   };
-
-  const pickQueue = (section) => {
-    const nextParams = new URLSearchParams(params);
-    nextParams.set('view', 'queue');
-    if (section) nextParams.set('section', section);
-    setParams(nextParams, { replace: true });
-  };
-
-  const pickRequest = (pane) => {
-    const nextParams = new URLSearchParams(params);
-    nextParams.set('view', 'request');
-    if (pane && pane !== 'intake') nextParams.set('pane', pane);
-    nextParams.delete('section');
-    setParams(nextParams, { replace: true });
+  const pickQueue = (section) => write({ view: 'queue', section: section || '' });
+  const pickRequest = (pane) => write({ view: 'request', pane: pane && pane !== 'intake' ? pane : '', section: '' });
+  const go = (fix) => {
+    if (!fix) return;
+    if (fix.tab !== 'review') {
+      navigate(`/deals/${deal.id}/${fix.tab}`);
+      return;
+    }
+    if (fix.view === 'queue') pickQueue(fix.section);
+    else if (fix.view === 'request') pickRequest(fix.pane);
+    else write({ view: '', section: fix.section || '', lane: fix.lane || '' });
   };
 
   if (board.isPending || !meta) return <Loading label="Loading what is open on this deal…" />;
@@ -58,10 +58,22 @@ export default function ReviewTab({ deal }) {
     <div className="bb-tab-page">
       <ReviewViews view={view} counts={board.data.counts} onPick={pick} />
       {view === 'request' && (
-        <RequestView deal={deal} meta={meta} actions={actions} asksClosed={board.data.asks_closed} />
+        <RequestView deal={deal} meta={meta} actions={actions} asksClosed={board.data.asks_closed} next={board.data.next} onGo={go} />
       )}
       {view === 'queue' && <QueueView deal={deal} meta={meta} board={board.data} />}
-      {view === 'board' && <Board board={board.data} meta={meta} actions={actions} onQueue={pickQueue} onRequest={pickRequest} />}
+      {view === 'board' && (
+        <Board
+          board={board.data}
+          meta={meta}
+          actions={actions}
+          scope={scope}
+          onQueue={pickQueue}
+          onRequest={pickRequest}
+          onGo={go}
+          lane={params.get('lane') || ''}
+          onScope={(section) => write({ section, lane: '' })}
+        />
+      )}
     </div>
   );
 }

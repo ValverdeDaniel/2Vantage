@@ -102,6 +102,14 @@ export default function useLinkActions(dealId) {
     if (answer?.pin) setPins((now) => ({ ...now, [person.link_id]: answer.pin }));
   }
 
+  // Slice 57's settings that act at once (L39, L63): a value on the link, said with Undo where Revert can take it back.
+  async function setting(person, action, extra, words = 'Saved on this link', undoable = true) {
+    const answer = await run(person, action, extra);
+    if (answer?.activity_id && undoable) said(words, answer.activity_id, 'Undone');
+    else if (answer) toast.success(words);
+    return answer;
+  }
+
   async function close(request, reason) {
     try {
       const answer = await closer.mutateAsync({ requestId: request.id, reason });
@@ -120,6 +128,7 @@ export default function useLinkActions(dealId) {
     revoke,
     restore,
     newPin,
+    setting,
     close,
   };
 }

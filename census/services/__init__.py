@@ -16,7 +16,8 @@
   call them through `review.owners`; C28, C32, C34; slice 55).
 Every write locks what it changes, records Activity in area `census` with keys only (never a value), writes nothing
 when nothing changes, and rewrites `CensusFacts` in its transaction (`census.facts.refresh`). Hand edits, people added
-by hand and removal arrived with the grid (slice 41); `set_rules` joins in slice 57.
+by hand and removal arrived with the grid (slice 41). `rules`: `set_rules`, a column's Auto, Required or Waived (C27,
+OQ17), from Review & requests' Census board (slice 57); its Activity holds rules, not values, so it is revertible.
 """
 
 from .apply import apply_import, dry_run
@@ -25,6 +26,7 @@ from .facts import refresh_facts
 from .imports import create_import, discard_import, update_import
 from .marks import mark_values
 from .members import add_member, clear_roster, edit_values, remove_member
+from .rules import set_rules
 
 __all__ = [
     'add_member',
@@ -39,5 +41,6 @@ __all__ = [
     'refresh_facts',
     'remove_member',
     'save_client',
+    'set_rules',
     'update_import',
 ]

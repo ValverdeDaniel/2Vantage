@@ -6,7 +6,8 @@ after a later write to one of the row's fields (naming it), refuses to put a lin
 (L71), and refuses a new PIN (a PIN is never kept, so there is nothing to put back). Otherwise each field's "before"
 goes back: Undo of Turn off turns the link back on, of a close reopens the request, of an extension restores the
 earlier expiry. A request's creation is not revertible (`deals.activity.NOT_REVERTIBLE`): its links are turned off or
-the request closed instead.
+the request closed instead. Slice 57's link settings put back what they see, the date and whether saves slide it, and
+the reminder to nudge them.
 """
 
 from datetime import datetime
@@ -20,7 +21,12 @@ MODELS = {'link': ClientLink, 'request': ClientRequest}
 TIMES = {'sent_at', 'expires_at', 'revoked_at', 'closed_at'}
 USERS = {'revoked_by', 'closed_by'}
 TEXTS = {'close_reason'}
+FLAGS = {'blank', 'slides'}  # slice 57's link settings
+JSONS = {'nudge'}
 LABELS = {
+    'blank': 'What they see',
+    'slides': 'Whether their saves push the date out',
+    'nudge': 'The reminder to nudge them',
     'sent_at': 'Sent',
     'expires_at': 'When the link runs out',
     'revoked_at': 'Turned off',
@@ -51,6 +57,10 @@ def _put(row, key, before):
         setattr(row, f'{key}_id', before)
     elif key in TEXTS:
         setattr(row, key, before or '')
+    elif key in FLAGS:
+        setattr(row, key, bool(before))
+    elif key in JSONS:
+        setattr(row, key, before or {})
     else:
         raise activity.Refused(activity.NOTHING_TO_PUT_BACK)
 

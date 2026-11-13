@@ -17,6 +17,8 @@
   (the BOR typed on the portal, with its link, IP and browser; L86, OQ86), slice 54.
 - `approvals`: a person's decision on those answers — `approve_client`, `reject_client`, `revert_approval`; an
   approved block lands through its owner (`client_blocks`: contacts, coverage, `set_intent`), slice 55.
+- `rules`: the deal's own rule per question — `set_rules` (Auto, Required or Waived, and a note for the client; B37,
+  OQ17), written from Review & requests' Intake board, slice 57.
 `rows` holds the locks (the Deal, the Intake row, then coverage rows by id) and the Activity entries they share.
 Every write records Activity (area `intake`) with before and after, writes nothing when nothing changes, and returns
 only what changed.
@@ -30,6 +32,7 @@ from .coverage import create_coverage, delete_coverage, update_coverage
 from .intent import confirm_intent, reopen_intent, set_intent
 from .marketed import NotReady, mark_marketed, unmark_marketed
 from .marks import mark_answers
+from .rules import set_rules
 
 __all__ = [
     'NotReady',
@@ -44,6 +47,7 @@ __all__ = [
     'set_checklist_item',
     'set_form_choice',
     'set_intent',
+    'set_rules',
     'sign_bor',
     'sign_from_link',
     'unmark_marketed',

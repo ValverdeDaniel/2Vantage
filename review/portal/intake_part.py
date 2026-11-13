@@ -1,13 +1,15 @@
 """The intake part of a link's page (plan.md §8.20; L83–L86, L108; B43; OQ84). Allowlisted: a question's words, its
 rule, the value the page shows (a pending answer over the stored one; on a blank link only the link's own), its
 compare-and-set base, whether it is on file (locked) or read by us; the blocks with what the deal holds in the same
-shape. Never commission, `on_proposal`, the Keep / Leave off decisions, sources, names of who did what, or files.
+shape; a question's `help` is the deal's own note to the client when a person left one (B37, L122; slice 57). Never
+commission, `on_proposal`, the Keep / Leave off decisions, sources, names of who did what, or files.
 """
 
 from deals import contacts as contact_rules
 from deals import lines
 from intake import client_view as intake_view
 from intake import form, readiness, values
+from intake.services.rules import note_of as rule_note
 from intake.status import notes
 
 from ..rules import portal as portal_rules
@@ -24,8 +26,10 @@ def _field(question, view, source, stored, found, carried, blank):
     shown, base, colleague = view
     on_file = not portal_rules.editable(source, stored, reopened=question['key'] in found.reopened)
     rule = question.get('shown_when')
+    note = rule_note(found.rules.get(question['key']))  # the deal's note to the client, in place of our help (B37)
     return {
         **{key: question.get(key, '' if key != 'options' else []) for key in QUESTION},
+        **({'help': note} if note else {}),
         'needed': _needed(question['key'], found.rules),
         'value': '' if (on_file and blank) else shown,
         'base': base,

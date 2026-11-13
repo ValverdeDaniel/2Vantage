@@ -15,7 +15,8 @@ import { fieldShown, intakeRef } from './portalModel';
 function Question({ field, bind }) {
   const ref = intakeRef(field.key);
   return (
-    <div className="bb-portal-field">
+    // data-ask-ref: where the request page's comment margin stands a card beside this question (L31; slice 57).
+    <div className="bb-portal-field" data-ask-ref={ref}>
       <label htmlFor={`q-${field.key}`}>
         {field.label}
         {field.needed && !field.locked && (

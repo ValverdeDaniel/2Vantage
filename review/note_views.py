@@ -10,7 +10,8 @@ service → answer with what the screen redraws. Ids from the path are integers 
 - POST deals/{id}/review/tray/send/ {ids?, request_id?, new?: {people, security?, expires_on?, message?, blank?}}
   → {sent, targets, waiting, whys, dropped, request?, links?, tray}; `links` (a new link's, with its PIN this once).
 - POST deals/{id}/review/seen/ {at?} → {seen_at}: this person's last look (L33).
-- GET  deals/{id}/review/request/?pane=intake | census | documents → the request page (selectors/request_page.py).
+- GET  deals/{id}/review/request/?pane=intake | census | documents[&request=<id>] → the request page
+  (selectors/request_page.py); with `request`, the Ask card's `target` (slice 57).
 400 {field: [sentence]}; 409 {detail} (a deal that may no longer ask its client, nothing to send, no link for a note).
 """
 
@@ -142,4 +143,7 @@ class RequestPageView(APIView):
         pane = request.query_params.get('pane') or 'intake'
         if pane not in PANES:
             raise ValidationError({'pane': [f'Name the tab as one of: {", ".join(PANES)}.']})
-        return Response(request_page.page(deal, pane, request.user))
+        raw = request.query_params.get('request') or ''
+        if raw and (not raw.isdigit() or len(raw) > 18):
+            raise ValidationError({'request': ['Send the request as a number.']})
+        return Response(request_page.page(deal, pane, request.user, request_id=int(raw) if raw else None))

@@ -4,7 +4,9 @@ import { planRequest, reviewKey, useClientContacts, useCreateRequest } from '../
 import { errorText } from '../../../lib/errors';
 import { useDebouncedValue } from '../../../lib/useDebouncedValue';
 import { monthDay } from '../reviewModel';
-import { asksOf, bodyOf, createWords, dayIn, floorKey, hasAsk, initialState, whoCount } from './newLinkModel';
+import { numberWords } from '../requestpage/askCardModel';
+import TheirForm from '../requestpage/TheirForm';
+import { asksOf, bodyOf, createWords, dayIn, floorKey, hasAsk, initialState, presetState, whoCount } from './newLinkModel';
 import WhatToAsk from './WhatToAsk';
 import WhoCanOpen from './WhoCanOpen';
 import WhoGetsIt from './WhoGetsIt';
@@ -13,19 +15,21 @@ const FILLED = 'What we have shows, for them to check or change.';
 const BLANK = 'Only what they answer shows, never what else we hold.';
 
 /*
- * New link settings (L40, L55–L57, L61, L64, L66; old 891f1b3 `LinkSettingsCard.jsx` `NewLinkSettings`), the minimal
- * builder: who gets it, what to ask, who can open it, what they see, when it expires and a note. Nothing is saved
- * until Create link; the server's dry run (after 350 ms) says the lowest level what is picked allows. `onCreated`
+ * New link settings (L40, L41, L55–L57, L61, L64, L66, L73; old 891f1b3 `LinkSettingsCard.jsx` `NewLinkSettings`), the
+ * builder: who gets it (contacts, typed people, "＋ Add a person to the deal", or nobody), what to ask (all missing,
+ * only what marketing needs, or the whole form, per part), who can open it, what they see, when it expires and a note.
+ * Nothing is saved until Create link; the server's dry run (after 350 ms) says the lowest level what is picked allows
+ * and the live numbers, and their form shows beside it (L30). `preset` is the builder's door (L41). `onCreated`
  * receives the server's answer (each link and any PIN, this once).
  */
-export default function NewLink({ deal, meta, onCreated, onCancel }) {
-  const [state, setState] = useState(initialState);
+export default function NewLink({ deal, meta, preset = '', onCreated, onCancel }) {
+  const [state, setState] = useState(() => presetState(preset));
   const contacts = useClientContacts(deal.id, deal.client.id);
   const create = useCreateRequest(deal.id);
   const asked = useDebouncedValue(floorKey(state), 350);
   const floor = useQuery({
     queryKey: reviewKey(deal.id, 'floor', asked),
-    queryFn: () => planRequest(deal.id, { asks: JSON.parse(asked), people: [] }),
+    queryFn: () => planRequest(deal.id, { asks: JSON.parse(asked), people: [], blank: state.blank }),
     enabled: asked !== '{}',
     staleTime: Infinity,
   });
@@ -71,7 +75,8 @@ export default function NewLink({ deal, meta, onCreated, onCancel }) {
       <div className="rr-newlink-grid">
         <div className="rr-newlink-h">Who gets it</div>
         <div>
-          <WhoGetsIt contacts={contacts.data?.contacts || []} state={state} onChange={change} disabled={create.isPending} />
+          <WhoGetsIt contacts={contacts.data?.contacts || []} state={state} onChange={change} disabled={create.isPending}
+            dealId={deal.id} clientId={deal.client.id} />
           {whoCount(state) > 1 && (
             <div className="rr-edit-note">
               Everyone gets the same questions and their own link, and what one of them enters saves to the same place.
@@ -113,6 +118,12 @@ export default function NewLink({ deal, meta, onCreated, onCancel }) {
       {Object.keys(asksOf(state)).length > 0 && floor.isError && (
         <div className="rr-edit-note">{errorText(floor.error, { fallback: 'Could not check what this asks.' })}</div>
       )}
+      {ready && floor.data?.numbers && (
+        <div className="rr-askfoot-sum">
+          <b>Their form asks {numberWords(floor.data.numbers)}</b>
+        </div>
+      )}
+      <TheirForm dealId={deal.id} body={hasAsk(state) ? { asks: asksOf(state), blank: state.blank, message: state.message } : null} />
     </div>
   );
 }

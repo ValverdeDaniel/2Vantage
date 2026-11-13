@@ -15,12 +15,16 @@ export const reviewKey = (dealId, ...rest) => dealKey(dealId, 'review', ...rest)
  * recipients: [person]}; person = {link_id, contact_id, name, email, role, security, blank, path (/portal/<token>,
  * or null once it can never open again), sent, sent_at, opened, opened_at, last_opened_at, opens, submitted_at,
  * last_saved_at, expires_at, ceiling_at, days_left, expired, revoked, revoked_at, revoked_by, covered, state,
- * in_progress, can_extend, can_restore}. Writes nothing.
+ * in_progress, can_extend, can_restore, request_id, slides, nudge_on, nudge_done_at, can_correct, pin_locked}. Slice
+ * 57 adds `next` (the ranked entries {kind, surface, label, why, fix, rank, link_id?, request_id?, unopened?}),
+ * `lanes.missing` ([{key, section, count, label, questions_open, items, fix, ask, left}]) and `?scope=intake|census`
+ * (one section's own Board). Writes nothing.
  */
-export function useReviewBoard(dealId) {
+export function useReviewBoard(dealId, scope = '') {
   return useQuery({
-    queryKey: reviewKey(dealId, 'board'),
-    queryFn: async () => (await api.get(`deals/${dealId}/review/board/`)).data,
+    queryKey: scope ? reviewKey(dealId, 'board', scope) : reviewKey(dealId, 'board'),
+    queryFn: async () =>
+      (await api.get(`deals/${dealId}/review/board/`, { params: scope ? { scope } : {} })).data,
     staleTime: 0,
   });
 }
@@ -67,6 +71,7 @@ function withRequest(queryClient, dealId, request) {
 /**
  * mutate({linkId, action, copied?}) — PATCH links/{id}/ (L8, L60, L64, L71): action mark_sent | unsend | extend |
  * revoke | restore | new_pin → {link: person, request, changed, activity_id, pin? (new_pin, this once)}. 409 {detail}.
+ * Slice 57's settings take a value: expiry {day}, blank {blank}, address {email}, nudge {day | null}, nudge_done.
  */
 export function useLinkAction(dealId) {
   const queryClient = useQueryClient();
@@ -75,7 +80,9 @@ export function useLinkAction(dealId) {
     onSuccess: (answer) => withRequest(queryClient, dealId, answer.request),
     // The request page's who bar and the tray's destinations read links too (slice 56).
     onSettled: () =>
-      ['board', 'request', 'tray'].forEach((area) => queryClient.invalidateQueries({ queryKey: reviewKey(dealId, area) })),
+      ['board', 'request', 'tray', 'requests'].forEach((area) =>
+        queryClient.invalidateQueries({ queryKey: reviewKey(dealId, area) }),
+      ),
   });
 }
 

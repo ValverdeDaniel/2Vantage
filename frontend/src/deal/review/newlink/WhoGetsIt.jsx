@@ -1,12 +1,14 @@
 import { useState } from 'react';
+import AddPerson from './AddPerson';
 import { toggled, typedPerson } from './newLinkModel';
 
 /*
- * Who gets it (L56, L57; old 891f1b3 `RecipientPicker.jsx`): the client's contacts, a tick each, and someone typed
- * in by name with an optional address. A name is enough while copying the link is the send (Ch. 7, OQ82). Nobody
- * picked is a private link anyone holding it can open.
+ * Who gets it (L56, L57, L73; old 891f1b3 `RecipientPicker.jsx`): the client's contacts, a tick each, someone typed
+ * in by name with an optional address, or "＋ Add a person to the deal", who joins the client's contacts with the role
+ * a person picks (nothing pre-picked, Ch. 7) and is ticked. A name is enough while copying the link is the send (OQ82).
+ * Nobody picked is a private link anyone holding it can open.
  */
-export default function WhoGetsIt({ contacts, state, onChange, disabled }) {
+export default function WhoGetsIt({ contacts, state, onChange, disabled, dealId = null, clientId = null }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   function add() {
@@ -58,6 +60,10 @@ export default function WhoGetsIt({ contacts, state, onChange, disabled }) {
           Add
         </button>
       </div>
+      {dealId && clientId && (
+        <AddPerson dealId={dealId} clientId={clientId} disabled={disabled}
+          onAdded={(contact) => onChange({ contactIds: [...state.contactIds, contact.id] })} />
+      )}
     </div>
   );
 }

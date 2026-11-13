@@ -3,6 +3,14 @@
 
 export const NOTHING = '';
 
+/** The builder's doors (L41): `?preset=required` asks what marketing still needs, `census-missing` the census gaps. */
+export function presetState(preset) {
+  const state = initialState();
+  if (preset === 'required') state.intake = 'required';
+  if (preset === 'census-missing') state.census = 'missing';
+  return state;
+}
+
 export function initialState() {
   return {
     contactIds: [], // the client's contacts picked, in the order picked

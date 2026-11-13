@@ -1,9 +1,12 @@
 """Review's vocabularies for /api/meta/ as `review` (rule 1; plan.md §7.1): the security levels, request and link
 states, close reasons, the readiness chip's words, the fixed link rules (OQ81, OQ83: code constants), and the review
 queue's words: what an answer did, its phases, the queue's sections and the idle hours (slice 55); a note's kinds, the
-request page's statuses and tabs and the tray's sections (slice 56)."""
+request page's statuses and tabs and the tray's sections (slice 56); where a value came from, the boards' rules,
+statuses and bar segments (slice 57)."""
 
-from . import words
+from census import fields as census_fields
+
+from . import origins, words
 from .rules import asks, items, policy
 
 
@@ -37,4 +40,14 @@ def meta():
         'tray_sections': _pairs(words.TRAY_SECTIONS),
         'request_panes': _pairs(words.REQUEST_PANES),
         'note_limit': 1000,
+        'origins': origins.ORIGINS,
+        'next_kinds': _pairs(words.NEXT_KINDS),
+        'rules': _pairs(words.RULES),
+        'intake_rules': _pairs(words.INTAKE_RULES),
+        'board_statuses': _pairs(words.BOARD_STATUSES),
+        'census_segments': _pairs(words.CENSUS_SEGMENTS),
+        'census_groups': _pairs(census_fields.GROUPS),
+        'note_rule_limit': 300,
+        'enter_limit': 500,
+        'file_hint': 400,
     }

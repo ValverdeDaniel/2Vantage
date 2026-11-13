@@ -44,7 +44,7 @@ function Person({ person, bind, adding, setAdding, adder, onAdd }) {
             {group.fields.map((field) => {
               const ref = cellRef(person.id, field.column);
               return (
-                <div key={field.column} className="bb-portal-field">
+                <div key={field.column} className="bb-portal-field" data-ask-ref={ref}>
                   <label>
                     {field.label}
                     {field.required && (

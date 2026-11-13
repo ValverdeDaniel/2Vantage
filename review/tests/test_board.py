@@ -63,12 +63,15 @@ def test_L40_the_dry_run_answers_the_floor(api, deal):
     body = {'asks': {'census': {'scope': 'missing'}}, 'people': [], 'security': 'link'}
     answer = api.post(f'/api/deals/{deal.id}/review/requests/?dry_run=1', body, format='json')
     assert answer.status_code == 200
-    assert answer.json() == {
+    found = answer.json()
+    numbers = found.pop('numbers')  # the builder's live numbers (slice 57): no census yet, so nothing to ask
+    assert found == {
         'floor': {'level': 'pin', 'because': ['Census']},
         'security': 'pin',
         'people': 0,
         'asks': ['The census gaps'],
     }
+    assert numbers['values'] == 0 and numbers['total'] == 0
     assert not ClientLink.objects.exists()
 
 

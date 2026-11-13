@@ -1,6 +1,6 @@
 from django.urls import include, path
 
-from . import decision_views, note_views, views
+from . import decision_views, form_views, note_views, views
 from .portal import views as portal_views
 
 urlpatterns = [
@@ -18,6 +18,13 @@ urlpatterns = [
     path('deals/<int:pk>/review/request/', note_views.RequestPageView.as_view()),
     path('deals/<int:pk>/review/requests/', views.RequestsView.as_view()),
     path('deals/<int:pk>/review/requests/<int:rid>/close/', views.CloseView.as_view()),
+    path('deals/<int:pk>/review/requests/<int:rid>/form/', form_views.FormView.as_view()),
+    path('deals/<int:pk>/review/requests/<int:rid>/people/', form_views.PeopleView.as_view()),
+    path('deals/<int:pk>/review/preview/', form_views.PreviewView.as_view()),
+    path('deals/<int:pk>/review/enter/', form_views.EnterView.as_view()),
+    path('deals/<int:pk>/review/census-blanks/', form_views.CensusBlanksView.as_view()),
+    path('deals/<int:pk>/review/section/', form_views.SectionView.as_view()),
+    path('deals/<int:pk>/review/rules/', form_views.RulesView.as_view()),
     path('links/<int:lid>/', views.LinkView.as_view()),
     path('links/<int:lid>/preview/', portal_views.PreviewView.as_view()),
     path('portal/', include('review.portal.urls')),

@@ -4,7 +4,7 @@ import { useDecide, useReviewBoard } from '../../../api/review';
 import { errorText } from '../../../lib/errors';
 import { useToast } from '../../../ui/useToast';
 import { approvedWords } from '../queue/queueWords';
-import { returnedOf, returnText, sectionNumbers, taking } from './sectionModel';
+import { fixUrl, nextFor, returnedOf, returnText, sectionNumbers, taking } from './sectionModel';
 
 const LANES = [
   { key: 'review', tone: 'violet', label: 'to review' },
@@ -18,9 +18,10 @@ const LANES = [
  * came back — the violet line ("↩ Dana answered 3 · 2 ready · 1 still typing") with Review ▸ and "Approve N ready ✓",
  * which takes the submitted answers, and an idle link's too with its tick (D-153 C4). Its numbers are the Board's
  * (`sections`). To review opens the section's queue on the Review & requests tab; waiting and missing open its Board
- * (the section's own Board and Missing lane are slice 57's). Waiting counts what went back to the client too, and the
- * tray's count says what waits to go (slice 56). The Next line waits for the ranking (L3, L4; slice 57). Hidden while the
- * counts load; a deal that may no longer ask its client approves nothing (L129).
+ * (the section's own Board, slice 57). Waiting counts what went back to the client too, and the tray's count says what
+ * waits to go (slice 56). The Next line (L14; slice 57) is the first of the Board's ranked entries that is this
+ * section's (or a link running out), with Go ▸. Hidden while the counts load; a deal that may no longer ask its client
+ * approves nothing (L129).
  */
 export default function SectionBar({ dealId, surface, label }) {
   const board = useReviewBoard(dealId);
@@ -36,7 +37,8 @@ export default function SectionBar({ dealId, surface, label }) {
   const canApprove = returned.ready > 0 && !board.data.asks_closed;
   const takes = taking(returned, withIdle && returned.readyIdle > 0);
   const review = `/deals/${dealId}/review`;
-  const onLane = (lane) => navigate(lane === 'review' ? `${review}?view=queue&section=${surface}` : review);
+  const onLane = (lane) => navigate(lane === 'review' ? `${review}?view=queue&section=${surface}` : `${review}?section=${surface}`);
+  const next = nextFor(board.data.next, surface);
 
   const approve = async () => {
     try {
@@ -70,6 +72,18 @@ export default function SectionBar({ dealId, surface, label }) {
           Review &amp; requests · all sections ▸
         </button>
       </div>
+      {next && (
+        <div className="rr-sbar-line rr-sbar-next">
+          <span className="rr-sbar-next-label">Next →</span>
+          <span className="rr-sbar-next-text">
+            <b>{next.label}</b>
+            <span className="rr-sbar-why"> · {next.why}</span>
+          </span>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate(fixUrl(dealId, next.fix))}>
+            Go ▸
+          </button>
+        </div>
+      )}
       {cameBack && (
         <div className="rr-sbar-line rr-sbar-return">
           <span className="rr-sbar-return-text">{returnText(returned)}</span>

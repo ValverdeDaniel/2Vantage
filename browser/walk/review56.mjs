@@ -80,7 +80,7 @@ export const review56 = {
       await page.getByText('3 in the request tray').waitFor();
     });
     await step('Intake tab: DBA (on file) goes back with a note from its card', async () => {
-      await page.getByRole('button', { name: /^Intake/, pressed: false }).click();
+      await page.getByRole('button', { name: /^Intake( ·|$)/, pressed: false }).click();
       await page.getByRole('button', { name: 'DBA', exact: true }).click();
       const card = page.getByLabel('DBA: its thread');
       await card.getByRole('button', { name: 'To client' }).click();

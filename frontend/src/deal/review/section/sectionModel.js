@@ -61,3 +61,21 @@ export function returnText(returned) {
 export function taking(returned, withIdle) {
   return returned.readySubmitted + (withIdle ? returned.readyIdle : 0);
 }
+
+/** The section's Next line (L14): the first of the Board's ranked entries that is this section's, or a link's. */
+export function nextFor(entries, surface) {
+  return (entries || []).find((entry) => !entry.surface || entry.surface === surface) || null;
+}
+
+/** Where a ranked entry's or a lane row's `fix` lands: the Review & requests tab's view, or another tab. */
+export function fixUrl(dealId, fix) {
+  if (!fix) return `/deals/${dealId}/review`;
+  if (fix.tab !== 'review') return `/deals/${dealId}/${fix.tab}`;
+  const query = new URLSearchParams();
+  if (fix.view && fix.view !== 'board') query.set('view', fix.view);
+  if (fix.section) query.set('section', fix.section);
+  if (fix.lane) query.set('lane', fix.lane);
+  if (fix.pane && fix.pane !== 'intake') query.set('pane', fix.pane);
+  const text = query.toString();
+  return `/deals/${dealId}/review${text ? `?${text}` : ''}`;
+}

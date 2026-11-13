@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { returnedOf, returnText, sectionNumbers, taking, whoOf } from './sectionModel';
+import { fixUrl, nextFor, returnedOf, returnText, sectionNumbers, taking, whoOf } from './sectionModel';
 
 const section = {
   to_review: 3,
@@ -33,5 +33,24 @@ describe('L14 the section bar counts', () => {
     const returned = returnedOf(section);
     expect(taking(returned, false)).toBe(1);
     expect(taking(returned, true)).toBe(2);
+  });
+});
+
+describe('the section bar Next line (L14)', () => {
+  it('L14 keeps the section’s own first entry, or a link running out', () => {
+    const entries = [
+      { kind: 'blocks', surface: 'census', label: 'c' },
+      { kind: 'link_expiring', surface: '', label: 'l' },
+      { kind: 'blocks', surface: 'intake', label: 'i' },
+    ];
+    expect(nextFor(entries, 'intake').label).toBe('l');
+    expect(nextFor(entries, 'census').label).toBe('c');
+    expect(nextFor([], 'intake')).toBeNull();
+  });
+
+  it('L14 a fix lands on the Review tab view or its own tab', () => {
+    expect(fixUrl(7, { tab: 'review', view: 'board', section: 'census' })).toBe('/deals/7/review?section=census');
+    expect(fixUrl(7, { tab: 'review', view: 'request', pane: 'census' })).toBe('/deals/7/review?view=request&pane=census');
+    expect(fixUrl(7, { tab: 'documents' })).toBe('/deals/7/documents');
   });
 });

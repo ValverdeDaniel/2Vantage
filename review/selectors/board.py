@@ -17,6 +17,10 @@
   only reads (L129).
 - `questions` (L5; slice 56): the client's open questions, oldest first, at most six, each {note_id, ref, section,
   where, who, at, excerpt (140 characters), fix}, and `questions_total`: Answer ▸ opens the request page on its tab.
+- `lanes.missing` (L6; slice 57, `selectors.missing`) and `next` (L3, L4; `selectors.next_up`, `rules.next`): what
+  is missing and what to do next, ranked.
+- `scope` (L12, L45; slice 57): `?scope=intake|census`, one section's own Board: its Waiting requests, its To review
+  and Missing rows, its questions and its part of Next; the counts and `sections` stay the whole deal's.
 
 A fixed number of queries however many requests, links and answers the deal has (Q.3 #4). Writes nothing.
 """
@@ -31,6 +35,8 @@ from ..models import ReviewNote
 from ..rules import badges
 from ..rules import requests as request_rules
 from . import items as item_rows
+from . import missing as missing_rows
+from . import next_up
 from . import notes as note_rows
 
 QUESTIONS_SHOWN = 6
@@ -91,11 +97,10 @@ def readiness(deal_id):
     return {'pct': round(answered / needed * 100) if needed else 100, 'state': found.get('ready_state') or 'blocked'}
 
 
-def _intake(deal):
+def _intake(payload):
     """(readiness, missing) from intake's own payload: the needed questions answered and the ready state, and what
     the section bar counts as missing — the questions needed to market still blank (no client answer waiting) and the
     checklist's documents not in yet (old `missing + docs_missing`)."""
-    payload = intake_selectors.intake_payload(deal)
     ready = payload.get('ready') or {}
     questions = sum(1 for gap in ready.get('gaps') or [] if gap.get('kind') == 'question')
     items = (payload.get('checklist') or {}).get('items') or []
@@ -129,23 +134,38 @@ def questions(deal):
     return out, total
 
 
-def board(deal, now=None):
+def _in_scope(scope, surface):
+    return scope is None or surface == scope or (scope == 'intake' and surface == 'documents')
+
+
+def board(deal, now=None, scope=None):
     now = now or clock.now()
     facts, rows = summary.collect([deal.id], now)
     found = facts[deal.id]
-    intake_readiness, missing = _intake(deal)
+    payload = intake_selectors.intake_payload(deal)
+    intake_readiness, missing = _intake(payload)
     sections = found['sections']
     sections['intake']['missing'] = missing
     waiting = [row for row in rows[deal.id] if row['state'] in request_rules.OPEN_STATES]
+    if scope:
+        waiting = [row for row in waiting if scope in row['sections']]
     asked, total = questions(deal)
+    lane = missing_rows.lane(deal, payload, now)
+    ranked = next_up.entries(deal, rows[deal.id], found, lane, now)
     return {
         'deal_id': deal.id,
-        'questions': asked,
+        'scope': scope or '',
+        'questions': [row for row in asked if _in_scope(scope, row['fix']['pane'])],
         'questions_total': total,
         'asks_closed': rules.client_asks_open(deal),
         'counts': badges.counts(found),
         'readiness': intake_readiness,
-        'lanes': {'waiting': request_rules.soonest_first(waiting), 'to_review': to_review(found)},
+        'lanes': {
+            'waiting': request_rules.soonest_first(waiting),
+            'to_review': [row for row in to_review(found) if _in_scope(scope, row['key'])],
+            'missing': missing_rows.lane(deal, payload, now, scope=scope) if scope else lane,
+        },
+        'next': [entry for entry in ranked if not scope or entry['surface'] in ('', scope)],
         'in_progress': found['in_progress'],
         'sections': sections,
     }

@@ -26,6 +26,12 @@ export function viewOf(params) {
   return BUILT.has(asked) ? asked : 'board';
 }
 
+/** The section `?section=` names for a section's own Board (L12, L45), else '' (the whole deal). */
+export function scopeOf(params) {
+  const asked = params.get('section');
+  return asked === 'intake' || asked === 'census' ? asked : '';
+}
+
 /** A pill's words: "Request · 2 to send", "Review · 3". */
 export function pillLabel(key, counts) {
   if (key === 'board') return 'Board';

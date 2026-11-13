@@ -90,13 +90,18 @@ export function useResolveNote(dealId) {
  * waiting, in_cart}], people: [{link_id, request_id, name, security, sent, opens, days_left, expired, revoked,
  * submitted_at, path}], counts: {all, question, in_cart, answered, asked, on_file, missing}, items: [{ref, label,
  * section, needed, value, status, asked_at, draft_id, notes}], columns? (census: [{key, label, group, required, blank,
- * required_blank, in_cart, asked, on_link, answered, questions}]), census_file?, threads: {ref: [note]}, seen_at, new}.
+ * required_blank, in_cart, asked, on_link, answered, questions}]), census_file?, threads: {ref: [note]}, seen_at, new,
+ * target (with `requestId`, the Ask card's request, slice 57: {request_id, names, link_ids, asks, security, message,
+ * parts, on_link: [ref], drafted: {ref: draft id}})}.
  */
-export function useRequestPage(dealId, pane) {
+export function useRequestPage(dealId, pane, requestId = null) {
   return useQuery({
-    queryKey: reviewKey(dealId, 'request', pane),
-    queryFn: async () => (await api.get(`deals/${dealId}/review/request/`, { params: { pane } })).data,
+    queryKey: reviewKey(dealId, 'request', pane, requestId || ''),
+    queryFn: async () =>
+      (await api.get(`deals/${dealId}/review/request/`, { params: { pane, ...(requestId ? { request: requestId } : {}) } }))
+        .data,
     staleTime: 0,
+    placeholderData: (previous) => previous,
   });
 }
 
