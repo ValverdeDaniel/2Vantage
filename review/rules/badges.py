@@ -4,8 +4,8 @@ One rule, so the tab's pills, the tray (slice 56) and the shell's badges (slice 
 - `to_send`: asks and send-backs waiting in the tray (the Request pill's "N to send"; drafts are ours, never the
   client's, so they never join Waiting);
 - `to_review`: what came back and waits on us: client answers pending on the owners' rows, people a client added,
-  client files nobody has accepted or marked wrong, and the client's open questions (the Review pill). The AI reads'
-  counts join with the To review lane (L9, L10; slice 55);
+  client files nobody has accepted or marked wrong, the client's open questions, and the reads a client's upload
+  started that wait for a person (L135; slice 59) — the Review pill and the To review lane's rows;
 - `waiting`: the Waiting lane's count, the requests still out plus the links whose person is still answering;
 - `questions`: the client's questions nobody has answered (the "?" mark).
 """
@@ -18,7 +18,7 @@ def counts(facts):
     questions = (facts.get('questions') or {}).get('open', 0)
     return {
         'to_send': facts.get('tray', 0),
-        'to_review': pending.get('total', 0) + questions,
+        'to_review': pending.get('total', 0) + questions + facts.get('reads', 0),
         'waiting': len(facts.get('waiting') or []) + len(facts.get('in_progress') or []),
         'questions': questions,
     }

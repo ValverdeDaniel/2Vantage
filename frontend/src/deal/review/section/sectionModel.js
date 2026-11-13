@@ -70,7 +70,14 @@ export function nextFor(entries, surface) {
 /** Where a ranked entry's or a lane row's `fix` lands: the Review & requests tab's view, or another tab. */
 export function fixUrl(dealId, fix) {
   if (!fix) return `/deals/${dealId}/review`;
-  if (fix.tab !== 'review') return `/deals/${dealId}/${fix.tab}${fix.form ? `?form=${encodeURIComponent(fix.form)}` : ''}`;
+  if (fix.tab !== 'review') {
+    // `params` (slice 59): a staged client read opens its census import (`?import=`) or Work with Claude (`?claude=1`)
+    const query = new URLSearchParams();
+    Object.entries(fix.params || {}).forEach(([key, value]) => value != null && query.set(key, value));
+    if (fix.form) query.set('form', fix.form);
+    const text = query.toString();
+    return `/deals/${dealId}/${fix.tab}${text ? `?${text}` : ''}`;
+  }
   const query = new URLSearchParams();
   if (fix.view && fix.view !== 'board') query.set('view', fix.view);
   if (fix.section) query.set('section', fix.section);

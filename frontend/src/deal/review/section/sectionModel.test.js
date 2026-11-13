@@ -53,4 +53,10 @@ describe('the section bar Next line (L14)', () => {
     expect(fixUrl(7, { tab: 'review', view: 'request', pane: 'census' })).toBe('/deals/7/review?view=request&pane=census');
     expect(fixUrl(7, { tab: 'documents' })).toBe('/deals/7/documents');
   });
+
+  it('L135 a staged client read opens its census import, or Work with Claude on the Intake tab', () => {
+    expect(fixUrl(7, { tab: 'census', params: { import: 41 } })).toBe('/deals/7/census?import=41');
+    expect(fixUrl(7, { tab: 'intake', params: { claude: '1' } })).toBe('/deals/7/intake?claude=1');
+    expect(fixUrl(7, { tab: 'census', params: { import: null } })).toBe('/deals/7/census');
+  });
 });

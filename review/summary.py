@@ -19,13 +19,15 @@ Per deal:
   ready_submitted, ready_idle, going_back, names} (`rules.sections`; `going_back`, answers sent back and not answered
   since, slice 56), plus `questions` and `in_tray` from the notes, and the census's `missing` (its required blanks,
   from its stored counts): the section bars and the To review lane;
-- `questions`: {open, oldest_at}; `tray`: asks and send-backs not yet sent; `nudges`: reminders due today (L69).
+- `questions`: {open, oldest_at}; `tray`: asks and send-backs not yet sent; `nudges`: reminders due today (L69);
+- `reads` (slice 59): how many reads a client's upload started wait for a person (L135; `ai.file_reads`).
 """
 
 from collections import defaultdict
 
 from django.db.models import Count, Min, Q
 
+from ai import file_reads
 from census.models import CensusFacts
 from deals import clock
 from deals.models import Deal
@@ -126,7 +128,7 @@ def _waiting(rows):
     return request_rules.soonest_first(open_rows)
 
 
-def _deal_facts(rows, links, pending, notes, now, today, lost):
+def _deal_facts(rows, links, pending, notes, now, today, lost, reads=0):
     waiting = _waiting(rows)
     people = [person for row in rows for person in row['recipients']]
     sent = [person['sent_at'] for person in people if person['sent_at']]
@@ -169,6 +171,7 @@ def _deal_facts(rows, links, pending, notes, now, today, lost):
         'questions': {'open': notes.get('questions', 0), 'oldest_at': _iso(notes.get('oldest'))},
         'tray': notes.get('tray', 0),
         'nudges': nudges,
+        'reads': reads,
     }
 
 
@@ -188,6 +191,7 @@ def collect(deal_ids, now=None):
     opened = going.opens([request for group in found.values() for request in group], links, now)
     pending = _pending(ids, waiting, by_id, now, going.refs(ids, waiting, opened))
     notes = _notes(ids)
+    reads = file_reads.client_reads(ids)
     deal_links = defaultdict(list)
     for request_list in found.values():
         for request in request_list:
@@ -196,7 +200,14 @@ def collect(deal_ids, now=None):
     for deal_id in ids:
         lost = stages[deal_id] == 'lost'
         facts[deal_id] = _deal_facts(
-            rows[deal_id], deal_links[deal_id], pending[deal_id], notes.get(deal_id, {}), now, today, lost
+            rows[deal_id],
+            deal_links[deal_id],
+            pending[deal_id],
+            notes.get(deal_id, {}),
+            now,
+            today,
+            lost,
+            reads=len(reads.get(deal_id, [])),
         )
     return facts, rows
 

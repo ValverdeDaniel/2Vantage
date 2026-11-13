@@ -5,7 +5,8 @@ import IntakeSection from './IntakeSection';
 import PeopleSection from './PeopleSection';
 import { liveRail, nothingAsked, plural } from './portalModel';
 import QuestionnaireSection from './QuestionnaireSection';
-import SubmitBar, { SavedNote, ThankYou } from './SubmitBar';
+import Receipt from './Receipt';
+import SubmitBar, { SavedNote } from './SubmitBar';
 import TodoRail from './TodoRail';
 import usePortalWrites from './usePortalWrites';
 
@@ -14,7 +15,7 @@ import usePortalWrites from './usePortalWrites';
  * `BenefitsClientPortal.jsx`'s main branch: the to-do rail (a sticky left column, above the form on a phone), the
  * greeting card, the shared request card ("From your broker:", "This request also went to N colleagues"), the intake
  * questions and blocks, the questionnaires (slice 58), the people, the files, the follow-ups and questions (slice 56),
- * the notes and the foot. The receipt joins with slice 59.
+ * the notes and the foot; after Submit, the receipt (slice 59, L99) with "Back to the form ▸".
  *
  * page: the payload · token · readOnly (View as client) · onReload() · onChallenge() (the PIN again)
  */
@@ -71,7 +72,7 @@ export default function PortalForm({ token, page, readOnly = false, onReload, on
   const blocks = page.intake?.blocks || {};
   const files = { staged: w.staged, onStage: w.stage, onUnstage: w.unstage, onProblem: w.setProblem, readOnly: !writes };
 
-  if (w.submitted && !readOnly) return <ThankYou short={short} />;
+  if (w.submitted && !readOnly) return <Receipt receipt={w.receipt} short={short} open={writes} onBack={w.back} />;
   if (nothingAsked(page)) {
     return (
       <div className="bb-portal-card bb-portal-center">

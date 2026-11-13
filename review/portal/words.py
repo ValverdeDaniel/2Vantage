@@ -33,3 +33,18 @@ COMPLIANCE = {
 
 FILE_DETAIL = 'PDF, image, or spreadsheet'
 CENSUS_FILE_DETAIL = 'XLSX, CSV, or PDF'
+
+# The receipt after Submit (L99; slice 59): its sections, in the page's order, and the words of its rows.
+RECEIPT = {
+    'intake': RAIL['intake'],
+    'questionnaires': 'Questionnaires',
+    'people': RAIL['people'],
+    'files': 'Files',
+}
+RECEIPT_BLOCKS = {
+    'block:contacts': 'Contacts',
+    'block:coverage': 'Current coverage',
+    'block:lines': 'Lines to quote',
+}
+RECEIPT_BOR = 'Broker of Record — signed'
+RECEIPT_PAPER = 'paper copy'

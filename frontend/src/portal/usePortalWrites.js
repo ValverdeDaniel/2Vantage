@@ -1,6 +1,7 @@
 import { useCallback, useReducer, useState } from 'react';
 import { addPeople, signBor, statusOf, submitAnswers, uploadFile } from './portalApi';
 import { answersReducer, initialAnswers, pendingAnswers, savedWords } from './portalModel';
+import { opensOnReceipt } from './receiptModel';
 import useAutosave from './useAutosave';
 import useFormWrites from './useFormWrites';
 
@@ -10,10 +11,11 @@ import useFormWrites from './useFormWrites';
  * added at once, and Submit. A refusal is said where it belongs; nothing typed is ever wiped (old D-208). The
  * questionnaires (slice 58, `useFormWrites`): their answers ride the same autosave, each save answering the forms'
  * fresh states; their rows go at once; the officer's signature rides Save or Submit after the answers, and a
- * signature blank answers hold stops Submit until "Sign anyway".
+ * signature blank answers hold stops Submit until "Sign anyway". After Submit (slice 59) the page shows the receipt the
+ * answer carried; a submitted link opens on it again unless a follow-up waits for an answer; `back` returns to the form.
  *
  * Returns {answers, bind, staged, stage, unstage, borName, setBorName, note, problem, setProblem, busy, submitted,
- * save, submit, addPerson, confirming, forms}.
+ * receipt, back, save, submit, addPerson, confirming, forms}.
  */
 export default function usePortalWrites({ token, page, writes, onReload, onChallenge }) {
   const [answers, dispatch] = useReducer(answersReducer, page, initialAnswers);
@@ -23,13 +25,15 @@ export default function usePortalWrites({ token, page, writes, onReload, onChall
   const [note, setNote] = useState('');
   const [problem, setProblem] = useState('');
   const [busy, setBusy] = useState(false);
-  const [submitted, setSubmitted] = useState(Boolean(page.submitted_at));
+  const [submitted, setSubmitted] = useState(() => opensOnReceipt(page));
+  const [receipt, setReceipt] = useState(page.receipt || null);
   const [confirming, setConfirming] = useState(false);
 
   // A fresh payload (after files, people or a poll) takes its values and bases, keeping what was typed and not taken.
   if (seededFrom !== page) {
     setSeededFrom(page);
     dispatch({ type: 'reseed', page });
+    if (page.receipt) setReceipt(page.receipt);
   }
 
   const challenge = useCallback(() => onChallenge(), [onChallenge]);
@@ -146,7 +150,8 @@ export default function usePortalWrites({ token, page, writes, onReload, onChall
         setBusy(false);
         return;
       }
-      await submitAnswers(token, pendingAnswers(answers));
+      const done = await submitAnswers(token, pendingAnswers(answers));
+      setReceipt(done?.receipt || null);
       setSubmitted(true);
     } catch (error) {
       said(error, 'submitting');
@@ -178,6 +183,8 @@ export default function usePortalWrites({ token, page, writes, onReload, onChall
     setProblem,
     busy,
     submitted,
+    receipt,
+    back: () => setSubmitted(false),
     confirming,
     save,
     submit,

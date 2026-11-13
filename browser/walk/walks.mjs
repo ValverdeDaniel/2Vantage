@@ -15,6 +15,7 @@ import { commission48 } from './commission48.mjs';
 import { cover34 } from './cover34.mjs';
 import { census41 } from './census41.mjs';
 import { claudeReads51 } from './claudeReads51.mjs';
+import { clientReads59 } from './clientReads59.mjs';
 import { deck30 } from './deck30.mjs';
 import { documents23 } from './documents23.mjs';
 import { documents65 } from './documents65.mjs';
@@ -285,6 +286,7 @@ export const WALKS = {
   s56: { ...review56, run: (ctx) => review56.run(ctx, { signIn, openDeal }) }, // slice 56's done-when (re-seed GD6 after)
   s57: { ...review57, run: (ctx) => review57.run(ctx, { signIn, openDeal }) }, // slice 57's done-when (re-seed GD6 after)
   s58: { ...questionnaire58, run: (ctx) => questionnaire58.run(ctx, { signIn, openDeal }) }, // slice 58's done-when, at 390×844 (re-seed GD6 after)
+  s59: { ...clientReads59, run: (ctx) => clientReads59.run(ctx, { signIn }) }, // slice 59's done-when, the client at 390×844 (a fresh prospect, archived; no Claude call)
   s66: { ...voice66, run: (ctx) => voice66.run(ctx, { signIn, openDeal }) }, // slice 66's done-when (a fake recognizer; no Claude, no writes)
   s60: { ...agenda60, run: (ctx) => agenda60.run(ctx, { signIn, openDeal }) }, // slice 60's done-when (fresh GD3; re-seed GD3 after)
   s61: { ...home61, run: (ctx) => home61.run(ctx, { signIn, openDeal }) }, // slice 61's done-when (fresh GD2; re-seed GD2 after)

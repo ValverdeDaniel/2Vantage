@@ -3071,6 +3071,18 @@ has a Questionnaire section (`selectors/queue_questionnaire.py`), `summary.facts
 the request page has a Questionnaire tab, the tray joins a question onto a form's picks (`rules/join.py`) or a whole
 form, edit mode enters answers (`relay`), and the Ask card takes them off (`rules/form_plan.py`).
 
+**Built (slice 59):** reads started by client uploads, then the receipt (D44, D45, L99, L111, L125, L135; OQ89's
+default). Once the PHI gate is passed, a census file or an intake file (a kind the intake reader reads: an invoice, a
+plan document, a 5500, "Other") that a client uploads through their link starts its reader once the upload commits
+(`review/services/client_reads.py` → `ai.services.start_client_read`): no person, labelled "Client portal", in the work
+lane, always staged for a person; files of one kind join the read still waiting to start, one arriving while it runs
+starts the next (the old B17), and the upload never fails because of its read. A paper questionnaire, a renewal and
+every other file are only filed. The Board's To review lane gets a row per staged client read ("Their census file was
+read · Review and apply ▸", opening the census import it staged, or the intake read in Work with Claude), counted in the
+Review pill (`summary.facts.reads`); its files row lists the client's files by slot and day, never by name (§3.8),
+with "Read with Claude ▸" (the reader of the file's kind). The client never sees a read (L109): the portal's polls stay read-only and never reap (D45). After
+Submit the page shows the receipt: what went through this link, by section, with the time.
+
 **Full rules:** Part L (L.3; L.6: models, the owner contract, `rules/`, portal security) and O.3.4. **Slices:** 53–59.
 
 ### 5.9 Next step and agenda — `agenda/steps/`, `agenda/rows.py`
@@ -4655,6 +4667,14 @@ row the link did not add or one holding an approved answer); `POST questionnaire
 → `{questionnaire: card, link}`, 409 `{detail, incomplete: {filled, total}}` for blank required answers, a lost deal
 or a signature on file; 400 a narrowed ask. Each a write (a staff session 403, a lost deal 410) but the two GETs.
 
+**Built (slice 59).** The page adds `receipt: {at, sections: [{key intake | questionnaires | people | files, title,
+lines: [text]}]} | null` to `KEYS` (null until the link was submitted; `review/portal/receipt.py`): what went through
+this link only — "2 answers", "Contacts", "Broker of Record — signed", "Florida Blue 51+: 12 answers · signed", "3
+details", "1 person added", "Employee census file", "Current invoice — Medical — 2 files" — with the time of its last
+Submit; never a value, never a file's name (file names are PHI, §3.8) and never what we did with it. `submit/` answers it too (`{…, submitted_at, receipt}`). `files/` is unchanged for the
+client, but once the upload commits a census or intake file starts its reader with no person ("Client portal"; OQ89):
+the client never sees it, and no portal read reaps or reports a job (D45, L109).
+
 Full list: Part L, L.6.
 
 ### 7.15 Agenda and work queue — `agenda/`
@@ -5026,6 +5046,11 @@ form and section; on a form the officer signed only Approve), the To review and 
 each question on screen with ＋ Ask), the New link builder's forms (G80: off, online, or as a signed copy), and the
 section bar on the Questionnaire tab (G45, G73).
 
+Built in slice 59: the To review lane's row per read a client's upload started that waits for a person ("Their census
+file was read · Review and apply ▸", L135: the census import on the Census tab, or the intake read in Work with Claude
+on the Intake tab), and the client's files on its files row, each with "Read with Claude ▸" by its kind's reader (L125,
+G101: a renewal or a quote goes to the quote reader, a paper questionnaire to the questionnaire's).
+
 ### 8.9 Intake (`intake`)
 
 Part B (B1–B44; B.6). Slices 11, 39 and 40. Pills Form · Board · Request · Review (B36).
@@ -5359,6 +5384,10 @@ Part L (L76–L110, L136; L.6). Slices 54, 58 and 59.
   paper?" (G90, G92), the officer's typed signature with its attestation and "Sign anyway" (G93), "Signed by …
   Thank you", and a to-do row per form ("N of M — please sign", "signed"; G95); answers autosave with the page's;
   walked at 390×844 (`--need s58`).
+- **Built (slice 59):** after Submit, the thank-you is followed by the receipt (`Receipt`, `receiptModel`; L99): "What
+  you sent", "Sent Nov 12, 2026 at 3:04 PM", a row per section on the to-do list's own classes, and "Back to the form ▸"
+  while the link takes answers; a submitted link opens on it again unless a follow-up waits for an answer (the old
+  D-142). Walked at 390×844 (`--need s59`).
 
 ### 8.21 The grid
 
@@ -6015,6 +6044,17 @@ finding, when allowed → landing (§10.5).
   log says "Finding the form each file fills", "Reading pages 1–3" and "Read Florida Blue 51+: 25 answers, 5 rows, ready
   for review". G109: `manage.py questionnaire_sample` (dev) stamps a synthetic filled Florida Blue 51+ onto the bundled
   blank with its key, and `--score` counts a waiting read against it.
+- **Built in slice 59** (D44, D45, L111, L125, L135; OQ89's default): **reads started by client uploads.**
+  `ai.services.start_client_read(deal, ids, target)` starts a read with no person (`Job.actor_label` "Client portal",
+  `jobs.CLIENT_PORTAL`) only while the reader is registered (the PHI-gate switch) and Claude is set up; it joins a
+  client read of that reader still queued (under the Deal, then the job's lock) and otherwise queues a new one, so an
+  upload is never dropped while another read runs (the old B17). Review decides which uploads start one
+  (`review/services/client_reads.py`: the census file → census; a kind the intake reader reads → intake; a paper
+  questionnaire and the rest are only filed) and starts it on commit, never failing the upload. Census and intake
+  reads always wait (§10.5); a census spreadsheet in our own columns is mapped in code, so nothing goes to Claude.
+  `ai/file_reads.py` serves the staged client reads (`client_reads`, L135), where each file's newest read stands
+  (`where_reads_stand`: reading, waiting, used) and the reader a person's "Read with Claude ▸" starts for a kind
+  (`reader_for`, L125). The client sees no read (L109); the portal never reaps (D45).
 - **Built in slice 18:** `ai/reading.py` (the job), `ai/read_files.py` (files in upload order, `FileIn`, the plan per
   file), `ai/ranges.py` (header-only pages always out, screened pages out only with the switch, a range under a quarter
   of `max_tokens`, halving), `ai/content.py`, `ai/codes.py` (F143's parser, left of quotes), and the quote reader in
@@ -7309,7 +7349,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | **Slice 57: REV-5** | | | | |
 | OQ88 | Keep census sends by contact (census columns assigned to contacts, one link each)? | Open. Default: drop it (L67). If kept, `CensusSettings.rules` stores the contacts and slice 57 sends the links. Built in slice 57 as the default: dropped (no assignee on the Census board) | Open | 57 |
 | **Slice 59: REV-7** | | | | |
-| OQ89 | After the PHI gate, are clients' census and intake files read automatically (staged)? Is a paper questionnaire read before signing? | Open. Default: census and intake files are read and staged; paper questionnaires are only filed | Open | 59 |
+| OQ89 | After the PHI gate, are clients' census and intake files read automatically (staged)? Is a paper questionnaire read before signing? | Open. Default: census and intake files are read and staged; paper questionnaires are only filed. Built in slice 59 as the default (intake files: the kinds the intake reader reads; a paper copy is read only on "Read with Claude ▸") | Open | 59 |
 | **Slice 60: AGD-1** | | | | |
 | OQ90 | Once quotes are in, do the intake, questionnaire and RFP steps stop leading, and do typed counts stop "Import the census" leading? | Open. Default: yes, which fits OQ9's answer | Open | 60 |
 | OQ91 | A sold deal shows the commission step and stays on New clients until its effective date. What ends a deal for you? | decisions.md's default: as stated. Built instead: the sold deal shows its commission step, or "Sold", and the sale moves its client from Prospects to Clients at once, where its row shows that step (I122 as changed; §13.11) | Open; default changed by OQ101 (c) | 60; 61 |

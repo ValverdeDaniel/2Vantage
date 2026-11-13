@@ -8,7 +8,8 @@ Its keys are exactly `KEYS` (review's tests pin them; nothing joins without this
 - `intake` (intake_part), `people` and `add_people` (census_part), `census_file` and `documents` (files_part), and
   the to-do list `checklist` (rules.portal.rail);
 - `follow_ups` (slice 56, follow_ups.py): our notes, send-backs and replies and their questions, by item, as threads;
-- `questionnaires` (slice 58, questionnaire_part.py): a card per form the link asks, with the link's view of it.
+- `questionnaires` (slice 58, questionnaire_part.py): a card per form the link asks, with the link's view of it;
+- `receipt` (slice 59, receipt.py; L99): once the link was submitted, what went through it by section, with the time.
 No team notes, commission, intent, document ids, owner names, other deals' data or files from outside the request.
 """
 
@@ -17,7 +18,7 @@ from deals.models import AgencySettings
 
 from ..rules import policy
 from ..rules import portal as portal_rules
-from . import census_part, files_part, follow_ups, intake_part, questionnaire_part, words
+from . import census_part, files_part, follow_ups, intake_part, questionnaire_part, receipt, words
 from .asked import asked
 
 KEYS = (
@@ -42,6 +43,7 @@ KEYS = (
     'checklist',
     'follow_ups',
     'questionnaires',
+    'receipt',
 )
 
 
@@ -94,4 +96,5 @@ def build(link, request, deal, *, staff=False, preview=False):
         ),
         'follow_ups': cards,
         'questionnaires': forms,
+        'receipt': receipt.receipt(link, deal),
     }

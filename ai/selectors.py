@@ -5,7 +5,8 @@ fifteen minutes (so a browser that saw a job run learns how it ended and refetch
 deal's AI settings with their defaults. A fixed number of queries, however many jobs (Q.3 #4). Slice 20 adds what the
 drawer shows: each job's model, cost so far and last steps (the running card, D22), the files Claude has read (the
 File room's "read" tag, D13), the deal's budget with its default (D8) and whether this person may pick Opus, run past
-a cap and have reads land at once (D9, D24, D71).
+a cap and have reads land at once (D9, D24, D71). Slice 59: each job says who started it when no person did
+(`actor_label`, "Client portal").
 """
 
 from datetime import timedelta
@@ -62,6 +63,7 @@ def job_light(job, queue_position=None):
         'resolution': job.resolution,
         'activity_id': job.activity_id,
         'created_by': person(job.created_by),
+        'actor_label': job.actor_label,  # who started it when no person did: "Client portal" (D44; slice 59)
         'created_at': job.created_at,
         'started_at': job.started_at,
         'finished_at': job.finished_at,
@@ -80,6 +82,7 @@ def waiting_payload(job):
         'counts': result.get('counts') or {},
         'partial': bool(result.get('partial')),
         'created_by': person(job.created_by),
+        'actor_label': job.actor_label,
         'finished_at': job.finished_at,
     }
 

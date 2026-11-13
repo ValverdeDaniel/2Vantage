@@ -7,7 +7,7 @@ no-referrer` and `X-Robots-Tag: noindex`, plus a fresh `X-Link-Verification` onc
 - POST portal/{t}/verify/ {pin} → {verified: true} with the token header; 400 {detail, tries_left, locked}.
 - POST portal/{t}/save/ {answers: {ref: {value, base}}} → {saved: [ref], bases: {ref: base}, link: {expires_at,
   days_left}, activity_id}; 400 {answers: {ref: sentence}}; 409 {detail, conflicts: [{ref, theirs, base}]}.
-- POST portal/{t}/submit/ {answers} → the save's answer plus {submitted_at}.
+- POST portal/{t}/submit/ {answers} → the save's answer plus {submitted_at, receipt} (the receipt, slice 59: L99).
 - POST portal/{t}/files/ multipart {slot, file} → 201 {slot, received: [{name, at}], link}.
 - POST portal/{t}/people/ {people: [{kind, first_name, last_name, employee_id?, relationship?, dob?}]} → 201
   {people: [person], add_people}.
@@ -42,7 +42,7 @@ from ..rules import policy
 from ..rules import portal as portal_rules
 from ..services import answers as answer_services
 from ..services import client_adds, pins, questions, stamps
-from . import census_part, files_part, follow_ups, guard, payload, questionnaire_part, throttles
+from . import census_part, files_part, follow_ups, guard, payload, questionnaire_part, receipt, throttles
 from .asked import asked
 
 HEADERS = {'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex'}
@@ -139,7 +139,11 @@ class SubmitView(PortalView):
     def post(self, request, token):
         opened = self.open(request, token, write=True)
         done = answer_services.submit(opened.link.id, _body(request).get('answers') or {})
-        answer = {**_saved_answer(done), 'submitted_at': done.link.submitted_at.isoformat()}
+        answer = {
+            **_saved_answer(done),
+            'submitted_at': done.link.submitted_at.isoformat(),
+            'receipt': receipt.receipt(done.link, opened.deal),
+        }
         return Response(_with_forms(answer, done))
 
 

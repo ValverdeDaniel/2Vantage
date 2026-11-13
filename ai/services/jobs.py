@@ -6,6 +6,10 @@
 - `start_locate` is "Check this file" (E59): the deal's own files only.
 - `cancel` is Stop: a queued job ends at once; a running one ends at its next beat, keeping what it finished. Stop on
   a stopped job changes nothing; on a finished one it is refused with a sentence.
+- `start_client_read` is a read a client's upload starts on the portal (D44, L111; slice 59): no person, labelled
+  "Client portal", in the work lane, only for a reader registered (after the PHI gate). Files of one kind that arrive
+  while its read still waits to start join it (one read per kind); one that arrives while it runs starts the next, so
+  no upload is ever left unread (the old B17).
 A job is the AI's own working record, not deal data: starting or stopping one records no Activity. What a job changes
 on the deal is recorded by the job (one row, `Job.activity`).
 """
@@ -37,10 +41,12 @@ NO_OVERRIDE = 'Only an admin or a direct person can run a read past its cost cap
 NO_OPUS = 'Opus 5.5 is kept to admins and direct people.'
 WAITING = 'Waiting to start'
 STOPPED_EARLY = 'Stopped before it started.'
+CLIENT_PORTAL = 'Client portal'  # who started a read no person started: a client's upload (D44; slice 59)
 
 
-def start(user, deal, kind, *, documents=(), params=None, target='', chat=None):
-    """(job, created). `documents` are ids, kept in order; `chat` is a turn's (slice 24)."""
+def start(user, deal, kind, *, documents=(), params=None, target='', chat=None, actor_label=''):
+    """(job, created). `documents` are ids, kept in order; `chat` is a turn's (slice 24); `actor_label` names who
+    started it when no person did (`CLIENT_PORTAL`)."""
     lane = kinds.LANE_OF[kind]
     documents, params = list(documents), dict(params or {})
     with transaction.atomic():
@@ -58,6 +64,7 @@ def start(user, deal, kind, *, documents=(), params=None, target='', chat=None):
             documents=documents,
             params=params,
             created_by=user if getattr(user, 'is_authenticated', False) else None,
+            actor_label=actor_label[:100],
             steps=[WAITING],
             chat=chat,
         )
@@ -65,6 +72,36 @@ def start(user, deal, kind, *, documents=(), params=None, target='', chat=None):
         running.run_inline(job)
         job.refresh_from_db()
     return job, True
+
+
+def start_client_read(deal, document_ids, *, target):
+    """(job, created) for the read of a client's uploaded files by `target`'s reader, or None when there is no read to
+    start: the reader is not registered (the PHI-gate switch is off), Claude is not set up, or none of the files is a
+    client's file of a kind the reader reads. Never refused with a sentence: the client sees no reads (L109)."""
+    from .. import client, registry
+
+    reader = registry.readers.get(target)
+    if reader is None or not client.available():
+        return None
+    found = Document.objects.filter(deal=deal, pk__in=list(document_ids), source='client')
+    ids = [doc.id for doc in sorted(found, key=lambda doc: doc.id) if doc.kind in reader.kinds]
+    if not ids:
+        return None
+    with transaction.atomic():
+        Deal.objects.select_for_update().only('id').get(pk=deal.id)  # the Deal, then the job (O.3.7)
+        waiting = (
+            Job.objects.select_for_update()
+            .filter(deal=deal, kind=kinds.READ, target=target, status=kinds.QUEUED, created_by__isnull=True)
+            .filter(actor_label=CLIENT_PORTAL)
+            .order_by('id')
+            .first()
+        )
+        if waiting is not None:  # still queued after the lock: the worker has not claimed it, so it reads these too
+            waiting.documents = [*waiting.documents, *(doc for doc in ids if doc not in waiting.documents)]
+            waiting.save(update_fields=['documents', 'updated_at'])
+            return waiting, False
+        # under the same lock, so two uploads at once make one read
+        return start(None, deal, kinds.READ, documents=ids, target=target, actor_label=CLIENT_PORTAL)
 
 
 def start_locate(user, deal, document_ids, recheck=False):

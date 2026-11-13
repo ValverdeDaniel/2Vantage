@@ -10,8 +10,10 @@
 - `lanes.waiting` holds the requests still out, soonest to run out first (L7); `lanes.to_review` (L9; slice 55) a row
   per section with something back: {key, section, count, questions, label, fix}, the census's answers and added
   people, the intake's answers, the questionnaires' (slice 58) and the client's files; Review ▸ opens the section's
-  queue. The Missing lane, Next and
-  the client's questions join with slices 56–57.
+  queue. Slice 59 adds a row per staged read a client's upload started, after its section's ({…, surface, detail,
+  action "Review and apply ▸", fix with `params`}; L135), and the files row lists the files (`files`, `files_more`;
+  each with the reader "Read with Claude ▸" starts and where its read stands, L125: `selectors.client_files`). The
+  Missing lane, Next and the client's questions join with slices 56–57.
 - `sections` (slice 55): what each section bar draws (L14, C34), the section's `summary.facts` counts plus its
   `missing`: the intake's needed questions and checklist documents not in yet, the census's required blanks.
 - `asks_closed` is the sentence when the deal may no longer ask its client (lost, archived, a past year): the tab then
@@ -35,9 +37,9 @@ from .. import summary
 from ..models import ReviewNote
 from ..rules import badges
 from ..rules import requests as request_rules
+from . import client_files, next_up
 from . import items as item_rows
 from . import missing as missing_rows
-from . import next_up
 from . import notes as note_rows
 
 QUESTIONS_SHOWN = 6
@@ -59,8 +61,9 @@ def _queue(section):
     return {'tab': 'review', 'view': 'queue', 'section': section}
 
 
-def to_review(found):
-    """The To review lane's rows (L9): each section with something back, its count holding its questions too."""
+def to_review(found, reads=(), files=None):
+    """The To review lane's rows (L9): each section with something back, its count holding its questions too, each
+    followed by its staged client reads (`reads`, L135); `files` ([file row], more) list the client's files."""
     census, intake = found['sections']['census'], found['sections']['intake']
     forms = found['sections'].get('questionnaire') or {'to_review': 0, 'questions': 0}
     rows = [
@@ -95,9 +98,13 @@ def to_review(found):
             'questions': 0,
             'label': 'files from the client to check',
             'fix': {'tab': 'documents'},
+            **({'files': files[0], 'files_more': files[1]} if files else {}),
         },
     ]
-    return [row for row in rows if row['count']]
+    out = []
+    for row in rows:
+        out += ([row] if row['count'] else []) + [read for read in reads if read['surface'] == row['key']]
+    return out
 
 
 def readiness(deal_id):
@@ -175,7 +182,11 @@ def board(deal, now=None, scope=None):
         'readiness': intake_readiness,
         'lanes': {
             'waiting': request_rules.soonest_first(waiting),
-            'to_review': [row for row in to_review(found) if _in_scope(scope, row['key'])],
+            'to_review': [
+                row
+                for row in to_review(found, client_files.read_rows(deal), client_files.files(deal))
+                if _in_scope(scope, row.get('surface', row['key']))
+            ],
             'missing': missing_rows.lane(deal, payload, now, scope=scope) if scope else lane,
         },
         'next': [entry for entry in ranked if not scope or entry['surface'] in ('', scope)],

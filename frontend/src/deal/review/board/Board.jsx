@@ -92,7 +92,7 @@ function BoardLanes({ board, meta, actions, scope, label, readOnly, onGo, onQueu
               All links ▸
             </button>
           ) : null} />
-        <ToReviewLane dealId={board.deal_id} board={board} onQueue={onQueue} />
+        <ToReviewLane dealId={board.deal_id} board={board} readOnly={readOnly} onQueue={onQueue} />
       </div>
       {scope && (
         <button type="button" className="bnf-override-link" onClick={() => onGo({ tab: 'review', view: 'board', section: scope, lane: 'missing' })}

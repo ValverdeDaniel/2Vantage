@@ -6,8 +6,9 @@ C35; B12, B22).
   `documents.services.upload`, the only door: the kind's accept list, the first bytes, the 30 MB cap and the
   member-data screen (B12), with source `client`, the link and the slot kept on the row so the page names only files
   that came through its request (B22). Documents records the upload ("Uploaded a Census
-  file", by the client). Then the link's save stamp and slide. Nothing reads it yet: client files are read once staff
-  ask, or from slice 59.
+  file", by the client). Then the link's save stamp and slide. Once it commits, a census or intake file starts its
+  reader, staged for a person (slice 59, OQ89: `client_reads`); a paper questionnaire and every other file are only
+  filed.
 - `add_people(link_id, people)`: "＋ Add an employee / a dependent" (L90), through census's door; each waits whole
   for a person. One key-only Activity row ("Client added 2 people to the census").
 Both lock the link last and refuse (410) when it was turned off or closed meanwhile.
@@ -24,7 +25,7 @@ from questionnaire import forms as questionnaire_forms
 from ..models import ClientLink
 from ..portal.asked import PAPER, asked, takes_paper
 from ..portal.files_part import CENSUS_SLOT, slot_kind
-from . import common, stamps
+from . import client_reads, common, stamps
 
 NOT_ASKED = 'This link does not ask for that file.'
 NO_FILE = 'Choose a file to upload.'
@@ -62,6 +63,7 @@ def upload(link_id, slot, file):
     document = store_upload(None, deal, file, meta, source='client', link_id=link.id, slot=slot)
     _deal, _request, link = common.locked_open(link_id)
     stamps.saved(link, clock.now())
+    client_reads.after_upload(document)
     return document
 
 
