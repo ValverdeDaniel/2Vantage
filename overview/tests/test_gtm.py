@@ -1,8 +1,15 @@
 """Card 1's pure rules (plan.md §8.6; M42–M60, M67, M108–M110; `overview.gtm`): the badge and "N of M requirements
 met", the groups in the old order and when each is met, the counts the old card printed (891f1b3
-`GetToMarketCard.jsx`), the census ask, and slice 58's questionnaire answers read as none while review has no count."""
+`GetToMarketCard.jsx`), the census ask, and the client's questionnaire answers waiting (slice 58, through the
+overview read)."""
+
+import pytest
 
 from overview import gtm
+from questionnaire.selectors import portal
+from questionnaire.services import client as questionnaire_client
+from questionnaire.tests.world import make_world
+from review import services as review_services
 
 LABELS = {'cobra': 'COBRA', 'renewal': 'Renewal', 'invoice': 'Invoice', 'claims': 'Claims'}
 
@@ -152,8 +159,23 @@ def test_M57_M60_documents_and_confirmations_count_what_is_not_waived():
     assert 'confirmations' not in [found['key'] for found in gtm.card(facts(intake(items[:3])))['groups']]
 
 
-def test_S58_questionnaire_client_answers_read_as_none_until_review_counts_them():
-    item = row('medical_questionnaire')
-    assert group(gtm.card(facts(intake([item]), pending={'intake': 1})), 'questionnaire')['pending_client'] == 0
-    counted = facts(intake([item]), pending={'questionnaire': 3})
-    assert group(gtm.card(counted), 'questionnaire')['pending_client'] == 3
+@pytest.mark.django_db
+def test_S58_M50_the_questionnaire_group_counts_the_clients_answers_waiting_for_review(api, user):
+    """A real client answer: the form asked online on a link, two answers saved through it (slice 58), and Card 1's
+    questionnaire group reads them from review's `pending.questionnaire`; intake's own count is not theirs."""
+    form = 'fl_blue_51'
+    deal = make_world(user)
+    body = {'asks': {'questionnaires': [{'form': form, 'mode': 'online'}]}, 'people': [{'name': 'Casey (synthetic)'}]}
+    link = review_services.create(user, deal.id, body).links[0][0]
+
+    def card():
+        found = api.get(f'/api/deals/{deal.id}/overview/').json()['get_to_market']
+        return group(found, 'questionnaire'), group(found, 'intake')
+
+    assert card()[0]['pending_client'] == 0
+    lv = portal.link_view(deal, form, link.id)
+    answers = {'txtRsnBid': 'Renewal Increase', 'chkFBPrior': 'No'}
+    sent = {slot: {'value': value, 'base': portal.base_of(lv, slot)} for slot, value in answers.items()}
+    assert not questionnaire_client.save_client(deal.id, link.id, form, sent).conflicts
+    questionnaire, intake_group = card()
+    assert questionnaire['pending_client'] == 2 and intake_group['pending_client'] == 0

@@ -23,8 +23,13 @@ state="${CANARY_STATE:-$HOME/.2vantage-canary}"
 mkdir -p "$state"
 inside=/tmp/2vantage-canaries.json
 
-since="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-echo "== the walk (since $since)"
+# The log window opens a little before the walk: Docker Desktop's VM clock can run seconds behind the host's (2.6 s
+# seen, slice 58), and `docker compose logs --since` reads the VM's timestamps, so a window opened at the host's "now"
+# cut the walk's first second. Lines from just before the walk only widen the scan.
+skew=10
+start=$(($(date -u +%s) - skew))
+since="$(date -u -d "@$start" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -r "$start" +%Y-%m-%dT%H:%M:%SZ)"
+echo "== the walk (logs since $since, ${skew} s before it)"
 walk=0
 docker compose exec -T -e CANARY_PASSWORD backend python deploy/canary_walk.py --url http://localhost:8000 \
     --user "$user" --out "$inside" || walk=$?

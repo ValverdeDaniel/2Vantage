@@ -3,8 +3,9 @@ column shows, its `link` (Open ▸) and `can`: which buttons it offers, so the b
 
 - step rows: the marked steps with their Later and Done anyway overlays (I10–I26);
 - task rows: tasks added by hand, open and done (I27–I34); deleting is for the creator or an admin (OQ93);
-- nudge rows: a review link's reminder (I35–I39). Later and ✓ on them go through review's `set_nudge` and
-  `finish_nudge` (I37), which slice 57 builds; until then a nudge row offers only Open ▸.
+- nudge rows: a review link's reminder (I35–I39), opening that link's settings card. Later and ✓ on them go through
+  review's `set_nudge` and `finish_nudge` (I37; `services.nudges`): Later while `later_max` (the day before the link
+  runs out, I15) is after today, ✓ until it is done; a done one offers neither (I39).
 `arrange` orders them (I6): open tasks and nudges by date, then open steps in catalogue order; then Waiting on,
 Later and Blocked in catalogue order; Done last, steps before tasks.
 """
@@ -84,9 +85,9 @@ def nudge_row(nudge, deal_id, today):
         'done': done,
         'severity': 'done' if done else rules.severity(nudge['on'], today),
         'chip': catalogue.NUDGE_CHIP,
-        'link': None if done else links.link_for(deal_id, 'review'),
+        'link': None if done else links.nudge(deal_id, nudge['link_id']),
         'later_max': nudge.get('later_max'),
-        'can': {'tick': False, 'later': False},  # review's set_nudge and finish_nudge (slice 57)
+        'can': {'tick': not done, 'later': not done and (nudge.get('later_max') or '') > today.isoformat()},
     }
     row['section'] = rows.section(row)
     return row

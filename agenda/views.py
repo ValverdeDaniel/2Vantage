@@ -107,6 +107,26 @@ class FollowUpsView(APIView):
         return Response({**found, 'note': note_row(found['note'], request.user)})
 
 
+class NudgeView(APIView):
+    """POST deals/{id}/agenda/nudges/{link_id}/ {kind: later, until, note?} | {kind: done} → {nudge: row | null}: Later
+    and ✓ on a nudge row, through review's `set_nudge` and `finish_nudge` (I37), refused with their 400 or 409; 404
+    for a link that is not the deal's."""
+
+    def post(self, request, pk, link_id):
+        deal_id = _deal_id(pk)
+        if link_id > MAX_ID:
+            raise Http404
+        data = request.data
+        kind = data.get('kind')
+        if kind == 'later':
+            found = services.later_nudge(request.user, deal_id, link_id, data.get('until'), data.get('note', ''))
+        elif kind == 'done':
+            found = services.tick_nudge(request.user, deal_id, link_id)
+        else:
+            raise ValidationError({'detail': 'kind must be "later" or "done".'})
+        return Response(found)
+
+
 class DealTasksView(APIView):
     """POST deals/{id}/tasks/ {title, due, assigned_to?, note?, done?} → 201 task row."""
 

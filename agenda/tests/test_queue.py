@@ -12,7 +12,7 @@ from agenda.queue import rows as queue_rows
 from conftest import make_client, make_deal
 from deals import clock
 from deals.services import mark_lost, set_archived, set_facts
-from review.models import ClientLink
+from review import services as review_services
 
 from .world import sent_ask
 
@@ -134,10 +134,10 @@ def test_L118_the_client_response_waits_on_us_until_handled():
     assert queue_rows.response({}) is None
 
 
-def test_I35_an_open_nudge_is_a_task_row_that_opens_review(api, user):
+def test_I35_an_open_nudge_is_a_task_row_that_opens_the_links_settings(api, user):
     deal = make_deal(user, name='Nudge Co. (synthetic)')
     link = sent_ask(user, deal, days_ago=1)
-    # review's link settings card (slice 57) is the nudge's writer; the stored shape is set here as it leaves it
-    ClientLink.objects.filter(pk=link.id).update(nudge={'on': day(2), 'by': user.id, 'at': clock.now().isoformat()})
+    review_services.set_nudge(user, link.id, day(2))  # the link settings card's writer (slice 57)
     row = row_of(feed(api), 'nudge', deal.id)
-    assert row['category'] == 'task' and row['link'] == f'/deals/{deal.id}/review' and row['due_in'] == 2
+    assert row['category'] == 'task' and row['due_in'] == 2
+    assert row['link'] == f'/deals/{deal.id}/review?view=request&target=link%3A{link.id}&settings={link.id}'

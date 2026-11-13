@@ -12,7 +12,7 @@ opens), `held` (the day a Later mark gives the row back, or None), `finished` an
   `steps`, every open step for "All open steps" (I74; old `feed_steps`: ours to do now, never waiting or blocked);
   `response`, the Client response column (L118; D-159), and `review_link`;
 - task rows: an open hand task (I71), on a sold or lost deal too, opening the deal's Agenda at the task;
-- nudge rows: a review link's open reminder (I35), filed under Tasks as before (ch. 21).
+- nudge rows: a review link's open reminder (I35), filed under Tasks as before (ch. 21), opening the link's settings.
 """
 
 from .. import catalogue, journey, links, rows, rules
@@ -121,7 +121,7 @@ def task_row(base, task, today, assignee):
 
 
 def nudge_row(base, nudge, today):
-    """A review link's open reminder (I35), under Tasks (ch. 21); it opens the deal's Review & requests."""
+    """A review link's open reminder (I35), under Tasks (ch. 21); it opens that link's settings card."""
     return {
         **base,
         'kind': 'nudge',
@@ -131,7 +131,7 @@ def nudge_row(base, nudge, today):
         'key': None,
         'label': catalogue.NUDGE_TITLE.format(who=nudge['who']),
         'severity': rules.severity(nudge['on'], today),
-        'link': links.link_for(base['deal_id'], 'review'),
+        'link': links.nudge(base['deal_id'], nudge['link_id']),
         **_due(nudge['on'], today),
         'held': None,
         'finished': False,

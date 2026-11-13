@@ -7,7 +7,8 @@ import { useToast } from '../../ui/useToast';
  * What each Agenda button does (I15–I24, I31–I33), each one request (I.5 bug 8), with the old toasts ("Held back until
  * then", "Marked done", "Task done"…) and the API's own sentence on a refusal (I8). Done anyway and Delete ask first
  * (I19, OQ93): `confirm` holds the open question for the tab's ConfirmDialog. `form` is the one row form open
- * ({rowId, type: later | follow_up | edit}).
+ * ({rowId, type: later | follow_up | edit}). A nudge row's Later and ✓ go to review's reminder through the Agenda's
+ * nudge door (I37), with the old task toasts (old 891f1b3 kept a nudge as a task).
  */
 export default function useAgendaActions(dealId) {
   const toast = useToast();
@@ -52,6 +53,9 @@ export default function useAgendaActions(dealId) {
           go: () => run(row.id, () => writes.doneAnyway.mutateAsync({ stepKey: row.key }), 'Marked done'),
         });
       case 'tick':
+        if (row.kind === 'nudge') {
+          return run(row.id, () => writes.nudge.mutateAsync({ linkId: row.link_id, kind: 'done' }), 'Task done');
+        }
         return run(row.id, () => writes.updateTask.mutateAsync({ ...task, done: true }), 'Task done');
       case 'reopen':
         return run(row.id, () => writes.updateTask.mutateAsync({ ...task, done: false }), 'Task reopened');
@@ -68,10 +72,15 @@ export default function useAgendaActions(dealId) {
     }
   }
 
-  const later = (row, until, note) =>
-    row.kind === 'task'
-      ? run(row.id, () => writes.updateTask.mutateAsync({ taskId: row.task_id, due: until, move_note: note }), 'Task moved')
-      : run(row.id, () => writes.later.mutateAsync({ stepKey: row.key, until, note }), 'Held back until then');
+  function later(row, until, note) {
+    if (row.kind === 'task') {
+      return run(row.id, () => writes.updateTask.mutateAsync({ taskId: row.task_id, due: until, move_note: note }), 'Task moved');
+    }
+    if (row.kind === 'nudge') {
+      return run(row.id, () => writes.nudge.mutateAsync({ linkId: row.link_id, kind: 'later', until, note }), 'Task moved');
+    }
+    return run(row.id, () => writes.later.mutateAsync({ stepKey: row.key, until, note }), 'Held back until then');
+  }
   const followUp = (row, body, kind) =>
     run(row.id, () => writes.followUp.mutateAsync({ stepKey: row.key, kind, body }), 'Follow-up logged');
   const editTask = (row, changes) =>

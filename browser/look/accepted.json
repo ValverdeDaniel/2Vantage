@@ -6365,17 +6365,6 @@
       "width": null,
       "check": "pixels",
       "selector": null,
-      "item": "M54",
-      "why": "Once a fillable form is chosen, the medical questionnaire's ＋ Ask (the form itself, to fill online) waits for slice 58's questionnaires in review and on the portal (M54; G68–G98); an upload-only row, the documents and \"＋ Ask for their census file\" ask through review's request tray now.",
-      "new_sha256": null,
-      "signed_by": null,
-      "signed_on": null
-    },
-    {
-      "screen": "gd3.overview",
-      "width": null,
-      "check": "pixels",
-      "selector": null,
       "item": "M59",
       "why": "No \"＋ Add request\" under Documents carriers need: free-text asks are in no slice's row yet (M58, M59; L121, OQ87).",
       "new_sha256": null,
@@ -6906,17 +6895,6 @@
       "selector": null,
       "item": "M110",
       "why": "The Census group says \"The Advisor is priced from typed counts — add the census when it arrives\" while typed counts price a deal with no census (M110, C21).",
-      "new_sha256": null,
-      "signed_by": null,
-      "signed_on": null
-    },
-    {
-      "screen": "gd6.overview",
-      "width": null,
-      "check": "pixels",
-      "selector": null,
-      "item": "M54",
-      "why": "Once a fillable form is chosen, the medical questionnaire's ＋ Ask (the form itself, to fill online) waits for slice 58's questionnaires in review and on the portal (M54; G68–G98); an upload-only row, the documents and \"＋ Ask for their census file\" ask through review's request tray now.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

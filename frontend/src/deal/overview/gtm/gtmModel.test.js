@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { askRefOf, formLink, isOpen, marketButton, quoteRows, suffixOf, tabLink, toggled } from './gtmModel';
+import {
+  askRefOf,
+  askTitleOf,
+  formLink,
+  formReviewLink,
+  isOpen,
+  marketButton,
+  quoteRows,
+  suffixOf,
+  tabLink,
+  toggled,
+} from './gtmModel';
 
 const doc = (over = {}) => ({ key: 'renewal', satisfy: 'document', status: 'missing', kind: 'renewal', ...over });
 
@@ -13,12 +24,23 @@ describe('Card 1 (M42–M61)', () => {
     expect(toggled(after, { key: 'census', met: true })).toEqual({ census: false });
   });
 
-  it('M54 asks for a missing document by its kind, a form row only while it is upload only, never a done one', () => {
+  it('M54 asks for a missing document by its kind, a chosen fillable form to fill online, never a done one', () => {
     expect(askRefOf(doc())).toBe('doc:renewal');
     expect(askRefOf(doc({ status: 'done' }))).toBeNull();
     expect(askRefOf(doc({ key: 'medical_questionnaire', kind: 'questionnaire' }))).toBe('doc:questionnaire');
-    expect(askRefOf(doc({ key: 'medical_questionnaire', kind: 'questionnaire', form_key: 'fl_blue_51' }))).toBeNull();
+    const chosen = doc({ key: 'medical_questionnaire', kind: 'questionnaire', form_key: 'fl_blue_51' });
+    expect(askRefOf(chosen)).toBe('qform:fl_blue_51');
+    expect(askRefOf({ ...chosen, status: 'done', signed: true })).toBeNull();
+    const disclosure = doc({ key: 'stop_loss_disclosure', kind: 'stop_loss', form_key: 'stop_loss_siia' });
+    expect(askRefOf(disclosure)).toBe('qform:stop_loss_siia');
+    expect(askRefOf(doc({ key: 'stop_loss_disclosure', kind: 'stop_loss' }))).toBe('doc:stop_loss');
     expect(askRefOf({ key: 'cobra', satisfy: 'attest', status: 'missing', kind: '' })).toBeNull();
+    expect(askTitleOf('qform:fl_blue_51')).toBe('Add the form to the request tray: they fill it out online on their link');
+    expect(askTitleOf('doc:renewal')).toBeUndefined();
+  });
+
+  it('M50 sends the client’s questionnaire answers to the review queue’s Questionnaire section', () => {
+    expect(formReviewLink(7)).toBe('/deals/7/review?view=queue&section=questionnaire');
   });
 
   it('M50 M57 says a file is on hand, and a signed form is signed', () => {

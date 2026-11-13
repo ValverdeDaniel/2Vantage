@@ -65,4 +65,13 @@ describe('rows (I4, I11, I20)', () => {
     expect(actionsOf(task).map((a) => a.label)).toEqual(['Later', 'Edit', '✓']);
     expect(actionsOf({ kind: 'nudge', can: { tick: false, later: false } })).toEqual([]);
   });
+
+  it('I37 gives an open nudge Later and ✓, as the old task row did, and never Edit or Delete', () => {
+    const nudge = { kind: 'nudge', can: { tick: true, later: true } };
+    expect(actionsOf(nudge).map((a) => [a.key, a.label])).toEqual([
+      ['later', 'Later'],
+      ['tick', '✓'],
+    ]);
+    expect(actionsOf({ kind: 'nudge', can: { tick: true, later: false } }).map((a) => a.key)).toEqual(['tick']);
+  });
 });

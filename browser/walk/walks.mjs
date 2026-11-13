@@ -6,6 +6,7 @@
 import { agenda60 } from './agenda60.mjs';
 import { archive38 } from './archive38.mjs';
 import { asQuoted21 } from './asQuoted21.mjs';
+import { catchup } from './catchup.mjs';
 import { boardClaude24 } from './boardClaude24.mjs';
 import { booking49 } from './booking49.mjs';
 import { builder25 } from './builder25.mjs';
@@ -288,4 +289,5 @@ export const WALKS = {
   s61: { ...home61, run: (ctx) => home61.run(ctx, { signIn, openDeal }) }, // slice 61's done-when (fresh GD2; re-seed GD2 after)
   s62: { ...overview62, run: (ctx) => overview62.run(ctx, { signIn, openDeal }) }, // slice 62's done-when (fresh GD2; re-seed GD2 after)
   s63: { ...overview63, run: (ctx) => overview63.run(ctx, { signIn, openDeal }) }, // slice 63's done-when (fresh GD2; re-seed GD2 after)
+  catchup: { ...catchup, run: (ctx) => catchup.run(ctx, { signIn, openDeal }) }, // nudge Later/✓, Card 1's form ask (fresh GD3; re-seed GD3 after)
 };

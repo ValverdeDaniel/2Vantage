@@ -11,6 +11,7 @@ from django.test.utils import CaptureQueriesContext
 from agenda import services
 from conftest import check_permissions, make_deal, sweep_gets
 from deals import clock
+from review import services as review_services
 
 from .world import sent_ask
 
@@ -26,13 +27,14 @@ def day(n):
 @pytest.fixture
 def world(user, deal):
     services.set_later(user, deal.id, 'complete_intake', day(2))
-    sent_ask(user, deal)
+    link = sent_ask(user, deal)
+    review_services.set_nudge(user, link.id, day(2))
     task = services.add_task(user, deal.id, title='Send the renewal to HR', due=day(1))
-    return {'deal': deal, 'task': task}
+    return {'deal': deal, 'task': task, 'link': link}
 
 
 def samples(world):
-    deal, task = world['deal'], world['task']
+    deal, task, link = world['deal'], world['task'], world['link']
     return {
         'api/deals/<int:pk>/agenda/': {'pk': deal.id},
         'api/deals/<int:pk>/journey/': {'pk': deal.id},
@@ -41,6 +43,7 @@ def samples(world):
         'api/deals/<int:pk>/agenda/marks/': {'pk': deal.id},
         'api/deals/<int:pk>/agenda/marks/<str:step_key>/': {'pk': deal.id, 'step_key': 'complete_intake'},
         'api/deals/<int:pk>/agenda/follow-ups/': {'pk': deal.id},
+        'api/deals/<int:pk>/agenda/nudges/<int:link_id>/': {'pk': deal.id, 'link_id': link.id},
         'api/deals/<int:pk>/tasks/': {'pk': deal.id},
         'api/tasks/<int:pk>/': {'pk': task.id},
     }
@@ -63,6 +66,7 @@ def test_Q3_3_the_permission_matrix(actors, no_csrf_api, world):
         ('DELETE', 'api/deals/<int:pk>/agenda/marks/<str:step_key>/', everyone),
         ('POST', 'api/deals/<int:pk>/agenda/follow-ups/', everyone,
          {'step_key': 'follow_up_client', 'kind': 'email', 'body': 'Sent a reminder'}),
+        ('POST', 'api/deals/<int:pk>/agenda/nudges/<int:link_id>/', everyone, {'kind': 'done'}),
         ('POST', 'api/deals/<int:pk>/tasks/', created, {'title': 'Call HR', 'due': day(0)}),
         ('PATCH', 'api/tasks/<int:pk>/', everyone, {'done': True}),
         ('DELETE', 'api/tasks/<int:pk>/', gone),
@@ -78,6 +82,8 @@ def test_Q3_3_the_permission_matrix(actors, no_csrf_api, world):
         ('post', '/api/deals/{big}/agenda/marks/'),
         ('delete', '/api/deals/{big}/agenda/marks/import_census/'),
         ('post', '/api/deals/{big}/agenda/follow-ups/'),
+        ('post', '/api/deals/{big}/agenda/nudges/1/'),
+        ('post', '/api/deals/1/agenda/nudges/{big}/'),
         ('post', '/api/deals/{big}/tasks/'),
         ('patch', '/api/tasks/{big}/'),
         ('delete', '/api/tasks/{big}/'),

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import AskButton from '../../shared/AskButton';
 import { controlsOf, statusOf } from '../../intake';
-import { askRefOf, suffixOf } from './gtmModel';
+import { askRefOf, askTitleOf, suffixOf } from './gtmModel';
 
 /**
  * One checklist row in Card 1's frame (M50–M57, M60; old 891f1b3 `GetToMarketCard.jsx` items): the status glyph
@@ -90,7 +90,7 @@ export default function ReqItem({ dealId, item, writes, accept, form = false, ch
             <span>{controls.tick}</span>
           </label>
         )}
-        {askRef && <AskButton dealId={dealId} refName={askRef} className="btn btn-secondary btn-sm" />}
+        {askRef && <AskButton dealId={dealId} refName={askRef} title={askTitleOf(askRef)} className="btn btn-secondary btn-sm" />}
         {after}
         {controls.override === 'undo' && (
           <button type="button" className="bnf-override-link" disabled={busy} title="Restore the automatic requirement"

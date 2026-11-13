@@ -4,7 +4,8 @@
 // offer "＋ Ask", and how Card 2's rows meet the journey's steps. Vitest pins them (gtmModel.test.js).
 
 // The two rows that carry an in-app form: once a fillable form is chosen, their ask is the form itself, to fill
-// online (slice 58's `qform:` ask, not built here yet); with no fillable form ("upload only") they ask for the file.
+// online (slice 58's `qform:` ask, as on intake's checklist); with no fillable form ("upload only") they ask for the
+// file.
 const FORM_ITEMS = new Set(['medical_questionnaire', 'stop_loss_disclosure']);
 
 /** A group stays open until it is met, then the person's own toggle wins (M44). */
@@ -24,12 +25,22 @@ export function tabLink(dealId, tab, params = {}) {
   return `/deals/${dealId}/${tab}${tail ? `?${tail}` : ''}`;
 }
 
-/** The request-tray ref a missing document row asks for (`doc:<kind>`), else null (M54): a form row asks for its file
- *  only while no fillable form is chosen (the form's own ask is slice 58's). */
+/** The request-tray ref a missing document row asks for, else null (M54): a form row with a fillable form chosen asks
+ *  for the form, to fill online (`qform:<form>`); any other (an upload-only form row too) for its file (`doc:<kind>`). */
 export function askRefOf(item) {
   if (item.satisfy !== 'document' || item.status !== 'missing' || !item.kind) return null;
-  if (FORM_ITEMS.has(item.key) && item.form_key) return null;
+  if (FORM_ITEMS.has(item.key) && item.form_key) return `qform:${item.form_key}`;
   return `doc:${item.kind}`;
+}
+
+/** The "＋ Ask" button's title for a ref: the old card's words for a form asked online, else AskButton's own. */
+export function askTitleOf(ref) {
+  return ref?.startsWith('qform:') ? 'Add the form to the request tray: they fill it out online on their link' : undefined;
+}
+
+/** Where "Review ▸" goes for the client's questionnaire answers waiting: the review queue's Questionnaire section. */
+export function formReviewLink(dealId) {
+  return tabLink(dealId, 'review', { view: 'queue', section: 'questionnaire' });
 }
 
 /** The words after a row's label: a file on hand or the form signed (old `— document on file`, `— on file`). */

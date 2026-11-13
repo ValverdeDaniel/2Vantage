@@ -72,7 +72,9 @@ function settle(queryClient, dealId) {
 
 /**
  * The Agenda's writes, each one request and one transaction (I.5 bug 8): {later, doneAnyway, clearMark, followUp,
- * addTask, updateTask, deleteTask}. Each is a mutateAsync; a refusal throws the API's 400/409 with its sentence.
+ * addTask, updateTask, deleteTask, nudge}. Each is a mutateAsync; a refusal throws the API's 400/409 with its sentence.
+ * `nudge` is Later ({linkId, kind: 'later', until, note}) or ✓ ({linkId, kind: 'done'}) on a nudge row, which the
+ * server hands to review's set_nudge / finish_nudge (I37) → {nudge: row | null}.
  */
 export function useAgendaWrites(dealId) {
   const queryClient = useQueryClient();
@@ -99,5 +101,8 @@ export function useAgendaWrites(dealId) {
     write(async ({ taskId, ...changes }) => (await api.patch(`tasks/${taskId}/`, changes)).data),
   );
   const deleteTask = useMutation(write(async ({ taskId }) => (await api.delete(`tasks/${taskId}/`)).data));
-  return { later, doneAnyway, clearMark, followUp, addTask, updateTask, deleteTask };
+  const nudge = useMutation(
+    write(async ({ linkId, ...body }) => (await api.post(`deals/${dealId}/agenda/nudges/${linkId}/`, body)).data),
+  );
+  return { later, doneAnyway, clearMark, followUp, addTask, updateTask, deleteTask, nudge };
 }

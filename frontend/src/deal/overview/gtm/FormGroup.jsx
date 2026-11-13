@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { FormPicker } from '../../intake';
-import { formLink, tabLink } from './gtmModel';
+import { formLink, formReviewLink } from './gtmModel';
 import ReqItem from './ReqItem';
 
 /**
@@ -8,8 +8,8 @@ import ReqItem from './ReqItem';
  * `GetToMarketCard.jsx`): the row with its form, who chose it and how far the answers are; the form picker, which is
  * intake's own (the questionnaire's choice door; locked once signed), hidden on a row that is not needed; the row's
  * controls (⬆ Attach, On file, Not needed / Still needed ▸ / Undo); Open questionnaire ▸ or Open disclosure ▸ once a
- * form is chosen; and the client's answers waiting with Review ▸ (slice 58 counts them; none until then). The
- * disclosure stays an "Optional" offer, with no controls, until a form is picked.
+ * form is chosen; and the client's answers waiting (slice 58) with Review ▸ to the review queue's Questionnaire
+ * section. The disclosure stays an "Optional" offer, with no controls, until a form is picked.
  */
 export default function FormGroup({ deal, meta, group, writes, accept }) {
   const { item } = group;
@@ -38,7 +38,7 @@ export default function FormGroup({ deal, meta, group, writes, accept }) {
         <div className="bnf-req-line">
           <span className="bb-badge bb-badge-violet">Client</span>
           {group.pending_client} answer{group.pending_client === 1 ? '' : 's'} from the client to review
-          <Link className="bnf-override-link" to={tabLink(deal.id, 'review')}>
+          <Link className="bnf-override-link" to={formReviewLink(deal.id)}>
             Review ▸
           </Link>
         </div>

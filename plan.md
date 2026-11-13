@@ -4660,7 +4660,8 @@ Full list: Part L, L.6.
 ### 7.15 Agenda and work queue — `agenda/`
 
 Built in slice 60: the deal's `agenda/`, `marks/`, `follow-ups/` and `tasks/`. Built in slice 61: `journey/`
-(`agenda/shell.py`), the Work queue and its stats (`agenda/queue/`). The client's agenda follows in 68.
+(`agenda/shell.py`), the Work queue and its stats (`agenda/queue/`). Built after slices 57–58: `nudges/` (Later and ✓ on
+a nudge row through review's `set_nudge` and `finish_nudge`, I37). The client's agenda follows in 68.
 
 | Method | Path | Request and response |
 |---|---|---|
@@ -4668,6 +4669,7 @@ Built in slice 60: the deal's `agenda/`, `marks/`, `follow-ups/` and `tasks/`. B
 | POST | `deals/{id}/agenda/marks/` | `{step_key, kind, until?, note?}` → `{step, next_step}`; `400` or `409` |
 | DELETE | `deals/{id}/agenda/marks/{step_key}/` | `{step, next_step}` |
 | POST | `deals/{id}/agenda/follow-ups/` | `{step_key, kind: call or email, body}` → `{step, note}` |
+| POST | `deals/{id}/agenda/nudges/{link_id}/` | `{kind: later, until, note?}` or `{kind: done}` → `{nudge: row or null}`: review's `set_nudge` / `finish_nudge` with their `400` / `409`; `409` with no reminder on the link, or Later on a done one; `404` for another deal's link; the note is a deal Note "Task moved to <day>: <note>" |
 | POST | `deals/{id}/tasks/` | `{title, due, assigned_to?, note?, done?}` → `201` task row |
 | PATCH | `tasks/{id}/` | any of `title`, `due`, `note`, `assigned_to`, `done`, `move_note` → task row |
 | DELETE | `tasks/{id}/` | `204`, a soft delete; `403` unless the creator or an admin |
@@ -4946,8 +4948,12 @@ the old order (M.6), except that the Waiting banner sits under the title (M33; O
   (M62); the Activity card (the outreach strip, "Who we've asked", the Timeline from Activity with each row's detail);
   Notes (five kinds, pin, edit, soft delete with an Undo toast); Coverage notes and the commission card. The Timeline
   and the notes card are exported for the client page (`Timeline {dealId | path, queryKey}`, `NotesCard {dealId}`).
-  Not built: the old custom asks and "＋ Add request" (M58, M59: no slice stores a free-text ask yet, L121), the
-  questionnaire's own "＋ Ask" (the form to fill online, slice 58), "N from them" on a link.
+  Not built: the old custom asks and "＋ Add request" (M58, M59: no slice stores a free-text ask yet, L121), "N from
+  them" on a link.
+- **Built after slices 57–58:** a form row with a fillable form chosen asks for the form itself, to fill online
+  (`qform:<form>`, "＋ Ask" with the old title "…they fill it out online on their link"; M54), and the questionnaire
+  group's client answers waiting (`review.summary` `pending.questionnaire`) open the review queue's Questionnaire
+  section with Review ▸ (M50).
 
 ### 8.7 Agenda (`agenda`)
 
@@ -4957,7 +4963,9 @@ toggles and counts, Done collapsed (I4–I6); step rows with date, dot, words, c
 tick, move, edit and soft delete (I27–I34); nudge rows owned by Review & requests (I35–I40); `?focus=` scrolls to a row
 and flashes it (I7). Steps come from the catalogue (I41–I66). Once quotes are in, intake steps stop leading, and
 "Import the census" does not lead while typed counts price the Advisor (I44, I50; OQ90). Plan my day and the task bar
-wait (I91–I102; OQ8).
+wait (I91–I102; OQ8). Built after slices 57–58: a nudge row opens its link's settings card and offers **Later** (to
+the day before the link runs out) and **✓**, through review's `set_nudge` and `finish_nudge` (I35–I39); the
+questionnaire step reads the client's answers waiting and opens the review queue's Questionnaire section (I46).
 
 ### 8.8 Review & requests (`review`)
 
