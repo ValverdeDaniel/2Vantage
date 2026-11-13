@@ -8,7 +8,8 @@ check those belong to the deal. `sections(asks)` is the sections a request carri
 Scopes: intake `selected` (the keys), `missing` (every shown blank), `required` (what marketing needs and does not
 have), `all` (the whole form); census `none`, `selected` (the cells), `blank` (every empty cell), `missing` (the
 required blanks), `all` (the whole census), each narrowed to `columns` when they are given; `missing` and `required`
-are worked out on read, so a link asks what is still missing (L6 Ch. 2).
+are worked out on read, so a link asks what is still missing (L6 Ch. 2). Intake `keys` and census `cells` named beside
+another scope are asked too: what the tray joins onto an open request (slice 56, `rules.join`) rides beside its scope.
 """
 
 from census import fields as census_fields
@@ -84,7 +85,7 @@ def _clean_intake(raw, errors):
         errors['intake.blocks'] = [f'Not a part of the intake: {", ".join(bad)}.']
     if scope == 'selected' and not keys:
         errors['intake.keys'] = ['Pick the intake questions to ask.']
-    return {'scope': scope, 'keys': keys if scope == 'selected' else [], 'blocks': blocks}
+    return {'scope': scope, 'keys': [] if scope == 'all' else keys, 'blocks': blocks}
 
 
 def _cell(cell):
@@ -135,7 +136,7 @@ def _clean_census(raw, errors):
     return {
         'scope': scope,
         'columns': [] if scope == 'none' else columns,
-        'cells': cells if scope == 'selected' else [],
+        'cells': [] if scope in ('none', 'all') else cells,
         'file': raw.get('file') is True,
     }
 

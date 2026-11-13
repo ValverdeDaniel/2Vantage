@@ -18,8 +18,9 @@ const LANES = [
  * came back — the violet line ("↩ Dana answered 3 · 2 ready · 1 still typing") with Review ▸ and "Approve N ready ✓",
  * which takes the submitted answers, and an idle link's too with its tick (D-153 C4). Its numbers are the Board's
  * (`sections`). To review opens the section's queue on the Review & requests tab; waiting and missing open its Board
- * (the section's own Board and Missing lane are slice 57's). The Next line joins with slice 56. Hidden while the counts
- * load; a deal that may no longer ask its client approves nothing (L129).
+ * (the section's own Board and Missing lane are slice 57's). Waiting counts what went back to the client too, and the
+ * tray's count says what waits to go (slice 56). The Next line waits for the ranking (L3, L4; slice 57). Hidden while the
+ * counts load; a deal that may no longer ask its client approves nothing (L129).
  */
 export default function SectionBar({ dealId, surface, label }) {
   const board = useReviewBoard(dealId);

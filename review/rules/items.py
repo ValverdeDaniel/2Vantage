@@ -10,13 +10,14 @@
 - `change`: what the answer does to the value we hold: `added` (a person the client added), `same` (confirms it),
   `filled` (we held nothing), `cleared` (they blanked it) or `changed`. A cleared answer is never taken by "Approve N
   ready": a person looks at it (old `_add`).
-- Going back (an answer sent back) arrives with the notes, slice 56.
+- `GOING_BACK` (slice 56): an answer sent back to the client and not answered since (`rules.tray.going_back`) leaves
+  To review for the queue's third phase until they answer again (L16).
 """
 
 from .requests import IDLE, ready
 
-TO_REVIEW, IN_PROGRESS = 'to_review', 'in_progress'
-PHASES = (TO_REVIEW, IN_PROGRESS)
+TO_REVIEW, IN_PROGRESS, GOING_BACK = 'to_review', 'in_progress', 'going_back'
+PHASES = (TO_REVIEW, IN_PROGRESS, GOING_BACK)
 SUBMITTED, IDLE_WHY = 'submitted', 'idle'
 ADDED, SAME, FILLED, CLEARED, CHANGED = 'added', 'same', 'filled', 'cleared', 'changed'
 CHANGES = (CHANGED, ADDED, FILLED, CLEARED, SAME)  # the order the queue lists its groups (old CHANGE_ORDER)

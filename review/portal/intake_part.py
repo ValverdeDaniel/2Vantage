@@ -22,7 +22,7 @@ def _needed(key, rules):
 
 def _field(question, view, source, stored, found, carried, blank):
     shown, base, colleague = view
-    on_file = not portal_rules.editable(source, stored)
+    on_file = not portal_rules.editable(source, stored, reopened=question['key'] in found.reopened)
     rule = question.get('shown_when')
     return {
         **{key: question.get(key, '' if key != 'options' else []) for key in QUESTION},

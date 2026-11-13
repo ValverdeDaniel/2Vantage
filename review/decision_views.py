@@ -1,7 +1,7 @@
 """The review queues and their decisions, staff side (plan.md §7.13; L.6 endpoints; slice 55). Thin: parse → selector or
 service → answer. Ids come from the path as integers (B4); a bad query or body answers 400, never 500.
 
-- GET  deals/{id}/review/queue/?surface=intake|census&phase=to_review|in_progress&group=&page= → the queue
+- GET  deals/{id}/review/queue/?surface=intake|census&phase=to_review|in_progress|going_back&group=&page= → the queue
   (selectors/queue.py). Writes nothing; `private, no-store` (member data rides it).
 - POST deals/{id}/review/approve/ {refs: [ref]} | {surface, ready_only?, include_idle?} → {approved: [ref],
   activity_ids: [id]}.

@@ -33,6 +33,7 @@ import { rfp45 } from './rfp45.mjs';
 import { rfp46 } from './rfp46.mjs';
 import { review53 } from './review53.mjs';
 import { review55 } from './review55.mjs';
+import { review56 } from './review56.mjs';
 import { pptx31 } from './pptx31.mjs';
 import { sbc22 } from './sbc22.mjs';
 import { quoteDoor20 } from './quoteDoor20.mjs';
@@ -274,6 +275,7 @@ export const WALKS = {
   s53: { ...review53, run: (ctx) => review53.run(ctx, { signIn, openDeal }) }, // slice 53's done-when (re-seed GD4 after)
   s54: { ...portal54, run: (ctx) => portal54.run(ctx, { signIn, openDeal }) }, // slice 54's done-when, at 390×844 (re-seed GD6 after)
   s55: { ...review55, run: (ctx) => review55.run(ctx, { signIn, openDeal }) }, // slice 55's done-when (re-seed GD6 after)
+  s56: { ...review56, run: (ctx) => review56.run(ctx, { signIn, openDeal }) }, // slice 56's done-when (re-seed GD6 after)
   s66: { ...voice66, run: (ctx) => voice66.run(ctx, { signIn, openDeal }) }, // slice 66's done-when (a fake recognizer; no Claude, no writes)
   s60: { ...agenda60, run: (ctx) => agenda60.run(ctx, { signIn, openDeal }) }, // slice 60's done-when (fresh GD3; re-seed GD3 after)
 };

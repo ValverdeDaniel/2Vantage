@@ -58,3 +58,34 @@ def test_L70_Q3_8_closing_beside_turning_a_link_off_never_deadlocks(user, deal):
     _race([lambda: services.close(user, made.request.id, 'cancelled'), lambda: services.revoke(user, link.id)])
     assert ClientRequest.objects.get(pk=made.request.id).closed_at is not None
     assert ClientLink.objects.get(pk=link.id).revoked_at is not None
+
+
+def test_L51_B7_Q3_8_two_asks_for_one_item_at_once_leave_one_draft(user, deal):
+    from review.models import ReviewNote
+    from review.services import tray
+
+    real = tray.locked_deal
+
+    def slow(deal_id):
+        found = real(deal_id)
+        time.sleep(0.2)  # hold the Deal's lock before reading the drafts
+        return found
+
+    errors = []
+
+    def run():
+        try:
+            tray.ask(user, deal.id, ['intake:fein'])
+        except Exception as exc:  # noqa: BLE001 (reported below)
+            errors.append(exc)
+        finally:
+            connection.close()
+
+    with mock.patch.object(tray, 'locked_deal', slow):
+        threads = [threading.Thread(target=run) for _ in range(2)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+    assert errors == []
+    assert ReviewNote.objects.filter(deal=deal, key='fein', sent_at__isnull=True).count() == 1

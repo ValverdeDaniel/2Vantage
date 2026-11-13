@@ -17,6 +17,8 @@ while the client answers it, and reads missing again once a link ends (L.6).
 
 from collections import namedtuple
 
+from django.db.models import Q
+
 from census import client_view as census_view
 from census import facts as census_facts
 from census import fields
@@ -26,12 +28,14 @@ from intake import form, values
 from intake.checklist_words import COMPLIANCE
 from intake.models import Intake
 
+from ..models import ASK_KINDS, ReviewNote
 from ..rules import asks as ask_rules
+from ..rules import tray as tray_rules
 from ..rules.requests import carries
 
 Asked = namedtuple(
     'Asked',
-    'intake_keys blocks people columns needed census_file add_people documents intake rules overlay',
+    'intake_keys blocks people columns needed census_file add_people documents intake rules overlay reopened',
 )
 
 
@@ -111,6 +115,22 @@ def _documents(asks, deal, blocks):
     return list(dict.fromkeys(slots))
 
 
+def reopened(link, request, intake):
+    """The intake questions a send-back or ask that went out on this request reopens on its links (slice 56), until a
+    person of ours decides the answer after it (an approval, a typed or relayed edit): B43's lock gives way to them."""
+    sources = (intake.sources if intake else None) or {}
+    out = set()
+    sent = ReviewNote.objects.filter(
+        surface='intake', kind__in=ASK_KINDS, sent_at__isnull=False, resolved_at__isnull=True
+    ).filter(Q(request_id=request.id) | Q(link_id=link.id))
+    for key, at in sent.values_list('key', 'sent_at'):
+        source = sources.get(key)
+        decided = source.get('at') if isinstance(source, dict) else None
+        if tray_rules.open_ask(at, opens=True, decided_at=decided):
+            out.add(key)
+    return frozenset(out)
+
+
 def asked(link, request, deal, *, link_ids=()):
     """Asked(...) for `link` now. `link_ids`: every link on its request (whose added people it shares)."""
     asks = request.asks or {}
@@ -131,6 +151,7 @@ def asked(link, request, deal, *, link_ids=()):
         intake=intake,
         rules=(intake.rules if intake else None) or {},
         overlay=overlay(deal, intake, link, blank) if keys else {},
+        reopened=reopened(link, request, intake) if keys else frozenset(),
     )
 
 
@@ -139,6 +160,29 @@ def refs(found):
     out = {f'intake:{key}' for key in found.intake_keys}
     out |= {f'intake:block:{block}' for block in found.blocks if block in ('contacts', 'coverage', 'lines')}
     out |= {f'census:{member_id}:{key}' for member_id, keys in found.columns.items() for key in keys}
+    return out
+
+
+def carried(found):
+    """Every ref a link asks now, its parts and files included (what the tray need not join again, slice 56)."""
+    out = {f'intake:{key}' for key in found.intake_keys}
+    out |= {f'intake:block:{block}' for block in found.blocks}
+    out |= {f'census:{member_id}:{key}' for member_id, keys in found.columns.items() for key in keys}
+    out |= {f'doc:{slot}' for slot in found.documents}
+    if found.census_file:
+        out.add('census:file')
+    return out
+
+
+def outline(request, deal, intake):
+    """The intake questions and parts, files and census file a request asks now, without its people: what the intake
+    tab's "Asked <date>" reads (B12), cheaply, for every open request."""
+    asks = request.asks or {}
+    keys, blocks = _intake(asks, deal, intake)
+    out = {f'intake:{key}' for key in keys} | {f'intake:block:{block}' for block in blocks}
+    out |= {f'doc:{slot}' for slot in _documents(asks, deal, blocks)}
+    if carries(asks, 'census:file'):
+        out.add('census:file')
     return out
 
 

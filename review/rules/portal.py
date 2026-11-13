@@ -4,11 +4,13 @@
   approved, or a client answer a person approved, is on file: the portal shows it "Already on file ✓" and takes no
   answer for it, unless a person sent it back (`reopened`, slice 56). A value Claude or an import put there, with no
   person's approval, is the client's to correct (`we_read`).
-- `form_stamp(link, request, now)`: one opaque word for what the page was built from (L103, Ch. 15): the request's
-  `form_version`, the link's blank flag, submitted, security and PIN version, closed and turned off. A poll that reads
-  a different word re-reads the page and keeps what the person typed.
-- `rail(intake, people, census_file, documents)`: the to-do list (L81, old `_client_checklist`): a row per section, its
-  counts and whether it is done; the browser recounts it from what is typed, with the same rule (portalModel.js).
+- `form_stamp(link, request, now, notes='')`: one opaque word for what the page was built from (L103, Ch. 15): the
+  request's `form_version`, the link's blank flag, submitted, security and PIN version, closed and turned off, and
+  (slice 56) its notes' stamp, so a reply or a send-back of ours shows on a page left open. A poll that reads a
+  different word re-reads the page and keeps what the person typed.
+- `rail(intake, people, census_file, documents, follow_ups)`: the to-do list (L81, old `_client_checklist`): a row per
+  section, its counts and whether it is done, and (slice 56) Follow-ups: what we sent back or asked again, done once
+  they answered it; the browser recounts the form's rows from what is typed, with the same rule (portalModel.js).
 """
 
 import hashlib
@@ -34,8 +36,9 @@ def we_read(source, value):
     return 'read' if source.get('origin') in READ_ORIGINS and not source.get('confirmed') else ''
 
 
-def form_stamp(link, request, now):
+def form_stamp(link, request, now, notes=''):
     parts = [
+        notes,
         request.form_version,
         int(link.blank),
         link.security,
@@ -54,9 +57,10 @@ def _counted(fields):
     return filled, total
 
 
-def rail(words, intake, people, census_file, documents):
+def rail(words, intake, people, census_file, documents, follow_ups=()):
     """{items: [{key, kind, label, done, filled?, total?}], done, total}. `words` holds the labels; `intake` is the
-    intake section (or None), `people` the people asked, `census_file` its section (or None), `documents` the slots."""
+    intake section (or None), `people` the people asked, `census_file` its section (or None), `documents` the slots,
+    `follow_ups` the follow-up cards."""
     items = []
     if intake:
         shown = [field for section in intake['sections'] for field in section['fields'] if field['shown']]
@@ -75,5 +79,10 @@ def rail(words, intake, people, census_file, documents):
     for slot in documents:
         items.append({'key': f'doc_{slot["slot"]}', 'kind': 'document', 'label': slot['label'],
                       'done': bool(slot['received'])})  # fmt: skip
+    asked = [card for card in follow_ups if card['needs_answer'] or card['answered']]
+    if asked:
+        filled = sum(1 for card in asked if not card['needs_answer'])
+        items.append({'key': 'followups', 'kind': 'fields', 'label': words['followups'], 'filled': filled,
+                      'total': len(asked), 'done': filled >= len(asked)})  # fmt: skip
     done = sum(1 for item in items if item['done'])
     return {'items': items, 'done': done, 'total': len(items)}

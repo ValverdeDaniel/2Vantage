@@ -15,6 +15,8 @@ import useLinkActions from './useLinkActions';
  * row with the tab's own counts (L1, L28), the Board with the readiness strip (L2) and the Waiting lane (L7, L8), and
  * the Request view with a minimal New link (L40). The view is `?view=` (board by default), written on a click. Slice 55
  * adds the Review view, the keyboard queue of what the client sent (L11, L15–L17, L20; B38, C32), and the To review lane.
+ * Slice 56 turns the Request view into the request page (who has a link, the ask list, the request tray going out, each
+ * item's thread) and puts the client's open questions on the Board (L5).
  */
 export default function ReviewTab({ deal }) {
   const meta = useMeta().data?.review;
@@ -28,6 +30,7 @@ export default function ReviewTab({ deal }) {
     if (next === 'board') nextParams.delete('view');
     else nextParams.set('view', next);
     if (next !== 'queue') nextParams.delete('section');
+    if (next !== 'request') ['pane', 'show'].forEach((key) => nextParams.delete(key));
     setParams(nextParams, { replace: true });
   };
 
@@ -35,6 +38,14 @@ export default function ReviewTab({ deal }) {
     const nextParams = new URLSearchParams(params);
     nextParams.set('view', 'queue');
     if (section) nextParams.set('section', section);
+    setParams(nextParams, { replace: true });
+  };
+
+  const pickRequest = (pane) => {
+    const nextParams = new URLSearchParams(params);
+    nextParams.set('view', 'request');
+    if (pane && pane !== 'intake') nextParams.set('pane', pane);
+    nextParams.delete('section');
     setParams(nextParams, { replace: true });
   };
 
@@ -47,10 +58,10 @@ export default function ReviewTab({ deal }) {
     <div className="bb-tab-page">
       <ReviewViews view={view} counts={board.data.counts} onPick={pick} />
       {view === 'request' && (
-        <RequestView deal={deal} meta={meta} actions={actions} onDone={() => pick('board')} asksClosed={board.data.asks_closed} />
+        <RequestView deal={deal} meta={meta} actions={actions} asksClosed={board.data.asks_closed} />
       )}
       {view === 'queue' && <QueueView deal={deal} meta={meta} board={board.data} />}
-      {view === 'board' && <Board board={board.data} meta={meta} actions={actions} onQueue={pickQueue} />}
+      {view === 'board' && <Board board={board.data} meta={meta} actions={actions} onQueue={pickQueue} onRequest={pickRequest} />}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { BorBlock, ContactsBlock, CoverageBlock, LinesBlock } from './blocks';
 import { CensusFileCard, DocumentSlots } from './FileSlots';
+import FollowUps from './FollowUps';
 import IntakeSection from './IntakeSection';
 import PeopleSection from './PeopleSection';
 import { liveRail, nothingAsked, plural } from './portalModel';
@@ -11,8 +12,8 @@ import usePortalWrites from './usePortalWrites';
  * What a link asks, on one page (plan.md §8.20; L80–L98, L105). Ported from old Vantage 891f1b3
  * `BenefitsClientPortal.jsx`'s main branch: the to-do rail (a sticky left column, above the form on a phone), the
  * greeting card, the shared request card ("From your broker:", "This request also went to N colleagues"), the intake
- * questions and blocks, the people, the files, the notes and the foot. Questionnaires join with slice 58, threads and
- * follow-ups with 56, the receipt with 59.
+ * questions and blocks, the people, the files, the follow-ups and questions (slice 56), the notes and the foot.
+ * Questionnaires join with slice 58, the receipt with 59.
  *
  * page: the payload · token · readOnly (View as client) · onReload() · onChallenge() (the PIN again)
  */
@@ -90,6 +91,7 @@ export default function PortalForm({ token, page, readOnly = false, onReload, on
       <div className="bnf-portal-main" style={{ minWidth: 0 }}>
         <Greeting page={page} rail={rail} short={short} />
         <SharedCard page={page} />
+        {(page.follow_ups || []).length > 0 && <FollowUps token={token} page={page} short={short} readOnly={!writes} />}
         <IntakeSection intake={page.intake} bind={w.bind} />
         {blocks.contacts && <ContactsBlock block={blocks.contacts} bind={w.bind} />}
         {blocks.coverage && <CoverageBlock block={blocks.coverage} bind={w.bind} />}
@@ -99,6 +101,7 @@ export default function PortalForm({ token, page, readOnly = false, onReload, on
                        onAdd={w.addPerson} />
         <DocumentSlots documents={page.documents} {...files} />
         <CensusFileCard token={token} censusFile={page.census_file} canTemplate={!readOnly} {...files} />
+        {!(page.follow_ups || []).length && <FollowUps token={token} page={page} short={short} readOnly={!writes} />}
         <SavedNote note={w.note} problem={w.problem} onRetry={writes ? w.save : null} busy={w.busy} />
         {!readOnly && (
           <SubmitBar

@@ -70,6 +70,16 @@ export async function signBor(token, name) {
   return (await call(token, { url: door(token, 'sign/'), method: 'post', data: { name } })).data;
 }
 
+/** POST questions/ {questions: [{ref, text}]} → {follow_ups} (L101; slice 56). 400 {questions: [sentence]}. */
+export async function askQuestions(token, questions) {
+  return (await call(token, { url: door(token, 'questions/'), method: 'post', data: { questions } })).data;
+}
+
+/** POST seen/ → {seen_at}: the page's last look at its follow-ups (L103; slice 56). */
+export async function postSeen(token) {
+  return (await call(token, { url: door(token, 'seen/'), method: 'post', data: {} })).data;
+}
+
 export async function getStamp(token) {
   return (await call(token, { url: door(token, 'stamp/'), method: 'get' })).data;
 }

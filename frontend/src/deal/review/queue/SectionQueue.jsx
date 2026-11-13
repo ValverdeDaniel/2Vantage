@@ -3,6 +3,7 @@ import { useReviewQueue } from '../../../api/review';
 import InlineError from '../../../ui/InlineError';
 import Loading from '../../../ui/Loading';
 import ReviewQueue from '../../../valuereview/ReviewQueue';
+import useItemThread from '../thread/useItemThread';
 import { QUEUE_KEYS } from '../../../valuereview/queueModel';
 import useReviewHotkeys from '../../../valuereview/useReviewHotkeys';
 import GroupChips from './GroupChips';
@@ -12,17 +13,20 @@ import { cfgFor, renderSummary } from './queueItems';
 import { DECIDED, focusOf, keepDecided } from './queueWords';
 import useQueueDecisions from './useQueueDecisions';
 
-const TITLES = { to_review: 'From the client', in_progress: 'Not submitted yet' };
+const TITLES = { to_review: 'From the client', in_progress: 'Not submitted yet', going_back: 'Going back' };
 const EMPTY = {
   to_review: 'Nothing from the client is waiting for review.',
   in_progress: 'Nobody is part-way through a link.',
+  going_back: 'Nothing is waiting on the client to answer again.',
 };
 
 /*
  * One section's client answers (plan.md §8.8; L11, L15, L16, L20, B38, C28, C32; old 891f1b3 `CensusClientReview.jsx`
  * and `IntakeQueue.jsx`): the phase tabs (To review · Not submitted yet), the groups by column or section and change
  * with the picked group's "Approve all N ✓", the keyboard queue, and its pages. Not submitted yet only reads. Each row
- * keeps its mark for the visit; an approval offers ↶ Undo (C28). Threads, notes and Send back join with slice 56.
+ * keeps its mark for the visit; an approval offers ↶ Undo (C28). Slice 56: X sends an answer back with a note (into
+ * the request tray), N writes a team note, each item shows its thread, and Going back lists what went back until the
+ * client answers again (still decidable: an approval closes what was sent back).
  */
 export default function SectionQueue({ dealId, meta, surface, readOnly = false }) {
   const [phase, setPhase] = useState('to_review');
@@ -31,11 +35,12 @@ export default function SectionQueue({ dealId, meta, surface, readOnly = false }
   const [focusId, setFocusId] = useState(null);
   const queue = useReviewQueue(dealId, { surface, phase, group, page });
   const decisions = useQueueDecisions(dealId);
+  const thread = useItemThread(dealId, { readOnly });
   const queueRef = useRef(null);
   const fresh = (queue.data?.items || []).map((item, index) => ({ ...item, id: item.ref, index }));
   const items = keepDecided(fresh, decisions.decided, { phase, group });
   const focus = focusOf(items, focusId, decisions.decided);
-  const reviewing = phase === 'to_review' && !readOnly;
+  const reviewing = phase !== 'in_progress' && !readOnly;
   useReviewHotkeys({
     enabled: items.length > 0,
     onKey: (action) => queueRef.current?.act(action),
@@ -46,6 +51,7 @@ export default function SectionQueue({ dealId, meta, surface, readOnly = false }
   if (queue.isError) return <InlineError title="The review queue" error={queue.error} onRetry={() => queue.refetch()} />;
   const data = queue.data;
   const changes = Object.fromEntries((meta?.changes || []).map((entry) => [entry.key, entry.label]));
+  const kindWords = Object.fromEntries((meta?.note_kinds || []).map((entry) => [entry.key, entry.label]));
   const groups = data.groups.map((entry) => ({ ...entry, sub: changes[entry.change] || entry.change }));
   const picked = groups.find((entry) => entry.key === group);
   const decided = Object.fromEntries(
@@ -75,7 +81,13 @@ export default function SectionQueue({ dealId, meta, surface, readOnly = false }
         focusId={focus}
         onFocus={setFocusId}
         renderSummary={(item) => renderSummary(item, changes)}
-        renderDetail={(item) => <ItemDetail item={item} />}
+        renderDetail={(item) => (
+          <ItemDetail
+            item={item}
+            kindWords={kindWords}
+            threadProps={(ref, ask) => thread.propsFor({ ref, ask })}
+          />
+        )}
         cfgFor={cfgFor}
         onDecide={decisions.onDecide}
         decided={decided}

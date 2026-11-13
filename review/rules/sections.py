@@ -6,7 +6,9 @@
 - `ready`: the part of `to_review` "Approve N ready" may take (an answer that blanks a value waits for a person), split
   into `ready_submitted` (what the button takes) and `ready_idle` (what its tick adds);
 - `names`: who answered (still typing or ready), the most answers first, each once: the bar's "↩ Dana answered 3". A
-  link with no name is left out, and the bar then says "The client".
+  link with no name is left out, and the bar then says "The client";
+- `going_back` (slice 56): answers sent back to the client and not answered since (`going`, `rules.tray.going_back`):
+  out of `to_review` and `in_progress` until they answer again.
 """
 
 from collections import Counter
@@ -17,7 +19,15 @@ SURFACES = ('intake', 'census')
 
 
 def empty():
-    return {'to_review': 0, 'in_progress': 0, 'ready': 0, 'ready_submitted': 0, 'ready_idle': 0, 'names': []}
+    return {
+        'to_review': 0,
+        'in_progress': 0,
+        'ready': 0,
+        'ready_submitted': 0,
+        'ready_idle': 0,
+        'going_back': 0,
+        'names': [],
+    }
 
 
 def _names(by_link, links):
@@ -25,11 +35,14 @@ def _names(by_link, links):
     return list(dict.fromkeys(links[link_id].name for link_id, _n in ranked if links[link_id].name))
 
 
-def counts(entries, links, now):
+def counts(entries, links, now, going=frozenset()):
     out = {surface: empty() for surface in SURFACES}
     answered = {surface: Counter() for surface in SURFACES}
     for entry in entries:
         found = out.setdefault(entry.surface, empty())
+        if entry.ref in going:
+            found['going_back'] += 1
+            continue
         link = links.get(entry.link_id)
         why = items.ready_why(link, now)
         if not why:
@@ -47,12 +60,14 @@ def counts(entries, links, now):
     return out
 
 
-def ready_refs(entries, links, now, *, include_idle=False):
-    """The refs "Approve N ready" takes: ready for their link's reason, and not one that blanks a value."""
+def ready_refs(entries, links, now, *, include_idle=False, going=frozenset()):
+    """The refs "Approve N ready" takes: ready for their link's reason, not sent back, and not one that blanks a
+    value."""
     return [
         entry.ref
         for entry in entries
-        if items.takes(
+        if entry.ref not in going
+        and items.takes(
             items.ready_why(links.get(entry.link_id), now),
             cleared=not entry.person and items.blank(entry.value),
             include_idle=include_idle,

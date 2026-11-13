@@ -3001,6 +3001,25 @@ only with its tick, never one that blanks a value. Intake approvals keep before 
 answer; census approvals are key-only. rfp's export check reads review's lines through `rfp.check.providers` (L120:
 the client's census answers waiting, still typed, going back; "not in the file until approved").
 
+**Built (slice 56):** the request tray, notes and threads. Every "＋ Ask" (an intake row, B12; a checklist file,
+B27; picked census values and their census file, L54; the request page's list) and every send-back (the queue's X)
+waits in the tray as one draft per item (`ReviewNote`, kind ask or sendback, unsent; the Deal locked first, so two asks
+leave one, B7) until a person sends it; nothing reaches the client before then (OQ87's default). Each draft says where
+it goes (`rules/tray.py`): a request named for it, else the one its answer came through, else the newest open request
+asking its section, else the newest open request; a request can take an ask while it is open and one of its links is
+not turned off and is inside its ceiling, and a census value goes only on a request whose links ask for a PIN (B18, a
+link is never tightened under its holder); otherwise it "needs a new link". Sending (`services/send.py`, one
+transaction per destination) joins what the request does not ask yet to its asks (`rules/join.py`: intake keys and
+census cells may ride beside a scope), bumps `form_version`, gives its links their life again within the ceiling, and
+stamps the drafts sent; "Choose who ▸" makes one new request carrying exactly the homeless drafts. A note goes to the
+team, or to the client now on the request that would take it; a reply answers and closes a client's question; Resolve
+closes by hand; an approval or "Keep ours" closes what was sent back about that answer. An answer sent back and not
+answered since reads Going back (`rules.tray.going_back`): out of To review and "Approve N ready", counted as waiting
+on the section bar and in the export check's `going_back` line; a sent send-back reopens a locked intake answer on its
+link until a person decides it again. The portal's page carries `follow_ups` (a card per item, never a team note, a
+draft or a staff name) and takes a client's questions and last look (`questions/`, `seen/`). Activity rows for notes
+and the tray are key-only (a note's words never enter Activity, §3.8).
+
 **Full rules:** Part L (L.3; L.6: models, the owner contract, `rules/`, portal security) and O.3.4. **Slices:** 53–59.
 
 ### 5.9 Next step and agenda — `agenda/steps/`, `agenda/rows.py`
@@ -3737,7 +3756,9 @@ slice 29; slice 34's Firm pages drawer edits them (J155). **CoverImage** (≤ 24
 
 ### 6.12 review
 
-Built in slice 53 (all four models; services for requests and links); the portal, notes and seen with slices 54–59.
+Built in slice 53 (all four models; services for requests and links); the portal with slice 54; notes, the tray
+and seen with slice 56 (`review/services/tray.py`, `send.py`, `notes.py`, `seen.py`, `questions.py`; no
+migration: the slice 53 rows and their one-open-draft constraint carry them).
 L.6. v1.1's `ClientValue` goes: client answers wait on the owners' rows (§6, O.3.1).
 
 - **ClientRequest**: `deal`, `asks` (below), `message` (≤ 1,000), `created_by`/`at`, `closed_at`/`by`, `close_reason`,
@@ -4410,6 +4431,34 @@ Built in slice 55: the queue and the decisions, and the Board's `lanes.to_review
   `intake:block:<contacts|coverage|lines>`, `census:<member>:<column>` or `census:<member>:*` (a person a client
   added); 400 `{refs: [refused]}`. A ref already decided is skipped. `undo/` is new beside v1.1's list.
 
+Built in slice 56: the tray, notes, the request page and the last look (each answers 404 past bigint or on another
+deal; 400 by field; 409 with a sentence when the deal may no longer ask its client).
+- `GET …/review/tray/` → `{count, asks_closed, items: [{id, ref, surface, kind: ask | sendback, title, text, at, by,
+  target: {key, request_id, names, expires_at, days_left} | null, why, why_code: needs_link | needs_pin | gone | '',
+  gone, named}], links: [{key, request_id, created_at, names, people: [{link_id, name, security, sent_at, opened,
+  last_opened_at, submitted_at, expires_at, days_left, expires_if_sent}]}], needs_new: [id], out: {ref: first asked}}`,
+  in a fixed number of queries. A ref is `intake:<key>`, `intake:block:<contacts|coverage|lines|bor|files>`,
+  `census:<member>:<column>` (never SSN), `census:file` or `doc:<slot>`.
+- `POST …/review/tray/` `{refs, kind?: ask | sendback, text?, request_id?, skip_out?}` or `{census: {columns, scope:
+  blank | missing}}` → 201 `{tray, added, activity_id}`, at most 500 refs; `POST …/tray/remove/` `{ids}` → `{removed,
+  tray}`; `POST …/tray/send/` `{ids?, request_id?, new?: {people, security?, expires_on?, message?, blank?}}` →
+  `{sent, targets: [{key, request_id, names, items, links}], waiting: [id], whys: {id: sentence}, dropped, tray,
+  request?, links?}` (`links` a new request's, each PIN shown this once).
+- `POST …/review/notes/` `{kind: note, ref, text, audience: team | client}` | `{kind: reply, question_id, text}` → 201
+  `{note: {id, ref, kind, audience, text, by, who, at, sent_at, resolved_at, from_client, link_id, request_id},
+  activity_id}`; `{kind: ask | sendback, ref | refs, text?}` → 201 `{tray, added, activity_id}`. `PATCH …/notes/{nid}/`
+  `{action: resolve}` → `{note, activity_id}`; `DELETE …/notes/{nid}/` (a draft) → `{tray}`.
+- `GET …/review/request/?pane=intake | census | documents` → `{pane, asks_closed, panes: [{key, label, waiting,
+  in_cart}], people: [{link_id, request_id, name, security, sent, opens, days_left, expired, revoked, submitted_at,
+  path}], counts: {all, question, in_cart, answered, asked, on_file, missing}, items: [{ref, label, section, needed,
+  value, status, asked_at, draft_id, notes}], columns? (census: [{key, label, group, required, blank, required_blank,
+  in_cart, asked, on_link, answered, questions}]), census_file?, threads: {ref: [note]}, seen_at, new: [ref]}`;
+  `POST …/review/seen/` `{at?}` → `{seen_at}` (only moves forward).
+- The Board adds `questions: [{note_id, ref, section, where, who, at, excerpt, fix: {tab, view, pane}}]` (the oldest
+  six) and `questions_total`; `sections` and the queue add `going_back`; a queue item adds `thread`, `question_open`
+  and `draft_id`; `GET …/queue/?phase=going_back`. /api/meta/ `review` adds `note_kinds`, `rail_statuses`,
+  `tray_sections`, `request_panes`, `note_limit`.
+
 | Method | Path | What it does |
 |---|---|---|
 | GET | `deals/{id}/review/badges/`, `…/board/?scope=` | Counts; lanes, Next and questions (L1, L2) |
@@ -4478,6 +4527,12 @@ it asks now (blanks and gaps read stored values only). Every answer, refusals in
   `{people: [person], add_people}`; `POST sign/` `{name}` → `{bor, link}`; `GET stamp/` → `{form_stamp, days_left}`;
   `GET census-template/` → the blank template; `GET portal/moved/` → `{agency}` (takes no token);
   `GET links/{lid}/preview/` (staff) → the page with `preview: true`, no open counted.
+
+**Built (slice 56).** The page adds `follow_ups: [{ref, title, needs_answer, answered, question_open, new, replied,
+thread: [{who: you | colleague | agency, kind, text, plain, at}]}]` to `KEYS` and a Follow-ups row to `checklist`;
+`form_stamp` moves when a note to the link is sent or closed. `POST questions/` `{questions: [{ref, text}]}` (at most 20,
+each about a ref the page asks, text ≤ 1,000) → 201 `{follow_ups}`; 400 `{questions: [sentence]}`. `POST seen/` →
+`{seen_at}`. Both are writes: a staff session gets 403, a lost or archived deal 410.
 
 Full list: Part L, L.6.
 
@@ -4769,6 +4824,14 @@ Built in slice 55: the Review view (`?view=queue&section=`) with its section chi
 the tray, slice 56) in `src/valuereview/ReviewQueue.jsx`; the To review lane; the section bar at the top of Intake and
 Census with "Approve N ready ✓" and its idle tick (L14, C34). The Next line, the Missing lane and the sections' own
 Board, Request and Review views come with slices 56–57.
+Built in slice 56: the request tray's bar on every deal tab ("Request tray · N · → Dana’s link (expires Oct 30)") and
+its snippet by section with "Open the request ▸" (L49, L50); the request page (L24, L26–L29, L33, L37): the who bar,
+the tabs Intake, Census and Documents and the Show chips, the ask list with "Required to market" lifted first and
+"＋ Add all N", Going out (the tray by destination, Send, "Choose who ▸" for one new link), and the picked item's card
+with its thread; the client's open questions on the Board (L5); X (send back with a note), N (a team note) and each
+item's thread in the queue, with its Going back phase (L16, L22); "＋ Ask" outside the tab (B12, B27, L54). Their form
+beside the list (L30), the comment margin, edit mode, the Next line and banner (L3, L4, L25) and the Missing lane come
+with slice 57.
 
 ### 8.9 Intake (`intake`)
 
@@ -7038,7 +7101,7 @@ Add them to decisions.md when this version is agreed, and update OQ91's and OQ95
 | OQ86 | Before real PHI, must every portal open, save and submit be logged with IP and browser? | Open. Default: link stamps and Activity rows; IP only on the BOR signature | Open | 54 |
 | OQ111 | On an ordinary (not blank) link, a client sees pending answers from any link on the deal, flagged "Updated by someone else on your team", not only from the same request. Limit it to the same request? | Open. Default: any link of the deal (as built in slice 54) | Open | 54 |
 | **Slice 56: REV-4** | | | | |
-| OQ87 | Does a new custom ask ("＋ Add request") wait in the tray rather than reach the portal at once? | Open. Default: yes | Open | 56 |
+| OQ87 | Does a new custom ask ("＋ Add request") wait in the tray rather than reach the portal at once? | Open. Default: yes (built in slice 56 as the rule for every ask: nothing reaches the portal until the tray is sent; "＋ Add request" itself, L121, is in no slice's row yet) | Open | 56 |
 | **Slice 57: REV-5** | | | | |
 | OQ88 | Keep census sends by contact (census columns assigned to contacts, one link each)? | Open. Default: drop it (L67). If kept, `CensusSettings.rules` stores the contacts and slice 57 sends the links | Open | 57 |
 | **Slice 59: REV-7** | | | | |

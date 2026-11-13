@@ -12,6 +12,8 @@ no-referrer` and `X-Robots-Tag: noindex`, plus a fresh `X-Link-Verification` onc
 - POST portal/{t}/people/ {people: [{kind, first_name, last_name, employee_id?, relationship?, dob?}]} → 201
   {people: [person], add_people}.
 - POST portal/{t}/sign/ {name} → {bor: {signed, name, signed_at, on_file}, link}.
+- POST portal/{t}/questions/ {questions: [{ref, text}]} → 201 {follow_ups} (slice 56); 400 {questions: [sentence]}.
+- POST portal/{t}/seen/ → {seen_at}: the page's last look at its follow-ups (slice 56).
 - GET  portal/{t}/stamp/ → {form_stamp, days_left} (the poll; writes nothing).
 - GET  portal/{t}/census-template/ → the blank census template (B3).
 - GET  portal/moved/ → {agency} for the "This link has moved" page (L136); it takes no token.
@@ -36,8 +38,8 @@ from ..models import ClientLink
 from ..rules import policy
 from ..rules import portal as portal_rules
 from ..services import answers as answer_services
-from ..services import client_adds, pins, stamps
-from . import census_part, files_part, guard, payload, throttles
+from ..services import client_adds, pins, questions, stamps
+from . import census_part, files_part, follow_ups, guard, payload, throttles
 from .asked import asked
 
 HEADERS = {'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex'}
@@ -171,13 +173,35 @@ class SignView(PortalView):
         return Response({'bor': bor, 'link': _link_state(link)})
 
 
+class QuestionsView(PortalView):
+    def post(self, request, token):
+        opened = self.open(request, token, write=True)
+        questions.ask(opened.link.id, _body(request).get('questions'))
+        link = ClientLink.objects.get(pk=opened.link.id)
+        siblings = list(opened.request.links.values_list('id', flat=True))
+        found = asked(link, opened.request, opened.deal, link_ids=siblings)
+        cards = follow_ups.cards(
+            link, opened.request, opened.deal, found, link_ids=files_part.shown_links(link, siblings)
+        )
+        return Response({'follow_ups': cards}, status=status.HTTP_201_CREATED)
+
+
+class SeenView(PortalView):
+    throttle_classes = (throttles.Poll,)
+
+    def post(self, request, token):
+        opened = self.open(request, token, write=True)
+        return Response({'seen_at': questions.seen_now(opened.link.id).isoformat()})
+
+
 class StampView(PortalView):
     throttle_classes = (throttles.Poll,)
 
     def get(self, request, token):
         opened = self.open(request, token)
         now = clock.now()
-        stamp = portal_rules.form_stamp(opened.link, opened.request, now)
+        notes = follow_ups.stamp(opened.link, opened.request)
+        stamp = portal_rules.form_stamp(opened.link, opened.request, now, notes)
         return Response({'form_stamp': stamp, 'days_left': policy.days_left(opened.link.expires_at, now)})
 
 

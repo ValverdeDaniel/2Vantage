@@ -94,10 +94,8 @@ def _intake(asks, key, ref, missing, blank):
     scope = intake.get('scope')
     if key.startswith('block:'):
         return key.removeprefix('block:') in (intake.get('blocks') or [])
-    if scope == 'all':
-        return True
-    if scope == 'selected':
-        return key in (intake.get('keys') or [])
+    if scope == 'all' or key in (intake.get('keys') or []):
+        return True  # keys named beside a scope are asked too (what the tray joined, slice 56)
     if scope == 'missing':
         return ref in blank
     return scope == 'required' and ref in missing
@@ -110,9 +108,9 @@ def _census(asks, rest, ref, missing, blank):
     member, _, column = rest.partition(':')
     scope = census.get('scope', 'none')
     columns = census.get('columns') or []
-    if scope == 'selected':
-        return any(str(cell[0]) == member and cell[1] == column for cell in census.get('cells') or [])
-    if scope == 'none' or (columns and column not in columns):
+    if any(str(cell[0]) == member and cell[1] == column for cell in census.get('cells') or []):
+        return True  # cells named beside a scope are asked too (what the tray joined, slice 56)
+    if scope in ('none', 'selected') or (columns and column not in columns):
         return False
     if scope == 'all':
         return True

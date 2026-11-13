@@ -9,10 +9,11 @@ import { selectable } from './formModel';
  * `fieldRow`, `bb-account-row bnf-intake-row`): the label with the rose star when this deal needs it, the answer (a
  * click opens its editor; ↗ opens the file it was read from), the badge, then the inline checks and a refused save's
  * sentence. Hidden questions are not drawn. The question's help is its title. While ☑ Select fields is on (B10), a
- * row is a tick box instead; an answer with nothing to review is locked.
+ * row is a tick box instead; an answer with nothing to review is locked. A blank answer carries `ask`, the request
+ * tray's "＋ Ask / ✓ In tray / Asked <date>" (B12; slice 56).
  */
 export default function QuestionRow(props) {
-  const { row, editing, draft, error, onOpen, onKeyDown, onChange, onBlur, onDone, select } = props;
+  const { row, editing, draft, error, onOpen, onKeyDown, onChange, onBlur, onDone, select, ask = null } = props;
   if (!row.visible) return null;
   const { question } = row;
   const badge = badgeFor(row);
@@ -83,6 +84,7 @@ export default function QuestionRow(props) {
       <span className={`bb-badge ${badge.className}`} title={badge.title || undefined}>
         {badge.label}
       </span>
+      {blank && !editing && ask}
       {(row.issues.length > 0 || error) && (
         <div className="bnf-issue-line">
           {error && (

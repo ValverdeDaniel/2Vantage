@@ -102,5 +102,26 @@ CHANGES = [
 PHASES = [
     ('to_review', 'To review', 'Answers the client submitted, waiting on your decision'),
     ('in_progress', 'Not submitted yet', 'What the client has typed but not submitted yet: read only until they do'),
+    ('going_back', 'Going back', 'Answers sent back to the client: they return here when the client answers again'),
 ]
 QUEUE_SECTIONS = [('census', 'Census · client'), ('intake', 'Intake')]
+
+# Notes, the tray and the request page (slice 56; old 891f1b3 `NoteThread.jsx` KIND_WORDS, `RequestRail.jsx` STATUS,
+# `FollowUpSnippet.jsx` SECTIONS).
+NOTE_KINDS = [
+    ('note', 'Note'),
+    ('sendback', 'Sent back'),
+    ('ask', 'Asked for'),
+    ('question', 'Asked'),
+    ('reply', 'Replied'),
+]
+RAIL_STATUSES = [
+    ('question', 'Question open'),
+    ('in_cart', 'In the tray'),
+    ('answered', 'Answered'),
+    ('asked', 'Asked'),
+    ('on_file', 'On file'),
+    ('missing', 'Missing'),
+]
+TRAY_SECTIONS = [('census', 'Census'), ('intake', 'Intake'), ('documents', 'Documents')]
+REQUEST_PANES = [('intake', 'Intake'), ('census', 'Census'), ('documents', 'Documents')]

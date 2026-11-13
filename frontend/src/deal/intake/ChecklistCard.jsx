@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { formatDate } from '../../lib/format';
+import AskButton from '../shared/AskButton';
 import ChecklistRow from './ChecklistRow';
 import FormPicker from './FormPicker';
 import { isCollapsed, meterOf, rememberCollapsed, subtitleOf } from './checklistModel';
@@ -89,6 +90,12 @@ export default function ChecklistCard({ deal, meta, checklist, sentAt, open: ope
               onTick={writes.tick}
               onRequirement={writes.requirement}
               onAttach={writes.attach}
+              ask={
+                // A carrier form's row asks for the form itself, to fill online (slice 58); the others for the file.
+                item.satisfy === 'document' && item.status === 'missing' && item.kind && !FORM_ITEMS.has(item.key) ? (
+                  <AskButton dealId={deal.id} refName={`doc:${item.kind}`} className="btn btn-secondary btn-sm" />
+                ) : null
+              }
             >
               {FORM_ITEMS.has(item.key) && <FormPicker deal={deal} meta={meta} item={item} />}
             </ChecklistRow>

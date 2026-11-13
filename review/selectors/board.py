@@ -15,6 +15,8 @@
   `missing`: the intake's needed questions and checklist documents not in yet, the census's required blanks.
 - `asks_closed` is the sentence when the deal may no longer ask its client (lost, archived, a past year): the tab then
   only reads (L129).
+- `questions` (L5; slice 56): the client's open questions, oldest first, at most six, each {note_id, ref, section,
+  where, who, at, excerpt (140 characters), fix}, and `questions_total`: Answer ▸ opens the request page on its tab.
 
 A fixed number of queries however many requests, links and answers the deal has (Q.3 #4). Writes nothing.
 """
@@ -25,8 +27,15 @@ from intake import summary as intake_summary
 from intake.checklist import DOCUMENT
 
 from .. import summary
+from ..models import ReviewNote
 from ..rules import badges
 from ..rules import requests as request_rules
+from . import items as item_rows
+from . import notes as note_rows
+
+QUESTIONS_SHOWN = 6
+EXCERPT = 140
+SECTIONS = {'intake': 'Intake', 'census': 'Census', 'documents': 'Documents'}
 
 
 def _plural(n, one):
@@ -94,6 +103,32 @@ def _intake(deal):
     return {'pct': payload['readiness']['pct'], 'state': ready.get('state') or 'blocked'}, questions + documents
 
 
+def questions(deal):
+    """([question row], total): the client's open questions, oldest first (old `_questions`, D-159)."""
+    open_ = ReviewNote.objects.filter(deal_id=deal.id, kind='question', resolved_at__isnull=True)
+    total = open_.count()
+    rows = list(open_.select_related('link').order_by('at', 'id')[:QUESTIONS_SHOWN])
+    found = item_rows.resolve(deal, [note_rows.ref_of(note) for note in rows])
+    out = []
+    for note in rows:
+        ref = note_rows.ref_of(note)
+        text = note.text.strip()
+        item = found.get(ref)
+        out.append(
+            {
+                'note_id': note.id,
+                'ref': ref,
+                'section': SECTIONS.get(note.surface, ''),
+                'where': item.label if item else '',
+                'who': note.link.name if note.link_id else '',
+                'at': note.at.isoformat(),
+                'excerpt': text if len(text) <= EXCERPT else f'{text[: EXCERPT - 1]}…',
+                'fix': {'tab': 'review', 'view': 'request', 'pane': note.surface},
+            }
+        )
+    return out, total
+
+
 def board(deal, now=None):
     now = now or clock.now()
     facts, rows = summary.collect([deal.id], now)
@@ -102,8 +137,11 @@ def board(deal, now=None):
     sections = found['sections']
     sections['intake']['missing'] = missing
     waiting = [row for row in rows[deal.id] if row['state'] in request_rules.OPEN_STATES]
+    asked, total = questions(deal)
     return {
         'deal_id': deal.id,
+        'questions': asked,
+        'questions_total': total,
         'asks_closed': rules.client_asks_open(deal),
         'counts': badges.counts(found),
         'readiness': intake_readiness,

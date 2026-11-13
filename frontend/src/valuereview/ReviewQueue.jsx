@@ -15,7 +15,8 @@ import { DEFAULT_KEY_LABELS, movedFrom, nextOpen, progress } from './queueModel'
  * renderSummary(item) -> {title, sub?, badge?, icon?, flag?}; renderDetail(item) -> node.
  * cfgFor(item) -> {approve, reject, rejectMode 'value' | 'note', rejectBlocked, needsValue, valueLabel, valuePh,
  *   valueInit, blankAllowed, noteLabel, notePh, noteRequired, noteAction, extras: [{action, label, key, title?,
- *   mode?: 'value', valueLabel, valueInit, blankAllowed}]}.
+ *   mode?: 'value', valueLabel, valueInit, blankAllowed}]}. `noteAction` (slice 56) is N's button: a team note on the
+ *   item, which leaves it where it is (onDecide(item, {action: 'note', note})); a decision moves on.
  */
 const ReviewQueue = forwardRef(function ReviewQueue(
   {
@@ -63,6 +64,7 @@ const ReviewQueue = forwardRef(function ReviewQueue(
     if (ok === false) return;
     setMode(null);
     setDraft('');
+    if (action === 'note') return; // a note leaves the item where it is
     const next = nextOpen(items, item.id, { ...decided, [item.id]: true }, skipped);
     if (next != null) onFocus(next);
   }
@@ -112,6 +114,11 @@ const ReviewQueue = forwardRef(function ReviewQueue(
     if (action === 'approve') {
       if (!cfg.approve) return undefined;
       return cfg.needsValue ? valueMode('approve', cfg) : commit('approve');
+    }
+    if (action === 'note') {
+      if (!cfg.noteAction) return undefined;
+      if (mode?.action === 'note') return submit();
+      return open({ kind: 'note', action: 'note', label: 'Team note', placeholder: 'Only your team sees a team note…', required: true });
     }
     if (action === 'reject') {
       if (!cfg.reject) return undefined;

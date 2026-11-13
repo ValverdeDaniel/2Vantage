@@ -61,6 +61,7 @@ export const DECIDED = {
   corrected: { label: 'Corrected', icon: '✎' },
   kept: { label: 'Kept ours', icon: '↺' },
   undone: { label: 'Approval taken back — waiting again', icon: '↶', tone: 'back' },
+  sentback: { label: 'Sent back — in the request tray, it goes when you send it', icon: '↩', tone: 'back' },
 };
 
 /** "2 answers approved" for a toast. */

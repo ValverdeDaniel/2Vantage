@@ -4,8 +4,8 @@
  */
 
 /** ☑ Select cells' bar (C8): the count, ✓ Approve, Ignore, ⚑ Needs checking on the picked cells that hold a value,
- * and ＋ Ask N (the request tray arrives with Review & requests). */
-export function SelectBar({ count, filled, busy, onMark }) {
+ * and ＋ Ask N, the picked cells into the request tray (L54; slice 56). */
+export function SelectBar({ count, filled, busy, onMark, onAsk, asking = false }) {
   const off = !filled || Boolean(busy);
   return (
     <div className="bb-select-bar">
@@ -45,8 +45,9 @@ export function SelectBar({ count, filled, busy, onMark }) {
         <button
           type="button"
           className="bb-btn-white"
-          disabled
-          title="Asking the client goes through the request tray, which arrives with Review & requests"
+          disabled={!count || asking || !onAsk}
+          title="Put the picked values in the request tray: they go with everything else you ask for, on one link"
+          onClick={onAsk}
         >
           ＋ Ask {count || ''}
         </button>

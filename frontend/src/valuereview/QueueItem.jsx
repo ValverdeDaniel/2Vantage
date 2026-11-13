@@ -85,6 +85,18 @@ const QueueItem = forwardRef(function QueueItem(
                   {extra.key && <Kbd k={extra.key} />}
                 </button>
               ))}
+              {cfg.noteAction && (
+                <button
+                  type="button"
+                  className={`rr-qi-act${mode?.action === 'note' ? ' rr-qi-act-on' : ''}`}
+                  disabled={busy}
+                  title="A note on it for your team (N): the client never sees it, and the item stays where it is"
+                  onClick={() => onAct('note')}
+                >
+                  {cfg.noteAction}
+                  <Kbd k="N" />
+                </button>
+              )}
               <button
                 type="button"
                 className="rr-qi-act rr-qi-act-later"

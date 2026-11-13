@@ -1,4 +1,5 @@
 import { labelIn } from '../reviewModel';
+import QuestionsBlock from './QuestionsBlock';
 import ToReviewLane from './ToReviewLane';
 import WaitingLane from './WaitingLane';
 
@@ -7,10 +8,11 @@ const READY_CLASSES = { blocked: 'bnf-ready-blocked', ready: 'bnf-ready-ready', 
 /*
  * The Board (plan.md §8.8; L2, L7; old 891f1b3 `DealReviewTab.jsx` board view): the head with the deal's intake
  * readiness — its chip, bar and "% intake complete", as the Overview shows it — then the lanes. Slice 53 builds the
- * Waiting lane, slice 55 the To review lane (L9); the Next banner, the client's questions and Missing arrive with
- * slices 56–57. On a deal that may no longer ask its client, the banner says why and the cards only read (L129).
+ * Waiting lane, slice 55 the To review lane (L9), slice 56 the client's open questions above the lanes (L5); the Next
+ * banner and Missing arrive with slice 57. On a deal that may no longer ask its client, the banner says why and the
+ * cards only read (L129).
  */
-export default function Board({ board, meta, actions, onQueue }) {
+export default function Board({ board, meta, actions, onQueue, onRequest }) {
   const { readiness } = board;
   return (
     <div className="bnf-board">
@@ -31,6 +33,7 @@ export default function Board({ board, meta, actions, onQueue }) {
         </div>
       </div>
       {board.asks_closed && <div className="bb-banner">{board.asks_closed}</div>}
+      <QuestionsBlock board={board} onRequest={onRequest} />
       <div className="bnf-board-lanes">
         <WaitingLane board={board} meta={meta} actions={actions} />
         <ToReviewLane dealId={board.deal_id} board={board} onQueue={onQueue} />

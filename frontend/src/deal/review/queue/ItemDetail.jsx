@@ -1,5 +1,14 @@
+import NoteThread from '../thread/NoteThread';
 import { readyWords } from './queueWords';
 import ValueChange from './ValueChange';
+
+// "To client" on a queue item: a send-back with the note, into the request tray (L22; the item has an answer).
+const SEND_BACK = {
+  kind: 'sendback',
+  label: 'Send back',
+  hint: 'Sends it back to check, with your note · waits in the request tray',
+  placeholder: 'What should they check?',
+};
 
 function when(iso) {
   if (!iso) return '';
@@ -10,9 +19,10 @@ function when(iso) {
 /*
  * The focused item's detail (old 891f1b3 `CensusClientReview.jsx` renderDetail, `ReadyWhy.jsx`): what we hold beside
  * what the client sent, a person the client added with what they gave for them, the carriers whose file needs the
- * column, and whose link it came through, when, and why it is ready. Threads and notes join with slice 56.
+ * column, and whose link it came through, when, and why it is ready; then its thread (slice 56, L22): the team's notes,
+ * what went back to the client, their questions and our replies, with a composer (`threadProps`, useItemThread).
  */
-export default function ItemDetail({ item }) {
+export default function ItemDetail({ item, kindWords, threadProps }) {
   const at = when(item.at);
   return (
     <>
@@ -43,6 +53,9 @@ export default function ItemDetail({ item }) {
         {item.via === 'The client' ? 'Through the client link' : `Through ${item.via}'s link`}
         {at ? ` · ${at}` : ''} · {readyWords(item)}
       </div>
+      {threadProps && item.kind !== 'person' && (
+        <NoteThread notes={item.thread} kindWords={kindWords} clientName={item.via} {...threadProps(item.ref, SEND_BACK)} />
+      )}
     </>
   );
 }

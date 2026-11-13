@@ -2,9 +2,9 @@
  * ☑ Select fields' bar (plan.md §8.9; B10), in the old words and classes (891f1b3 `IntakeTab.jsx`, `bb-select-bar`):
  * the count, "Select all missing" (fixed: the blank questions this deal needs, not every blank), ＋ Ask N, ✓ Approve,
  * Ignore, ⚑ Needs checking and Cancel. Approve, Ignore and Needs checking act on the ticked answers that hold a value;
- * ＋ Ask puts questions in the request tray, which arrives with Review & requests (B12, slice 56).
+ * ＋ Ask puts the ticked questions in the request tray (B10, B12; slice 56).
  */
-export default function IntakeSelectBar({ count, answered, busy, onAllMissing, onMark, onCancel }) {
+export default function IntakeSelectBar({ count, answered, busy, onAllMissing, onMark, onCancel, onAsk, asking = false }) {
   const off = !answered || Boolean(busy);
   return (
     <div className="bb-select-bar">
@@ -23,8 +23,9 @@ export default function IntakeSelectBar({ count, answered, busy, onAllMissing, o
         <button
           type="button"
           className="btn btn-violet btn-sm"
-          disabled
-          title="Asking the client goes through the request tray, which arrives with Review & requests"
+          disabled={!count || asking || !onAsk}
+          title="Put the ticked questions in the request tray: they go with everything else you ask for, on one link"
+          onClick={onAsk}
         >
           ＋ Ask {count || ''}
         </button>

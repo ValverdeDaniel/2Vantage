@@ -15,8 +15,9 @@ Per deal:
   come from its stored counts); `ready`: {intake, census}, those whose link is ready (submitted after its last save,
   or idle 24 h; census's counts the people a client added);
 - `sections` (slice 55): per surface (intake, census) what came back — {to_review, in_progress, ready,
-  ready_submitted, ready_idle, names} (`rules.sections`), plus `questions` and `in_tray` from the notes, and the
-  census's `missing` (its required blanks, from its stored counts): the section bars and the To review lane;
+  ready_submitted, ready_idle, going_back, names} (`rules.sections`; `going_back`, answers sent back and not answered
+  since, slice 56), plus `questions` and `in_tray` from the notes, and the census's `missing` (its required blanks,
+  from its stored counts): the section bars and the To review lane;
 - `questions`: {open, oldest_at}; `tray`: asks and send-backs not yet sent; `nudges`: reminders due today (L69).
 
 Questionnaire answers join with slice 58, when the questionnaire's `client` entries are written.
@@ -36,6 +37,7 @@ from .rules import policy
 from .rules import requests as request_rules
 from .rules import sections as section_rules
 from .selectors import entries as entry_rows
+from .selectors import going
 from .selectors import requests as request_rows
 
 
@@ -65,12 +67,12 @@ def _notes(ids):
     return out
 
 
-def _pending(ids, waiting, links, now):
+def _pending(ids, waiting, links, now, gone):
     """{deal_id: (pending, ready, sections)} from the waiting entries, the census counts and the client's files."""
     out = {}
     for deal_id in ids:
         entries = waiting.get(deal_id, [])
-        sections = section_rules.counts(entries, links, now)
+        sections = section_rules.counts(entries, links, now, gone.get(deal_id, frozenset()))
         intake = sum(1 for entry in entries if entry.surface == 'intake')
         pending = {'intake': intake, 'census': 0, 'people': 0, 'documents': 0}
         ready = {surface: sections[surface]['to_review'] for surface in section_rules.SURFACES}
@@ -182,7 +184,9 @@ def collect(deal_ids, now=None):
         deal_id: [request_rows.row(request, links.get(request.id, []), now) for request in found.get(deal_id, [])]
         for deal_id in ids
     }
-    pending = _pending(ids, entry_rows.waiting(ids), by_id, now)
+    waiting = entry_rows.waiting(ids)
+    opened = going.opens([request for group in found.values() for request in group], links, now)
+    pending = _pending(ids, waiting, by_id, now, going.refs(ids, waiting, opened))
     notes = _notes(ids)
     deal_links = defaultdict(list)
     for request_list in found.values():

@@ -1,6 +1,6 @@
 from django.urls import include, path
 
-from . import decision_views, views
+from . import decision_views, note_views, views
 from .portal import views as portal_views
 
 urlpatterns = [
@@ -9,6 +9,13 @@ urlpatterns = [
     path('deals/<int:pk>/review/approve/', decision_views.ApproveView.as_view()),
     path('deals/<int:pk>/review/reject/', decision_views.RejectView.as_view()),
     path('deals/<int:pk>/review/undo/', decision_views.UndoView.as_view()),
+    path('deals/<int:pk>/review/notes/', note_views.NotesView.as_view()),
+    path('deals/<int:pk>/review/notes/<int:nid>/', note_views.NoteView.as_view()),
+    path('deals/<int:pk>/review/tray/', note_views.TrayView.as_view()),
+    path('deals/<int:pk>/review/tray/remove/', note_views.TrayRemoveView.as_view()),
+    path('deals/<int:pk>/review/tray/send/', note_views.TraySendView.as_view()),
+    path('deals/<int:pk>/review/seen/', note_views.SeenView.as_view()),
+    path('deals/<int:pk>/review/request/', note_views.RequestPageView.as_view()),
     path('deals/<int:pk>/review/requests/', views.RequestsView.as_view()),
     path('deals/<int:pk>/review/requests/<int:rid>/close/', views.CloseView.as_view()),
     path('links/<int:lid>/', views.LinkView.as_view()),

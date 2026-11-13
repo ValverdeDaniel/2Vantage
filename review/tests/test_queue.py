@@ -72,7 +72,7 @@ def test_L16_the_census_queue_groups_by_column_and_change_and_splits_the_phases(
     submitted(link)
     typing(other)
     found = _queue(api, deal, surface='census')
-    assert found['phases'] == {'to_review': 3, 'in_progress': 1}
+    assert found['phases'] == {'to_review': 3, 'in_progress': 1, 'going_back': 0}
     groups = {group['key']: (group['label'], group['count']) for group in found['groups']}
     assert groups == {'zip:changed': ('ZIP', 1), 'zip:filled': ('ZIP', 1), '*:added': ('New people', 1)}
     by_ref = {item['ref']: item for item in found['items']}

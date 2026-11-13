@@ -8,6 +8,7 @@ from django.test.utils import CaptureQueriesContext
 from conftest import check_permissions, make_deal, sweep_gets
 from review import services, summary
 from review.models import ClientLink, ClientRequest
+from review.services import tray
 
 pytestmark = pytest.mark.django_db
 
@@ -24,7 +25,15 @@ def made(user, deal):
 
 def samples(deal, made):
     token = made.links[0][1].rsplit('/', 1)[1]
+    draft = tray.ask(None, deal.id, ['intake:fein']).drafts[0]
     return {
+        'api/deals/<int:pk>/review/notes/': {'pk': deal.id},
+        'api/deals/<int:pk>/review/notes/<int:nid>/': {'pk': deal.id, 'nid': draft.id},
+        'api/deals/<int:pk>/review/tray/': {'pk': deal.id},
+        'api/deals/<int:pk>/review/tray/remove/': {'pk': deal.id},
+        'api/deals/<int:pk>/review/tray/send/': {'pk': deal.id},
+        'api/deals/<int:pk>/review/seen/': {'pk': deal.id},
+        'api/deals/<int:pk>/review/request/': {'pk': deal.id},
         'api/deals/<int:pk>/review/board/': {'pk': deal.id},
         'api/deals/<int:pk>/review/queue/': {'pk': deal.id},
         'api/deals/<int:pk>/review/approve/': {'pk': deal.id},
@@ -39,9 +48,11 @@ def samples(deal, made):
 
 
 ALL = {'signed_out': 401, 'producer': 200, 'admin': 200}
+MADE = {'signed_out': 401, 'producer': 201, 'admin': 201}
 # The portal (rule 11): public; a staff session reads it and every write answers 403.
 PUBLIC_READ = {'signed_out': 200, 'producer': 200, 'admin': 200}
 PUBLIC_WRITE = {'signed_out': 200, 'producer': 403, 'admin': 403}
+QUESTION = {'questions': [{'ref': 'census:file', 'text': 'Which file do you need?'}]}
 PORTAL = [
     'api/portal/<str:token>/',
     'api/portal/<str:token>/verify/',
@@ -52,6 +63,8 @@ PORTAL = [
     'api/portal/<str:token>/sign/',
     'api/portal/<str:token>/stamp/',
     'api/portal/<str:token>/census-template/',
+    'api/portal/<str:token>/questions/',
+    'api/portal/<str:token>/seen/',
 ]
 MATRIX = [
     ('GET', 'api/deals/<int:pk>/review/board/', ALL),
@@ -59,6 +72,20 @@ MATRIX = [
     ('POST', 'api/deals/<int:pk>/review/approve/', ALL, {'refs': ['intake:fein']}),
     ('POST', 'api/deals/<int:pk>/review/reject/', ALL, {'refs': ['intake:fein']}),
     ('POST', 'api/deals/<int:pk>/review/undo/', ALL, {'refs': ['intake:fein']}),
+    ('POST', 'api/deals/<int:pk>/review/notes/', MADE, {'kind': 'note', 'ref': 'intake:fein', 'text': 'Check it.'}),
+    (
+        'PATCH',
+        'api/deals/<int:pk>/review/notes/<int:nid>/',
+        {**ALL, 'producer': 409, 'admin': 409},
+        {'action': 'resolve'},
+    ),
+    ('DELETE', 'api/deals/<int:pk>/review/notes/<int:nid>/', ALL),
+    ('GET', 'api/deals/<int:pk>/review/tray/', ALL),
+    ('POST', 'api/deals/<int:pk>/review/tray/', MADE, {'refs': ['intake:dba']}),
+    ('POST', 'api/deals/<int:pk>/review/tray/remove/', ALL, {'ids': []}),
+    ('POST', 'api/deals/<int:pk>/review/tray/send/', ALL, {}),
+    ('POST', 'api/deals/<int:pk>/review/seen/', ALL, {}),
+    ('GET', 'api/deals/<int:pk>/review/request/', ALL),
     ('POST', 'api/deals/<int:pk>/review/requests/', {**ALL, 'producer': 201, 'admin': 201}, ASK),
     ('POST', 'api/deals/<int:pk>/review/requests/<int:rid>/close/', ALL, {'reason': 'cancelled'}),
     ('PATCH', 'api/links/<int:lid>/', ALL, {'action': 'mark_sent', 'copied': True}),
@@ -74,6 +101,8 @@ MATRIX = [
     ('POST', 'api/portal/<str:token>/sign/', PUBLIC_WRITE, {'name': 'Jordan Example'}),
     ('POST', 'api/portal/<str:token>/people/', {**PUBLIC_WRITE, 'signed_out': 400}, {'people': []}),
     ('POST', 'api/portal/<str:token>/files/', {**PUBLIC_WRITE, 'signed_out': 400}, {'slot': 'census_file'}),
+    ('POST', 'api/portal/<str:token>/questions/', {**PUBLIC_WRITE, 'signed_out': 201}, QUESTION),
+    ('POST', 'api/portal/<str:token>/seen/', PUBLIC_WRITE, {}),
 ]
 
 

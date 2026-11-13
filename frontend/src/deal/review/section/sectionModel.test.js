@@ -18,6 +18,9 @@ describe('L14 the section bar counts', () => {
     expect(sectionNumbers(section)).toEqual({ review: 4, waiting: 1, missing: 4, inTray: 0 });
     expect(sectionNumbers(undefined)).toEqual({ review: 0, waiting: 0, missing: 0, inTray: 0 });
   });
+  it('L16 waiting also holds the answers sent back and not answered since (slice 56)', () => {
+    expect(sectionNumbers({ ...section, going_back: 2, in_tray: 1 })).toEqual({ review: 4, waiting: 3, missing: 4, inTray: 1 });
+  });
 
   it('says who answered and what is ready', () => {
     const returned = returnedOf(section);

@@ -23,10 +23,13 @@ def _plural(count, noun):
 def _intake_words(intake):
     out = []
     scope = intake.get('scope')
+    keys = intake.get('keys') or []
     if scope == 'selected':
-        out.append(_plural(len(intake.get('keys') or []), 'intake question'))
+        out.append(_plural(len(keys), 'intake question'))
     elif scope:
         out.append(INTAKE_WORDS[scope])
+        if keys:
+            out.append(f'{_plural(len(keys), "more intake question")}')
     out += [BLOCK_WORDS[block] for block in intake.get('blocks') or [] if block in BLOCK_WORDS]
     return out
 
@@ -34,11 +37,14 @@ def _intake_words(intake):
 def _census_words(census):
     out = []
     scope = census.get('scope', 'none')
+    cells = census.get('cells') or []
     if scope == 'selected':
-        out.append(_plural(len(census.get('cells') or []), 'census value'))
+        out.append(_plural(len(cells), 'census value'))
     elif scope in CENSUS_WORDS:
         columns = census.get('columns') or []
         out.append(_plural(len(columns), 'census column') if columns else CENSUS_WORDS[scope])
+        if cells:
+            out.append(_plural(len(cells), 'more census value'))
     if census.get('file'):
         out.append('The census file')
     return out

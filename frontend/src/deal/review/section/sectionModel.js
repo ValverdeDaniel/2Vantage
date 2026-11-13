@@ -2,12 +2,15 @@
 // `reviewrequest/ReviewSectionBar.jsx`). Pure, over one section of the Board payload's `sections` (the deal page's one
 // count, so the bar, the lanes and the pills cannot disagree).
 
-/** The three lane counts and the tray's: to review (ready answers and questions), waiting (still typing), missing. */
+/**
+ * The three lane counts and the tray's: to review (ready answers and questions), waiting on the client (still typing,
+ * and answers sent back and not answered since: slice 56's going back, as the old bar counted them), missing.
+ */
 export function sectionNumbers(section) {
   const found = section || {};
   return {
     review: (found.to_review || 0) + (found.questions || 0),
-    waiting: found.in_progress || 0,
+    waiting: (found.in_progress || 0) + (found.going_back || 0),
     missing: found.missing || 0,
     inTray: found.in_tray || 0,
   };

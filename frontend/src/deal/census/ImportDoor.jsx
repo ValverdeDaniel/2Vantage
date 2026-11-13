@@ -5,13 +5,14 @@ import { errorText } from '../../lib/errors';
 import Button from '../../ui/Button';
 import Select from '../../ui/Select';
 import { useToast } from '../../ui/useToast';
+import AskButton from '../shared/AskButton';
 
 /*
  * The import door (plan.md §5.3.2, §8.10; C12): a census spreadsheet goes in through documents' one upload door (kind
  * Census), and its columns are mapped next; a census file already on the deal can be mapped as it is. Laid out in the
  * old empty roster's row of doors (`bnf-census-empty-actions`); `first` leads the row (Claude's "Scan the census with
- * Claude ▸", D41; slice 51) and `children` follow it (adding the first employee by hand). Asking the client for the
- * file comes with the request tray.
+ * Claude ▸", D41; slice 51) and `children` follow it (adding the first employee by hand), then "＋ Ask for their census
+ * file", into the request tray (L54; slice 56; old 891f1b3 CensusTab `censusFileAsk`).
  */
 export default function ImportDoor({
   dealId,
@@ -79,6 +80,14 @@ export default function ImportDoor({
         </>
       )}
       {children}
+      <AskButton
+        dealId={dealId}
+        refName="census:file"
+        label="＋ Ask for their census file"
+        className="btn btn-violet btn-sm"
+        inTrayWords="✓ Census file in tray"
+        title="Put their census file in the request tray: their link asks them to upload it, any layout"
+      />
     </div>
   );
 }

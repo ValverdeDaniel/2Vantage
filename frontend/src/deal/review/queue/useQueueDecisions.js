@@ -3,6 +3,7 @@ import { patchMember } from '../../../api/census';
 import { useInvalidateDeal } from '../../../api/deals';
 import { patchAnswers } from '../../../api/intake';
 import { useDecide } from '../../../api/review';
+import { useNote } from '../../../api/reviewTray';
 import { errorText } from '../../../lib/errors';
 import { useToast } from '../../../ui/useToast';
 import { approvedWords, cellOf, DECIDED } from './queueWords';
@@ -11,12 +12,15 @@ import { approvedWords, cellOf, DECIDED } from './queueWords';
  * Every write the review queue makes (L16, L17, L43, C28; old 891f1b3 `CensusClientReview.jsx` onDecide, acceptAll),
  * each through the endpoint that owns it: A approves through review (`approve/`, the owner lands it with origin
  * client), U "Keep ours" is review's reject, E "Correct" is the owner's own typed write (intake's answers, the census
- * cell), which closes the client's answer as replaced; ↶ Undo takes an approval back (`undo/`). `decided` is this
- * visit's record of it, by ref, for the queue's marks; a decision reads every deal query again (useDecide).
+ * cell), which closes the client's answer as replaced; ↶ Undo takes an approval back (`undo/`). X "Send back" puts a
+ * send-back with its note in the request tray (slice 56: `review/notes/`, sent from the request page); N writes a team
+ * note and leaves the item open. `decided` is this visit's record of it, by ref, for the queue's marks; a decision
+ * reads every deal query again (useDecide).
  */
 export default function useQueueDecisions(dealId) {
   const toast = useToast();
   const decide = useDecide(dealId);
+  const note = useNote(dealId);
   const invalidate = useInvalidateDeal();
   const [decided, setDecided] = useState({});
   const [busyId, setBusyId] = useState(null);
@@ -31,10 +35,16 @@ export default function useQueueDecisions(dealId) {
     else await patchAnswers(dealId, { answers: { [cell.key]: value } });
   }
 
-  async function onDecide(item, { action, value }) {
+  async function onDecide(item, { action, value, note: words = '' }) {
     setBusyId(item.id);
     try {
-      if (action === 'approve') {
+      if (action === 'note') {
+        await note.mutateAsync({ kind: 'note', ref: item.ref, text: words, audience: 'team' });
+        toast.success('Team note saved');
+      } else if (action === 'reject') {
+        await note.mutateAsync({ kind: 'sendback', ref: item.ref, text: words });
+        mark(item, 'sentback', { value: words });
+      } else if (action === 'approve') {
         await decide.mutateAsync({ door: 'approve', refs: [item.ref] });
         mark(item, 'approved');
       } else if (action === 'clear') {

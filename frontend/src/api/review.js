@@ -73,7 +73,9 @@ export function useLinkAction(dealId) {
   return useMutation({
     mutationFn: async ({ linkId, ...body }) => (await api.patch(`links/${linkId}/`, body)).data,
     onSuccess: (answer) => withRequest(queryClient, dealId, answer.request),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: reviewKey(dealId, 'board') }),
+    // The request page's who bar and the tray's destinations read links too (slice 56).
+    onSettled: () =>
+      ['board', 'request', 'tray'].forEach((area) => queryClient.invalidateQueries({ queryKey: reviewKey(dealId, area) })),
   });
 }
 

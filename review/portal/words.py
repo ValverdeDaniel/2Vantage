@@ -3,7 +3,12 @@ words (891f1b3 `BenefitsClientPortal.jsx` CENSUS_GROUP_LABELS and COMPLIANCE_TYP
 `_client_checklist`)."""
 
 # The to-do list's rows (L81).
-RAIL = {'intake': 'Company intake form', 'people': 'Employee details', 'census': 'Employee census file'}
+RAIL = {
+    'intake': 'Company intake form',
+    'people': 'Employee details',
+    'census': 'Employee census file',
+    'followups': 'Follow-ups',
+}
 
 # A person's census fields, under an employer's headings, not the producer's ("Enrollment — Dental").
 GROUPS = {

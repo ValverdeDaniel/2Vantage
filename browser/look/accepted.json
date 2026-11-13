@@ -836,7 +836,7 @@
       "signed_on": null,
       "check": "pixels",
       "item": "B1",
-      "why": "Slices 11 and 39 build the view pills (B36), the four question cards (B1–B8), the \"Required to market\" banner (B9), \"These came from the client\" and ☑ Select fields (B10), the coverage card, Current coverage and Lines to quote. Slice 40 builds the ready badge and Market anyway ▸ (B33, B34), the Marketing readiness checklist (B25–B27), Contacts (B13) and Compliance & authorizations (B29, B31). Pending: the questionnaire and stop-loss form pickers on the medical row and the checklist (B22, slice 42); ＋ Ask on the checklist rows, the census row's ＋ Ask ▸ and ＋ Ask all N (the request tray, slice 56); ＋ Add request (Review's asks, slice 53); the section bar's Next line (L3, L4; slice 56). The section bar itself is built (L14; slice 55): its \"N missing\" counts the questions needed to market plus the checklist documents not in yet, as the old did, one more here because Legal Company Name is not prefilled (M.5 B34). The Goals card ends with Client guidance (§4.5 †). GD1 has no intake answers, so every needed question reads Missing on both sides."
+      "why": "Slices 11 and 39 build the view pills (B36), the four question cards (B1–B8), the \"Required to market\" banner (B9), \"These came from the client\" and ☑ Select fields (B10), the coverage card, Current coverage and Lines to quote. Slice 40 builds the ready badge and Market anyway ▸ (B33, B34), the Marketing readiness checklist (B25–B27), Contacts (B13) and Compliance & authorizations (B29, B31). Slice 56 builds the request tray's \"＋ Ask\" on each blank question (B12) and on each missing document row (B27), with \"✓ In tray\" and \"Asked <date>\", and the tray's bar at the tab's foot when something waits (L49). Pending: the questionnaire and stop-loss form pickers on the medical row and the checklist (B22, slice 42), whose rows ask for the form online (slice 58); the census row's ＋ Ask ▸ (the census Missing lane) and ＋ Ask all N (L6; slice 57); ＋ Add request (L121, in no slice's row yet; OQ87's default, waiting in the tray, holds when it comes); the section bar's Next line (L3, L4; slice 57). The section bar itself is built (L14; slice 55): its \"N missing\" counts the questions needed to market plus the checklist documents not in yet, as the old did, one more here because Legal Company Name is not prefilled (M.5 B34). The Goals card ends with Client guidance (§4.5 †). GD1 has no intake answers, so every needed question reads Missing on both sides."
     },
     {
       "screen": "gd1.intake",
@@ -847,7 +847,7 @@
       "signed_on": null,
       "check": "classes",
       "item": "B1",
-      "why": "The checklist, contacts, authorizations and ready badge are built (slice 40; bnf-marketing-*, bnf-ready-badge, bnf-esign-*, bnf-compliance-row); still missing: the form pickers' bnf-cvg-forms, bnf-cvg-formpick, bnf-q-formpick and bnf-q-formselect (B22, slice 42), ＋ Add request's bnf-ask-form (Review's asks, slice 53), and the section bar's Next line (rr-sbar-next*, rr-sbar-why, rr-sbar-actions; L3, L4, slice 56); the bar's counts line is built (L14; slice 55)."
+      "why": "The checklist, contacts, authorizations and ready badge are built (slice 40; bnf-marketing-*, bnf-ready-badge, bnf-esign-*, bnf-compliance-row); still missing: the form pickers' bnf-cvg-forms, bnf-cvg-formpick, bnf-q-formpick and bnf-q-formselect (B22, slice 42), ＋ Add request's bnf-ask-form (L121), and the section bar's Next line (rr-sbar-next*, rr-sbar-why, rr-sbar-actions; L3, L4, slice 57); the request tray's bnf-ask-btn, bnf-in-tray and rr-followup-* are built (B12, B27, L49; slice 56); the bar's counts line is built (L14; slice 55)."
     },
     {
       "screen": "gd1.intake",
@@ -858,7 +858,7 @@
       "signed_on": null,
       "check": "style",
       "item": "M112",
-      "why": "The nav, the tab title, the buttons and the cards sit higher or elsewhere: the header strip replaces the journey stepper and the NEXT bar, the checklist's pickers and asks are pending (slices 42, 53, 56), and the sidebar has fewer tabs."
+      "why": "The nav, the tab title, the buttons and the cards sit higher or elsewhere: the header strip replaces the journey stepper and the NEXT bar, the checklist's pickers and ＋ Add request are pending (slice 42; L121) while its ＋ Ask is built (B27; slice 56), and the sidebar has fewer tabs."
     },
     {
       "screen": "gd1.intake",
@@ -1056,7 +1056,7 @@
       "signed_on": null,
       "check": "style",
       "item": "M112",
-      "why": "The nav, the tab title, the buttons and the cards sit higher or elsewhere: the header strip replaces the journey stepper and the NEXT bar, the checklist's pickers and asks are pending (slices 42, 53, 56), and the sidebar has fewer tabs."
+      "why": "The nav, the tab title, the buttons and the cards sit higher or elsewhere: the header strip replaces the journey stepper and the NEXT bar, the checklist's pickers and ＋ Add request are pending (slice 42; L121) while its ＋ Ask is built (B27; slice 56), and the sidebar has fewer tabs."
     },
     {
       "screen": "gd6.intake",
@@ -1075,7 +1075,7 @@
       "check": "pixels",
       "selector": null,
       "item": "B10",
-      "why": "The head's ready badge (\"Blocked — required items open\"), Market anyway ▸ (B33, B34; slice 40) and Intake's ✦ Work with Claude (D134; slice 51, the old words and title) are built and match, the head's first row as the old one; ＋ Ask all N, beside Market anyway ▸ on its second row, waits for the request tray (slice 56).",
+      "why": "The head's ready badge (\"Blocked — required items open\"), Market anyway ▸ (B33, B34; slice 40) and Intake's ✦ Work with Claude (D134; slice 51, the old words and title) are built and match, the head's first row as the old one; ＋ Ask all N, beside Market anyway ▸ on its second row, waits for the Missing lane's \"Ask all\" (L6; slice 57); the request tray it fills is built (slice 56).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1086,7 +1086,7 @@
       "check": "pixels",
       "selector": null,
       "item": "B26",
-      "why": "The Marketing readiness checklist is built (B25–B27; slice 40) and matches row for row; pending: the medical row's and the checklist's questionnaire and stop-loss pickers (\"Fillable form\", \"Needed for this group?\"; B22, slice 42), ＋ Ask on each document row and the census row's ＋ Ask ▸ (the request tray, slice 56) and ＋ Add request (Review's asks, slice 53), so the rows are shorter and the cards below start higher.",
+      "why": "The Marketing readiness checklist is built (B25–B27; slice 40) and matches row for row; pending: the medical row's and the checklist's questionnaire and stop-loss pickers (\"Fillable form\", \"Needed for this group?\"; B22, slice 42), the census row's ＋ Ask ▸ (L6; slice 57) and ＋ Add request (L121), so the rows are shorter and the cards below start higher; ＋ Ask on each missing document row is built (B27, L54; slice 56), the old secondary button where the old row had it, except on the questionnaire and stop-loss rows, which ask for the form online (slice 58).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1097,7 +1097,7 @@
       "check": "pixels",
       "selector": null,
       "item": "B13",
-      "why": "Contacts (B13) and Compliance & authorizations with the BOR e-signature (B29, B31) are built (slice 40) and match the old cards; they sit higher only because the cards above are shorter (the pickers and asks of slices 42, 53 and 56). The × on a subcard is a button (B13: removing asks first).",
+      "why": "Contacts (B13) and Compliance & authorizations with the BOR e-signature (B29, B31) are built (slice 40) and match the old cards; they sit higher only because the cards above are shorter (the pickers of slice 42 and ＋ Add request, L121). The × on a subcard is a button (B13: removing asks first).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1108,7 +1108,7 @@
       "check": "pixels",
       "selector": null,
       "item": "B36",
-      "why": "The section bar (\"0 to review · 0 waiting on the client · N missing\", \"Review & requests · all sections ▸\") is built (L14; slice 55) and stands where the old one does; the view pills' Board, Request and Review, with the Review pill's count, are drawn and cannot be picked until the section views arrive (B36, L45; slices 56–57).",
+      "why": "The section bar (\"0 to review · 0 waiting on the client · N missing\", \"Review & requests · all sections ▸\") is built (L14; slice 55) and stands where the old one does; the view pills' Board, Request and Review, with the Review pill's count, are drawn and cannot be picked until the section views arrive (B36, L45; slice 57).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1141,7 +1141,7 @@
       "check": "style",
       "selector": ".bb-nav",
       "item": "M112",
-      "why": "The nav, the tab title, the buttons and the cards sit higher or lower: the header strip replaces the journey stepper, the checklist's pickers and asks are pending (slices 42, 53, 56), and the sidebar has fewer tabs.",
+      "why": "The nav, the tab title, the buttons and the cards sit higher or lower: the header strip replaces the journey stepper, the checklist's pickers and ＋ Add request are pending (slice 42; L121) while its ＋ Ask is built (B27; slice 56), and the sidebar has fewer tabs.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1295,7 +1295,7 @@
       "check": "pixels",
       "selector": null,
       "item": "C31",
-      "why": "The toolbar's export picker (carrier census formats and Warner's request forms) is gone: ⬇ Export downloads the census workbook (§9.2) and the carrier files moved to the RFP's format lens (C31, C36, C37, K79–K89); ＋ Ask ▸ is greyed until the request tray (C8, slice 53); ⟲ Re-map source file shows because 2Vantage's GD4 was imported from its file, which the old parity load does not upload (GD4's parity left_out).",
+      "why": "The toolbar's export picker (carrier census formats and Warner's request forms) is gone: ⬇ Export downloads the census workbook (§9.2) and the carrier files moved to the RFP's format lens (C31, C36, C37, K79–K89); ＋ Ask ▸ (the census gap panel, L46) is greyed until the census request view (slice 57), while ☑ Select cells' ＋ Ask N puts picked values in the request tray (C8, L54; slice 56); ⟲ Re-map source file shows because 2Vantage's GD4 was imported from its file, which the old parity load does not upload (GD4's parity left_out).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1383,7 +1383,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A25",
-      "why": "Both empty rosters open the ✦ Work with Claude drawer by themselves (C10) and lead the row of doors with \"Scan the census with Claude ▸\" (D41; slice 51, built behind the PHI-gate switch). 2V adds the import door (C12) beside it and keeps the census reader's own words in the drawer's head (the census reads always wait); the old drawer's census chat copy and \"＋ Ask for their census file\" wait for the request tray (slice 56).",
+      "why": "Both empty rosters open the ✦ Work with Claude drawer by themselves (C10) and lead the row of doors with \"Scan the census with Claude ▸\" (D41; slice 51, built behind the PHI-gate switch). 2V adds the import door (C12) beside it and keeps the census reader's own words in the drawer's head (the census reads always wait); the old drawer's census chat copy waits; \"＋ Ask for their census file\" is built at the end of the row of doors (L54; slice 56).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1405,7 +1405,7 @@
       "check": "pixels",
       "selector": null,
       "item": "C10",
-      "why": "The empty roster's row of doors: \"Import a census file ▸\" (slice 12's way in, C12) where the old scan door stood, then \"＋ Add the first employee by hand\"; \"＋ Ask for their census file\" waits for the request tray (slice 53). The subtitle says what is built: the columns are mapped, validated and made exportable, with no chat with Claude yet.",
+      "why": "The empty roster's row of doors: \"Import a census file ▸\" (slice 12's way in, C12) where the old scan door stood, then \"＋ Add the first employee by hand\"; then \"＋ Ask for their census file\" (the request tray, L54; slice 56), the old violet button with its words, after the doors rather than beside the scan door. The subtitle says what is built: the columns are mapped, validated and made exportable, with no chat with Claude yet.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2450,7 +2450,7 @@
       "check": "pixels",
       "selector": null,
       "item": "B22",
-      "why": "The questionnaire and stop-loss form pickers on the coverage card's medical row (K15, B22) come with slice 42's pickers; the checklist's ＋ Ask buttons and ＋ Add request wait for the request tray and Review's asks (K32; slices 53, 56); the checklist's tier and the renewal row read as on gd1.intake (B25).",
+      "why": "The questionnaire and stop-loss form pickers on the coverage card's medical row (K15, B22) come with slice 42's pickers; ＋ Add request waits for Review's free-text asks (K32, L121), while the checklist's ＋ Ask on a missing document is built (B27; slice 56); the checklist's tier and the renewal row read as on gd1.intake (B25).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2824,7 +2824,7 @@
       "check": "pixels",
       "selector": null,
       "item": "L3",
-      "why": "Slice 53 builds the Board’s head with its readiness strip (L2), the View row with its own counts (L1, L28) and the Waiting lane (L7, L8); slice 55 adds the To review lane (L9); the Next banner (L3, L4), the client’s questions (L5) and the Missing lane (L6) arrive with slices 56–57, so Waiting and To review stand in the first two columns of the lanes row, where the old has Missing, Waiting and To review.",
+      "why": "Slice 53 builds the Board’s head with its readiness strip (L2), the View row with its own counts (L1, L28) and the Waiting lane (L7, L8); slice 55 adds the To review lane (L9); slice 56 the client’s open questions above the lanes (L5, drawn only when a question is open, so not on GD1); the Next banner (L3, L4) and the Missing lane (L6) arrive with slice 57, so Waiting and To review stand in the first two columns of the lanes row, where the old has Missing, Waiting and To review.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2857,7 +2857,7 @@
       "check": "classes",
       "selector": null,
       "item": "L3",
-      "why": "The Next banner’s and the Missing lane’s classes (bnf-board-next*, bnf-board-lane-rose, bnf-board-card*, bnf-board-section) wait for slices 56–57 (L3–L6; GD1 has nothing back, so the To review lane draws no card either); the header strip’s bnf-ov-*, bb-stage-pill, bnf-select, bnf-archive-*, bnf-line-chips and bb-chip are new (M112).",
+      "why": "The Next banner’s and the Missing lane’s classes (bnf-board-next*, bnf-board-lane-rose, bnf-board-card*, bnf-board-section) wait for slice 57 (L3, L4, L6; GD1 has nothing back, so the To review lane draws no card either); the header strip’s bnf-ov-*, bb-stage-pill, bnf-select, bnf-archive-*, bnf-line-chips and bb-chip are new (M112).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2868,7 +2868,7 @@
       "check": "style",
       "selector": "body",
       "item": "L3",
-      "why": "The page is shorter: the Next banner and the Missing lane wait for slices 56–57 (L3–L6).",
+      "why": "The page is shorter: the Next banner and the Missing lane wait for slice 57 (L3, L4, L6).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2879,7 +2879,7 @@
       "check": "style",
       "selector": ".btn-primary",
       "item": "L3",
-      "why": "The old page’s one primary button is the Next banner’s Go ▸ (L3, L4), which waits for slices 56–57.",
+      "why": "The old page’s one primary button is the Next banner’s Go ▸ (L3, L4), which waits for slice 57.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2989,7 +2989,7 @@
       "check": "style",
       "selector": ".bnf-board-lane-head",
       "item": "L3",
-      "why": "The lanes sit lower (the header strip, M112) though there is no Next banner above them yet (L3, slices 56–57).",
+      "why": "The lanes sit lower (the header strip, M112) though there is no Next banner above them yet (L3, slice 57).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -4629,6 +4629,193 @@
       "selector": ".bnf-agenda-detail",
       "item": "I46",
       "why": "The first detail line is the first blocked step's reason, lower down with the extra steps and the header strip (I46, I48, I53, M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "L29",
+      "why": "Slice 56 builds the request page's frame: the head with \"N need you\" (L24), the who bar with each open link, Copy link and View ▸, and \"A new link…\" (L26), the tabs Intake, Census and Documents with their counts (L28) and the Show chips (L27) in one row under the who bar, then the ask list on the left, \"Required to market\" lifted first (L29). The old's middle column, their form or our rows (L30), and its comment margin (L31), edit mode (L34, L35), the Next banner with Log a call (L25) and the key legend (L24, L32) come with slice 57, so the middle holds Going out instead: the request tray by the link each item goes on, with Send and Choose who ▸ (L37, L53), and the picked item's card with its thread stands on the right (L22). The Questionnaire tab joins with slice 58. GD1 asks nothing yet, so Going out reads empty.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "L30",
+      "why": "The old's middle form (rr-reqform*, bnf-intake-row in our rows), the Next banner (rr-next*), the comment margin (rr-margin*, rr-card*), Edit and Note (rr-edit*), the asking picker (rr-rail-asking) and the folded on-file rows (rr-rail-onfile) come with slice 57 (L25, L30–L35); the middle's Going out brings rr-cart, rr-dest* and rr-sheet-* (L37), and the tabs and Show chips are the View row's bnf-viewtab pills (L27, L28).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": "body",
+      "item": "L30",
+      "why": "The page is shorter: their form or our rows (L30) fill the old's middle column, which slice 57 brings.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-viewtab",
+      "item": "L28",
+      "why": "The tabs and Show chips are pills in one row under the who bar (L27, L28), where the old drew the Show chips in the who card and the tabs as underlined words over the form; their box also moves with the header strip (M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".rr-who",
+      "item": "M112",
+      "why": "Only the box moves: the who bar sits below the header strip (M112), with no People & links ▸ until slice 57 (L38).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".rr-rail",
+      "item": "L30",
+      "why": "The ask list starts higher: the Next banner above it (L25) and the tab strip's Edit, Note and Their form / Our form (L30, L34) come with slice 57.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".rr-rail-sechead",
+      "item": "L29",
+      "why": "Only the box moves: the ask list starts higher (L25, L30; slice 57).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".rr-rail-q",
+      "item": "L29",
+      "why": "The first row is Legal Company Name, needed and missing here, where the old's first row is FEIN: GD1's Legal Company Name is not prefilled in 2Vantage (M.5 B34), so it is lifted into Required to market (L29).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".rr-rail-chip",
+      "item": "L29",
+      "why": "The first chip differs: the old's Required to market rows carry no chip and its first chip is a folded section's, 2Vantage's first is a row's own (L29).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".rr-cart-empty",
+      "item": "L37",
+      "why": "Going out stands in the middle column (L37, L53) while the old folds it behind Going out ▸ under the form (slice 57 brings the form, L30).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".btn-primary",
+      "item": "L25",
+      "why": "The old page's one primary button is the Next banner's Go ▸ (L25), which comes with slice 57.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".btn-secondary",
+      "item": "M112",
+      "why": "The secondary buttons are the header strip's Activity, Stage, Mark as lost… and Archive… (M112); the old page's are its Next banner's Log a call and the tab strip's Edit and Note (L25, L34; slice 57).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-nav",
+      "item": "A21",
+      "why": "The sidebar is shorter and starts higher: no client status chip or readiness meters (A24, slice 61) and fewer built tabs (Overview, Agenda; OQ9).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-nav-item.active",
+      "item": "A21",
+      "why": "Only the box moves: the sidebar has no client status chip above the nav and no Overview or Agenda tabs above 1 · Get to Market yet (A24, OQ9).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-nav-group-label",
+      "item": "A21",
+      "why": "Only the box moves: the group label sits higher, with no Overview or Agenda tabs above it yet (OQ9).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-tab-title",
+      "item": "M112",
+      "why": "Only the box moves: the header strip above every tab (M112) replaces the journey stepper, so the tab sits lower.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.request",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-panel",
+      "item": "M112",
+      "why": "The first .bb-panel is 2Vantage's header strip (M112); the old request page has no panel before its who card.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

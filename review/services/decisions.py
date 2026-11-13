@@ -9,6 +9,8 @@ owner's row itself; `review.owners` names who decides each section.
 - `reject(user, deal_id, refs)`: "Keep ours" (L17: a reject, so one writer).
 - `undo(user, deal_id, refs)`: takes approvals back (C28 "undo approval"), through the owner's `revert_approval`.
 Each returns Decided([ref], [Activity row]); the owners record their own rows (L.6: "the owners record approvals").
+An approval or "Keep ours" answers what was sent back about the answer (slice 56): its send-backs and asks that went
+out close (a person decided), so the item leaves Going back and the client's page no longer asks it again.
 Lock order: the Deal first, then the owners in chain order (intake, then census), each locking its rows by id (O.3.7).
 A ref with nothing to decide (decided meanwhile, by someone else) is skipped, so a repeated click changes nothing.
 """
@@ -21,10 +23,14 @@ from rest_framework.exceptions import ValidationError
 from deals import clock
 from deals.models import Deal
 
+from ..models import ASK_KINDS, ReviewNote
 from ..owners import OWNERS
 from ..rules import refs as ref_rules
 from ..rules import sections as section_rules
 from ..selectors import entries as entry_rows
+from ..selectors import going
+from ..selectors import notes as note_rows
+from .common import user_id
 
 Decided = namedtuple('Decided', 'refs activity')
 
@@ -60,16 +66,32 @@ def _through(user, deal_id, by_surface, door):
         decided = getattr(OWNERS[surface], door)(user, deal_id, slots)
         refs += [ref_rules.ref_of(surface, slot) for slot in decided[0]]
         rows += [row for row in decided[1] if row is not None]
+    if door != 'revert_approval':
+        _close_asks(user, deal_id, set(refs))
     return Decided(refs, rows)
+
+
+def _close_asks(user, deal_id, refs):
+    """The send-backs and asks that went out about decided answers close (a person answered them)."""
+    if not refs:
+        return
+    sent = ReviewNote.objects.filter(
+        deal_id=deal_id, kind__in=ASK_KINDS, sent_at__isnull=False, resolved_at__isnull=True
+    ).select_for_update()
+    ids = [note.id for note in sent if note_rows.ref_of(note) in refs]
+    if ids:
+        ReviewNote.objects.filter(pk__in=ids).update(resolved_at=clock.now(), resolved_by_id=user_id(user))
 
 
 def section_refs(deal_id, surface, *, ready_only=True, include_idle=False, now=None):
     """The refs a section's "Approve N ready" (or, without `ready_only`, "Approve all") takes now."""
+    now = now or clock.now()
     found = entry_rows.waiting([deal_id], (surface,)).get(deal_id, [])
+    back = going.refs([deal_id], {deal_id: found}, going.opens_for([deal_id], now))[deal_id]
     if not ready_only:
-        return [entry.ref for entry in found]
+        return [entry.ref for entry in found if entry.ref not in back]
     links = entry_rows.links_of(found)
-    return section_rules.ready_refs(found, links, now or clock.now(), include_idle=include_idle)
+    return section_rules.ready_refs(found, links, now, include_idle=include_idle, going=back)
 
 
 @transaction.atomic

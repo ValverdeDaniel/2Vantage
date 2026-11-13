@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Link, Navigate, useParams } from 'react-router';
 import { useDeal } from '../../api/deals';
 import { useMeta } from '../../api/meta';
@@ -14,6 +14,9 @@ import DealSidebar from './DealSidebar';
 import { tabFor, tabLabel } from './nav';
 import { BUILT_TABS, TAB_COMPONENTS } from './tabs';
 import useWarmTabs from './useWarmTabs';
+
+// The request tray's bar under every tab (L49; slice 56), loaded with the Review tab's own code.
+const TrayDock = lazy(() => import('../../deal/review').then((module) => ({ default: module.TrayDock })));
 
 function MissingDeal() {
   return (
@@ -83,6 +86,11 @@ export default function DealPage() {
             </Suspense>
           </ErrorBoundary>
         </section>
+        <ErrorBoundary resetKey={`tray-${shown}`} fallback={() => null}>
+          <Suspense fallback={null}>
+            <TrayDock deal={deal} tab={shown} />
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </div>
   );

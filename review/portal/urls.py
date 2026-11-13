@@ -14,6 +14,8 @@ urlpatterns = [
     path('<str:token>/files/', views.FilesView.as_view()),
     path('<str:token>/people/', views.PeopleView.as_view()),
     path('<str:token>/sign/', views.SignView.as_view()),
+    path('<str:token>/questions/', views.QuestionsView.as_view()),
+    path('<str:token>/seen/', views.SeenView.as_view()),
     path('<str:token>/stamp/', views.StampView.as_view()),
     path('<str:token>/census-template/', views.TemplateView.as_view()),
 ]

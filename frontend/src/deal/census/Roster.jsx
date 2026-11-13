@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStartImport } from '../../api/census';
+import { useTrayAsk } from '../../api/reviewTray';
 import EditModePrompt from '../../grid/EditModePrompt';
 import { errorText } from '../../lib/errors';
 import ConfirmDialog from '../../ui/ConfirmDialog';
@@ -48,6 +49,7 @@ export default function Roster({ deal, meta, census, onPage, onReview, refetch, 
   const relationships = meta.census.fields.find((field) => field.key === 'relationship')?.choices || [];
 
   const writes = useRosterWrites(deal.id, editing, { relay });
+  const trayAsk = useTrayAsk(deal.id); // ＋ Ask N into the request tray (C8, L54; slice 56)
   const enter = () => {
     setPicking(false);
     setPicked(new Set());
@@ -128,6 +130,16 @@ export default function Roster({ deal, meta, census, onPage, onReview, refetch, 
           filled={filledRefs(census, picked).length}
           busy={actions.busy.mark}
           onMark={markPicked}
+          asking={trayAsk.isPending}
+          onAsk={() =>
+            trayAsk
+              .mutateAsync({ refs: [...picked] })
+              .then((answer) => {
+                toast.success(`${answer.added} added to the request tray`);
+                stopPicking();
+              })
+              .catch((error) => toast.error(errorText(error)))
+          }
         />
       )}
       {!picking && review.open > 0 && (

@@ -1,26 +1,32 @@
 import { summaryOf } from './queueWords';
 
-// Why X cannot act yet: a send-back is a note in the request tray, which arrives with slice 56 (L22, L49–L53).
-export const SEND_BACK_LATER =
-  'Sending an answer back to the client goes through the request tray, which comes in a later version. For now, keep ' +
-  'ours (U) or correct it (E).';
+// Why X cannot send a person back: a person the client added is added or kept off whole (Ch. 12).
+export const NOT_A_PERSON = 'A person the client added is added to the census or kept off whole: X sends values back, not people.';
 
 /** A row's title, sub-line, change chip and flag (old renderSummary; "blocks Aetna", "required to market"). */
 export function renderSummary(item, changes) {
   const summary = summaryOf(item);
   const badge = <span className={`rr-change-chip rr-change-${item.change}`}>{changes[item.change] || item.change}</span>;
-  const flag = summary.flag || (item.required ? 'required to market' : '');
+  const flag = item.question_open ? '? question open' : summary.flag || (item.required ? 'required to market' : '');
   return { ...summary, badge, flag };
 }
 
-/** What A, X, E and U do on an item (old cfgFor): approve, send back (later), correct it ourselves, keep ours. */
+/**
+ * What A, X, N, E and U do on an item (old cfgFor): approve; send back with a note — into the request tray, sent from
+ * the request page (L17, L22; slice 56); a team note that leaves it where it is; correct it ourselves; keep ours.
+ */
 export function cfgFor(item) {
   const person = item.kind === 'person';
   const theirs = Array.isArray(item.theirs) ? '' : item.theirs || '';
   return {
     approve: person ? 'Add to census' : 'Approve',
     reject: 'Send back',
-    rejectBlocked: SEND_BACK_LATER,
+    rejectMode: 'note',
+    rejectBlocked: person ? NOT_A_PERSON : '',
+    noteLabel: 'Back to the client, with a note',
+    notePh: 'What should they check? Leave it blank for “Please check this and update it.”',
+    noteRequired: false,
+    noteAction: '＋ Note',
     extras: [
       ...(item.editable
         ? [

@@ -1,6 +1,7 @@
 """Review's vocabularies for /api/meta/ as `review` (rule 1; plan.md §7.1): the security levels, request and link
 states, close reasons, the readiness chip's words, the fixed link rules (OQ81, OQ83: code constants), and the review
-queue's words: what an answer did, its phases, the queue's sections and the idle hours (slice 55)."""
+queue's words: what an answer did, its phases, the queue's sections and the idle hours (slice 55); a note's kinds, the
+request page's statuses and tabs and the tray's sections (slice 56)."""
 
 from . import words
 from .rules import asks, items, policy
@@ -31,4 +32,9 @@ def meta():
         'phases': [{'key': key, 'label': label, 'title': title} for key, label, title in words.PHASES],
         'queue_sections': _pairs(words.QUEUE_SECTIONS),
         'idle_hours': int(items.IDLE.total_seconds() // 3600),
+        'note_kinds': _pairs(words.NOTE_KINDS),
+        'rail_statuses': _pairs(words.RAIL_STATUSES),
+        'tray_sections': _pairs(words.TRAY_SECTIONS),
+        'request_panes': _pairs(words.REQUEST_PANES),
+        'note_limit': 1000,
     }

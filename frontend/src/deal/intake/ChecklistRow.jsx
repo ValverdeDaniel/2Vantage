@@ -6,9 +6,10 @@ import { controlsOf, statusOf } from './checklistModel';
  * `MarketingChecklist.jsx`): its status, label and detail, "✓ Document on file", the note, what the client sees on a
  * re-asked item, the "Still needed" note editor, and the controls `controlsOf` allows — ⬆ Attach, On file /
  * Confirmed, and Not needed / Still needed ▸ / Undo. `children` is the medical questionnaire's or stop-loss
- * disclosure's form picker (FormPicker, B22; slice 42); ＋ Ask comes with the request tray (slice 56).
+ * disclosure's form picker (FormPicker, B22; slice 42); `ask` is the request tray's ＋ Ask on a missing file (B27, L54;
+ * slice 56).
  */
-export default function ChecklistRow({ item, accept, busy, onTick, onRequirement, onAttach, children = null }) {
+export default function ChecklistRow({ item, accept, busy, onTick, onRequirement, onAttach, children = null, ask = null }) {
   const fileRef = useRef(null);
   const [note, setNote] = useState(null); // the "Still needed" note while its editor is open
   const status = statusOf(item);
@@ -86,6 +87,7 @@ export default function ChecklistRow({ item, accept, busy, onTick, onRequirement
             <span>{controls.tick}</span>
           </label>
         )}
+        {ask}
         {controls.override === 'undo' && (
           <button type="button" className="bnf-override-link" disabled={busy} title="Restore the automatic requirement"
             onClick={() => onRequirement(item.key, '')}>

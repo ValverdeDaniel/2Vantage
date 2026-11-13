@@ -5,8 +5,12 @@ import { useMeta } from '../../api/meta';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import ReviewBulkBar from '../../valuereview/ReviewBulkBar';
+import { useTrayAsk } from '../../api/reviewTray';
+import { errorText } from '../../lib/errors';
+import { useToast } from '../../ui/useToast';
 import { claudeDoor } from '../claude';
 import { SectionBar } from '../review';
+import AskButton from '../shared/AskButton';
 import { isBlank } from '../shared/fieldValue';
 import AuthorizationsCard from './AuthorizationsCard';
 import ChecklistCard from './ChecklistCard';
@@ -43,6 +47,8 @@ export default function IntakeTab({ deal }) {
   const [picked, setPicked] = useState(null); // a Set while ☑ Select fields is on, else null
   const pageRef = useRef(null);
   const marks = useAnswerMarks(deal.id);
+  const trayAsk = useTrayAsk(deal.id); // ＋ Ask N into the request tray (B10, B12; slice 56)
+  const toast = useToast();
   const form = useIntakeForm({
     dealId: deal.id,
     formMeta: meta?.intake?.form,
@@ -72,7 +78,16 @@ export default function IntakeTab({ deal }) {
   const rowProps = (row) => ({
     ...form.rowProps(row),
     select: picked ? { picked: picked.has(row.key), onToggle: () => toggle(row.key) } : null,
+    ask: <AskButton dealId={deal.id} refName={`intake:${row.key}`} />,
   });
+  const askPicked = () =>
+    trayAsk
+      .mutateAsync({ refs: [...picked].map((key) => `intake:${key}`) })
+      .then((answer) => {
+        toast.success(`${answer.added} added to the request tray`);
+        setPicked(null);
+      })
+      .catch((error) => toast.error(errorText(error)));
   const tickedAnswers = picked ? allRows(form.sections).filter((row) => picked.has(row.key) && !isBlank(row.value)) : [];
   const review = intake.data.review ?? { open: 0 };
 
@@ -119,6 +134,8 @@ export default function IntakeTab({ deal }) {
           answered={tickedAnswers.length}
           busy={marks.busy}
           onAllMissing={() => setPicked(new Set(missingKeys(form.sections)))}
+          onAsk={askPicked}
+          asking={trayAsk.isPending}
           onMark={(action) =>
             marks.run(action, tickedAnswers.map((row) => row.key), 'the selected questions').then((done) => done && setPicked(null))
           }
