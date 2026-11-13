@@ -17,6 +17,7 @@ root_packages =
     rfp
     proposals
     review
+    agenda
     golden
 
 [importlinter:contract:chain]
@@ -24,6 +25,7 @@ name = The app chain: an app imports only from apps to its left
 type = layers
 layers =
     golden
+    agenda
     review
     proposals
     rfp

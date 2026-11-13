@@ -1,6 +1,8 @@
 """Intake's facts for Agenda and the Overview (plan.md §5.10, O.2; B35): `facts(deal_ids) -> {deal_id: dict}` —
 counts, dates and flags only, the same for every viewer. The next step "Complete intake" or "Mark as marketed" reads
-`ready_state` and `gaps`; the journey reads `answered` of `needed`.
+`ready_state` and `gaps`; the journey reads `answered` of `needed`. Agenda's intake steps (slice 60; I44, I46) read
+`blockers` (each gap with its kind and key: one step per blocker) and `items` (the checklist's rows with their status,
+how each is satisfied and, for the questionnaire rows, the form's state).
 
 Intake's own rows (the deals, their Intake rows, coverage rows, contacts and files) are read in a fixed number of
 queries however many deals are asked. The four provider slots (headcount, Census OK, the questionnaire forms and the
@@ -24,9 +26,13 @@ def _grouped(rows, key):
     return found
 
 
+ITEM_KEYS = ('key', 'label', 'satisfy', 'kind', 'status', 'has_document', 'form_key', 'signed', 'needed')
+
+
 def facts(deal_ids):
-    """{deal_id: {answered, needed, missing, contacts_ok, bor_on_file, census_ok, ready_state, gaps, checklist:
-    {tier, required, done, missing, all_clear}, marketed_at}} for the deals asked (unknown ids are left out)."""
+    """{deal_id: {answered, needed, missing, contacts_ok, bor_on_file, census_ok, ready_state, gaps, blockers: [{kind,
+    key, label}], checklist: {tier, required, done, missing, all_clear}, items: [{key, label, satisfy, kind, status,
+    has_document, form_key, signed, needed}], marketed_at}} for the deals asked (unknown ids are left out)."""
     deals = list(Deal.objects.filter(pk__in=list(deal_ids)))
     ids = [deal.id for deal in deals]
     intakes = {row.deal_id: row for row in Intake.objects.filter(deal_id__in=ids)}
@@ -73,7 +79,9 @@ def facts(deal_ids):
             'census_ok': ready['census_ok'],
             'ready_state': ready['state'],
             'gaps': [entry['label'] for entry in ready['gaps']],
+            'blockers': [{key: entry[key] for key in ('kind', 'key', 'label')} for entry in ready['gaps']],
             'checklist': {key: card[key] for key in ('tier', 'required', 'done', 'missing', 'all_clear')},
+            'items': [{key: row.get(key) for key in ITEM_KEYS} for row in card['items']],
             'marketed_at': intake.marketed_at if intake else None,
         }
     return found

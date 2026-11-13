@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rfp',  # RfpRequest and asked_by_line (slice 26); the RFP tab from slices 44–46
     'proposals',
     'review',  # requests, client links and the tab's counts (slice 53); the portal from slice 54
+    'agenda',  # steps, marks and tasks, and the deal's Agenda tab (slice 60); the Work queue from slice 61
     'golden',  # seed only, last in the chain (§3.3)
 ]
 

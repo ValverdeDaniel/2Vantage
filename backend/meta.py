@@ -3,6 +3,7 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from agenda import meta as agenda_meta
 from ai import client as ai_client
 from ai import selectors as ai_selectors
 from census import fields as census_fields
@@ -52,6 +53,7 @@ class MetaView(APIView):
                 'rfp': rfp_meta.meta(),  # the RFP tab's cards, bands, routes, funding and carriers (K.6; slice 44)
                 'proposal': proposal_catalog.meta(),  # the builder's cards, parts, layouts and limits (J.6.6; slice 25)
                 'review': review_meta.meta(),  # link levels, request and link states, close reasons (L.6; slice 53)
+                'agenda': agenda_meta.meta(),  # sections, step titles, follow-up days, Later picks (I.6; slice 60)
                 **({'ai': ai_selectors.meta()} if ai_client.available() else {}),  # only with a key (D26; slice 18)
             }
         )

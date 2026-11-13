@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/', include('rfp.urls')),
     path('api/', include('proposals.urls')),
     path('api/', include('review.urls')),
+    path('api/', include('agenda.urls')),
 ]
 
 # The built SPA answers every other path (the production image; slice 69, §11.2). Last, so every route above wins.

@@ -3769,8 +3769,8 @@ L.6. v1.1's `ClientValue` goes: client answers wait on the owners' rows (§6, O.
 
 ### 6.13 agenda
 
-Not built (slice 60). I.6. Agenda never writes a module value or a stage (O.2); its steps, journey, badges and meters
-are worked out on read.
+Built in slice 60 (both models). I.6. Agenda never writes a module value or a stage (O.2); its steps, journey, badges
+and meters are worked out on read.
 
 - **StepMark**: `deal` (related `step_marks`), `step_key` Char(80), `kind` (`later` or `done`), `until` (Date, null),
   `sig` Char(40), `note` (≤ 1,000), `by`, `at`. Unique (deal, step_key); lapsed rows are ignored on read.
@@ -4483,7 +4483,8 @@ Full list: Part L, L.6.
 
 ### 7.15 Agenda and work queue — `agenda/`
 
-Not built (slices 60, 61 and 68).
+Built in slice 60: the deal's `agenda/`, `marks/`, `follow-ups/` and `tasks/`. `journey/`, the Work queue and its stats
+follow in slice 61, the client's agenda in 68.
 
 | Method | Path | Request and response |
 |---|---|---|
@@ -6752,11 +6753,11 @@ An app imports only from apps to its left (lint-imports); a fact read by an app 
 reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
 AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client, never
 business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far: accounts, deals,
-documents, ai, intake, census, quotes, questionnaire, commission, rfp, proposals, review, golden. The chain orders
-imports, not screens: the deal sidebar keeps old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get to
-Market: Review & requests, Intake, Census, Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to Close:
-Advisor, Proposal · Shared: Documents. Quotes never wait for intake, census or a questionnaire: typed summary tier
-counts carry the Advisor and Proposal. Tab folders take the app's name except advisor/ (quotes) and proposal/
+documents, ai, intake, census, quotes, questionnaire, commission, rfp, proposals, review, agenda, golden. The chain
+orders imports, not screens: the deal sidebar keeps old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get
+to Market: Review & requests, Intake, Census, Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to
+Close: Advisor, Proposal · Shared: Documents. Quotes never wait for intake, census or a questionnaire: typed summary
+tier counts carry the Advisor and Proposal. Tab folders take the app's name except advisor/ (quotes) and proposal/
 (proposals); from slice 4 a tab folder's index.js exports only what others mount. Other pages live in pages/ (home;
 Archived, slice 38; Commissions, 48; client page, 67).
 

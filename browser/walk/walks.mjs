@@ -3,6 +3,7 @@
 // restyling slices. Each walk: { title, deal, run(ctx) }, where ctx = { page, step, base, user, spec }.
 // Needs 1–12 arrive with the slices that build them (Q.9); 0 is the example the lane started with.
 
+import { agenda60 } from './agenda60.mjs';
 import { archive38 } from './archive38.mjs';
 import { asQuoted21 } from './asQuoted21.mjs';
 import { boardClaude24 } from './boardClaude24.mjs';
@@ -274,4 +275,5 @@ export const WALKS = {
   s54: { ...portal54, run: (ctx) => portal54.run(ctx, { signIn, openDeal }) }, // slice 54's done-when, at 390×844 (re-seed GD6 after)
   s55: { ...review55, run: (ctx) => review55.run(ctx, { signIn, openDeal }) }, // slice 55's done-when (re-seed GD6 after)
   s66: { ...voice66, run: (ctx) => voice66.run(ctx, { signIn, openDeal }) }, // slice 66's done-when (a fake recognizer; no Claude, no writes)
+  s60: { ...agenda60, run: (ctx) => agenda60.run(ctx, { signIn, openDeal }) }, // slice 60's done-when (fresh GD3; re-seed GD3 after)
 };

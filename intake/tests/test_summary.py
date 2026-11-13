@@ -26,3 +26,16 @@ def test_B35_facts_say_what_stands_between_each_deal_and_the_market(user, deal):
     assert (marketed['contacts_ok'], marketed['bor_on_file'], marketed['census_ok']) == (True, True, False)
     assert marketed['answered'] == 1 and 'Legal Company Name' not in marketed['missing']
     assert set(marketed['checklist']) == {'tier', 'required', 'done', 'missing', 'all_clear'}
+
+
+def test_I44_I46_facts_name_each_blocker_and_the_checklist_rows(user, deal):
+    found = summary.facts([deal.id])[deal.id]
+    kinds = {entry['kind'] for entry in found['blockers']}
+    assert {'question', 'contacts', 'bor', 'census'} <= kinds
+    assert [entry['label'] for entry in found['blockers']] == found['gaps']
+    rows = {row['key']: row for row in found['items']}
+    assert rows['coverage_intent']['satisfy'] == 'auto' and rows['cobra']['satisfy'] == 'attest'
+    questionnaire = rows['medical_questionnaire']
+    assert questionnaire['kind'] == 'questionnaire' and questionnaire['status'] == 'missing'
+    assert set(questionnaire) == {'key', 'label', 'satisfy', 'kind', 'status', 'has_document', 'form_key', 'signed',
+                                  'needed'}  # fmt: skip

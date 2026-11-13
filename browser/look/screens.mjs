@@ -16,6 +16,7 @@
 
 const SHELL = ['body', '.navbar', 'h1', '.btn-primary', '.btn-secondary'];
 const WORKSPACE = [...SHELL, '.bb-nav', '.bb-nav-item.active', '.bnf-nav-group-label', '.bb-tab-title', '.bb-panel'];
+const AGENDA = [...WORKSPACE, '.bb-panel-title', '.bnf-event-title', '.bnf-ag-toggle', '.bnf-ag-count', '.bnf-ag-section-sub', '.bnf-ag-row', '.bnf-cal-label', '.bnf-agenda-detail', '.bnf-agenda-open', '.bnf-ag-btn'];
 
 export const SCREENS = [
   {
@@ -47,7 +48,8 @@ export const SCREENS = [
   { key: 'commissions.book', title: '/commissions: the tiles and the Book (slice 49; H42–H51)', old: { path: '/commissions' }, new: { path: '/commissions' }, ready: '.bnf-com-tiles', styles: [...SHELL, '.bb-dash-header', '.bnf-com-tiles .bb-stat-card', '.bnf-com-tabs', '.bnf-com-tab.active', '.bnf-com-filters'] },
   { key: 'commissions.people', title: '/commissions By person (slice 49; H68)', old: { path: '/commissions?tab=people' }, new: { path: '/commissions?tab=people' }, ready: '.bnf-com-tabs', styles: [...SHELL, '.bnf-com-tiles .bb-stat-card', '.bnf-com-tab.active', '.bnf-com-filters'] },
   { key: 'gd1.overview', title: 'GD1 Overview', deal: 'GD1', widths: 'workspace', old: { tab: 'overview' }, new: { pending: 62, why: 'the Overview' }, styles: WORKSPACE },
-  { key: 'gd1.agenda', title: 'GD1 Agenda', deal: 'GD1', old: { tab: 'agenda' }, new: { pending: 60, why: 'the Agenda tab' }, styles: WORKSPACE },
+  { key: 'gd1.agenda', title: 'GD1 Agenda: the steps by section, Add a task, Done collapsed (slice 60; I1–I14, I27)', deal: 'GD1', old: { tab: 'agenda' }, new: { tab: 'agenda' }, ready: '.bnf-ag-block', styles: AGENDA },
+  { key: 'gd3.agenda', title: 'GD3 Agenda at checkpoint A: quote-first, the intake steps listed and not leading (slice 60; I44, I50, OQ90)', deal: 'GD3', old: { tab: 'agenda' }, new: { tab: 'agenda' }, ready: '.bnf-ag-block', styles: AGENDA },
   { key: 'gd1.review', title: 'GD1 Review & requests: the Board, its readiness strip, the Waiting and To review lanes (slices 53, 55; L1, L2, L7, L9)', deal: 'GD1', widths: 'workspace', old: { tab: 'review' }, new: { tab: 'review' }, ready: '.bnf-board-lanes', styles: [...WORKSPACE, '.bnf-viewtab', '.bnf-board-head', '.bnf-board-ready', '.bnf-board-lane-head', '.bnf-board-empty'] },
   { key: 'gd1.intake', title: 'GD1 Intake (slice 11: the coverage card, current coverage, lines to quote; the form in 39)', deal: 'GD1', widths: 'workspace', old: { tab: 'intake' }, new: { tab: 'intake' }, ready: '.bnf-cvg', styles: [...WORKSPACE, '.bnf-cvg-head', '.bnf-cvg-badge', '.bnf-cvg-table th', '.bnf-cvg-box', '.bnf-cvg-foot', '.bnf-subcard', '.bnf-chip'] },
   { key: 'gd6.intake', title: 'GD6 Intake: the four question cards answered (slice 39); contacts, checklist and BOR in 40', deal: 'GD6', widths: 'workspace', old: { tab: 'intake' }, new: { tab: 'intake' }, ready: '.bnf-intake-section', styles: [...WORKSPACE, '.bnf-intake-section', '.bb-account-row', '.bb-account-label', '.bb-account-value', '.bnf-qb-star', '.bnf-intake-row .bb-badge', '.bnf-note-line', '.bnf-viewtab'] },
