@@ -11,6 +11,7 @@ import Loading from '../../ui/Loading';
 import BookingSlot from './BookingSlot';
 import DealHeader from './DealHeader';
 import DealSidebar from './DealSidebar';
+import JourneyStepper from './JourneyStepper';
 import { tabFor, tabLabel } from './nav';
 import { BUILT_TABS, TAB_COMPONENTS } from './tabs';
 import useWarmTabs from './useWarmTabs';
@@ -77,6 +78,7 @@ export default function DealPage() {
       <DealSidebar deal={deal} tab={shown} />
       <div className="bb-content">
         <DealHeader key={deal.id} deal={deal} meta={meta.data} />
+        <JourneyStepper deal={deal} tab={shown} />
         <WorkWithClaude deal={deal} tab={shown} />
         <BookingSlot deal={deal} />
         <section aria-label={label} className="bnf-claude-section">

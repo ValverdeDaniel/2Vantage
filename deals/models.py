@@ -198,5 +198,8 @@ class AgencySettings(models.Model):
 
     @classmethod
     def get(cls):
-        """The stored row, else the defaults unsaved: a read never creates it (§3.6). Django admin adds it."""
-        return cls.objects.filter(pk=1).first() or cls(pk=1)
+        """The stored row, else the defaults unsaved: a read never creates it (§3.6). Django admin adds it. Read once
+        per batch scope (`deals.batch`), so a read over many deals asks once."""
+        from . import batch
+
+        return batch.once('deals.agency', lambda: cls.objects.filter(pk=1).first() or cls(pk=1))

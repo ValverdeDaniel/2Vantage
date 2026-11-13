@@ -4,8 +4,8 @@ import { ARCHIVED_LINK_TIP } from '../ArchivedPage/archiveCopy';
 import { VIEWS } from './homeParams';
 
 /**
- * The view pill (`bnf-viewtab`, A9, I87, CL10) with the shown list's Refreshing… chip beside it, then the Archived
- * link (a link, not a view; CasesDashboard.jsx at 891f1b3). The Work queue pill waits for slice 61.
+ * The view pill (`bnf-viewtab`, A9, I87, CL10): Prospects · Clients · Work queue, with the shown list's Refreshing…
+ * chip beside it, then the Archived link (a link, not a view; CasesDashboard.jsx at 891f1b3).
  */
 export default function ViewBar({ view, onView, refreshing, failed, onRetry }) {
   return (

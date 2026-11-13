@@ -3056,8 +3056,12 @@ viewer, in a fixed number of queries however many deals are asked (O.2; Q.3 #4).
 There is no registry in `deals`: agenda, overview and golden import each app's `summary` directly (O.6 #3, overruling
 A.4). Commission adds `summary.card(deal, viewer)`, the figures the viewer's tier may see (H.6). An empty deal returns
 every block, and no GET creates a row (O.2, M.6). Census's and quotes' counts come from their stored counts
-(`CensusFacts`, `flags`; O.3.7), so the Work queue reads every open deal cheaply. The Overview's own rules are pure
-(`overview/rules.py`: last contact, tiles, the Get to Market groups, Quote to Close; M37, M.6).
+(`CensusFacts`, `flags`; O.3.7), so the Work queue reads every open deal cheaply. The per-deal reads behind a summary
+(intake's provider slots, quotes' pricing, the proposal's line sheets) run inside one batch scope (`deals/batch.py`,
+slice 61): `with batch.scope(ids)`, each loader reads its rows once for every deal in the scope, and outside a scope
+reads one deal as before, so `facts(ids)` runs the same queries for 1 deal or 300. A scope is for reads only. The
+Overview's own rules are pure (`overview/rules.py`: last contact, tiles, the Get to Market groups, Quote to Close; M37,
+M.6).
 
 | App | Facts (where defined) |
 |---|---|
@@ -4538,8 +4542,8 @@ Full list: Part L, L.6.
 
 ### 7.15 Agenda and work queue — `agenda/`
 
-Built in slice 60: the deal's `agenda/`, `marks/`, `follow-ups/` and `tasks/`. `journey/`, the Work queue and its stats
-follow in slice 61, the client's agenda in 68.
+Built in slice 60: the deal's `agenda/`, `marks/`, `follow-ups/` and `tasks/`. Built in slice 61: `journey/`
+(`agenda/shell.py`), the Work queue and its stats (`agenda/queue/`). The client's agenda follows in 68.
 
 | Method | Path | Request and response |
 |---|---|---|
@@ -4550,8 +4554,8 @@ follow in slice 61, the client's agenda in 68.
 | POST | `deals/{id}/tasks/` | `{title, due, assigned_to?, note?, done?}` → `201` task row |
 | PATCH | `tasks/{id}/` | any of `title`, `due`, `note`, `assigned_to`, `done`, `move_note` → task row |
 | DELETE | `tasks/{id}/` | `204`, a soft delete; `403` unless the creator or an admin |
-| GET | `deals/{id}/journey/` | `{journey, waiting, next_step: {key, label, tab, params}}`, with the sidebar's badges and meters; the shell's one read, from counts and EXISTS checks only (M.6, O.6 #3; slice 61) |
-| GET | `work-queue/` | `?include=closed` → `{today, rows, owners, client_names}` (slice 61) |
+| GET | `deals/{id}/journey/` | `{deal_id, today, next_step, waiting, journey: {modules: [{key, label, pct, steps: [{key, label, tab, state: done, current or todo}]}], complete}, progress, badges, meters, ready}`: the stepper (the current dot owns the next step; never "skipped", M40), the sidebar's badges, Deal readiness meters and ready chip; the shell's one read, from every app's `summary.facts` inside one batch scope, so its queries never grow with the deal (M.6, O.6 #3; slice 61) |
+| GET | `work-queue/` | `?include=closed` → `{today, rows, owners, client_names, cards: {prospects: {count, deal_size, unsized}}}`: every live deal's row (its next step, `client_status`, `type`, `due_in`, `held`, `finished`, `lost`, `progress_pct`, open `steps`, `response`), open hand tasks and nudges; finished and lost deals' rows only with `include=closed` (I80); the same queries for 1 deal or 300 (slice 61) |
 | GET | `work-queue/stats/` | `{actions_week, sales_month}`, each `{total, change_pct, series}` (slice 61) |
 | GET | `clients/{id}/agenda/` | `{today, counts, deals: [{deal, next_step, waiting, rows}]}`, from one `facts_for` (slice 68) |
 
@@ -4592,7 +4596,7 @@ Context; OQ10).
   `browser/look/accepted.json` and signed once by Daniel; an unexplained one fails the lane. On the old side,
   `browser/look/dropped.yaml` hides the UI of Drop and Defer rows.
 - **Not built yet.** A tab whose slice is not built is left out of the sidebar, and its route opens the deal's default
-  tab. The sidebar's badges and meters and the journey stepper arrive with slice 61 (§13.12, risk 5). The Look lane
+  tab. The sidebar's badges and meters and the journey stepper arrived with slice 61 (§13.12, risk 5). The Look lane
   labels each gap "pending slice N".
 - Names in examples are fictional.
 

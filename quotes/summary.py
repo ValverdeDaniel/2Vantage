@@ -10,21 +10,25 @@ Per deal:
 - `sold_lines`: the lines with a sold plan;
 - `unpriced`, `unpriced_lines`: plans that no enrollment prices — no census, no typed counts reaching them (the
   precedence of `math.enrollment_for`; F88's `per_plan_counts_needed` among them), on deals with quotes. This is what
-  turns Agenda's census step into "Add the census, or type enrollment in the Advisor" (I50, OQ90).
+  turns Agenda's census step into "Add the census, or type enrollment in the Advisor" (I50, OQ90);
+- `required_total`, `required_filled`, `to_review`: over the proposed plans (every plan but the current ones), the
+  fields they must hold and how many do, and the values with an open warning: the shell's Proposal meter and badge
+  (A21, A23; slice 61; old `proposal_metrics`).
 
-The plans, the files and the reads are one query each whatever the deal count; pricing the unpriced check reads
-`selectors.state.deal_state` once per deal with quotes (a batched pricing read is the Work queue's, slice 61).
+The plans, the files and the reads are one query each whatever the deal count; the unpriced check reads
+`selectors.state.deal_state` for each deal with quotes, inside one batch scope (`deals.batch`; slice 61), so its rows
+are read once for every deal: the same queries for 1 deal or 300 (Q.3 #4).
 """
 
 from ai import kinds as ai_kinds
 from ai.models import Job
-from deals.models import Deal
+from deals import batch
 from documents.models import Document
 
 from . import facts as plan_facts
 from .models import Plan
 from .reader import READS
-from .selectors.state import deal_state
+from .selectors.state import deal_state, scope_plans
 
 QUOTE_ROLES = ('renewal', 'alternate')
 
@@ -33,9 +37,9 @@ def _iso(moment):
     return moment.isoformat() if moment else None
 
 
-def _blank(row):
-    statuses = plan_facts.statuses(row['line'], row['values'] or {}, {})
-    return sum(1 for status in statuses.values() if status == 'missing')
+def _required(row):
+    """(required, blank) of one plan's values (`facts.required_counts`: `statuses`' missing, without warnings)."""
+    return plan_facts.required_counts(row['line'], row['values'] or {})
 
 
 def _unpriced(deal):
@@ -50,7 +54,31 @@ def _unpriced(deal):
 
 
 def facts(deal_ids):
-    ids = list(deal_ids)
+    with batch.scope(deal_ids):
+        return _facts(list(deal_ids))
+
+
+def _proposed(found, row, required, blank):
+    """The Proposal meter's counts for one proposed plan (old `proposal_metrics`: required filled of required)."""
+    if row['role'] == 'current':
+        return
+    found['required_total'] += required
+    found['required_missing'] += blank
+    found['to_review'] += row['flags'] or 0
+
+
+ROW = ('deal_id', 'line', 'role', 'values', 'flags', 'sold', 'created_at', 'source_document_id')
+
+
+def _rows(ids):
+    """The plans' rows: the batch scope's plans when it holds the deals (the steps price those same rows), else one
+    query."""
+    if ids and batch.holds(ids[0]):
+        return [{key: getattr(plan, key) for key in ROW} for deal_id in ids for plan in scope_plans(deal_id)]
+    return Plan.objects.filter(deal_id__in=ids).values(*ROW)
+
+
+def _facts(ids):
     out = {
         deal_id: {
             'plans': 0,
@@ -62,17 +90,20 @@ def facts(deal_ids):
             'sold_lines': [],
             'unpriced': 0,
             'unpriced_lines': [],
+            'required_total': 0,
+            'required_filled': 0,
+            'required_missing': 0,
+            'to_review': 0,
         }
-        for deal_id in Deal.objects.filter(pk__in=ids).values_list('id', flat=True)
+        for deal_id in (deal.id for deal in batch.deals(ids))
     }
     cited = {}
-    rows = Plan.objects.filter(deal_id__in=list(out)).values(
-        'deal_id', 'line', 'role', 'values', 'flags', 'sold', 'created_at', 'source_document_id'
-    )
-    for row in rows:
+    for row in _rows(list(out)):
         found = out[row['deal_id']]
         found['plans'] += 1
-        found['flagged'] += (row['flags'] or 0) + _blank(row)
+        required, blank = _required(row)
+        found['flagged'] += (row['flags'] or 0) + blank
+        _proposed(found, row, required, blank)
         if row['role'] in QUOTE_ROLES:
             found['quotes'] += 1
             at = _iso(row['created_at'])
@@ -98,8 +129,9 @@ def facts(deal_ids):
         if doc_id not in read.get(deal_id, set()) and doc_id not in cited.get(deal_id, set()):
             found['unread'].append(doc_id)
     with_quotes = [deal_id for deal_id, found in out.items() if found['quotes']]
-    for deal in Deal.objects.filter(pk__in=with_quotes):
+    for deal in batch.deals(with_quotes):
         out[deal.id]['unpriced'], out[deal.id]['unpriced_lines'] = _unpriced(deal)
     for found in out.values():
         found['sold_lines'].sort()
+        found['required_filled'] = found['required_total'] - found['required_missing']
     return out

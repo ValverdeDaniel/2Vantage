@@ -4,6 +4,8 @@
   journey, progress, rows}: the facts read once, the steps worked out, the marks laid over them, the tasks and nudges.
 - `marked_steps(deal_id)`: (facts, unmarked steps, marked steps, today) — what the services decide against.
 - `next_step(deal)`, `waiting(deal)`: the Overview's light reads (slice 62), from the same steps.
+- `marks_for(deal_ids)`, `next_of(deal_id, facts, marked)`: the pieces the shell's `journey/` read and the Work queue
+  (slice 61) share with the tab, so a deal's next step reads the same words everywhere (I68).
 `today` is the agency's date (`deals.clock.today()`), so a Later picked at 21:00 Eastern means the agency's tomorrow.
 """
 
@@ -16,11 +18,11 @@ from .models import StepMark, Task
 from .steps import steps
 
 
-def stored_marks(deal_id):
-    """{step_key: {kind, until, sig, note, by, at}} for the deal, in one query."""
+def marks_for(deal_ids):
+    """{deal_id: {step_key: {kind, until, sig, note, by, at}}} for the deals, in one query."""
     found = {}
-    for mark in StepMark.objects.filter(deal_id=deal_id).select_related('by'):
-        found[mark.step_key] = {
+    for mark in StepMark.objects.filter(deal_id__in=list(deal_ids)).select_related('by'):
+        found.setdefault(mark.deal_id, {})[mark.step_key] = {
             'kind': mark.kind,
             'until': mark.until,
             'sig': mark.sig,
@@ -29,6 +31,11 @@ def stored_marks(deal_id):
             'at': mark.at.isoformat() if mark.at else None,
         }
     return found
+
+
+def stored_marks(deal_id):
+    """{step_key: {kind, until, sig, note, by, at}} for the deal, in one query."""
+    return marks_for([deal_id]).get(deal_id, {})
 
 
 def marked_steps(deal_id, now=None):
@@ -41,7 +48,8 @@ def marked_steps(deal_id, now=None):
     return facts, unmarked, marks.apply_marks(unmarked, stored_marks(deal_id), today), today
 
 
-def _next(deal_id, facts, marked):
+def next_of(deal_id, facts, marked):
+    """The deal's next step with its link: lost words, the first live step, or "Sold" (I67; OQ91 as changed)."""
     deal = facts['deal']
     if deal['lost']:
         return rows.lost_step(deal.get('lost_reason'))
@@ -56,7 +64,7 @@ def step_payload(deal_id, step, marked, facts):
     row = next((s for s in marked if s['key'] == step), None)
     return {
         'step': payload.step_row(row, deal_id) if row else None,
-        'next_step': _next(deal_id, facts, marked),
+        'next_step': next_of(deal_id, facts, marked),
     }
 
 
@@ -72,7 +80,7 @@ def deal_agenda(deal, viewer):
         'deal_id': deal.id,
         'lost': facts['deal']['lost'],
         'finished': facts['deal']['lost'] or rows.finished(unmarked),
-        'next_step': _next(deal.id, facts, marked),
+        'next_step': next_of(deal.id, facts, marked),
         'waiting': rows.waiting(marked, today),
         'journey': milestones,
         'progress': journey.progress(milestones),
@@ -82,7 +90,7 @@ def deal_agenda(deal, viewer):
 
 def next_step(deal):
     facts, _unmarked, marked, _today = marked_steps(deal.id)
-    return _next(deal.id, facts, marked)
+    return next_of(deal.id, facts, marked)
 
 
 def waiting(deal):

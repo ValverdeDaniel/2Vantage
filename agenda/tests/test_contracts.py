@@ -1,5 +1,6 @@
 """The Q.3 contracts for agenda (plan.md §12.3): GETs write nothing, the permission matrix, ids past bigint, and the
-deal's Agenda in the same number of queries whatever its tasks and marks (Q.3 #4)."""
+deal's Agenda in the same number of queries whatever its tasks and marks (Q.3 #4). The shell's `journey/` and the Work
+queue's feed and stats (slice 61) join every table; their scaling checks are in test_shell and test_queue_golden."""
 
 from datetime import timedelta
 
@@ -34,6 +35,9 @@ def samples(world):
     deal, task = world['deal'], world['task']
     return {
         'api/deals/<int:pk>/agenda/': {'pk': deal.id},
+        'api/deals/<int:pk>/journey/': {'pk': deal.id},
+        'api/work-queue/': {'query': {'include': 'closed'}},
+        'api/work-queue/stats/': {},
         'api/deals/<int:pk>/agenda/marks/': {'pk': deal.id},
         'api/deals/<int:pk>/agenda/marks/<str:step_key>/': {'pk': deal.id, 'step_key': 'complete_intake'},
         'api/deals/<int:pk>/agenda/follow-ups/': {'pk': deal.id},
@@ -52,6 +56,9 @@ def test_Q3_3_the_permission_matrix(actors, no_csrf_api, world):
     gone = {'signed_out': 401, 'producer': 204, 'admin': 204}  # the producer created it
     matrix = [
         ('GET', 'api/deals/<int:pk>/agenda/', everyone),
+        ('GET', 'api/deals/<int:pk>/journey/', everyone),
+        ('GET', 'api/work-queue/', everyone),
+        ('GET', 'api/work-queue/stats/', everyone),
         ('POST', 'api/deals/<int:pk>/agenda/marks/', everyone, {'step_key': 'import_census', 'kind': 'done'}),
         ('DELETE', 'api/deals/<int:pk>/agenda/marks/<str:step_key>/', everyone),
         ('POST', 'api/deals/<int:pk>/agenda/follow-ups/', everyone,
@@ -67,6 +74,7 @@ def test_Q3_3_the_permission_matrix(actors, no_csrf_api, world):
     ('method', 'path'),
     [
         ('get', '/api/deals/{big}/agenda/'),
+        ('get', '/api/deals/{big}/journey/'),
         ('post', '/api/deals/{big}/agenda/marks/'),
         ('delete', '/api/deals/{big}/agenda/marks/import_census/'),
         ('post', '/api/deals/{big}/agenda/follow-ups/'),

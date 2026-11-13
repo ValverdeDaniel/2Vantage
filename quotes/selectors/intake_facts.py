@@ -6,7 +6,8 @@ One light query: the deal's live plans without their JSON columns, except the me
 
 from django.db.models.fields.json import KT
 
-from deals import lines
+from deals import batch, lines
+from intake import selectors as intake_selectors
 from intake.models import CurrentCoverage
 
 from .. import presented
@@ -16,7 +17,16 @@ from ..shapes import LineData, PlanData
 FIELDS = ('id', 'line', 'role', 'carrier', 'starred', 'recommended', 'sold', 'sort_order')
 
 
+def _batched(ids):
+    plans = Plan.objects.filter(deal_id__in=ids).annotate(funding=KT('values__funding'))
+    rows = plans.values('deal_id', *FIELDS, 'funding').order_by('sort_order', 'id')
+    return batch.grouped(rows, lambda row: row.pop('deal_id'))
+
+
 def _rows(deal_id, line=None):
+    if batch.holds(deal_id):  # every deal's plans in one query (`deals.batch`), each row a copy
+        found = batch.per_deal('quotes.plan_rows', deal_id, _batched, ())
+        return [dict(row) for row in found if line is None or row['line'] == line]
     plans = Plan.objects.filter(deal_id=deal_id)
     if line is not None:
         plans = plans.filter(line=line)
@@ -71,8 +81,12 @@ def incumbent(deal, line):
     current = _current(_rows(deal_id, line))
     if current:
         return {**current, 'source': 'plans'}
-    row = CurrentCoverage.objects.filter(deal_id=deal_id, line=line, in_force=True).order_by('sort_order', 'id')
-    found = row.values('carrier', 'funding').first()
+    if batch.holds(deal_id):
+        rows = [row for row in intake_selectors.coverage_rows(deal_id) if row.line == line and row.in_force]
+        found = {'carrier': rows[0].carrier, 'funding': rows[0].funding} if rows else None
+    else:
+        row = CurrentCoverage.objects.filter(deal_id=deal_id, line=line, in_force=True).order_by('sort_order', 'id')
+        found = row.values('carrier', 'funding').first()
     if found and (found['carrier'] or found['funding']):
         return {**found, 'source': 'coverage'}
     return None

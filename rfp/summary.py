@@ -6,12 +6,13 @@ are marked sent of how many the route makes (Warner: one; direct: one per picked
 the first and last send dates (the follow-up counts from the first when `marketed_at` is blank, K123), the cards
 marked completed, the due date, and `awaiting`: the carriers asked that no plan has come from since their send (old
 follow-up fired only on a deal with no plans at all). Never builds cards per deal. The requests and the plans are one
-query each; only a deal whose route still follows the band reads its headcount (a batched headcount slot is the
-Agenda's to add, slice 60, as for `intake.summary`).
+query each; only a deal whose route still follows the band reads its headcount, inside one batch scope
+(`deals.batch`; slice 61), so the rows behind the headcounts are read once for every deal.
 """
 
 from datetime import datetime
 
+from deals import batch
 from deals import carriers as identities
 from deals.models import Deal
 from quotes.models import Plan
@@ -49,7 +50,11 @@ def _awaiting(sends, plans):
 
 
 def facts(deal_ids):
-    ids = list(deal_ids)
+    with batch.scope(deal_ids):
+        return _facts(list(deal_ids))
+
+
+def _facts(ids):
     rows = {row.deal_id: row for row in RfpRequest.objects.filter(deal_id__in=ids)}
     plans = {}
     for deal_id, carrier, created in Plan.objects.filter(deal_id__in=ids).values_list(

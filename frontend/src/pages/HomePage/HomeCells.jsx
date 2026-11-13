@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { initialsOf } from '../../lib/dealLook';
 import { formatMoney } from '../../lib/format';
 import { BY_NAME } from './homeParams';
+import { SortTh } from './QueueCells';
 
 // Cells both home tables share (HomeCells.jsx at 891f1b3): the avatar with the name and its sub-line, the
 // Potential deal size, the Client column's sort header; the Archive cells are in ArchiveCells.jsx.
@@ -28,10 +29,19 @@ export function AccountCell({ name, sub, to }) {
   );
 }
 
-/** The Potential deal size header (I124). */
-export function DealTh() {
+const DEAL_TITLE = "This deal's estimate, else the client's most recent one.";
+
+/** The Potential deal size header (I124); on the work feed's tables it sorts, biggest first (I81). */
+export function DealTh({ sort, onSort }) {
+  if (onSort) {
+    return (
+      <SortTh className="bnf-th-deal" sortKey="deal" sort={sort} onSort={onSort} title={DEAL_TITLE}>
+        Potential deal size
+      </SortTh>
+    );
+  }
   return (
-    <div className="bnf-th-deal" title="This deal's estimate, else the client's most recent one.">
+    <div className="bnf-th-deal" title={DEAL_TITLE}>
       Potential deal size
     </div>
   );

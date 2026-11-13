@@ -109,8 +109,67 @@ MILESTONES = [
 ]
 GROUP_LABELS = {GET_TO_MARKET: 'Get to Market', QUOTE_TO_CLOSE: 'Quote to Close'}
 
+# The tab each milestone's dot opens on the stepper (M39; old journey `tab`), and the milestone that owns each lead
+# step: the stepper's current dot is the milestone owning the deal's next step, so dot and banner agree (M39, ch. C5).
+# A step no milestone owns (the asks) leaves the current dot on the first milestone still to do.
+MILESTONE_TABS = {
+    'intake_ready': 'intake',
+    'enrollment_in': 'census',
+    'marketed': 'intake',
+    'quotes_in': 'advisor',
+    'built': 'proposal',
+    'issued': 'proposal',
+    'sold': 'advisor',
+    'commission': 'commission',
+}
+STEP_MILESTONES = {
+    **dict.fromkeys(
+        ('complete_intake', 'checklist_ask', 'review_client_answers', 'review_flagged_answers', 'add_hr_contact',
+         'get_bor', 'questionnaire', 'finish_intake'),
+        'intake_ready',
+    ),
+    **dict.fromkeys(('send_rfp', 'build_rfp'), 'marketed'),
+    **dict.fromkeys(
+        ('review_mapping', 'map_census', 'import_census', 'fix_census', 'approve_client', 'answer_client_questions'),
+        'enrollment_in',
+    ),
+    **dict.fromkeys(('read_quotes', 'follow_up_carriers', 'review_values'), 'quotes_in'),
+    'build_proposal': 'built',
+    **dict.fromkeys(('issue_proposal', 'follow_up_selection'), 'issued'),
+    'mark_sold': 'sold',
+    'commission': 'commission',
+}  # fmt: skip
+
+
+def milestone_of(step_key):
+    """The milestone a step belongs to, or None (`checklist:<item>` steps are intake's)."""
+    if step_key and step_key.startswith('checklist:'):
+        return 'intake_ready'
+    return STEP_MILESTONES.get(step_key)
+
+
 # The Overview banner's words when nothing waits on anyone (I119).
 WITH_US = 'The ball is in our court'
+
+# A queue row's words when a deal has nothing left and no sale (the old work feed's "Complete").
+COMPLETE = 'Complete'
+
+# The Work queue's filters (I78; old homeRows.js), served by /api/meta/ `agenda.queue` so the browser holds no list of
+# its own. Type: the deal type as of the deal (`deals.rules.deal_type`, I123); the old Upkeep chip waits with the Radar
+# (ch. 21). Due: plain comparisons on each row's `due_in` (days from the agency's today; ch. 12), `None` an open end;
+# an undated row matches only All. Category: hand tasks and nudges (ch. 21); deal rows are the pipeline.
+QUEUE_TYPES = [{'key': 'all', 'label': 'All work'}, {'key': 'new_business', 'label': 'New business'},
+               {'key': 'renewal', 'label': 'Renewals'}]  # fmt: skip
+DUE_BUCKETS = [
+    {'key': 'overdue', 'label': 'Overdue', 'min': None, 'max': -1},
+    {'key': 'week', 'label': 'This week', 'min': 0, 'max': 7},
+    {'key': '30', 'label': '30 days', 'min': 0, 'max': 30},
+    {'key': '90', 'label': '90 days', 'min': 0, 'max': 90},
+    {'key': 'all', 'label': 'All', 'min': None, 'max': None},
+]
+TASKS = 'task'
+CATEGORIES = [{'key': TASKS, 'label': 'Tasks'}]
+PIPELINE = {'key': 'pipeline', 'label': 'Pipeline'}
 
 # Row chips (I30, I35).
 TASK_CHIP, NUDGE_CHIP = 'Task', 'Nudge'

@@ -1,11 +1,54 @@
 // Agenda (plan.md §7.15; I.6): the deal's steps, marks and tasks. Query key: ['deal', id, 'agenda'] (staleTime 0, a
-// deal tab). Every write invalidates only the agenda, the Overview, the activity and the Work queue (I8, ch. 13), never
-// the Advisor's queries; the tab redraws from its own refetch.
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+// deal tab). Every write invalidates only the agenda, the shell's journey, the Overview, the activity and the Work
+// queue (I8, ch. 13), never the Advisor's queries; the tab redraws from its own refetch. From slice 61: the shell's
+// one read ['deal', id, 'journey'], and the home page's feed ['work-queue', include] and stats ['work-queue-stats'].
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from './client';
 import { dealKey } from './deals';
 
 export const agendaKey = (dealId) => dealKey(dealId, 'agenda');
+export const journeyKey = (dealId) => dealKey(dealId, 'journey');
+export const WORK_QUEUE_KEY = ['work-queue'];
+export const QUEUE_STATS_KEY = ['work-queue-stats'];
+
+/**
+ * GET deals/{id}/journey/ → {deal_id, today, next_step, waiting, journey: {modules: [{key, label, pct, steps: [{key,
+ * label, tab, state: done | current | todo}]}], complete}, progress, badges, meters, ready}: the sidebar's badges,
+ * meters and ready chip and the stepper (A21, A23, A24). `invalidateDeal` refetches it after a tab's write.
+ */
+export function useJourney(dealId) {
+  return useQuery({
+    queryKey: journeyKey(dealId),
+    queryFn: async () => (await api.get(`deals/${dealId}/journey/`)).data,
+    staleTime: 0,
+    enabled: Boolean(dealId),
+  });
+}
+
+/**
+ * GET work-queue/ → {today, rows, owners, client_names, cards: {prospects: {count, deal_size, unsized}}}: every live
+ * deal's row, open tasks and nudges (agenda/queue/feed.py). `closed` asks for finished and lost deals' rows too (I80).
+ * Kept on screen while a newer copy loads, as the old home's cache did (I89).
+ */
+export function useWorkQueue({ closed = false, enabled = true } = {}) {
+  return useQuery({
+    queryKey: [...WORK_QUEUE_KEY, closed ? 'closed' : 'open'],
+    queryFn: async () => (await api.get('work-queue/', { params: closed ? { include: 'closed' } : {} })).data,
+    staleTime: 0,
+    placeholderData: keepPreviousData,
+    enabled,
+  });
+}
+
+/** GET work-queue/stats/ → {actions_week, sales_month}, each {total, change_pct, series} (I83, I84, I127). */
+export function useQueueStats({ enabled = true } = {}) {
+  return useQuery({
+    queryKey: QUEUE_STATS_KEY,
+    queryFn: async () => (await api.get('work-queue/stats/')).data,
+    staleTime: 0,
+    enabled,
+  });
+}
 
 /**
  * GET deals/{id}/agenda/ → {today, deal_id, lost, finished, next_step, waiting, journey, progress, rows}. A row is a
@@ -21,10 +64,10 @@ export function useAgenda(dealId) {
 
 function settle(queryClient, dealId) {
   const id = Number(dealId);
-  for (const area of ['agenda', 'overview', 'activity']) {
+  for (const area of ['agenda', 'journey', 'overview', 'activity']) {
     queryClient.invalidateQueries({ queryKey: dealKey(id, area) });
   }
-  queryClient.invalidateQueries({ queryKey: ['work-queue'] });
+  queryClient.invalidateQueries({ queryKey: WORK_QUEUE_KEY });
 }
 
 /**

@@ -30,7 +30,9 @@ def test_I49_I51_facts_say_whether_a_census_is_in_waiting_for_its_mapping_or_onl
         'employees': 0,
         'dependents': 0,
         'errors': 0,
+        'warnings': 0,
         'missing_required': 0,
+        'readiness_pct': 100,
         'proposed_import': None,
         'files': 1,
     }

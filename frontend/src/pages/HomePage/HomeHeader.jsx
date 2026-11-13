@@ -1,10 +1,9 @@
 import { Link } from 'react-router';
 import { ARCHIVED_LINK_TIP } from '../ArchivedPage/archiveCopy';
 
-// Each view's header and stat card (A7, A10; plan.md §8.3), in the old home's classes. Only the cards with real
-// numbers today are drawn: the Prospects count and the Clients count. The Potential deal size card (a total of
-// Deal.deal_size, which rows show since slice 38) and Client responses wait for the work feed's stats (slice 61), and
-// the Calendar button and card for the Radar (I88).
+// Each view's header (A7; plan.md §8.3), in the old home's classes, then its stat cards (A10): the Clients count here;
+// Prospects' and the Work queue's cards are StatCards.jsx, on the work feed (slice 61). The Calendar button and card
+// wait for the Radar (I88).
 const WORDS = {
   prospects: {
     title: 'Prospects',
@@ -21,11 +20,17 @@ const WORDS = {
     card: 'Clients',
     sub: null,
   },
+  queue: {
+    title: 'Work queue',
+    subtitle:
+      "New deals, renewals, and year-round upkeep in one feed — every row is the next thing a client needs, sorted by when it's due.",
+    button: 'New deal',
+  },
 };
 
-/** The title row with ＋ New deal (Prospects) or Archived and ＋ New client (Clients, as the old book had them), then
- *  the stat card row. */
-export default function HomeHeader({ view, count, onCreate }) {
+/** The title row with ＋ New deal (Prospects, the Work queue) or Archived and ＋ New client (Clients, as the old book had
+ *  them), then the stat cards: `children`, or Clients' count card. */
+export default function HomeHeader({ view, count, onCreate, children }) {
   const words = WORDS[view];
   return (
     <>
@@ -47,13 +52,15 @@ export default function HomeHeader({ view, count, onCreate }) {
           </button>
         </div>
       </div>
-      <div className="bnf-graph-row">
-        <div className="bb-stat-card">
-          <div className="bb-stat-label">{words.card}</div>
-          <div className="bb-stat-value">{count ?? '—'}</div>
-          {words.sub && <div className="bb-stat-sub">{words.sub}</div>}
+      {children || (
+        <div className="bnf-graph-row">
+          <div className="bb-stat-card">
+            <div className="bb-stat-label">{words.card}</div>
+            <div className="bb-stat-value">{count ?? '—'}</div>
+            {words.sub && <div className="bb-stat-sub">{words.sub}</div>}
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

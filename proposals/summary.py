@@ -7,10 +7,11 @@ Per deal:
   nothing sold; `ready.subjects`'s rule) and how many of them have it (I56: "m of n lines recommended");
 - `ready`: Issue's gate would let it go (`ready.ready`, the builder's banner and Issue's one answer).
 The issues are one query whatever the deal count; the lines are the builder's own fact sheets (`builder.laid_lines`),
-read once per deal with plans (the Work queue's batched read is slice 61's).
+worked out for each deal with plans inside one batch scope (`deals.batch`; slice 61), so their rows are read once for
+every deal: the same queries for 1 deal or 300 (Q.3 #4).
 """
 
-from deals.models import Deal
+from deals import batch
 from quotes.models import Plan
 
 from . import builder, ready
@@ -33,7 +34,12 @@ def _lines(deal):
 
 
 def facts(deal_ids):
-    deals = list(Deal.objects.filter(pk__in=list(deal_ids)))
+    with batch.scope(deal_ids):
+        return _facts(deal_ids)
+
+
+def _facts(deal_ids):
+    deals = batch.deals(deal_ids)
     out = {deal.id: {'latest': None, 'needs': 0, 'picked': 0, 'ready': False} for deal in deals}
     issued = (
         ProposalIssue.objects.filter(deal_id__in=list(out), state=ProposalIssue.ISSUED)

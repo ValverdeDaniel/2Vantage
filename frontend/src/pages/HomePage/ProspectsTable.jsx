@@ -1,59 +1,57 @@
 import { useNavigate } from 'react-router';
-import { stageLabel } from '../../api/meta';
-import { stagePillClass } from '../../lib/dealLook';
-import { formatDate, personName, toDate } from '../../lib/format';
 import { ArchiveCell, ArchiveTh } from './ArchiveCells';
-import { AccountCell, ClientSortTh, DealCell, DealTh } from './HomeCells';
-
-function startOfToday() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
-}
+import { DealCell, DealTh } from './HomeCells';
+import { archiveRow } from './homeRows';
+import {
+  ActionCell,
+  DueCell,
+  OwnerCell,
+  RESPONSE_TITLE,
+  ResponseCell,
+  RowAccountCell,
+  SortTh,
+  StageCell,
+} from './QueueCells';
 
 /**
- * Prospects (CL11): I86's table (NewClientsTable.jsx at 891f1b3; bnf-nc-*), one row per Prospect client with its deal.
- * Due is the effective date, red once past. Until slice 61 brings the work feed, Next action and Client response are
- * empty, and the stage has no readiness bar. Archive hides the client and its deal (I126). A row opens the deal.
+ * Prospects (CL11; I86's table, old NewClientsTable.jsx at 891f1b3; bnf-nc-*), on the work feed from slice 61: one row
+ * per Prospect client (`homeRows.onePerClient`) with its next action, client response, stage and progress, due (the
+ * effective date, red once past) and owner; every other thing it needs is on the Work queue. A sale moves the client
+ * to Clients at once (I122 as changed by OQ101 c). The row opens its next action; the name opens the deal.
  */
-export default function ProspectsTable({ rows, meta, ordering, onSort, children }) {
+export default function ProspectsTable({ rows, meta, sort, onSort, emptyText }) {
   const navigate = useNavigate();
-  const today = startOfToday();
   return (
     <div className="bb-transfers-card">
       <div className="bb-transfers-head bnf-nc-head">
-        <ClientSortTh ordering={ordering} onSort={onSort} />
-        <DealTh />
+        <SortTh className="bb-th-account" sortKey="client" sort={sort} onSort={onSort}>
+          Client
+        </SortTh>
+        <DealTh sort={sort} onSort={onSort} />
         <div className="bnf-th-action">Next action</div>
-        <div className="bnf-th-response">Client response</div>
+        <SortTh className="bnf-th-response" sortKey="response" sort={sort} onSort={onSort} title={RESPONSE_TITLE}>
+          Client response
+        </SortTh>
         <div className="bnf-wq-th-extra">Stage</div>
-        <div className="bb-th-date">Due</div>
+        <SortTh className="bb-th-date" sortKey="due" sort={sort} onSort={onSort}>
+          Due
+        </SortTh>
         <div className="bnf-th-owner">Owner</div>
         <ArchiveTh />
       </div>
-      {children}
-      {rows.map((row) => {
-        const href = `/deals/${row.deal.id}`;
-        const due = toDate(row.deal.effective_date);
-        return (
-          <div key={row.id} className="bb-transfer-row bnf-nc-row" onClick={() => navigate(href)}>
-            <AccountCell name={row.name} sub="New business" to={href} />
-            <DealCell value={row.deal.deal_size} />
-            <div className="bnf-th-action" />
-            <div className="bnf-th-response bb-account-sub">—</div>
-            <div className="bnf-wq-th-extra">
-              <div className="bnf-wq-stagecell">
-                <span className={stagePillClass(row.deal.stage)}>{stageLabel(meta, row.deal.stage)}</span>
-              </div>
-            </div>
-            <div className={due && due < today ? 'bb-th-date bb-mono bnf-wq-overdue' : 'bb-th-date bb-mono'}>
-              {formatDate(row.deal.effective_date, '—')}
-            </div>
-            <div className="bnf-th-owner bb-account-sub">{personName(row.owner, '—')}</div>
-            <ArchiveCell row={row} />
-          </div>
-        );
-      })}
+      {rows.length === 0 && <div className="empty-state">{emptyText}</div>}
+      {rows.map((row) => (
+        <div key={row.client_id} className="bb-transfer-row bnf-nc-row" onClick={() => navigate(row.link)}>
+          <RowAccountCell row={row} sub={row.dealCount > 1 ? `${row.dealCount} new-business deals` : 'New business'} />
+          <DealCell value={row.deal_size} />
+          <ActionCell row={row} />
+          <ResponseCell row={row} />
+          <StageCell row={row} meta={meta} />
+          <DueCell row={row} />
+          <OwnerCell row={row} />
+          <ArchiveCell row={archiveRow(row)} />
+        </div>
+      ))}
     </div>
   );
 }

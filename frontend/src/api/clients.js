@@ -43,6 +43,7 @@ export function useArchiveClient() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: CLIENTS_KEY });
       queryClient.invalidateQueries({ queryKey: ARCHIVED_KEY });
+      queryClient.invalidateQueries({ queryKey: ['work-queue'] }); // the home feed (slice 61); its row leaves
     },
   });
 }

@@ -16,6 +16,7 @@ from collections import namedtuple
 
 from django.db.models import Max
 
+from deals import batch
 from intake.selectors import line_facts
 from quotes import labels, presented
 from quotes import selectors as quotes
@@ -30,8 +31,21 @@ from .models import ProposalConfig
 Laid = namedtuple('Laid', 'rows shown numbers pages options state pairs')
 
 
+def _tops(ids):
+    rows = Plan.all_objects.filter(deal_id__in=ids).order_by().values_list('deal_id', 'line')
+    rows = rows.annotate(top=Max('option_number'))
+    out = {}
+    for deal_id, line, top in rows:
+        out.setdefault(deal_id, {})[line] = top or 0
+    return out
+
+
 def tops(deal, line_keys):
-    """{line: the highest option number stored on it}, removed plans included (a number is never reused). One query."""
+    """{line: the highest option number stored on it}, removed plans included (a number is never reused). One query
+    (one for a whole batch scope, `deals.batch`)."""
+    if batch.holds(deal):
+        found = batch.per_deal('proposals.tops', deal.id, _tops, {})
+        return {line: top for line, top in found.items() if line in set(line_keys)}
     rows = (
         Plan.all_objects.filter(deal=deal, line__in=list(line_keys))
         .order_by()

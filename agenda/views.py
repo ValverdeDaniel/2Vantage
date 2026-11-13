@@ -13,8 +13,9 @@ from deals.models import Deal
 from deals.selectors import note_row
 from deals.views import MAX_ID
 
-from . import payload, selectors, services
+from . import payload, selectors, services, shell
 from .models import Task
+from .queue import feed, stats
 
 STEP_KEY_MAX = 80
 
@@ -42,6 +43,33 @@ class DealAgendaView(APIView):
     def get(self, request, pk):
         deal = get_object_or_404(Deal, pk=_deal_id(pk))
         return Response(selectors.deal_agenda(deal, request.user))
+
+
+class DealJourneyView(APIView):
+    """GET deals/{id}/journey/ → the shell's one read: {deal_id, today, next_step, waiting, journey, progress, badges,
+    meters, ready} (A21, A23, A24; slice 61)."""
+
+    def get(self, request, pk):
+        deal = get_object_or_404(Deal, pk=_deal_id(pk))
+        return Response(shell.journey_read(deal))
+
+
+class WorkQueueView(APIView):
+    """GET work-queue/ ?include=closed → {today, rows, owners, client_names, cards} (I70–I86; slice 61). Finished
+    and lost deals' rows come only with `include=closed` (I80); anything else is a 400."""
+
+    def get(self, request):
+        include = request.query_params.get('include', '')
+        if include not in ('', 'closed'):
+            raise ValidationError({'include': ['include must be "closed" or left out.']})
+        return Response(feed.work_queue(include_closed=include == 'closed'))
+
+
+class WorkQueueStatsView(APIView):
+    """GET work-queue/stats/ → {actions_week, sales_month}, each {total, change_pct, series} (I83, I84, I127)."""
+
+    def get(self, request):
+        return Response(stats.stats())
 
 
 class MarksView(APIView):

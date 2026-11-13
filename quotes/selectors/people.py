@@ -8,10 +8,12 @@ tier-rated lines borrow (OQ19) and stop-loss counts as lives (F98), are set by `
 first.
 """
 
+from django.db.models import Count
+
 from census import facts as census_facts
 from census import rollup
 from census.models import CensusImport
-from deals import lines
+from deals import batch, lines
 
 from ..models import LineEnrollment
 from ..shapes import People
@@ -31,11 +33,22 @@ def applied_imports(deal_id, stored=None):
     stored = stored or census_facts.stored(deal_id)
     if stored['last_import_at'] is None:
         return 0
-    return CensusImport.objects.filter(deal_id=deal_id, status=CensusImport.APPLIED).count()
+    return batch.per_deal('quotes.applied_imports', deal_id, _applied, 0)
+
+
+def _applied(ids):
+    applied = CensusImport.objects.filter(deal_id__in=ids, status=CensusImport.APPLIED)
+    return dict(applied.order_by().values('deal_id').annotate(n=Count('id')).values_list('deal_id', 'n'))
+
+
+def _enrollment_rows(ids):
+    return batch.grouped(LineEnrollment.objects.filter(deal_id__in=ids), lambda row: row.deal_id)
 
 
 def load(deal_id, line_keys):
-    rows = {row.line: row for row in LineEnrollment.objects.filter(deal_id=deal_id, line__in=list(line_keys))}
+    wanted = set(line_keys)
+    found = batch.per_deal('quotes.line_enrollment', deal_id, _enrollment_rows, ())
+    rows = {row.line: row for row in found if row.line in wanted}
     stored = census_facts.stored(deal_id)
     imports = applied_imports(deal_id, stored)
     out = {}

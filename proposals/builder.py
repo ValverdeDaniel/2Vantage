@@ -16,7 +16,7 @@ the issued versions (`issues.selectors`, slice 32; the packet card's Issued list
 previews (slice 28; `stamps.py`).
 """
 
-from deals import rules
+from deals import batch, rules
 from intake import coverage as intent
 from intake.selectors import intent_rows_for, line_facts
 from quotes import presented
@@ -38,9 +38,14 @@ def best_only(sheets):
     return f'Pick a recommendation on {", ".join(waiting)} first' if waiting else None
 
 
+def _stored(ids):
+    rows = ProposalConfig.objects.filter(deal_id__in=ids).values_list('deal_id', 'config', 'marks')
+    return {deal_id: (stored, marks) for deal_id, stored, marks in rows}
+
+
 def stored_rows(deal):
-    row = ProposalConfig.objects.filter(deal=deal).values_list('config', 'marks').first()
-    return row or ({}, {})
+    """(config, marks) of the deal's ProposalConfig, else ({}, {}): one query, or one for a whole batch scope."""
+    return batch.per_deal('proposals.config', getattr(deal, 'id', deal), _stored) or ({}, {})
 
 
 def proposal_lines(deal, states=None):

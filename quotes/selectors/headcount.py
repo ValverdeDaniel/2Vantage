@@ -13,7 +13,7 @@ the one the band uses, saying so when that one is an estimate ("Enrolled: intake
 
 from census import facts as census_facts
 from census import rollup
-from deals import lines
+from deals import batch, lines
 from deals.models import Deal
 from intake import providers as intake_providers
 
@@ -29,7 +29,9 @@ WHERE = {
 
 
 def _deal(deal):
-    return deal if isinstance(deal, Deal) else Deal.objects.get(pk=deal)
+    if isinstance(deal, Deal):
+        return deal
+    return (batch.deal(deal) if batch.holds(deal) else None) or Deal.objects.get(pk=deal)
 
 
 def advisor_count(deal):

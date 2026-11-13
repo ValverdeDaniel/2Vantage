@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { changeHome, listQuery, pageWords, readHome, statusChips, viewParams, VIEWS } from './homeParams';
+import { changeHome, listQuery, pageWords, readHome, statusChips, stepsParams, viewParams, VIEWS } from './homeParams';
 
 const url = (text) => new URLSearchParams(text);
 const KEYS = { prospect: 'prospect', statuses: ['new_client', 'existing_client'] };
@@ -7,12 +7,22 @@ const KEYS = { prospect: 'prospect', statuses: ['new_client', 'existing_client']
 describe('the home views (CL10, OQ95)', () => {
   it('OQ95 lands on Prospects at the bare address', () => {
     expect(readHome(url('')).view).toBe('prospects');
-    expect(readHome(url('view=queue')).view).toBe('prospects');
+    expect(readHome(url('view=other')).view).toBe('prospects');
     expect(readHome(url('view=book')).view).toBe('book');
+    expect(readHome(url('view=queue')).view).toBe('queue');
   });
 
-  it('CL10 offers Prospects then Clients, the Work queue waiting for slice 61', () => {
-    expect(VIEWS.map((view) => view.label)).toEqual(['Prospects', 'Clients']);
+  it('CL10 offers Prospects, Clients and the Work queue, in the old order', () => {
+    expect(VIEWS.map((view) => view.label)).toEqual(['Prospects', 'Clients', 'Work queue']);
+  });
+
+  it('I74 keeps All open steps in the URL on the Work queue only, written on a click', () => {
+    expect(readHome(url('view=queue&steps=all')).steps).toBe(true);
+    expect(readHome(url('view=queue')).steps).toBe(false);
+    expect(readHome(url('steps=all')).steps).toBe(false);
+    expect(stepsParams(url('view=queue'), true).toString()).toBe('view=queue&steps=all');
+    expect(stepsParams(url('view=queue&steps=all'), false).toString()).toBe('view=queue');
+    expect(viewParams('queue').toString()).toBe('view=queue');
   });
 
   it('CL10 switching the view keeps only the view, as the old pill did', () => {
@@ -29,6 +39,7 @@ describe('the URL keeps the search and filters (§8.3)', () => {
       status: 'existing_client',
       ordering: 'name',
       page: 3,
+      steps: false,
     });
   });
 
@@ -39,6 +50,7 @@ describe('the URL keeps the search and filters (§8.3)', () => {
       status: '',
       ordering: '',
       page: 1,
+      steps: false,
     });
   });
 

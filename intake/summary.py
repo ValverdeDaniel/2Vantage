@@ -6,13 +6,14 @@ how each is satisfied and, for the questionnaire rows, the form's state).
 
 Intake's own rows (the deals, their Intake rows, coverage rows, contacts and files) are read in a fixed number of
 queries however many deals are asked. The four provider slots (headcount, Census OK, the questionnaire forms and the
-plans' lines; O.1) answer one deal at a time, so they still cost a few queries per deal: batch slots join when agenda
-reads this (slice 60), and Q.3 #4's scaling check covers intake's own reads until then.
+plans' lines; O.1) answer one deal at a time, inside one batch scope (`deals.batch`; slice 61), so the rows behind
+them are read once for every deal: the same queries for 1 deal or 300 (Q.3 #4).
 """
 
 from collections import defaultdict
 
-from deals.models import Contact, Deal
+from deals import batch
+from deals.models import Contact
 from documents.models import Document
 
 from . import gate, providers, selectors
@@ -32,8 +33,14 @@ ITEM_KEYS = ('key', 'label', 'satisfy', 'kind', 'status', 'has_document', 'form_
 def facts(deal_ids):
     """{deal_id: {answered, needed, missing, contacts_ok, bor_on_file, census_ok, ready_state, gaps, blockers: [{kind,
     key, label}], checklist: {tier, required, done, missing, all_clear}, items: [{key, label, satisfy, kind, status,
-    has_document, form_key, signed, needed}], marketed_at}} for the deals asked (unknown ids are left out)."""
-    deals = list(Deal.objects.filter(pk__in=list(deal_ids)))
+    has_document, form_key, signed, needed}], marketed_at, readiness_pct}} for the deals asked (unknown ids are left
+    out)."""
+    with batch.scope(deal_ids):
+        return _facts(deal_ids)
+
+
+def _facts(deal_ids):
+    deals = batch.deals(deal_ids)
     ids = [deal.id for deal in deals]
     intakes = {row.deal_id: row for row in Intake.objects.filter(deal_id__in=ids)}
     coverage = _grouped(
@@ -83,5 +90,6 @@ def facts(deal_ids):
             'checklist': {key: card[key] for key in ('tier', 'required', 'done', 'missing', 'all_clear')},
             'items': [{key: row.get(key) for key in ITEM_KEYS} for row in card['items']],
             'marketed_at': intake.marketed_at if intake else None,
+            'readiness_pct': state['readiness']['pct'],  # the sidebar's Intake meter (A23; slice 61)
         }
     return found

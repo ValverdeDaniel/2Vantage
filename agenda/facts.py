@@ -6,14 +6,15 @@ it has no steps (I66). Per deal: `deal` {id, stage, lost, lost_reason, sold, cli
 facts plus `raw_asks`: each open request's stored asks, what Agenda's "waiting on the client" reads, I45),
 `documents` {questionnaire_files: [{id, review_state}]} and `nudges` (`agenda.nudges.of`).
 
-Each app's own reads are batched; the left apps' per-deal parts (intake's providers, quotes' pricing, the proposal's
-line sheets) are named in their modules: the Work queue's batched slots are slice 61's (P.12 risk 3).
+Each app's own reads are batched, and the left apps' per-deal parts (intake's providers, quotes' pricing, the
+proposal's line sheets) read their rows once for every deal asked, inside one batch scope (`deals.batch`; slice 61): the
+Work queue's facts for 300 deals run the same queries as for one (Q.3 #4, Q.7).
 """
 
 from census import summary as census_summary
 from commission import summary as commission_summary
 from commission.selectors import agency_default
-from deals import clock
+from deals import batch, clock
 from deals.models import Deal
 from documents.models import Document
 from intake import summary as intake_summary
@@ -67,13 +68,22 @@ def _unrated(sold_lines, rated_lines, agency):
     return [line for line in sold_lines if line not in set(rated_lines)]
 
 
-def facts_for(deal_ids, now=None):
+def facts_for(deal_ids, now=None, *, lost_too=False):
+    """{deal_id: facts} (above), in the same number of queries for one deal or many: every app's per-deal reads run
+    once for all of them inside one batch scope (`deals.batch`; Q.3 #4, slice 61). `lost_too`: a lost deal's facts are
+    read too (the shell's meters and badges still describe it; it still has no steps)."""
     now = now or clock.now()
     deals = list(Deal.objects.filter(pk__in=list(deal_ids)))
     out = {deal.id: {'deal': _deal(deal)} for deal in deals}
-    ids = [deal.id for deal in deals if deal.stage != 'lost']
+    ids = [deal.id for deal in deals if lost_too or deal.stage != 'lost']
     if not ids:
         return out
+    with batch.scope(ids):
+        _gather(out, ids, now)
+    return out
+
+
+def _gather(out, ids, now):
     intake = intake_summary.facts(ids)
     census = census_summary.facts(ids)
     quotes = quote_summary.facts(ids)
@@ -103,4 +113,3 @@ def facts_for(deal_ids, now=None):
             documents={'questionnaire_files': files.get(deal_id, [])},
             nudges=held.get(deal_id, []),
         )
-    return out

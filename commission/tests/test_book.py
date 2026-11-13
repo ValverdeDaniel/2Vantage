@@ -154,4 +154,10 @@ def test_H38_the_deal_facts_count_booked_records_in_a_fixed_number_of_queries(bo
     assert len(one.captured_queries) == len(two.captured_queries)
     assert found[book['deal'].id]['records'] == 1 and found[book['deal'].id]['booked_expected'] == 6000
     assert found[book['deal'].id]['rated_lines'] == ['dental', 'medical']
-    assert found[other.id] == {'rated_lines': [], 'records': 0, 'booked_expected': None, 'holes': 0, 'booked': False}
+    assert {key: value for key, value in found[other.id].items() if key != 'needs_primary'} == {
+        'rated_lines': [],
+        'records': 0,
+        'booked_expected': None,
+        'holes': 0,
+        'booked': False,
+    }

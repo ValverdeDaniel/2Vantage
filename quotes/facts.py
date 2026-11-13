@@ -61,6 +61,19 @@ def _key_fields(line_key):
     )
 
 
+def required_counts(line_key, values):
+    """(required, blank): how many of the line's fields this plan must hold and how many of those are blank, by
+    `statuses`' rule (a quoted-only premium exempts the tier rates; blank is its `missing`) without reading warnings:
+    the Proposal meter and badge (A21, A23; old `proposal_metrics`) and Agenda's flagged count, over many plans."""
+    quoted_only = values.get('group_premium_monthly') and not any(values.get(k) for k in fields.TIER_RATE_KEYS)
+    required = blank = 0
+    for key in _line_keys(line_key):
+        if fields.BY_KEY[key]['required'] and not (quoted_only and key in fields.TIER_RATE_KEYS):
+            required += 1
+            blank += values.get(key) in (None, '')
+    return required, blank
+
+
 def statuses(line_key, values, sources):
     quoted_only = values.get('group_premium_monthly') and not any(values.get(k) for k in fields.TIER_RATE_KEYS)
     status = {}
@@ -161,6 +174,13 @@ def _iso(day):
     return day.isoformat() if day else ''
 
 
+def _bor_filed(ids):
+    from documents.models import Document
+
+    filed = Document.objects.filter(deal_id__in=ids, kind='bor').exclude(review_state='wrong')
+    return dict.fromkeys(filed.values_list('deal_id', flat=True), True)
+
+
 def group_facts(deal):
     """{fact: text} about one deal's group, read once per request (plan.md §5.7's table; G.4): rfp prints them on its
     forms, cover and emails (slices 44–46) and the questionnaire prefills from them (slice 42). Keys:
@@ -171,13 +191,13 @@ def group_facts(deal):
     deal.effective_date, deal.anniversary_date (the medical renewal date in force, else the effective date),
     deal.medical_effective_date; broker.agent (`deals.rules.agent_name`), agency, email, phone, address,
     city_state_zip, is_bor (a BOR signed or filed, §5.2). Blank when unknown; never a guess."""
+    from deals import batch
     from deals import contacts as contact_rules
     from deals import rules as deal_rules
-    from deals.models import AgencySettings, Contact
-    from documents.models import Document
-    from intake.models import CurrentCoverage, Intake
+    from deals.models import AgencySettings
+    from intake import selectors as intake_selectors
 
-    intake = Intake.objects.filter(deal_id=deal.id).first()
+    intake = intake_selectors.intake_row(deal.id)
     answers = (intake.answers if intake else None) or {}
 
     def answer(key):
@@ -188,18 +208,15 @@ def group_facts(deal):
         answer('address_physical') or answer('address_mailing')
     )
     medical = incumbent(deal, 'medical') or {}
-    coverage = (
-        CurrentCoverage.objects.filter(deal_id=deal.id, line='medical', in_force=True)
-        .order_by('sort_order', 'id')
-        .values('effective_date', 'renewal_date')
-        .first()
-    ) or {}
-    contact = contact_rules.primary(list(Contact.objects.filter(client_id=deal.client_id).order_by('sort_order', 'id')))
+    in_force = [row for row in intake_selectors.coverage_rows(deal.id) if row.line == 'medical' and row.in_force]
+    first = in_force[0] if in_force else None
+    coverage = {'effective_date': first.effective_date, 'renewal_date': first.renewal_date} if first else {}
+    contact = contact_rules.primary(batch.client_contacts(deal.id))
     name = (contact.name if contact else '').strip()
     first, _, last = name.partition(' ')
     agency = AgencySettings.get()
     headcount_found = enrolled_headcount(deal)
-    bor_filed = Document.objects.filter(deal_id=deal.id, kind='bor').exclude(review_state='wrong').exists()
+    bor_filed = batch.per_deal('quotes.bor_filed', deal.id, _bor_filed, False)
     return {
         'group.legal_name': answer('legal_name') or deal.client.name,
         'group.dba': answer('dba'),

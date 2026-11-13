@@ -1,5 +1,5 @@
 """/api/meta/ `agenda` (plan.md §7.1; I.6): the Agenda's words and constants, so the browser hard-codes none (rule 1).
-The Work queue's due buckets, type chips and categories join with it in slice 61."""
+`queue` (slice 61): the Work queue's type chips, due buckets (on each row's `due_in`) and categories (I78)."""
 
 from . import catalogue, rules
 
@@ -22,4 +22,10 @@ def meta():
         'title_max': rules.TITLE_MAX,
         'note_max': rules.TASK_NOTE_MAX,
         'mark_note_max': rules.MARK_NOTE_MAX,
+        'queue': {
+            'types': catalogue.QUEUE_TYPES,
+            'due': catalogue.DUE_BUCKETS,
+            'categories': catalogue.CATEGORIES,
+            'pipeline': catalogue.PIPELINE,
+        },
     }

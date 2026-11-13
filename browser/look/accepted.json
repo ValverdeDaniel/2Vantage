@@ -118,7 +118,7 @@
       "check": "pixels",
       "selector": null,
       "item": "CL10",
-      "why": "The old \"New clients\" view is labelled Prospects, with its own subtitle and card label (OQ101 c, OQ95); the Work queue pill is pending slice 61.",
+      "why": "The old \"New clients\" view is labelled Prospects, with its own title, subtitle and card label (OQ101 c, OQ95), and lists Prospect clients only: a sale moves its client to Clients at once (I122 as changed; OQ91).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -129,7 +129,7 @@
       "check": "pixels",
       "selector": null,
       "item": "A10",
-      "why": "Only the Prospects count card has a real number today; the Potential deal size card (a total of Deal.deal_size, which the rows show since slice 38) and Client responses are pending slice 61's stats (I124, I85).",
+      "why": "The cards' figures are the work feed's (slice 61): the open Prospect clients, the sum of their deals' Potential deal size with \"N without a size yet\" (sub-line \"Across every open prospect\"), and Client responses (I86, I124, I85); the dev DB holds more prospects than the old parity load.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -140,7 +140,7 @@
       "check": "classes",
       "selector": null,
       "item": "I78",
-      "why": "The filter card holds the search only: Client responses, Due chips and the owner and stage selects are pending slice 61 (the work feed).",
+      "why": "The filter card and the table are the old ones on the work feed (slice 61); class counts follow the rows the dev DB holds and 2Vantage's stage pill class for Proposal (M15).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -151,7 +151,7 @@
       "check": "pixels",
       "selector": null,
       "item": "I76",
-      "why": "Row cells pending: Next action chip, Client response and the readiness bar (slice 61); the Archive button archives the client with its deal, on every row (OQ46, I126); rows sort by last update until slice 61 (I81).",
+      "why": "Rows show 2Vantage's next steps (Part I's catalogue; OQ90: a quote-first deal leads with reading quotes or \"Add the census, or type enrollment in the Advisor\"), the bar is milestones done over those that apply (I69, OQ94), Owner is the deal's owner, else the client's (I73), and Archive archives the client with its deal on every row (OQ46, I126).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -162,7 +162,7 @@
       "check": "style",
       "selector": ".bb-transfers-head",
       "item": "I86",
-      "why": "The table moves up with the shorter filter card; the Client header is the only sortable one (the server sorts by last update or name), so the size header keeps its own line height.",
+      "why": "The header row is the old one; Client, Potential deal size, Client response and Due sort in the browser over the work feed, as the old ones did (I81; slice 61).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -184,7 +184,7 @@
       "check": "style",
       "selector": "body",
       "item": "A10",
-      "why": "The page is shorter: one stat card row and the shorter filter card.",
+      "why": "The page's height follows the rows: the dev DB holds more prospects than the old parity load (I86).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -250,7 +250,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -305,7 +305,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -360,7 +360,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -415,7 +415,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -470,7 +470,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -800,7 +800,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -899,7 +899,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1031,7 +1031,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1218,7 +1218,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1361,7 +1361,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1460,7 +1460,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1658,7 +1658,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -1900,7 +1900,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2384,7 +2384,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2846,7 +2846,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -3253,7 +3253,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -3341,7 +3341,7 @@
       "check": "classes",
       "selector": null,
       "item": "A24",
-      "why": "The journey stepper, the sidebar badges and \"Deal readiness\" meters (A21, A23) are pending slice 61; the sidebar's intake ready chip with them (intake's ready state is built, B33; slice 40); the client block for slice 67 (A20).",
+      "why": "The journey stepper has 2Vantage's two modules and milestones (Get to Market: Intake ready, Enrollment in, Sent to market; Quote to Close: Quotes in, Proposal built, Proposal issued, Sold, Commission entered; I69, I120), the current dot on the milestone owning the next step (M39) and never a skipped module or dot (M40); the sidebar's badges count 2Vantage's own reads (A21, L13, H9) and its meters are Intake, Proposal and Census, Hand-off dropped (A23) (slice 61); the client block waits for slice 67 (A20).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -4816,6 +4816,127 @@
       "selector": ".bb-panel",
       "item": "M112",
       "why": "The first .bb-panel is 2Vantage's header strip (M112); the old request page has no panel before its who card.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "home.clients",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "OQ91",
+      "why": "Next action shows each client's deal's next step from the work feed (slice 61): a won client's commission step, or \"Sold\" (I122 as changed by OQ101 c; OQ91); the old book's column read the Radar's reminders (I88).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "home.queue",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "A6",
+      "why": "The top bar keeps Benefits, Commissions and Admin; Dashboard, P&C, Joint Ventures and the other old links are modules out of scope (A2, A22, A40), and the Calendar link waits with the Radar (I88).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "home.queue",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "OQ95",
+      "why": "The view pill reads Prospects · Clients · Work queue: the old \"New clients\" view is labelled Prospects (OQ101 c, OQ95).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "home.queue",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "I76",
+      "why": "Rows show 2Vantage's next steps (Part I's catalogue; OQ90: a quote-first deal leads with reading quotes or \"Add the census, or type enrollment in the Advisor\"), the bar is milestones done over those that apply (I69, OQ94), Owner is the deal's owner, else the client's (I73), and a deal row's Archive archives the client with its deal (tasks and nudges have none) (OQ46, I126).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "home.queue",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "OQ94",
+      "why": "The graph cards are real (OQ94): Actions completed this week counts milestone Activity rows plus ticked tasks (I83), Total sales this month compares the same days of last month (I84), and both sparklines draw the server's ten real points (I127); the old drew illustrative curves.",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "home.queue",
+      "width": null,
+      "check": "pixels",
+      "selector": null,
+      "item": "I78",
+      "why": "The Type chips are All work · New business · Renewals: Upkeep waits with the Radar (I.6 ch. 21); Category lists only Tasks, hand tasks and nudges (I78, ch. 21).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "home.queue",
+      "width": null,
+      "check": "classes",
+      "selector": null,
+      "item": "I76",
+      "why": "Class counts follow the rows the dev DB holds and 2Vantage's stage pill class for Proposal (M15).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "home.queue",
+      "width": null,
+      "check": "style",
+      "selector": ".bb-transfer-row",
+      "item": "I76",
+      "why": "A row is taller by the client name's link (role link for the Walk lane), one line-height taller than the old name button (as on Prospects, slice 4).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "home.queue",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-action-chip",
+      "item": "I76",
+      "why": "The Next action chip sits where the taller row centres it, and its words are 2Vantage's next steps (Part I; OQ90).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "home.queue",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-viewtab-on",
+      "item": "OQ95",
+      "why": "The Work queue pill sits after \"Prospects\", which is narrower than the old \"New clients\" (OQ101 c, OQ95).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "home.queue",
+      "width": null,
+      "check": "style",
+      "selector": "body",
+      "item": "I76",
+      "why": "The page's height follows the rows: the dev DB holds more deals than the old parity load, and each row is a line taller.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

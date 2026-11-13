@@ -227,6 +227,14 @@ def sell_gd1(user, django_capture_on_commit_callbacks):
     return built
 
 
+@pytest.fixture
+def fresh_gd2(user):
+    """GD2 built for this test only (it writes: slice 61 sells its plan and watches the row move), owned by `user`."""
+    from golden import seed, specs
+
+    return seed.build(specs.load('GD2'), user)
+
+
 @pytest.fixture(scope='session')
 def golden_keys():
     """{'GD1': its answer key, …} (Q.4): the figures, with checked_by, checked_on and method (null until signed), the

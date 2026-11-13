@@ -6,6 +6,7 @@ signature: a client upload counts through the checklist's own document rule once
 portal, slice 54). Progress is read only for an armed form that is started, so a deal nobody wrote reads no prefill.
 """
 
+from deals import batch
 from deals.models import Deal
 
 from . import context
@@ -13,7 +14,10 @@ from .payload import progress_of
 
 
 def questionnaire_items(deal_id):
-    deal = Deal.objects.filter(pk=deal_id).select_related('client').first()
+    if batch.holds(deal_id):
+        deal = batch.deal(deal_id)
+    else:
+        deal = Deal.objects.filter(pk=deal_id).select_related('client').first()
     if deal is None:
         return {}
     ctx = context.deal_context(deal)

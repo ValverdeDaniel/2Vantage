@@ -20,9 +20,10 @@ ANSWER_ORDER = (('enrolled_count', False), ('employee_count', True), ('total_emp
 
 
 def _headcount_from_answers(deal_id):
-    from .models import Intake
+    from .selectors import intake_row
 
-    answers = Intake.objects.filter(deal_id=deal_id).values_list('answers', flat=True).first() or {}
+    intake = intake_row(deal_id)
+    answers = (intake.answers if intake else None) or {}
     for key, estimate in ANSWER_ORDER:
         raw = str(answers.get(key) or '').strip()
         if raw:

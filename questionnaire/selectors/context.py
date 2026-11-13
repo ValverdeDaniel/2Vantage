@@ -10,7 +10,8 @@ prefill and the engine's view.
 
 from collections import namedtuple
 
-from intake.models import Intake
+from deals import batch
+from intake import selectors as intake_selectors
 from quotes import facts as quote_facts
 from quotes.fields import TIER_RATE_KEYS
 from quotes.models import Plan
@@ -22,11 +23,16 @@ Context = namedtuple('Context', 'deal checklist headcount resolved stored')
 FormView = namedtuple('FormView', 'form row stored prefill view')
 
 
+def _stored(ids):
+    return batch.grouped(Questionnaire.objects.filter(deal_id__in=ids), lambda row: row.deal_id)
+
+
 def deal_context(deal):
-    checklist = Intake.objects.filter(deal_id=deal.id).values_list('checklist', flat=True).first() or {}
+    intake = intake_selectors.intake_row(deal.id)
+    checklist = (intake.checklist if intake else None) or {}
     headcount = quote_facts.enrolled_headcount(deal)
     resolved = choice.resolve_all(checklist, headcount['count'], deal.requested_lines)
-    stored = {row.form: row for row in Questionnaire.objects.filter(deal_id=deal.id)}
+    stored = {row.form: row for row in batch.per_deal('questionnaire.rows', deal.id, _stored, ())}
     return Context(deal, checklist, headcount, resolved, stored)
 
 
@@ -47,14 +53,16 @@ def chips(ctx):
     return choice.chips(ctx.resolved, started_forms(ctx))
 
 
+def _current_rows(ids):
+    plans = Plan.objects.filter(deal_id__in=ids, line='medical', role__in=('current', 'renewal'))
+    rows = plans.order_by('sort_order', 'id').values('deal_id', 'id', 'role', 'name', 'renews_id', 'values')
+    return batch.grouped(rows, lambda row: row.pop('deal_id'))
+
+
 def current_plans(deal):
     """{plan id: {name, effective_date, rate_ee…rate_fam, renewal: {…}}} and the ids in slot order: the deal's current
     medical plans (`ordered_plans` order: slot order) and their renewals (G30, G134)."""
-    plans = list(
-        Plan.objects.filter(deal_id=deal.id, line='medical', role__in=('current', 'renewal'))
-        .order_by('sort_order', 'id')
-        .values('id', 'role', 'name', 'renews_id', 'values')
-    )
+    plans = list(batch.per_deal('questionnaire.current_plans', deal.id, _current_rows, ()))
     renewals = {p['renews_id']: p for p in plans if p['role'] == 'renewal' and p['renews_id']}
 
     def facts_of(plan):

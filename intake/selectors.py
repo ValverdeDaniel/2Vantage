@@ -3,7 +3,7 @@ reads as empty (M.5 B34). One read per table, whatever the deal holds: the deal,
 files' kinds and lines, and quotes' `quote_lines` provider.
 """
 
-from deals import clock, comp, lines
+from deals import batch, clock, comp, lines
 from deals.models import Deal
 
 from . import checklist, coverage, form, gate, providers, status, validation, values
@@ -14,13 +14,40 @@ PLAIN = ('id', 'line', 'carrier', 'funding', 'in_force', 'notes', 'on_proposal',
 DATES = ('effective_date', 'renewal_date', 'rate_guarantee_through')
 
 
+def _coverages(ids):
+    return batch.grouped(CurrentCoverage.objects.filter(deal_id__in=ids).order_by('sort_order', 'id'), _deal_id)
+
+
+def _deal_id(row):
+    return row.deal_id
+
+
+def _intakes(ids):
+    return {row.deal_id: row for row in Intake.objects.filter(deal_id__in=ids)}
+
+
+def coverage_rows(deal_id):
+    """The deal's current-coverage rows in their order: one query, or one for a whole batch scope (`deals.batch`).
+    Read them; never save one."""
+    return list(batch.per_deal('intake.coverage', deal_id, _coverages, ()))
+
+
+def intake_row(deal_id):
+    """The deal's Intake row, or None: one query, or one for a whole batch scope. Read it; never save it."""
+    return batch.per_deal('intake.row', deal_id, _intakes)
+
+
 def _coverage(deal_id):
-    return list(CurrentCoverage.objects.filter(deal_id=deal_id).order_by('sort_order', 'id'))
+    return coverage_rows(deal_id)
 
 
 def intent_rows_for(deal_id):
     """The intent matrix as it stands (coverage.intent_rows over the deal's lines and rows)."""
-    requested = Deal.objects.values_list('requested_lines', flat=True).get(pk=deal_id)
+    found = batch.deal(deal_id) if batch.holds(deal_id) else None
+    if found is not None:
+        requested = found.requested_lines
+    else:
+        requested = Deal.objects.values_list('requested_lines', flat=True).get(pk=deal_id)
     return coverage.intent_rows(lines.LINE_KEYS, requested, _coverage(deal_id))
 
 
@@ -85,7 +112,8 @@ def line_facts(deal, quote_lines):
     """(line_states, lines_off) for an app on the right that holds its own plan facts (`quote_lines`' shape; only
     `sold` is read): the Advisor's line tabs (F13) and the proposal's lines (J2, J52) read the card's one rule."""
     rows = coverage.intent_rows(lines.LINE_KEYS, deal.requested_lines, _coverage(deal.id))
-    confirmed = Intake.objects.filter(deal_id=deal.id).values_list('intent_confirmed', flat=True).first() or {}
+    intake = intake_row(deal.id)
+    confirmed = (intake.intent_confirmed if intake else None) or {}
     recorded = bool(deal.requested_lines) or bool(confirmed)
     return coverage.line_states(rows, quote_lines), coverage.lines_off(rows, quote_lines, recorded)
 

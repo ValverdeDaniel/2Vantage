@@ -1,28 +1,58 @@
 """Commission's deal facts for Agenda and the Overview (plan.md §5.10; H38, H39; O.2). The Overview (slice 62) and
 Agenda (slice 60) read them; nothing here writes.
 
-- `facts(deal_ids)`: {deal_id: {rated_lines, records, booked_expected, holes, booked}} for any number of deals in two
-  queries, the same for every viewer: counts and flags only, no share and no one's earnings.
+- `facts(deal_ids)`: {deal_id: {rated_lines, records, booked_expected, holes, booked, needs_primary}} for any number
+  of deals in a fixed number of queries, the same for every viewer: counts and flags only, no share and no one's
+  earnings. `needs_primary`: no producer is set (no split on the deal or its client, and no active owner), so the
+  house keeps 100 % — the sidebar's Commission "1" (H9; slice 61).
 - `card(deal, viewer)`: the Overview's commission card (H38, H39): the expected figure, its note and the split chips
   for every deal user (D-066); the booked block's figures as the viewer's tier allows (H102).
 """
 
 from decimal import Decimal
 
+from deals.models import Deal
 from quotes.math import plain
 
-from . import book_rules, selectors, terms, vocab
-from .models import Commission, Record
+from . import book_rules, parties, rules, selectors, terms, vocab
+from .models import ClientSplit, Commission, Record
+
+
+def _needs_primary(out, splits):
+    """Each deal's `needs_primary` (H9): `rules.resolve` falls through to the house (H10)."""
+    deals = list(Deal.objects.filter(pk__in=list(out)).values_list('id', 'client_id', 'owner_id', 'client__owner_id'))
+    clients = ClientSplit.objects.filter(client_id__in={row[1] for row in deals}).values_list('client_id', 'rows')
+    client_rows = dict(clients)
+    entries = parties.people() if deals else []
+    for deal_id, client_id, owner_id, client_owner_id in deals:
+        source, _rows = rules.resolve(
+            splits.get(deal_id),
+            client_rows.get(client_id),
+            parties.owner_person(owner_id, entries),
+            parties.owner_person(client_owner_id, entries),
+        )
+        out[deal_id]['needs_primary'] = source == vocab.HOUSE
 
 
 def facts(deal_ids):
     deal_ids = list(deal_ids)
     out = {
-        deal_id: {'rated_lines': [], 'records': 0, 'booked_expected': None, 'holes': 0, 'booked': False}
+        deal_id: {
+            'rated_lines': [],
+            'records': 0,
+            'booked_expected': None,
+            'holes': 0,
+            'booked': False,
+            'needs_primary': False,
+        }
         for deal_id in deal_ids
     }
-    for deal_id, rates in Commission.objects.filter(deal_id__in=deal_ids).values_list('deal_id', 'rates'):
+    splits = {}
+    stored = Commission.objects.filter(deal_id__in=deal_ids).values_list('deal_id', 'rates', 'split')
+    for deal_id, rates, split in stored:
         out[deal_id]['rated_lines'] = sorted(rates or {})
+        splits[deal_id] = (split or {}).get('rows')
+    _needs_primary(out, splits)
     totals = {}
     for record in Record.objects.filter(deal_id__in=deal_ids).exclude(status=vocab.VOID):
         entry = out[record.deal_id]

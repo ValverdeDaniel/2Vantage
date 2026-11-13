@@ -15,7 +15,7 @@ employee, no missing required cell and no error.
 
 from django.db.models import Max
 
-from deals import clock
+from deals import batch, clock
 from deals.models import Deal
 from intake.models import CurrentCoverage
 
@@ -122,9 +122,14 @@ EMPTY = {
 }
 
 
+def _stored(ids):
+    return {row.pop('deal_id'): row for row in CensusFacts.objects.filter(deal_id__in=ids).values('deal_id', *COUNTS)}
+
+
 def stored(deal_id):
-    row = CensusFacts.objects.filter(deal_id=deal_id).values(*COUNTS).first()
-    return row or dict(EMPTY)
+    """The stored counts (one query, or one for a whole batch scope; `deals.batch`), else the empty counts."""
+    row = batch.per_deal('census.stored', deal_id, _stored)
+    return dict(row) if row else dict(EMPTY)
 
 
 def refresh(deal_id):
