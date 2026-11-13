@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatAgo,
   formatDate,
   formatMoney,
   formatPercent,
@@ -60,5 +61,23 @@ describe('when something happened', () => {
   it('names a person, or the fallback', () => {
     expect(personName({ id: 3, name: 'Dana Lee' })).toBe('Dana Lee');
     expect(personName(null)).toBe('Unassigned');
+  });
+});
+
+describe('formatAgo (M37)', () => {
+  const now = new Date('2026-11-12T15:00:00Z');
+
+  it('M37 says "just now" under an hour, never "0h ago", and for a stamp just ahead of this clock', () => {
+    expect(formatAgo('2026-11-12T14:20:00Z', now)).toBe('just now');
+    expect(formatAgo('2026-11-12T15:00:30Z', now)).toBe('just now');
+  });
+
+  it('M37 counts whole hours under a day, then whole days', () => {
+    expect(formatAgo('2026-11-12T12:00:00Z', now)).toBe('3h ago');
+    expect(formatAgo('2026-11-10T14:00:00Z', now)).toBe('2d ago');
+  });
+
+  it('M37 says nothing for a missing stamp', () => {
+    expect(formatAgo(null, now)).toBe('');
   });
 });

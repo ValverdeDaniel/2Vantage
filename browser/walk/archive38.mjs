@@ -78,6 +78,7 @@ export const archive38 = {
     });
 
     await step('Archive… asks first, naming the client, then the header says it is off every list', async () => {
+      await page.goto(`${base}/deals/${dealId}/overview`); // Archive… lives on the Overview from slice 62 (M1, M112)
       await page.getByRole('button', { name: 'Archive…' }).click();
       await page.getByText(`Archive ${WALK_CLIENT}?`).waitFor();
       await page.getByRole('group', { name: 'Archive this client' }).getByRole('button', { name: 'Archive' }).click();

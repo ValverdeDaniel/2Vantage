@@ -16,6 +16,7 @@
 
 const SHELL = ['body', '.navbar', 'h1', '.btn-primary', '.btn-secondary'];
 const WORKSPACE = [...SHELL, '.bb-nav', '.bb-nav-item.active', '.bnf-nav-group-label', '.bb-tab-title', '.bb-panel'];
+const OVERVIEW = [...WORKSPACE, '.bnf-ov-titlerow', '.bnf-ov-header', '.bnf-ov-name', '.bnf-cat-chip', '.bnf-ov-stage', '.bnf-ov-chips .bb-drop-meta', '.bnf-ov-clientbox', '.bnf-ov-nolink', '.bb-account-label', '.bb-account-value', '.bnf-ov-waiting', '.bnf-next-label', '.bnf-next-text', '.bb-stat-card', '.bb-stat-label', '.bb-stat-value'];
 const AGENDA = [...WORKSPACE, '.bb-panel-title', '.bnf-event-title', '.bnf-ag-toggle', '.bnf-ag-count', '.bnf-ag-section-sub', '.bnf-ag-row', '.bnf-cal-label', '.bnf-agenda-detail', '.bnf-agenda-open', '.bnf-ag-btn'];
 
 export const SCREENS = [
@@ -47,7 +48,10 @@ export const SCREENS = [
   { key: 'archived', title: 'Archived: archived clients with their status and stage, Restore (slice 38; A13, M105)', old: { path: '/benefits/archived' }, new: { path: '/archived' }, ready: '.bnf-archived-section', styles: [...SHELL, '.bb-eyebrow', '.bb-title', '.bb-subtitle', '.bnf-archived-title', '.bnf-archived-table th', '.bnf-archived-table td'] },
   { key: 'commissions.book', title: '/commissions: the tiles and the Book (slice 49; H42–H51)', old: { path: '/commissions' }, new: { path: '/commissions' }, ready: '.bnf-com-tiles', styles: [...SHELL, '.bb-dash-header', '.bnf-com-tiles .bb-stat-card', '.bnf-com-tabs', '.bnf-com-tab.active', '.bnf-com-filters'] },
   { key: 'commissions.people', title: '/commissions By person (slice 49; H68)', old: { path: '/commissions?tab=people' }, new: { path: '/commissions?tab=people' }, ready: '.bnf-com-tabs', styles: [...SHELL, '.bnf-com-tiles .bb-stat-card', '.bnf-com-tab.active', '.bnf-com-filters'] },
-  { key: 'gd1.overview', title: 'GD1 Overview', deal: 'GD1', widths: 'workspace', old: { tab: 'overview' }, new: { pending: 62, why: 'the Overview' }, styles: WORKSPACE },
+  { key: 'gd1.overview', title: 'GD1 Overview: the title row, the Waiting banner, the header with its client box and facts, the tiles (slice 62; M1–M38, OQ96); the cards, feed and side cards in 63–64', deal: 'GD1', widths: 'workspace', old: { tab: 'overview' }, new: { tab: 'overview' }, ready: '.bnf-ov-header', styles: OVERVIEW },
+  { key: 'gd2.overview', title: 'GD2 Overview: a prospect, "Not on the client book yet" with Convert to client (slice 62; M21, M23, CL4)', deal: 'GD2', old: { tab: 'overview' }, new: { tab: 'overview' }, ready: '.bnf-ov-header', styles: OVERVIEW },
+  { key: 'gd3.overview', title: 'GD3 Overview at checkpoint A: quote-first, its quotes counted, the incumbent open to typing (slice 62; Q.9)', deal: 'GD3', old: { tab: 'overview' }, new: { tab: 'overview' }, ready: '.bnf-ov-header', styles: OVERVIEW },
+  { key: 'gd6.overview', title: 'GD6 Overview: the legal name and facts from intake, the carrier from its current plan (slice 62; M13, M25, M26)', deal: 'GD6', old: { tab: 'overview' }, new: { tab: 'overview' }, ready: '.bnf-ov-header', styles: OVERVIEW },
   { key: 'gd1.agenda', title: 'GD1 Agenda: the steps by section, Add a task, Done collapsed (slice 60; I1–I14, I27)', deal: 'GD1', old: { tab: 'agenda' }, new: { tab: 'agenda' }, ready: '.bnf-ag-block', styles: AGENDA },
   { key: 'gd3.agenda', title: 'GD3 Agenda at checkpoint A: quote-first, the intake steps listed and not leading (slice 60; I44, I50, OQ90)', deal: 'GD3', old: { tab: 'agenda' }, new: { tab: 'agenda' }, ready: '.bnf-ag-block', styles: AGENDA },
   { key: 'gd1.review', title: 'GD1 Review & requests: the Board, its readiness strip, the Waiting and To review lanes (slices 53, 55; L1, L2, L7, L9)', deal: 'GD1', widths: 'workspace', old: { tab: 'review' }, new: { tab: 'review' }, ready: '.bnf-board-lanes', styles: [...WORKSPACE, '.bnf-viewtab', '.bnf-board-head', '.bnf-board-ready', '.bnf-board-lane-head', '.bnf-board-empty'] },

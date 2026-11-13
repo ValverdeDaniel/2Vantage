@@ -4627,11 +4627,13 @@ Full list: Part I, I.6.
 
 ### 7.16 Overview — `overview/`
 
-Not built (slices 62 and 67).
+Built in slice 62: `GET deals/{id}/overview/` with the blocks O2 draws (`overview/payload.py`, pure `overview/rules.py`;
+one batch scope, the same queries at any size). Card 1, Card 2, the outreach and the side cards add their blocks in
+slice 63; the client read follows in 67.
 
 | Method | Path | Auth | Response |
 |---|---|---|---|
-| GET | `deals/{id}/overview/` | user | M.6's payload: `identity`, `facts`, `archived`, `asks`, `tiles`, `get_to_market`, `quote_to_close`, `enrollment_check`, `outreach`, `commission`, `coverage_notes` (slice 62) |
+| GET | `deals/{id}/overview/` | user | M.6's payload. Slice 62: `{deal_id, identity: {name, legal_name, legal_name_default, type, type_label, stage, open_days, renews, owner}, client: {id, name, relationship, client_since, on_book, convert: {allowed, sentence} \| null}, renewal_offer: {premium_annual, pct_change, label} \| null, facts: {fein, sic_code, situs_state, employee_count, carrier and funding: {value, from: plans \| coverage \| null, coverage_id, editable}, agent_of_record: {value, default}, deal_size, in_force: [{line, label, comp_label}], contact}, tiles: {plans_quoted, last_contact_at, expected_revenue}}`. The Waiting banner and Intake complete read the shell's `journey/`, and the lost and archived banners the deal header, so neither is read twice; `asks`, `get_to_market`, `quote_to_close`, `enrollment_check`, `outreach`, `commission` and `coverage_notes` join in slice 63; 404 past bigint |
 | GET | `clients/{id}/overview/` | user | The client page's Overview: one batched `summary.facts(deal_ids)` per app, questionnaire's `summaries(deals)`, `commission.summary.card` and the intake and quotes facts, in a fixed number of queries (slice 67) |
 
 Neither read writes anything or creates a row. The Overview's writes use their owners' endpoints: notes, contacts,
@@ -4774,9 +4776,10 @@ journey stepper, the Claude strip and the open tab.
 - The Activity drawer, with Revert (A34; slice 5).
 - The Potential deal size and the Agent of record, typed inline; a blank agent shows its default (the owner, else the
   agency producer) in grey (M27, M29, OQ49; slice 38).
-- Mark lost, its dialog and the lost banner stay here until slice 62 moves them to the Overview (M1, M2, M4, M112), and
-  so do Archive… ⓘ, its inline confirmation and the archived banner with Restore (M6, M7, M103; slice 38). A lost deal
-  refuses what `deals.rules.refuses` lists; internal edits still work (O.3.7).
+- Mark as lost… (its inline row) and the lost banner with Reopen deal, and Archive… ⓘ with its inline confirmation and
+  the archived banner with Restore, moved to the Overview in slice 62 (M1, M2, M4, M6, M7, M103, M112); the strip keeps
+  the stage, so "Lost" shows on every tab. A lost deal refuses what `deals.rules.refuses` lists; internal edits still
+  work (O.3.7).
 
 **Journey stepper** (A24, M39, I120): Get to Market and Quote to Close; dots ✓, current, to do and –; a click opens the
 step's tab; the current dot is the step that owns the next step; no step is ever "skipped" (M40). It reads agenda's
@@ -4867,6 +4870,16 @@ the old order (M.6), except that the Waiting banner sits under the title (M33; O
 - **Data confidence** and Double-check with AI (M83–M93; slice 64).
 - Not built: the carry banner, earlier deals and earlier notes wait with renewals (M22, M31, M32, M47, M78, M84); the
   status report waits (OQ8); P&C is dropped (M19).
+- **Built in slice 62** (`deal/overview/`, `overview/`): the title row with Mark as lost…'s inline row ("Why did we lose
+  it? (optional)") and Archive… ⓘ, their banners; the Waiting banner from the shell's journey (Waiting on or Status,
+  With us or With them, how long, "Next step — …", Go ▸ to the next step's link; none on a lost deal); the header with
+  the deal type, stage, "Open N days", Renews, "Owner: …" and the renewal-offer chip "Renewal offer $X/yr (+Y%)" (M20,
+  OQ38: the proposal's one rule, `proposals.summary_read.renewal_offer`, so it shows once the letter's facts are
+  stored); the client box ("<client> ↗" opens the client dialog until slice 67; a prospect's Convert to client posts
+  to the status door, refused with its sentence on a lost deal); the facts grid in the old order (Legal name, FEIN, SIC
+  code, Funding, Situs state, Current carrier, Eligible employees, Agent of record, In-force commission, Potential deal
+  size, Contact, email, phone) on `ui/FactRow.jsx`, each written through its owner; and the four tiles. Deals open
+  here (`/deals/:id` → `/deals/:id/overview`).
 
 ### 8.7 Agenda (`agenda`)
 
@@ -6891,9 +6904,9 @@ An app imports only from apps to its left (lint-imports); a fact read by an app 
 reach right, a left app owns a seam (provider slot, registry or on-commit signal) that the right app fills in
 AppConfig.ready() (O.1); backend/ is the composition root. ai holds jobs, the worker, chats and the Claude client, never
 business data. golden is seed-only: only seed_golden and the root conftest.py import it. Built so far: accounts, deals,
-documents, ai, intake, census, quotes, questionnaire, commission, rfp, proposals, review, agenda, golden. The chain
-orders imports, not screens: the deal sidebar keeps old Vantage's order and groups (A21, OQ9): Overview, Agenda · 1 Get
-to Market: Review & requests, Intake, Census, Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to
+documents, ai, intake, census, quotes, questionnaire, commission, rfp, proposals, review, agenda, overview, golden. The
+chain orders imports, not screens: the deal sidebar keeps old Vantage's order and groups (A21, OQ9): Overview, Agenda ·
+1 Get to Market: Review & requests, Intake, Census, Questionnaire (if the deal has a form), RFP, Commission · 2 Quote to
 Close: Advisor, Proposal · Shared: Documents. Quotes never wait for intake, census or a questionnaire: typed summary
 tier counts carry the Advisor and Proposal. Tab folders take the app's name except advisor/ (quotes) and proposal/
 (proposals); from slice 4 a tab folder's index.js exports only what others mount. Other pages live in pages/ (home;

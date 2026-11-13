@@ -35,8 +35,8 @@ export const NAV = [
   },
 ];
 
-// The deal's default tab: the Advisor until slice 62 moves deals onto the Overview (O.4).
-export const DEFAULT_TAB = 'advisor';
+// The deal's default tab: the Overview, where deals open from slice 62 (O.4; plan.md §8.1).
+export const DEFAULT_TAB = 'overview';
 
 /** The groups to draw, in order, keeping only tabs in `built` (a list or Set of keys); empty groups are dropped. */
 export function navGroups(built) {

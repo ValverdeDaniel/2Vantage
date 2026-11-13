@@ -3,7 +3,7 @@ import { tabFor } from './nav';
 import { BUILT_TABS } from './tabs';
 
 /**
- * /deals/:dealId opens the deal's default tab (the Advisor until slice 62). A link that names its tab in the query
+ * /deals/:dealId opens the deal's default tab, the Overview (slice 62). A link that names its tab in the query
  * (`?tab=documents`, the old workspace's way, A26) opens that tab in the path, keeping the rest of its query.
  */
 export default function DealRedirect() {

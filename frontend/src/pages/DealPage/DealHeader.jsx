@@ -6,13 +6,10 @@ import { formatDate, formatMoney } from '../../lib/format';
 import Menu from '../../ui/Menu';
 import SaveStatus from '../../ui/SaveStatus';
 import ActivityDrawer from './ActivityDrawer';
-import { ArchiveButton, ArchiveConfirm, ArchivedBanner } from './ArchiveControls';
 import ClientDialog from './ClientDialog';
 import EffectiveDate from './EffectiveDate';
 import HeaderFact from './HeaderFact';
 import LinesPicker from './LinesPicker';
-import LostBanner from './LostBanner';
-import LostDialog from './LostDialog';
 import OwnerPicker from './OwnerPicker';
 
 // Stage ▾ — intake, quoting or proposal by hand (A30); sold comes from marking a plan sold, lost from Mark as lost.
@@ -44,14 +41,13 @@ function sizeDraft(value) {
 /**
  * The header strip on every tab (plan.md §8.4; new against the old app, M112), built from the old Overview header's
  * classes (bnf-ov-*): the client's name (opens the client dialog until slice 67) and status, the stage pill with
- * Stage ▾, the effective date, the owner, the Potential deal size and the Agent of record (M27, M29), Lines, Activity
- * with Revert, Mark as lost… and Archive… with their banners (until slice 62 moves them to the Overview). Every
- * change goes through PATCH and refreshes the rest of the deal's queries.
+ * Stage ▾ ("Lost" shows here on every tab), the effective date, the owner, the Potential deal size and the Agent of
+ * record (M27, M29), Lines and Activity with Revert. Mark as lost… and Archive… with their banners live on the
+ * Overview from slice 62 (M1, M112). Every change goes through PATCH and refreshes the rest of the deal's queries.
  */
 export default function DealHeader({ deal, meta }) {
-  const [open, setOpen] = useState(null); // 'client' | 'lost' | 'activity' | 'archive'
+  const [open, setOpen] = useState(null); // 'client' | 'activity'
   const stageUpdate = useUpdateDeal(deal.id);
-  const lost = deal.stage === LOST;
   const close = () => setOpen(null);
   const { client } = deal;
 
@@ -106,23 +102,12 @@ export default function DealHeader({ deal, meta }) {
             Activity
           </button>
           <StageMenu deal={deal} meta={meta} update={stageUpdate} />
-          {!lost && (
-            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setOpen('lost')}>
-              Mark as lost…
-            </button>
-          )}
-          {!deal.archived && open !== 'archive' && <ArchiveButton onClick={() => setOpen('archive')} />}
         </div>
       </div>
       <div className="bnf-ov-facts">
         <LinesPicker deal={deal} meta={meta} />
       </div>
-      {open === 'archive' && !deal.archived && <ArchiveConfirm deal={deal} onDone={close} />}
-      {deal.archived && <ArchivedBanner deal={deal} />}
-      {lost && <LostBanner deal={deal} />}
-
       {open === 'client' && <ClientDialog deal={deal} meta={meta} onClose={close} />}
-      {open === 'lost' && <LostDialog deal={deal} onClose={close} />}
       <ActivityDrawer dealId={deal.id} open={open === 'activity'} onClose={close} />
     </div>
   );

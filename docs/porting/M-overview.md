@@ -444,7 +444,7 @@ Mutations invalidate narrowly: notes → notes, activity; facts → overview, jo
 
 **Tests to write** (behavioural only):
 - **Payload:** an empty deal returns every block; overview, journey and dashboard GETs create no rows and no Activity; a quote-first deal with typed counts shows plans, Card 2, the enrollment line, M110 and its tier, nothing "skipped", and the current dot on the step that owns the next step; a lost deal has a lost waiting state.
-- **Deal type:** a won prospect stays New business while its client becomes Existing; a type edit before the sale changes it, after the sale it does not.
+- **Deal type:** a won prospect stays New business while its client becomes a New client (plan.md §5.1, §13.11; OQ2); a status edit before the sale changes the type, after the sale it does not.
 - **Facts:** facts land in intake; a bad FEIN returns intake's message; a current plan's carrier is read-only with its source; with no plan a typed carrier lands in `CurrentCoverage`; unknown funding answers 400; the agent falls back to owner, then agency producer.
 - **Contacts:** a prior broker is never primary; a benefit_admin can be; the first edit creates an hr_admin; a bad email answers 400.
 - **Archive:** archive and restore write Activity; the client leaves the dashboard and work queue, its Overview opens with the banner, the commission book keeps its sold deal; portal writes answer 410; `DELETE clients/{id}` answers 405.

@@ -98,3 +98,16 @@ export function formatPercent(value, { signed = true, decimals = 1, empty = '' }
 export function personName(person, fallback = 'Unassigned') {
   return person?.name || fallback;
 }
+
+/**
+ * How long ago, as the Overview's Last contact tile reads it (M37; old `timeAgo` at 891f1b3): "3h ago", "2d ago", and
+ * "just now" under an hour, never "0h ago". A stamp a little ahead of this clock (the server's) is "just now".
+ */
+export function formatAgo(value, now = new Date()) {
+  const date = toDate(value);
+  if (!date) return '';
+  const hours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+  if (hours < 1) return 'just now';
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}

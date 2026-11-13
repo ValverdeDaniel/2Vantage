@@ -47,22 +47,22 @@ describe('the deal sidebar (A21, OQ9)', () => {
 });
 
 describe('the tab in the path (A26, plan.md §8.1)', () => {
-  const built = ['advisor', 'proposal', 'documents'];
+  const built = ['overview', 'advisor', 'proposal', 'documents'];
 
   it('A26 opens a built tab', () => {
     expect(tabFor('documents', built)).toBe('documents');
   });
 
-  it('A26 sends an unbuilt or unknown tab to the default tab, the Advisor until slice 62', () => {
-    expect(DEFAULT_TAB).toBe('advisor');
-    expect(tabFor('census', built)).toBe('advisor');
-    expect(tabFor('commission', built)).toBe('advisor');
-    expect(tabFor(undefined, built)).toBe('advisor');
+  it('A26 O.4 sends an unbuilt or unknown tab to the default tab, the Overview from slice 62', () => {
+    expect(DEFAULT_TAB).toBe('overview');
+    expect(tabFor('census', built)).toBe('overview');
+    expect(tabFor('commission', built)).toBe('overview');
+    expect(tabFor(undefined, built)).toBe('overview');
   });
 
   it("A26 reads an old link's tab name: carriers is the RFP tab", () => {
     expect(tabFor('carriers', ['advisor', 'rfp'])).toBe('rfp');
-    expect(tabFor('carriers', built)).toBe('advisor');
+    expect(tabFor('carriers', built)).toBe('overview');
   });
 
   it('A21 names each tab as the sidebar does', () => {

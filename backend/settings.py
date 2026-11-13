@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'proposals',
     'review',  # requests, client links and the tab's counts (slice 53); the portal from slice 54
     'agenda',  # steps, marks and tasks, and the deal's Agenda tab (slice 60); the Work queue from slice 61
+    'overview',  # the deal Overview's read (slice 62); its cards in 63, data confidence in 64, the client page in 67
     'golden',  # seed only, last in the chain (§3.3)
 ]
 
