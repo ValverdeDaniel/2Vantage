@@ -8,9 +8,11 @@
   request's `form_version`, the link's blank flag, submitted, security and PIN version, closed and turned off, and
   (slice 56) its notes' stamp, so a reply or a send-back of ours shows on a page left open. A poll that reads a
   different word re-reads the page and keeps what the person typed.
-- `rail(intake, people, census_file, documents, follow_ups)`: the to-do list (L81, old `_client_checklist`): a row per
-  section, its counts and whether it is done, and (slice 56) Follow-ups: what we sent back or asked again, done once
-  they answered it; the browser recounts the form's rows from what is typed, with the same rule (portalModel.js).
+- `rail(intake, people, census_file, documents, follow_ups, forms)`: the to-do list (L81, old `_client_checklist`): a
+  row per section, its counts and whether it is done, and (slice 56) Follow-ups: what we sent back or asked again, done
+  once they answered it; (slice 58) a row per questionnaire first, as the old list put them (`questionnaire_part.
+  rail_items`: done once signed, G95); the browser recounts the form's rows from what is typed, with the same rule
+  (portalModel.js).
 """
 
 import hashlib
@@ -57,11 +59,11 @@ def _counted(fields):
     return filled, total
 
 
-def rail(words, intake, people, census_file, documents, follow_ups=()):
+def rail(words, intake, people, census_file, documents, follow_ups=(), forms=()):
     """{items: [{key, kind, label, done, filled?, total?}], done, total}. `words` holds the labels; `intake` is the
     intake section (or None), `people` the people asked, `census_file` its section (or None), `documents` the slots,
-    `follow_ups` the follow-up cards."""
-    items = []
+    `follow_ups` the follow-up cards, `forms` the questionnaires' rows (already counted)."""
+    items = list(forms)
     if intake:
         shown = [field for section in intake['sections'] for field in section['fields'] if field['shown']]
         if shown:

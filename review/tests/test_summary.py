@@ -78,8 +78,9 @@ def test_L13_to_review_counts_what_came_back_and_waits_on_us(user, deal):
     ReviewNote.objects.create(deal=deal, surface='intake', key='sic_code', kind='question', text='?', at=clock.now())
     ReviewNote.objects.create(deal=deal, surface='intake', key='dba', kind='ask', author=user, at=clock.now())
     found = summary.facts([deal.id])[deal.id]
-    assert found['pending'] == {'intake': 1, 'census': 0, 'people': 0, 'documents': 1, 'total': 2}
-    assert found['ready'] == {'intake': 1, 'census': 0}  # saved 30 hours ago and left: ready for review
+    assert found['pending'] == {'intake': 1, 'census': 0, 'people': 0, 'questionnaire': 0, 'documents': 1, 'total': 2}
+    # saved 30 hours ago and left: ready for review
+    assert found['ready'] == {'intake': 1, 'census': 0, 'questionnaire': 0}
     intake = found['sections']['intake']
     assert (intake['to_review'], intake['ready_idle'], intake['ready_submitted']) == (1, 1, 0)
     assert (intake['questions'], intake['in_tray']) == (1, 1)

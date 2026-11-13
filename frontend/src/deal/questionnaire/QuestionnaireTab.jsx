@@ -2,6 +2,7 @@ import { useSearchParams } from 'react-router';
 import { useDealForms } from '../../api/questionnaire';
 import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
+import { SectionBar } from '../review';
 import FormChips from './FormChips';
 import FormEditor from './FormEditor';
 
@@ -9,7 +10,8 @@ import FormEditor from './FormEditor';
  * The Questionnaire tab (plan.md §8.11; G1–G55, G133): the forms the deal uses — Florida Blue 51+ by the band at 51 or
  * more enrolled, Warner 51+ or the SIIA disclosure by a person's choice — one at a time, picked by chip and named in
  * `?form=` (G35); `?view=table` lays it out as a table (G38). Board, Request and Review are Review & requests' views
- * of the questionnaire (G34, slice 53). The sidebar shows the tab only while the deal has a form (G7).
+ * of the questionnaire (G34, slice 53). The sidebar shows the tab only while the deal has a form (G7). The section bar
+ * on top (slice 58; G45, G73) counts the client's answers on the forms and approves the ready ones.
  */
 export default function QuestionnaireTab({ deal }) {
   const forms = useDealForms(deal.id);
@@ -40,6 +42,7 @@ export default function QuestionnaireTab({ deal }) {
   };
   return (
     <div className="bnf-q-tab">
+      <SectionBar dealId={deal.id} surface="questionnaire" label="Questionnaire" />
       <FormChips forms={list} active={active} onPick={(form) => write({ form })} />
       <FormEditor
         key={active}

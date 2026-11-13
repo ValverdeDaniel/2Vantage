@@ -27,7 +27,12 @@ from .policy import EXPIRING_DAYS
 
 LIMIT = 8
 QUESTION_WAITS = timedelta(hours=24)
-SURFACE_WORDS = {'census': 'the census', 'intake': 'the intake', 'documents': 'the documents'}
+SURFACE_WORDS = {
+    'census': 'the census',
+    'intake': 'the intake',
+    'questionnaire': 'the questionnaire',
+    'documents': 'the documents',
+}
 
 
 def plural(count, noun):

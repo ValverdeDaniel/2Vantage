@@ -27,6 +27,7 @@ import { pdf29 } from './pdf29.mjs';
 import { portal54 } from './portal54.mjs';
 import { questionnaire42 } from './questionnaire42.mjs';
 import { questionnaire43 } from './questionnaire43.mjs';
+import { questionnaire58 } from './questionnaire58.mjs';
 import { questionnaireRead52 } from './questionnaireRead52.mjs';
 import { rfp44 } from './rfp44.mjs';
 import { rfp45 } from './rfp45.mjs';
@@ -281,6 +282,7 @@ export const WALKS = {
   s55: { ...review55, run: (ctx) => review55.run(ctx, { signIn, openDeal }) }, // slice 55's done-when (re-seed GD6 after)
   s56: { ...review56, run: (ctx) => review56.run(ctx, { signIn, openDeal }) }, // slice 56's done-when (re-seed GD6 after)
   s57: { ...review57, run: (ctx) => review57.run(ctx, { signIn, openDeal }) }, // slice 57's done-when (re-seed GD6 after)
+  s58: { ...questionnaire58, run: (ctx) => questionnaire58.run(ctx, { signIn, openDeal }) }, // slice 58's done-when, at 390×844 (re-seed GD6 after)
   s66: { ...voice66, run: (ctx) => voice66.run(ctx, { signIn, openDeal }) }, // slice 66's done-when (a fake recognizer; no Claude, no writes)
   s60: { ...agenda60, run: (ctx) => agenda60.run(ctx, { signIn, openDeal }) }, // slice 60's done-when (fresh GD3; re-seed GD3 after)
   s61: { ...home61, run: (ctx) => home61.run(ctx, { signIn, openDeal }) }, // slice 61's done-when (fresh GD2; re-seed GD2 after)

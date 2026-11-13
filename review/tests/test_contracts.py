@@ -18,6 +18,10 @@ ASK = {
 }
 
 
+# A form asked online (slice 58): its link needs the PIN, so a signed-out caller meets 428 and staff read it.
+FORM_ASK = {'asks': {'questionnaires': [{'form': 'fl_blue_51', 'mode': 'online'}]}, 'people': [{'name': 'Robin'}]}
+
+
 @pytest.fixture
 def made(user, deal):
     return services.create(user, deal.id, ASK)
@@ -26,6 +30,8 @@ def made(user, deal):
 def samples(deal, made):
     token = made.links[0][1].rsplit('/', 1)[1]
     draft = tray.ask(None, deal.id, ['intake:fein']).drafts[0]
+    form_token = services.create(None, deal.id, FORM_ASK).links[0][1].rsplit('/', 1)[1]
+    form = {'token': form_token, 'form': 'fl_blue_51'}
     return {
         'api/deals/<int:pk>/review/notes/': {'pk': deal.id},
         'api/deals/<int:pk>/review/notes/<int:nid>/': {'pk': deal.id, 'nid': draft.id},
@@ -51,6 +57,15 @@ def samples(deal, made):
         'api/links/<int:lid>/': {'lid': made.links[0][0].id},
         'api/links/<int:lid>/preview/': {'lid': made.links[0][0].id},
         **{route: {'token': token} for route in PORTAL},
+        'api/portal/<str:token>/questionnaires/<str:form>/spec/': form,
+        'api/portal/<str:token>/questionnaires/<str:form>/blank/': form,
+        'api/portal/<str:token>/questionnaires/<str:form>/rows/': form,
+        'api/portal/<str:token>/questionnaires/<str:form>/rows/<str:block>/<int:row_id>/': {
+            **form,
+            'block': 'plans',
+            'row_id': 1,
+        },
+        'api/portal/<str:token>/questionnaires/<str:form>/sign/': form,
     }
 
 
@@ -60,6 +75,7 @@ MADE = {'signed_out': 401, 'producer': 201, 'admin': 201}
 PUBLIC_READ = {'signed_out': 200, 'producer': 200, 'admin': 200}
 PUBLIC_WRITE = {'signed_out': 200, 'producer': 403, 'admin': 403}
 QUESTION = {'questions': [{'ref': 'census:file', 'text': 'Which file do you need?'}]}
+FORM_WRITE = {'signed_out': 428, 'producer': 403, 'admin': 403}  # a PIN link: 428 before the PIN, staff 403
 PORTAL = [
     'api/portal/<str:token>/',
     'api/portal/<str:token>/verify/',
@@ -118,6 +134,11 @@ MATRIX = [
     ('POST', 'api/portal/<str:token>/files/', {**PUBLIC_WRITE, 'signed_out': 400}, {'slot': 'census_file'}),
     ('POST', 'api/portal/<str:token>/questions/', {**PUBLIC_WRITE, 'signed_out': 201}, QUESTION),
     ('POST', 'api/portal/<str:token>/seen/', PUBLIC_WRITE, {}),
+    ('GET', 'api/portal/<str:token>/questionnaires/<str:form>/spec/', {**PUBLIC_READ, 'signed_out': 428}),
+    ('GET', 'api/portal/<str:token>/questionnaires/<str:form>/blank/', {**PUBLIC_READ, 'signed_out': 428}),
+    ('POST', 'api/portal/<str:token>/questionnaires/<str:form>/rows/', FORM_WRITE, {'block': 'plans'}),
+    ('DELETE', 'api/portal/<str:token>/questionnaires/<str:form>/rows/<str:block>/<int:row_id>/', FORM_WRITE),
+    ('POST', 'api/portal/<str:token>/questionnaires/<str:form>/sign/', FORM_WRITE, {'name': 'Robin Example'}),
 ]
 
 

@@ -46,7 +46,7 @@ def test_L29_each_intake_item_says_where_it_stands(api, user, deal):
     assert status['intake:years_in_business'] == 'missing'
     assert status['intake:block:bor'] == 'missing'
     assert found['counts']['question'] == 1 and found['counts']['in_cart'] == 1
-    assert [pane['key'] for pane in found['panes']] == ['intake', 'census', 'documents']
+    assert [pane['key'] for pane in found['panes']] == ['intake', 'census', 'questionnaire', 'documents']
     assert found['panes'][0]['waiting'] == 2 and found['panes'][0]['in_cart'] == 1
     assert found['threads']['intake:fein'][0]['from_client']
     assert found['people'][0]['name'] == 'Casey (synthetic)' and found['people'][0]['path'].startswith('/portal/')

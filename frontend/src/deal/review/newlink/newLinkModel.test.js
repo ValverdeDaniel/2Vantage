@@ -49,3 +49,14 @@ describe('the minimal New link (L40)', () => {
     expect(dayIn(7, new Date(2026, 10, 28))).toBe('2026-12-05');
   });
 });
+
+describe('the builder asks questionnaires (slice 58)', () => {
+  it('G80 asks each form online or as a signed copy, and leaves an unpicked form off', () => {
+    const picked = { ...initialState(), forms: { fl_blue_51: 'online', stop_loss_siia: 'upload', wp_lg: '' } };
+    expect(asksOf(picked).questionnaires).toEqual([
+      { form: 'fl_blue_51', mode: 'online', picks: { fields: [], blocks: [] } },
+      { form: 'stop_loss_siia', mode: 'upload', picks: { fields: [], blocks: [] } },
+    ]);
+    expect(hasAsk({ ...initialState(), forms: { fl_blue_51: 'online' } })).toBe(true);
+  });
+});

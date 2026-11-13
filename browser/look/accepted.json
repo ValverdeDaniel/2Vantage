@@ -1086,7 +1086,7 @@
       "check": "pixels",
       "selector": null,
       "item": "B26",
-      "why": "The Marketing readiness checklist is built (B25–B27; slice 40) and matches row for row; pending: the medical row's and the checklist's questionnaire and stop-loss pickers (\"Fillable form\", \"Needed for this group?\"; B22, slice 42), the census row's ＋ Ask ▸ (L6; slice 57) and ＋ Add request (L121), so the rows are shorter and the cards below start higher; ＋ Ask on each missing document row is built (B27, L54; slice 56), the old secondary button where the old row had it, except on the questionnaire and stop-loss rows, which ask for the form online (slice 58).",
+      "why": "The Marketing readiness checklist is built (B25–B27; slice 40) and matches row for row; pending: the medical row's and the checklist's questionnaire and stop-loss pickers (\"Fillable form\", \"Needed for this group?\"; B22, slice 42), the census row's ＋ Ask ▸ (L6; slice 57) and ＋ Add request (L121), so the rows are shorter and the cards below start higher; ＋ Ask on each missing document row is built (B27, L54; slice 56), the old secondary button where the old row had it; on the questionnaire and stop-loss rows with a fillable form it reads \"＋ Ask them to fill it out online\" and puts the whole form in the request tray (G76; slice 58).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -2329,7 +2329,7 @@
       "check": "classes",
       "selector": null,
       "item": "G34",
-      "why": "The view pills Form · Board · Request · Review and the section review bar (\"0 to review · 0 waiting on the client · N missing\", G45) are Review & requests' views of the questionnaire, slice 53; until then the tab shows the Form only.",
+      "why": "The view pills Form · Board · Request · Review are not drawn: the questionnaire's Board, Request and Review are Review & requests' own views (its queue's Questionnaire chip, ?view=queue&section=questionnaire, and the request page's Questionnaire tab; slice 58, L21, G78), so the tab shows the Form under the section review bar, which is built (\"0 to review · 0 waiting on the client · N missing\", G45, G73; slice 58) and stands where the old one does.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -4639,7 +4639,7 @@
       "check": "pixels",
       "selector": null,
       "item": "L29",
-      "why": "Slice 56 builds the request page's frame: the head with \"N need you\" (L24), the who bar with each open link, Copy link and View ▸, and \"A new link…\" (L26), the tabs Intake, Census and Documents with their counts (L28) and the Show chips (L27) in one row under the who bar, then the ask list on the left, \"Required to market\" lifted first (L29). The old's middle column, their form or our rows (L30), and its comment margin (L31), edit mode (L34, L35), the Next banner with Log a call (L25) and the key legend (L24, L32) come with slice 57, so the middle holds Going out instead: the request tray by the link each item goes on, with Send and Choose who ▸ (L37, L53), and the picked item's card with its thread stands on the right (L22). The Questionnaire tab joins with slice 58. GD1 asks nothing yet, so Going out reads empty.",
+      "why": "Slice 56 builds the request page's frame: the head with \"N need you\" (L24), the who bar with each open link, Copy link and View ▸, and \"A new link…\" (L26), the tabs Intake, Census and Documents with their counts (L28) and the Show chips (L27) in one row under the who bar, then the ask list on the left, \"Required to market\" lifted first (L29). The old's middle column, their form or our rows (L30), and its comment margin (L31), edit mode (L34, L35), the Next banner with Log a call (L25) and the key legend (L24, L32) come with slice 57, so the middle holds Going out instead: the request tray by the link each item goes on, with Send and Choose who ▸ (L37, L53), and the picked item's card with its thread stands on the right (L22). The Questionnaire tab is built (G78; slice 58: each form the deal uses, unsigned, by section, ＋ Ask per question, the whole form online first) and reads empty on GD1, which uses no form. GD1 asks nothing yet, so Going out reads empty.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

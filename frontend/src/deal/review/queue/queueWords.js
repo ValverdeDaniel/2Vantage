@@ -48,10 +48,12 @@ export function summaryOf(item) {
   return { title, sub, flag: item.blocks?.length ? `blocks ${item.blocks.join(', ')}` : '' };
 }
 
-/** "Avery One" from a census ref's item, the member id and column a correction writes. */
+/** What a correction writes, from a ref: a census cell (member id, column), a questionnaire answer (form, slot; slice
+ * 58) or an intake question. */
 export function cellOf(ref) {
   const [surface, first, second] = String(ref).split(':');
   if (surface === 'census') return { surface, memberId: Number(first), column: second };
+  if (surface === 'q') return { surface: 'questionnaire', form: first, slot: String(ref).slice(`q:${first}:`.length) };
   return { surface, key: ref.slice('intake:'.length) };
 }
 

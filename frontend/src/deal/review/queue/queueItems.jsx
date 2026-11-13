@@ -2,12 +2,16 @@ import { summaryOf } from './queueWords';
 
 // Why X cannot send a person back: a person the client added is added or kept off whole (Ch. 12).
 export const NOT_A_PERSON = 'A person the client added is added to the census or kept off whole: X sends values back, not people.';
+// Why only Approve is offered on a signed form (slice 58, G70): the officer attested these answers.
+export const SIGNED_FORM = 'The company officer signed this form with these answers: reopen it on the Questionnaire tab to change one.';
 
 /** A row's title, sub-line, change chip and flag (old renderSummary; "blocks Aetna", "required to market"). */
 export function renderSummary(item, changes) {
   const summary = summaryOf(item);
   const badge = <span className={`rr-change-chip rr-change-${item.change}`}>{changes[item.change] || item.change}</span>;
-  const flag = item.question_open ? '? question open' : summary.flag || (item.required ? 'required to market' : '');
+  const flag = item.question_open
+    ? '? question open'
+    : summary.flag || (item.signed ? 'signed by the officer' : item.required ? 'required to market' : '');
   return { ...summary, badge, flag };
 }
 
@@ -18,6 +22,10 @@ export function renderSummary(item, changes) {
 export function cfgFor(item) {
   const person = item.kind === 'person';
   const theirs = Array.isArray(item.theirs) ? '' : item.theirs || '';
+  if (item.signed) {
+    // A signed form's answers are approved as they were attested, or the form is reopened (slice 58).
+    return { approve: 'Approve', reject: 'Send back', rejectMode: 'note', rejectBlocked: SIGNED_FORM, noteAction: '＋ Note', extras: [] };
+  }
   return {
     approve: person ? 'Add to census' : 'Approve',
     reject: 'Send back',

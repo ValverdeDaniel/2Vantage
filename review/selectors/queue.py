@@ -7,7 +7,8 @@ group, 50 a page.
 in_progress [{link_id, name, last_saved_at, ready_at}]}.
 - `phase`: `to_review` (ready: submitted, or idle 24 h), `in_progress` (still typing: read only until then) or
   `going_back` (sent back to the client and not answered since; slice 56);
-- `groups`: the phase's answers by column (census) or section (intake) and change, the chips over the queue; `group`
+- `groups`: the phase's answers by column (census), section (intake) or form and section (questionnaire, slice 58)
+  and change, the chips over the queue; `group`
   narrows the items to one, and `ids` holds its refs (all of the phase's when none is picked, at most 5,000) for its
   "Approve all N ✓";
 - an item: {ref, kind answer|block|person, label, section?, person?, ours, theirs, change, phase, ready_why,
@@ -21,12 +22,12 @@ from deals import clock
 
 from ..rules import items as item_rules
 from . import entries as entry_rows
-from . import going, queue_census, queue_intake
+from . import going, queue_census, queue_intake, queue_questionnaire
 from . import notes as note_rows
 
 PAGE_SIZE = 50
 IDS_CAP = 5000
-SURFACES = {'intake': queue_intake, 'census': queue_census}
+SURFACES = {'intake': queue_intake, 'census': queue_census, 'questionnaire': queue_questionnaire}
 
 
 def _iso(moment):

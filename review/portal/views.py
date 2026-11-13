@@ -17,6 +17,9 @@ no-referrer` and `X-Robots-Tag: noindex`, plus a fresh `X-Link-Verification` onc
 - GET  portal/{t}/stamp/ → {form_stamp, days_left} (the poll; writes nothing).
 - GET  portal/{t}/census-template/ → the blank census template (B3).
 - GET  portal/moved/ → {agency} for the "This link has moved" page (L136); it takes no token.
+- portal/{t}/questionnaires/{form}/spec/, blank/, rows/, rows/{block}/{row}/, sign/ (slice 58): questionnaire_views.py.
+A save or submit naming questionnaire answers (`q:<form>:<slot>`) answers each named form's fresh `state` too, under
+`questionnaires` ({form: state}), so the page shows what the answers reveal or hide (G20, G25).
 404 bad token, 410 gone (with the agency), 428 PIN needed, 403 a staff session's write (guard.py).
 """
 
@@ -39,7 +42,7 @@ from ..rules import policy
 from ..rules import portal as portal_rules
 from ..services import answers as answer_services
 from ..services import client_adds, pins, questions, stamps
-from . import census_part, files_part, follow_ups, guard, payload, throttles
+from . import census_part, files_part, follow_ups, guard, payload, questionnaire_part, throttles
 from .asked import asked
 
 HEADERS = {'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex'}
@@ -117,18 +120,27 @@ def _saved_answer(done):
     }
 
 
+def _with_forms(answer, done):
+    if done.forms:
+        from .questionnaire_views import states
+
+        answer['questionnaires'] = states(done.link.id, done.forms)
+    return answer
+
+
 class SaveView(PortalView):
     def post(self, request, token):
         opened = self.open(request, token, write=True)
         done = answer_services.save(opened.link.id, _body(request).get('answers'))
-        return Response(_saved_answer(done))
+        return Response(_with_forms(_saved_answer(done), done))
 
 
 class SubmitView(PortalView):
     def post(self, request, token):
         opened = self.open(request, token, write=True)
         done = answer_services.submit(opened.link.id, _body(request).get('answers') or {})
-        return Response({**_saved_answer(done), 'submitted_at': done.link.submitted_at.isoformat()})
+        answer = {**_saved_answer(done), 'submitted_at': done.link.submitted_at.isoformat()}
+        return Response(_with_forms(answer, done))
 
 
 class FilesView(PortalView):
@@ -200,7 +212,7 @@ class StampView(PortalView):
     def get(self, request, token):
         opened = self.open(request, token)
         now = clock.now()
-        notes = follow_ups.stamp(opened.link, opened.request)
+        notes = follow_ups.stamp(opened.link, opened.request) + questionnaire_part.stamp(opened.request)
         stamp = portal_rules.form_stamp(opened.link, opened.request, now, notes)
         return Response({'form_stamp': stamp, 'days_left': policy.days_left(opened.link.expires_at, now)})
 

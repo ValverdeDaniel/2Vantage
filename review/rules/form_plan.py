@@ -156,7 +156,31 @@ def _ref_off(out, ref, carried):
             documents['slots'] = [slot for slot in documents['slots'] if slot != rest]
             return ref not in carried or not documents.get('missing')
         return ref not in carried
-    return ref not in carried  # a questionnaire's rows come off with slice 58
+    if area in ('q', 'qform'):
+        return _form_off(out, area, rest, ref, carried)
+    return ref not in carried
+
+
+def _form_off(out, area, rest, ref, carried):
+    """A whole form comes off the request; one picked question (or table) comes off its picks — the form goes once
+    nothing is picked. A question the whole form carries is refused by name, like a scope's (L59; slice 58)."""
+    form_key, _, slot = rest.partition(':')
+    forms = out.get('questionnaires') or []
+    entry = next((one for one in forms if one['form'] == form_key), None)
+    if entry is None:
+        return ref not in carried
+    if area == 'qform':
+        out['questionnaires'] = [one for one in forms if one['form'] != form_key]
+        return True
+    picks = entry.get('picks') or {}
+    key = slot.split('.')[0]
+    named = [*(picks.get('fields') or []), *(picks.get('blocks') or [])]
+    if key not in named:
+        return ref not in carried
+    entry['picks'] = {kind: [one for one in picks.get(kind) or [] if one != key] for kind in ('fields', 'blocks')}
+    if not (entry['picks']['fields'] or entry['picks']['blocks']):
+        out['questionnaires'] = [one for one in forms if one['form'] != form_key]
+    return True
 
 
 def _column_off(out, column, columns):

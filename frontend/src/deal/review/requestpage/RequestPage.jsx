@@ -28,6 +28,8 @@ import TheirForm from './TheirForm';
 import useAskCard from './useAskCard';
 import WhoBar from './WhoBar';
 
+const QUEUE_OF = { census: 'census', questionnaire: 'questionnaire' }; // a tab's Review ▸: its section's queue
+
 const SEEN_AFTER_MS = 5000; // a look counts once the page was up this long (L44)
 const pairs = (list) => Object.fromEntries((list || []).map(({ key, label }) => [key, label]));
 
@@ -187,7 +189,7 @@ export default function RequestPage({ deal, meta, actions, asksClosed, next, onG
         <div className="rr-reqpage-cards">
           {askTarget && !editing ? (
             <MarginColumn items={data.items} threads={data.threads} picked={picked} frameRef={frameRef} cardProps={cardProps}
-              onPick={setPicked} onEdit={railActions.onEdit} onReview={() => onGo({ tab: 'review', view: 'queue', section: pane === 'census' ? 'census' : 'intake' })} />
+              onPick={setPicked} onEdit={railActions.onEdit} onReview={() => onGo({ tab: 'review', view: 'queue', section: QUEUE_OF[pane] || 'intake' })} />
           ) : (
             <ItemCard {...cardProps} onClose={() => setPicked(null)} />
           )}

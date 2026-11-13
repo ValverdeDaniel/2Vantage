@@ -14,9 +14,10 @@ export const NOT_SAVED_YET =
  * further apart each time, up to a minute. Never on a page that cannot write (a staff session, a preview, a lost deal).
  *
  * answers/dispatch: the answers' reducer (portalModel). onNote(text), onProblem(text), onChallenge(): what the page
- * shows. Returns {flush}: send what is pending now (Save and Submit call it), resolving to the save's answer or null.
+ * shows; onSaved(answer): a save that landed (its questionnaires' fresh states, slice 58). Returns {flush}: send what
+ * is pending now (Save and Submit call it), resolving to the save's answer or null.
  */
-export default function useAutosave({ token, answers, dispatch, enabled, onNote, onProblem, onChallenge }) {
+export default function useAutosave({ token, answers, dispatch, enabled, onNote, onProblem, onChallenge, onSaved }) {
   const inFlight = useRef(false);
   const fails = useRef(0);
   const [tick, setTick] = useState(0);
@@ -28,6 +29,7 @@ export default function useAutosave({ token, answers, dispatch, enabled, onNote,
       try {
         const answer = await saveAnswers(token, pending);
         dispatch({ type: 'saved', sent: sentValues(pending), bases: answer.bases || {} });
+        onSaved?.(answer);
         fails.current = 0;
         onProblem('');
         return answer;
@@ -50,7 +52,7 @@ export default function useAutosave({ token, answers, dispatch, enabled, onNote,
         setTick((n) => n + 1);
       }
     },
-    [token, dispatch, onProblem, onChallenge],
+    [token, dispatch, onProblem, onChallenge, onSaved],
   );
 
   useEffect(() => {

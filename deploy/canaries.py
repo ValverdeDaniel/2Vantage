@@ -1,7 +1,8 @@
 """The canary census of the staging canary scan (slice 47; plan.md §11.4 item 5, §12.9; Q.8; deploy/phi-gate.md).
 
 Each run makes its own canaries: unique, synthetic strings for every PHI field a census carries (names, a spouse,
-date of birth, SSN, address, city, phone, email), for the census file's name and for a stop-loss laser, so a later
+date of birth, SSN, address, city, phone, email), for the census file's name, for a stop-loss laser and (slice 58) a
+medical answer the client gives on the questionnaire, so a later
 log query finds this run's leaks and nobody else's. `forms(value)` is every spelling a log could hold it in: as
 typed, URL-encoded and, for a date, as stored. Standard library only, like the rest of deploy/.
 """
@@ -42,6 +43,7 @@ def make(run=None):
         'phone': f'555-{rng.randint(100, 999)}-{rng.randint(1000, 9999)}',
         'email': f'zq.{run}@canary.test',
         'laser': f'Claimant ZQL{run.upper()}: $250,000 (synthetic)',
+        'condition': f'Zqcond{run} treated in spring (synthetic)',  # a medical answer on the questionnaire (slice 58)
     }
     return {'run': run, 'started_at': datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ'), 'values': values}
 

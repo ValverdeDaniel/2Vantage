@@ -5,8 +5,9 @@ each item stands, what is in the tray and where it goes, each item's thread, and
 `page(deal, pane, user)` → {pane, asks_closed, panes [{key, label, waiting, in_cart}], people [person], counts
 {all, question, in_cart, answered, asked, on_file, missing}, items [item], columns [column] (census), census_file
 (census), threads {ref: [note]}, seen_at, new [ref]}:
-- a tab (`pane`: intake, census, documents) is read alone (L28 Ch. 14a); the tabs' own numbers come from the deal's
-  counts: client answers and questions waiting (`waiting`), drafts in the tray (`in_cart`);
+- a tab (`pane`: intake, census, questionnaire (slice 58), documents) is read alone (L28 Ch. 14a); the tabs' own
+  numbers come from the deal's counts: client answers and questions waiting (`waiting`), drafts in the tray
+  (`in_cart`);
 - `people`: the who bar (L26): each link on a request still open that a person can still use (not past its ceiling),
   {link_id, request_id, name, security, sent, opens, days_left, expired, revoked, path};
 - an item and a column as `request_rail` builds them; `threads` the notes on the tab's items (L22);
@@ -33,7 +34,7 @@ from . import notes as note_rows
 from . import open_requests, request_rail
 from .tray import out_with_client
 
-PANES = (('intake', 'Intake'), ('census', 'Census'), ('documents', 'Documents'))
+PANES = (('intake', 'Intake'), ('census', 'Census'), ('questionnaire', 'Questionnaire'), ('documents', 'Documents'))
 
 
 def _iso(moment):
@@ -101,6 +102,8 @@ def _panes(facts):
 def _pane_of(ref):
     if ref.startswith('doc:'):
         return 'documents'
+    if ref.startswith(('q:', 'qform:')):
+        return 'questionnaire'
     return 'census' if ref.startswith('census:') else 'intake'
 
 
@@ -162,6 +165,8 @@ def page(deal, pane, user, now=None, request_id=None):
         items = request_rail.intake(deal, Intake.objects.filter(deal_id=deal.id).first(), facts)
     elif pane == 'documents':
         items = request_rail.documents(deal, facts)
+    elif pane == 'questionnaire':
+        items = request_rail.questionnaire(deal, facts)
     else:
         census_file, columns = request_rail.census(deal, facts)
         items = [census_file]

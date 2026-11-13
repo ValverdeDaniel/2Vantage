@@ -5,10 +5,11 @@
 A draft named for a request goes there or nowhere ("one item, one draft": it never rides someone else's link). Else
 the request its answer came through, then the newest open request already asking that section, then the newest open
 request. A request can take an ask while it is not closed and one of its links is not turned off and is still inside
-its 30-day ceiling: a link that ran out comes back when the ask joins it (L58). A census value shows people, so it goes
-only on a request whose links ask for a PIN (OQ80, L64: a link is never silently tightened under its holder); with
-none, it waits for a new link, which takes one (B18: "verified only" becomes "needs a PIN"). A draft about something
-no longer on the deal is `GONE`, and sending drops it.
+its 30-day ceiling: a link that ran out comes back when the ask joins it (L58). A census value shows people (and a
+questionnaire answer what the client holds, slice 58), so it goes only on a request whose links ask for a PIN (OQ80,
+L64: a link is never silently tightened under its holder); with none, it waits for a new link, which takes one (B18:
+"verified only" becomes "needs a PIN"). A draft about something no longer on the deal is `GONE`, and sending drops
+it.
 
 **Going back** (`going_back`): a client answer waiting for review that was sent back (or asked again) is out of
 "to review" until they answer again: its send-back waits in the tray, or went out after the answer came on a request
@@ -26,8 +27,8 @@ from . import policy
 
 NEEDS_LINK = 'No open link to the client can take this yet: choose who to ask, and it goes on the new link.'
 NEEDS_PIN = (
-    'Census values show people, so they go only on a link that asks for a PIN, and no open link does: choose who to '
-    'ask, and the new link takes one.'
+    'Census values and questionnaire answers show what the client holds, so they go only on a link that asks for a '
+    'PIN, and no open link does: choose who to ask, and the new link takes one.'
 )
 GONE = (
     'This is no longer on the deal (the person left the census, or it is no longer asked): sending the tray drops it.'

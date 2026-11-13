@@ -2,14 +2,18 @@ import { useCallback, useReducer, useState } from 'react';
 import { addPeople, signBor, statusOf, submitAnswers, uploadFile } from './portalApi';
 import { answersReducer, initialAnswers, pendingAnswers, savedWords } from './portalModel';
 import useAutosave from './useAutosave';
+import useFormWrites from './useFormWrites';
 
 /*
  * Everything the portal page writes (plan.md §7.14, §8.20; L90, L93–L98): the answers with their autosave, the files
  * staged until Save or Submit (one request each, L97), the BOR's typed name (it rides Save or Submit too), people
- * added at once, and Submit. A refusal is said where it belongs; nothing typed is ever wiped (old D-208).
+ * added at once, and Submit. A refusal is said where it belongs; nothing typed is ever wiped (old D-208). The
+ * questionnaires (slice 58, `useFormWrites`): their answers ride the same autosave, each save answering the forms'
+ * fresh states; their rows go at once; the officer's signature rides Save or Submit after the answers, and a
+ * signature blank answers hold stops Submit until "Sign anyway".
  *
  * Returns {answers, bind, staged, stage, unstage, borName, setBorName, note, problem, setProblem, busy, submitted,
- * save, submit, addPerson, confirming}.
+ * save, submit, addPerson, confirming, forms}.
  */
 export default function usePortalWrites({ token, page, writes, onReload, onChallenge }) {
   const [answers, dispatch] = useReducer(answersReducer, page, initialAnswers);
@@ -29,6 +33,9 @@ export default function usePortalWrites({ token, page, writes, onReload, onChall
   }
 
   const challenge = useCallback(() => onChallenge(), [onChallenge]);
+  const forms = useFormWrites({ token, page, dispatch, onProblem: setProblem });
+  const { adopt } = forms;
+  const onSaved = useCallback((answer) => adopt(answer?.questionnaires), [adopt]);
   const { flush } = useAutosave({
     token,
     answers,
@@ -37,6 +44,7 @@ export default function usePortalWrites({ token, page, writes, onReload, onChall
     onNote: setNote,
     onProblem: setProblem,
     onChallenge: challenge,
+    onSaved,
   });
 
   const set = useCallback((ref, value) => {
@@ -111,8 +119,10 @@ export default function usePortalWrites({ token, page, writes, onReload, onChall
       const files = await sendFiles();
       const signed = await sendBor();
       await flush();
+      const signing = await forms.signAll();
       setNote(savedWords('Progress saved'));
-      if (files || signed) onReload();
+      if (signing.held) setProblem(HELD);
+      if (files || signed || signing.signed) onReload();
     } catch (error) {
       if (!error?.response?.data?.conflicts && statusOf(error) !== 400) said(error, 'saving');
     }
@@ -129,6 +139,13 @@ export default function usePortalWrites({ token, page, writes, onReload, onChall
     try {
       await sendFiles();
       await sendBor();
+      await flush();
+      if ((await forms.signAll()).held) {
+        setProblem(HELD);
+        setConfirming(false);
+        setBusy(false);
+        return;
+      }
       await submitAnswers(token, pendingAnswers(answers));
       setSubmitted(true);
     } catch (error) {
@@ -165,5 +182,8 @@ export default function usePortalWrites({ token, page, writes, onReload, onChall
     save,
     submit,
     addPerson,
+    forms,
   };
 }
+
+const HELD = 'A questionnaire is not signed yet: some required answers are still blank — see the form.';

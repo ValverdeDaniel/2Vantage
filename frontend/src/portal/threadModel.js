@@ -35,6 +35,7 @@ export function askableItems(page) {
   );
   (page?.documents || []).forEach((slot) => out.push({ ref: `doc:${slot.slot}`, label: slot.label }));
   if (page?.census_file) out.push({ ref: 'census:file', label: 'Your census file' });
+  (page?.questionnaires || []).forEach((card) => out.push({ ref: `qform:${card.form}`, label: card.title }));
   return out;
 }
 

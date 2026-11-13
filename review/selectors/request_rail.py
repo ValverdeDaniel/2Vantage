@@ -8,7 +8,10 @@ asked}), the client answers waiting (refs), the open questions and the notes by 
   lines to quote, the BOR signature): {ref, label, section, needed, value, status, asked_at, draft_id, notes};
 - `documents(deal, facts)`: the checklist's files (not waived): the same shape;
 - `census(deal, facts)`: their census file as an item, and a row per census column {key, label, group, required,
-  blank, required_blank, in_cart, asked, on_link, answered, questions}: a column's blanks are asked at once (L46).
+  blank, required_blank, in_cart, asked, on_link, answered, questions}: a column's blanks are asked at once (L46);
+- `questionnaire(deal, facts)` (slice 58, G78): each form the deal uses that nobody signed — the whole form online
+  first ("Florida Blue 51+ — the whole form, online"), then every question on screen in the form's order, by
+  section, required ones marked, a gate (a question a table or another question hangs on) flagged.
 A value rides as words, for staff only; never on a client's page.
 """
 
@@ -152,3 +155,47 @@ def _count(counter, ref):
     parts = ref.split(':')
     if len(parts) == 3 and parts[0] == 'census':
         counter[parts[2]] += 1
+
+
+def questionnaire(deal, facts):
+    from questionnaire import forms
+    from questionnaire.engine import walk
+    from questionnaire.engine.narrow import drivers
+    from questionnaire.selectors import context
+
+    from .items import WHOLE_FORM
+    from .queue_questionnaire import label
+
+    ctx = context.deal_context(deal)
+    armed = [found['form'] for found in ctx.resolved.values() if found['form']]
+    if not armed:
+        return []
+    found_facts = context.prefill_facts(deal)
+    out = []
+    for key in [key for key in forms.FORMS if key in armed]:
+        row = ctx.stored.get(key)
+        if row is not None and row.locked:
+            continue
+        view = context.form_view(key, row, found_facts)
+        name = forms.label(key)
+        out.append(item(f'qform:{key}', WHOLE_FORM.format(form=name), name, facts, filled=False))
+        numbers = {(b, e['id']): at + 1 for b, listed in view.stored.rows.items() for at, e in enumerate(listed)}
+        gates = drivers(view.form)
+        blanks = set(walk.blanks(view.form, view.view))
+        for entry in walk.order(view.form, view.view):
+            slot = entry['slot']
+            words, section = label(view.form, slot, numbers)
+            block, _sep, rest = slot.partition('.')
+            gate = ((block, rest.split('.')[-1]) if rest else ('', slot)) in gates
+            value = '' if slot in blanks else str(_value(view, slot) or '')
+            found = item(f'q:{key}:{slot}', words, f'{name} · {section}' if section else name, facts,
+                         filled=bool(value), needed=entry['required'], value=value)  # fmt: skip
+            found['gate'] = gate
+            out.append(found)
+    return out
+
+
+def _value(view, slot):
+    from questionnaire import values
+
+    return values.effective(view.stored, view.prefill, slot)

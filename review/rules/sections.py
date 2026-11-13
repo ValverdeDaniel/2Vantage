@@ -15,7 +15,7 @@ from collections import Counter
 
 from . import items
 
-SURFACES = ('intake', 'census')
+SURFACES = ('intake', 'census', 'questionnaire')
 
 
 def empty():

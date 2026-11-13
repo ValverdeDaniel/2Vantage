@@ -8,7 +8,8 @@ const NAMES_SHOWN = 6;
 /*
  * The Missing lane (rose; plan.md §8.8; L6; old 891f1b3 `DealReviewTab.jsx`): what the deal still needs from the client
  * and nobody has — the required census values by column, the intake's questions required to market, the checklist's
- * files not on file (and, on the census's own board, "No census on file yet") — each with how many have a question
+ * files not on file, each questionnaire's blank required answers with "＋ Ask them to fill it out online" (slice 58,
+ * G76; the server's `ask_label`) (and, on the census's own board, "No census on file yet") — each with how many have a question
  * open, Open ▸ and "＋ Ask all", which puts what is not asked yet in the request tray (the server's `ask`; nothing goes
  * out until it is sent) and hides once nothing is left. The counts are the server's.
  */
@@ -55,7 +56,7 @@ export default function MissingLane({ dealId, rows, onGo, readOnly }) {
                 title={`Put the ${row.left} not asked yet in the request tray: nothing goes out until you send it from the request page`}
                 onClick={() => askAll(row)}
               >
-                {row.left === 1 ? '＋ Ask' : `＋ Ask all ${row.left}`}
+                {row.ask_label || (row.left === 1 ? '＋ Ask' : `＋ Ask all ${row.left}`)}
               </button>
             )}
           </div>

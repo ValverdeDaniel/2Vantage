@@ -4,7 +4,8 @@ they asked about, with its thread.
 
 - `titles(found)`: {ref: words} for everything the page asks (what a question may be about, and a card's title):
   each intake question and part, each person's asked value ("Date of birth — Avery Synthetic"; the page that shows
-  people needs the PIN), each file, their census file.
+  people needs the PIN), each file, their census file, and (slice 58) each question of a form on screen ("Florida
+  Blue 51+ · Plan 2 · Current plan name") and the form itself.
 - `cards(link, request, deal, found)`: [{ref, title, needs_answer, answered, question_open, new, replied, thread}],
   the ones that need an answer first, then the newest. A thread entry is {who: you | colleague | agency, kind, text,
   plain, at}: never a team note, never a draft, never a staff name, never a value. An ask that went with no words of
@@ -23,6 +24,8 @@ from census import fields as census_fields
 from census.client_view import title as person_title
 from documents.models import Document
 from intake import form
+from questionnaire import forms as questionnaire_forms
+from questionnaire.engine import walk
 
 from ..models import ASK_KINDS, ReviewNote, Seen
 from ..rules import tray as tray_rules
@@ -49,6 +52,22 @@ def titles(found):
     out.update({f'doc:{slot}': files_part.label(slot) for slot in found.documents})
     if found.census_file:
         out['census:file'] = CENSUS_FILE
+    for ask in found.forms:
+        out.update(_form_titles(ask))
+    return out
+
+
+def _form_titles(ask):
+    from ..selectors.queue_questionnaire import label
+
+    name = questionnaire_forms.label(ask.form)
+    out = {f'qform:{ask.form}': questionnaire_forms.FORMS[ask.form]['title']}
+    if ask.view is None:
+        return out
+    rows = ask.view.stored.rows
+    numbers = {(block, entry['id']): at + 1 for block, listed in rows.items() for at, entry in enumerate(listed)}
+    for entry in walk.order(ask.view.form, ask.view.view):
+        out[f'q:{ask.form}:{entry["slot"]}'] = f'{name} · {label(ask.view.form, entry["slot"], numbers)[0]}'
     return out
 
 
@@ -67,8 +86,13 @@ def _answered(found, link_ids):
         for column, entry in (member.client or {}).items():
             if isinstance(entry, dict) and entry.get('at'):
                 out[f'census:{member.id}:{column}'] = tray_rules.moment(entry['at'])
+    for ask in found.forms:
+        row = ask.view.row if ask.view is not None else None
+        for slot, entry in ((row.client if row else None) or {}).items():
+            if isinstance(entry, dict) and entry.get('at'):
+                out[f'q:{ask.form}:{slot}'] = tray_rules.moment(entry['at'])
     for slot, at in Document.objects.filter(link_id__in=link_ids, source='client').values_list('slot', 'uploaded_at'):
-        ref = 'census:file' if slot == files_part.CENSUS_SLOT else f'doc:{slot}'
+        ref = 'census:file' if slot == files_part.CENSUS_SLOT else slot if slot.startswith('qform:') else f'doc:{slot}'
         out[ref] = max(at, out.get(ref) or at)
     return out
 

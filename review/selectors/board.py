@@ -9,7 +9,8 @@
   (`intake.summary.facts`) and the ready state (blocked, ready or submitted; words in /api/meta/ `review.readiness`).
 - `lanes.waiting` holds the requests still out, soonest to run out first (L7); `lanes.to_review` (L9; slice 55) a row
   per section with something back: {key, section, count, questions, label, fix}, the census's answers and added
-  people, the intake's answers, and the client's files; Review ▸ opens the section's queue. The Missing lane, Next and
+  people, the intake's answers, the questionnaires' (slice 58) and the client's files; Review ▸ opens the section's
+  queue. The Missing lane, Next and
   the client's questions join with slices 56–57.
 - `sections` (slice 55): what each section bar draws (L14, C34), the section's `summary.facts` counts plus its
   `missing`: the intake's needed questions and checklist documents not in yet, the census's required blanks.
@@ -41,7 +42,7 @@ from . import notes as note_rows
 
 QUESTIONS_SHOWN = 6
 EXCERPT = 140
-SECTIONS = {'intake': 'Intake', 'census': 'Census', 'documents': 'Documents'}
+SECTIONS = {'intake': 'Intake', 'census': 'Census', 'questionnaire': 'Questionnaire', 'documents': 'Documents'}
 
 
 def _plural(n, one):
@@ -61,6 +62,7 @@ def _queue(section):
 def to_review(found):
     """The To review lane's rows (L9): each section with something back, its count holding its questions too."""
     census, intake = found['sections']['census'], found['sections']['intake']
+    forms = found['sections'].get('questionnaire') or {'to_review': 0, 'questions': 0}
     rows = [
         {
             'key': 'census',
@@ -77,6 +79,14 @@ def to_review(found):
             'questions': intake['questions'],
             'label': _parts(intake['questions'], intake['to_review']),
             'fix': _queue('intake'),
+        },
+        {
+            'key': 'questionnaire',
+            'section': 'Questionnaire',
+            'count': forms['to_review'] + forms['questions'],
+            'questions': forms['questions'],
+            'label': f'{_parts(forms["questions"], forms["to_review"])} on the questionnaire',
+            'fix': _queue('questionnaire'),
         },
         {
             'key': 'documents',
@@ -151,6 +161,9 @@ def board(deal, now=None, scope=None):
         waiting = [row for row in waiting if scope in row['sections']]
     asked, total = questions(deal)
     lane = missing_rows.lane(deal, payload, now)
+    sections['questionnaire']['missing'] = sum(
+        row['count'] for row in lane if row['key'].startswith('questionnaire:')
+    )  # the section bar's missing: required answers blank on the forms nobody signed (slice 58, G76)
     ranked = next_up.entries(deal, rows[deal.id], found, lane, now)
     return {
         'deal_id': deal.id,

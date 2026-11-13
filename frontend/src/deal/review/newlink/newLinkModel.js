@@ -19,6 +19,7 @@ export function initialState() {
     census: NOTHING, // a census scope key, or nothing
     censusFile: false,
     documents: false, // any documents the checklist still needs
+    forms: {}, // {form key: 'online' | 'upload'}: each questionnaire asked online or as a signed copy (G80)
     security: 'link',
     blank: false,
     expiresOn: '', // YYYY-MM-DD, or '' for the sliding default
@@ -32,6 +33,8 @@ export function asksOf(state) {
   if (state.intake) asks.intake = { scope: state.intake };
   if (state.census || state.censusFile) asks.census = { scope: state.census || 'none', file: state.censusFile };
   if (state.documents) asks.documents = { missing: true };
+  const forms = Object.entries(state.forms || {}).filter(([, mode]) => mode);
+  if (forms.length) asks.questionnaires = forms.map(([form, mode]) => ({ form, mode, picks: { fields: [], blocks: [] } }));
   return asks;
 }
 

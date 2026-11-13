@@ -2,10 +2,12 @@
 L83–L90, L95–L98; OQ84, OQ86). The portal's views call these once the guard has let the link through.
 
 `save(link_id, answers)`: `answers` is {ref: {value, base}}, refs as `rules.requests.carries` names them
-(`intake:<key>`, `intake:block:<block>`, `census:<member id>:<column>`). In one transaction:
+(`intake:<key>`, `intake:block:<block>`, `census:<member id>:<column>`, and from slice 58 `q:<form>:<slot>`). In one
+transaction:
 1. every ref must be one this link asks now (`portal.asked`): anything else refuses the whole save (400), so the page
    can never write past its allowlist;
-2. the owners take their part through their own doors, intake then census (`save_client`; the chain's order), each
+2. the owners take their part through their own doors, intake, census, then each questionnaire (`save_client`; the
+   chain's order), each
    cleaning by its own rules and checking every base; a refused value is a 400 naming the refs, a stale base a 409
    listing the conflicts, and either way nothing is saved (all or nothing);
 3. the link is locked last (Deal → owners → request → link, the staff services' order) and checked again: turned off
@@ -27,14 +29,15 @@ from rest_framework.exceptions import ValidationError
 from census.services import client as census_client
 from deals import clock
 from intake.services import client as intake_client
+from questionnaire.services import client as questionnaire_client
 
 from ..models import ClientLink
 from ..portal import guard
 from ..portal.asked import asked, refs
 from . import common, stamps
 
-Saved = namedtuple('Saved', 'link saved bases activity')
-Submitted = namedtuple('Submitted', 'link saved bases activity')
+Saved = namedtuple('Saved', 'link saved bases activity forms')  # forms: the questionnaires the save named
+Submitted = namedtuple('Submitted', 'link saved bases activity forms')
 
 NOT_ASKED = 'This link does not ask that.'
 NOT_ANSWERS = 'Send the answers as an object of {value, base} by item.'
@@ -53,21 +56,46 @@ class Conflicts(guard.Answer):
 
 
 def _split(answers, allowed):
-    """({intake slot: sent}, {member id: {column: sent}}) from the refs; 400 for any ref this link does not ask."""
+    """({intake slot: sent}, {member id: {column: sent}}, {form: {slot: sent}}) from the refs; 400 for any ref this
+    link does not ask."""
     if not isinstance(answers, dict):
         raise ValidationError({'answers': NOT_ANSWERS})
-    bad = {ref: NOT_ASKED for ref in answers if ref not in allowed}
+    bad = {str(ref)[:120]: NOT_ASKED for ref in answers if ref not in allowed}
     if bad:
         raise ValidationError({'answers': bad})
-    intake, census = {}, {}
+    intake, census, forms = {}, {}, {}
     for ref, sent in answers.items():
         area, _, rest = ref.partition(':')
         if area == 'intake':
             intake[rest] = sent
+        elif area == 'q':
+            form_key, _, slot = rest.partition(':')
+            forms.setdefault(form_key, {})[slot] = sent
         else:
             member, _, column = rest.partition(':')
             census.setdefault(int(member), {})[column] = sent
-    return intake, census
+    return intake, census, forms
+
+
+def _forms(link, deal, found, forms, outcome):
+    """Each questionnaire's part through its own door (slice 58), into `outcome` (errors, conflicts, saved, bases)."""
+    errors, conflicts, saved, bases = outcome
+    asks = {ask.form: ask for ask in found.forms}
+    for form_key, part in forms.items():
+        ask = asks[form_key]
+        try:
+            done = questionnaire_client.save_client(
+                deal.id, link.id, form_key, part, picks=ask.picks, blank=bool(link.blank)
+            )
+        except ValidationError as error:
+            detail = error.detail.get('answers', {}) if isinstance(error.detail, dict) else {}
+            errors.update({f'q:{form_key}:{slot}': str(text) for slot, text in detail.items()})
+            continue
+        conflicts += [
+            {'ref': f'q:{form_key}:{c["slot"]}', 'theirs': c['theirs'], 'base': c['base']} for c in done.conflicts
+        ]
+        saved += [f'q:{form_key}:{slot}' for slot in done.changed]
+        bases.update({f'q:{form_key}:{slot}': base for slot, base in done.bases.items()})
 
 
 def _errors(error, area):
@@ -81,7 +109,7 @@ def _write(link, request, deal, answers):
     """Owners first, all or nothing. Returns ([refs written], {ref: base})."""
     siblings = list(request.links.values_list('id', flat=True))
     found = asked(link, request, deal, link_ids=siblings)
-    intake_part, census_part = _split(answers, refs(found))
+    intake_part, census_part, forms_part = _split(answers, refs(found))
     blank = bool(link.blank)
     errors, conflicts, saved, bases = {}, [], [], {}
     if intake_part:
@@ -107,11 +135,13 @@ def _write(link, request, deal, answers):
             ]
             saved += [f'census:{member}:{column}' for member, column in done.changed]
             bases.update({f'census:{member}:{column}': base for (member, column), base in done.bases.items()})
+    if forms_part:
+        _forms(link, deal, found, forms_part, (errors, conflicts, saved, bases))
     if errors:
         raise ValidationError({'answers': errors})
     if conflicts:
         raise Conflicts(conflicts)
-    return saved, bases
+    return saved, bases, list(forms_part)
 
 
 def _context(link_id):
@@ -122,22 +152,22 @@ def _context(link_id):
 @transaction.atomic
 def save(link_id, answers):
     link, request, deal = _context(link_id)
-    saved, bases = _write(link, request, deal, answers or {})
+    saved, bases, forms = _write(link, request, deal, answers or {})
     deal, request, link = common.locked_open(link_id)
     if not saved:
-        return Saved(link, [], bases, None)
+        return Saved(link, [], bases, None, forms)
     stamps.saved(link, clock.now())
     row = stamps.client_row(
         deal, link, 'client_saved', 'Client saved', saved, count=len(saved), coalesce=f'review:save:{link.id}',
         noun='answer',
     )  # fmt: skip
-    return Saved(link, saved, bases, row)
+    return Saved(link, saved, bases, row, forms)
 
 
 @transaction.atomic
 def submit(link_id, answers):
     link, request, deal = _context(link_id)
-    saved, bases = _write(link, request, deal, answers or {})
+    saved, bases, forms = _write(link, request, deal, answers or {})
     deal, request, link = common.locked_open(link_id)
     now = clock.now()
     if saved:
@@ -147,7 +177,7 @@ def submit(link_id, answers):
     link.attested_form_version = request.form_version
     link.save(update_fields=['last_saved_at', 'submitted_at', 'first_submitted_at', 'attested_form_version'])
     row = stamps.client_row(deal, link, 'client_submitted', 'Client submitted their answers', saved)
-    return Submitted(link, saved, bases, row)
+    return Submitted(link, saved, bases, row, forms)
 
 
 @transaction.atomic

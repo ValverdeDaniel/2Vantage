@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { patchMember } from '../../../api/census';
 import { useInvalidateDeal } from '../../../api/deals';
 import { patchAnswers } from '../../../api/intake';
+import { patchFormAnswers } from '../../../api/questionnaire';
 import { useDecide } from '../../../api/review';
 import { useNote } from '../../../api/reviewTray';
 import { errorText } from '../../../lib/errors';
@@ -32,6 +33,7 @@ export default function useQueueDecisions(dealId) {
   async function correct(item, value) {
     const cell = cellOf(item.ref);
     if (cell.surface === 'census') await patchMember(cell.memberId, { values: { [cell.column]: value } });
+    else if (cell.surface === 'questionnaire') await patchFormAnswers(dealId, cell.form, { [cell.slot]: value });
     else await patchAnswers(dealId, { answers: { [cell.key]: value } });
   }
 

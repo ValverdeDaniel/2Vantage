@@ -117,7 +117,9 @@ def _census(asks, rest, ref, missing, blank):
     return ref in (blank if scope == 'blank' else missing)
 
 
-def _questionnaire(asks, rest):
+def _questionnaire(asks, rest, whole=False):
+    """A form's answer (`<form>:<slot>`, a row's answer named by its table), its signed copy (`<form>:file`), or with
+    `whole` the form itself asked online with no picks (`qform:<form>`; slice 58)."""
     form_key, _, slot = rest.partition(':')
     for form in asks.get('questionnaires') or []:
         if form['form'] != form_key:
@@ -128,7 +130,9 @@ def _questionnaire(asks, rest):
             return False
         picks = form.get('picks') or {}
         named = (picks.get('fields') or []) + (picks.get('blocks') or [])
-        return not named or slot in named
+        if whole:
+            return not named
+        return not named or slot.split('.')[0] in named
     return False
 
 
@@ -136,11 +140,11 @@ def carries(asks, ref, *, missing=frozenset(), blank=frozenset()):
     """True when a link asking `asks` asks for `ref`.
 
     Refs: `intake:<key>`, `intake:block:<block>`, `census:file`, `census:<member id>:<column>`, `q:<form>:<slot>`,
-    `q:<form>:file` (a form asked in upload mode), `doc:<slot>`. `blank` holds the refs blank now (intake's shown
-    blanks, census's empty cells) and `missing` those also needed (intake's needed to market, census's required
-    blanks, the checklist's missing files): the caller reads them from the owners, since what a scope asks follows
-    what is still missing (L6 Ch. 2). Intake `missing` and census `blank` read `blank`; intake `required`, census
-    `missing` and documents `missing` read `missing`."""
+    `q:<form>:file` (a form asked in upload mode), `qform:<form>` (the whole form online), `doc:<slot>`. `blank`
+    holds the refs blank now (intake's shown blanks, census's empty cells) and `missing` those also needed (intake's
+    needed to market, census's required blanks, the checklist's missing files): the caller reads them from the
+    owners, since what a scope asks follows what is still missing (L6 Ch. 2). Intake `missing` and census `blank`
+    read `blank`; intake `required`, census `missing` and documents `missing` read `missing`."""
     asks = asks or {}
     area, _, rest = str(ref).partition(':')
     if area == 'intake':
@@ -149,6 +153,8 @@ def carries(asks, ref, *, missing=frozenset(), blank=frozenset()):
         return _census(asks, rest, ref, missing, blank)
     if area == 'q':
         return _questionnaire(asks, rest)
+    if area == 'qform':
+        return _questionnaire(asks, rest, whole=True)
     if area == 'doc':
         documents = asks.get('documents') or {}
         return rest in (documents.get('slots') or []) or (bool(documents.get('missing')) and ref in missing)

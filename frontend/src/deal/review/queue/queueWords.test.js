@@ -43,6 +43,11 @@ describe('L16 a row says what came back', () => {
   it('a ref names what a correction writes', () => {
     expect(cellOf('census:12:zip')).toEqual({ surface: 'census', memberId: 12, column: 'zip' });
     expect(cellOf('intake:block:lines')).toEqual({ surface: 'intake', key: 'block:lines' });
+    expect(cellOf('q:fl_blue_51:plans.3.txtCurrPlanName')).toEqual({
+      surface: 'questionnaire',
+      form: 'fl_blue_51',
+      slot: 'plans.3.txtCurrPlanName',
+    });
   });
 });
 

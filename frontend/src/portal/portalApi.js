@@ -90,6 +90,45 @@ export async function downloadTemplate(token) {
   saveBlob(response.data, filenameFrom(response.headers['content-disposition']) || 'Census template.xlsx');
 }
 
+// ---- questionnaires (slice 58; G84, G87, G93) ----------------------------------------------------------------------
+
+const formDoor = (token, key, path = '') => door(token, `questionnaires/${encodeURIComponent(key)}/${path}`);
+
+/** GET questionnaires/{form}/spec/?v= → the form as this link asks it (the one answer the browser may keep). */
+export async function getFormSpec(token, key, version) {
+  return (await call(token, { url: formDoor(token, key, 'spec/'), method: 'get', params: { v: version } })).data;
+}
+
+/** POST questionnaires/{form}/rows/ {block} → 201 {row_id, state, link}. */
+export async function addFormRow(token, key, block) {
+  return (await call(token, { url: formDoor(token, key, 'rows/'), method: 'post', data: { block } })).data;
+}
+
+/** DELETE questionnaires/{form}/rows/{block}/{row_id}/ → {state, link}. */
+export async function removeFormRow(token, key, block, rowId) {
+  const url = formDoor(token, key, `rows/${encodeURIComponent(block)}/${rowId}/`);
+  return (await call(token, { url, method: 'delete' })).data;
+}
+
+/** POST questionnaires/{form}/sign/ {name, sign_anyway} → {questionnaire, link}; 409 {detail, incomplete}. */
+export async function signForm(token, key, name, signAnyway = false) {
+  const data = { name, sign_anyway: signAnyway };
+  return (await call(token, { url: formDoor(token, key, 'sign/'), method: 'post', data })).data;
+}
+
+/** The carrier's blank PDF: its bytes to show on the page, or saved under the server's name. */
+export async function getFormBlank(token, key, { save = false } = {}) {
+  const response = await call(token, {
+    url: formDoor(token, key, 'blank/'),
+    method: 'get',
+    responseType: save ? 'blob' : 'arraybuffer',
+    params: save ? {} : { inline: 1 },
+  });
+  if (!save) return new Uint8Array(response.data);
+  saveBlob(response.data, filenameFrom(response.headers['content-disposition']) || `${key}-blank.pdf`);
+  return null;
+}
+
 /** The agency's contact for "This link has moved" (L136). It sends no token. */
 export async function getMoved() {
   return (await portal.get('moved/')).data;

@@ -1,6 +1,11 @@
 """The client portal's leg of the canary walk (slice 54; plan.md §12.9 "the portal flow", §11.4 item 5, §7.14;
 deploy/phi-gate.md item 5). Standard library only.
 
+`questionnaire(walk, deal)` (slice 58): staff pick Florida Blue 51+ for the deal and ask it online (a PIN link); the
+employer proves the PIN and answers the medical history question with this run's condition canary, through the same
+save door; staff approve it. The page shows it back (that is what it is for); the approval, the deal's feed and the
+logs must carry none of it (a medical answer reaches Activity as its key only, rule 4).
+
 On the walk's own synthetic deal, after its census is applied: staff make a request that asks the whole census and
 the census file (so it needs the PIN, OQ80); then a second client with no session, as the employer's browser, opens
 the link (428), proves the PIN, reads the page, answers a person's phone with this run's canary, tries an SSN (refused,
@@ -40,6 +45,57 @@ def _cell(page, first_name, column):
                 if field['column'] == column:
                     return person['id'], field['base']
     return None, ''
+
+
+FORM = 'fl_blue_51'
+MEDICAL = ('chkMedCon', 'txtMcComments')
+
+
+def _employer(walk, link):
+    """(call, proof) for a second client with no session on `link`, its PIN proved."""
+    employer = Client(walk.client.base, walk.client.forwarded_proto)
+    base = f'/api/portal/{_token(link["path"])}/'
+
+    def call(what, method, door, body=None, proof=None, expect=(200,), clean=True):
+        headers = {'X-Link-Verification': proof} if proof else {}
+        data = json.dumps(body).encode() if body is not None else None
+        answer = employer.request(method, base + door, data, headers, 'application/json' if data else None)
+        walk.checks.check(what, answer.status in expect, f'answered {answer.status}')
+        if clean:
+            walk.clean(what, answer.text())
+        return answer
+
+    proved = call('the questionnaire link opens with its PIN', 'POST', 'verify/', {'pin': link['pin']})
+    return call, proved.header('X-Link-Verification')
+
+
+def questionnaire(walk, deal):
+    """The questionnaire's leg: a medical answer from the client, approved, and nowhere it should not be."""
+    walk.call('Florida Blue 51+ is chosen for the deal', 'PATCH', f'/api/deals/{deal}/questionnaires/choice/',
+              {'item': 'medical_questionnaire', 'choice': FORM})  # fmt: skip
+    asked = walk.call('a request for the questionnaire online', 'POST', f'/api/deals/{deal}/review/requests/', {
+        'people': [{'name': 'Canary walk officer (synthetic)'}],
+        'asks': {'questionnaires': [{'form': FORM, 'mode': 'online'}]}}, expect=(201,), clean=True)  # fmt: skip
+    if asked.status != 201:
+        return
+    call, proof = _employer(walk, asked.json()['links'][0])
+    page = call('the questionnaire page opens', 'GET', '', proof=proof, clean=False)
+    if page.status != 200:
+        return
+    card = next((one for one in page.json().get('questionnaires', []) if one['form'] == FORM), None)
+    walk.checks.check('the page carries the form', bool(card and card['state']), 'its card and its state')
+    if not (card and card['state']):
+        return
+    bases = card['state']['bases']
+    answers = {
+        f'q:{FORM}:{MEDICAL[0]}': {'value': 'Yes', 'base': bases.get(MEDICAL[0], '')},
+        f'q:{FORM}:{MEDICAL[1]}': {'value': walk.values['condition'], 'base': bases.get(MEDICAL[1], '')},
+    }
+    call('a medical answer is saved', 'POST', 'save/', {'answers': answers}, proof, clean=False)
+    refs = [f'q:{FORM}:{slot}' for slot in MEDICAL]
+    walk.call('the medical answer is approved', 'POST', f'/api/deals/{deal}/review/approve/', {'refs': refs},
+              clean=True)  # fmt: skip
+    walk.call("the deal's feed holds no medical answer", 'GET', f'/api/deals/{deal}/activity/', clean=True)
 
 
 def portal(walk, deal, made):

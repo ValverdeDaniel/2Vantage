@@ -11,16 +11,15 @@ Per deal:
   request_id, name, last_saved_at};
 - `first_sent_at` (the oldest send on an open request), `last_sent_at`, `last_response_at`;
 - `response`: the newest sent request's {state: waiting | answering | answered, at, link_id, name}, or None;
-- `pending`: client answers waiting on the owners: {intake, census, people, documents, total} (Ch. 14b: census's
-  come from its stored counts); `ready`: {intake, census}, those whose link is ready (submitted after its last save,
-  or idle 24 h; census's counts the people a client added);
-- `sections` (slice 55): per surface (intake, census) what came back — {to_review, in_progress, ready,
+- `pending`: client answers waiting on the owners: {intake, census, people, questionnaire, documents, total} (Ch.
+  14b: census's come from its stored counts; the questionnaires' from their `client` entries, slice 58: Agenda's
+  questionnaire step reads it); `ready`: {intake, census, questionnaire}, those whose link is ready (submitted after
+  its last save, or idle 24 h; census's counts the people a client added);
+- `sections` (slice 55): per surface (intake, census, questionnaire) what came back — {to_review, in_progress, ready,
   ready_submitted, ready_idle, going_back, names} (`rules.sections`; `going_back`, answers sent back and not answered
   since, slice 56), plus `questions` and `in_tray` from the notes, and the census's `missing` (its required blanks,
   from its stored counts): the section bars and the To review lane;
 - `questions`: {open, oldest_at}; `tray`: asks and send-backs not yet sent; `nudges`: reminders due today (L69).
-
-Questionnaire answers join with slice 58, when the questionnaire's `client` entries are written.
 """
 
 from collections import defaultdict
@@ -74,7 +73,8 @@ def _pending(ids, waiting, links, now, gone):
         entries = waiting.get(deal_id, [])
         sections = section_rules.counts(entries, links, now, gone.get(deal_id, frozenset()))
         intake = sum(1 for entry in entries if entry.surface == 'intake')
-        pending = {'intake': intake, 'census': 0, 'people': 0, 'documents': 0}
+        forms = sum(1 for entry in entries if entry.surface == 'questionnaire')
+        pending = {'intake': intake, 'census': 0, 'people': 0, 'questionnaire': forms, 'documents': 0}
         ready = {surface: sections[surface]['to_review'] for surface in section_rules.SURFACES}
         out[deal_id] = (pending, ready, sections)
     for deal_id, answers, added, missing in CensusFacts.objects.filter(deal_id__in=ids).values_list(

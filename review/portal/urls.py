@@ -3,6 +3,7 @@ characters, so it can never be `moved`."""
 
 from django.urls import path
 
+from . import questionnaire_views as forms
 from . import views
 
 urlpatterns = [
@@ -18,4 +19,9 @@ urlpatterns = [
     path('<str:token>/seen/', views.SeenView.as_view()),
     path('<str:token>/stamp/', views.StampView.as_view()),
     path('<str:token>/census-template/', views.TemplateView.as_view()),
+    path('<str:token>/questionnaires/<str:form>/spec/', forms.SpecView.as_view()),
+    path('<str:token>/questionnaires/<str:form>/blank/', forms.BlankView.as_view()),
+    path('<str:token>/questionnaires/<str:form>/rows/', forms.RowsView.as_view()),
+    path('<str:token>/questionnaires/<str:form>/rows/<str:block>/<int:row_id>/', forms.RowView.as_view()),
+    path('<str:token>/questionnaires/<str:form>/sign/', forms.SignView.as_view()),
 ]

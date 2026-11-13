@@ -91,9 +91,15 @@ export default function ChecklistCard({ deal, meta, checklist, sentAt, open: ope
               onRequirement={writes.requirement}
               onAttach={writes.attach}
               ask={
-                // A carrier form's row asks for the form itself, to fill online (slice 58); the others for the file.
-                item.satisfy === 'document' && item.status === 'missing' && item.kind && !FORM_ITEMS.has(item.key) ? (
-                  <AskButton dealId={deal.id} refName={`doc:${item.kind}`} className="btn btn-secondary btn-sm" />
+                // A carrier form's row asks for the form itself, to fill online (slice 58, G76); the others (and a
+                // form row with no fillable form) for the file.
+                item.satisfy === 'document' && item.status === 'missing' && item.kind ? (
+                  FORM_ITEMS.has(item.key) && item.form_key ? (
+                    <AskButton dealId={deal.id} refName={`qform:${item.form_key}`} label="＋ Ask them to fill it out online"
+                      className="btn btn-secondary btn-sm" />
+                  ) : (
+                    <AskButton dealId={deal.id} refName={`doc:${item.kind}`} className="btn btn-secondary btn-sm" />
+                  )
                 ) : null
               }
             >

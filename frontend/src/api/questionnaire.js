@@ -63,6 +63,12 @@ function useFormWrite(dealId, form, request) {
 }
 
 /** mutate({answers: {slot: text}, relay?}) → the form, with `changed` slots and `dropped` [{slot, reason, options?}]. */
+/** PATCH …/{form}/answers/ outside the tab (the review queue's Correct, slice 58): the typed write that closes a
+ * client answer waiting on the slot as replaced. */
+export async function patchFormAnswers(dealId, form, answers) {
+  return (await api.patch(`deals/${dealId}/questionnaires/${form}/answers/`, { answers })).data;
+}
+
 export function useSaveAnswers(dealId, form) {
   return useFormWrite(dealId, form, async (body) =>
     (await api.patch(`deals/${dealId}/questionnaires/${form}/answers/`, body)).data,

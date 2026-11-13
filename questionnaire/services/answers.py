@@ -5,7 +5,8 @@ against the form as it stands (`cleaning.clean_batch`, every drop reported), the
 `deals.values.apply` with a `typed` source (`relay` for "From the client — entered by us", G79). Clearing a box that
 shows the live prefill adds the slot to `cleared`, which hides only the prefill (G33); typing into it again takes it
 off. A locked form refuses (409). One Activity row per burst, coalesced per form, with before and after for ordinary
-answers and keys only for sensitive ones.
+answers and keys only for sensitive ones. A person's edit of a slot a client's answer waits on closes that answer as
+`replaced` (Ch. 13d; slice 58): "Correct" in the review queue and "Enter it" both write here.
 
 `revert(row, user)` puts a burst back (G123): each slot goes back to its earlier value — a slot that was never
 written goes back to "not written", so its live prefill shows again. It refuses, naming them, when a later write
@@ -18,8 +19,9 @@ from collections import namedtuple
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
-from deals import activity
+from deals import activity, clock
 from deals.values import apply, source
+from intake import client_entries as entries_rule
 
 from .. import cleaning, slots
 from ..engine.spec import field_spec
@@ -68,8 +70,10 @@ def set_answers(user, deal_id, form_key, raw, *, relay=False):
     if not diff:
         return Answered(row, {}, dropped, None, facts)
     row.answers, row.sources, row.cleared = answers, sources, cleared
+    touched = [key.removeprefix(CLEARED) for key in diff]
+    row.client = entries_rule.replaced(row.client or {}, touched, getattr(user, 'id', None), clock.now().isoformat())
     common.restamp(row, facts)
-    row.save(update_fields=['answers', 'sources', 'cleared', 'flags', 'updated_at'])
+    row.save(update_fields=['answers', 'sources', 'cleared', 'client', 'flags', 'updated_at'])
     plain, hidden = common.record_values(deal, user, row, 'edited', diff)
     return Answered(row, diff, dropped, plain or hidden, facts)
 

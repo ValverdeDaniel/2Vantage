@@ -9,6 +9,9 @@ fix, ask, left}:
   columns' required blanks (`{census: {columns, scope: missing}}`, the tray's door);
 - `intake`: the questions required to market still blank (`{refs}`);
 - `documents`: the checklist's files not on file (`{refs}`);
+- `questionnaire:<form>` (slice 58, G76): each form the deal uses and nobody signed, its required answers blank on
+  screen (a client's waiting answer or the live prefill fills a slot), named; its "＋ Ask them to fill it out
+  online" (`ask_label`) puts the whole form in the tray (`qform:<form>`) until a request asks it whole;
 - on the census's own board (`scope` census) with nobody on the roster, "No census on file yet", which asks for
   their census file.
 `left` is what "＋ Ask all" would still add: not in the tray and not out with the client; `ask` is None once nothing
@@ -32,6 +35,7 @@ from . import notes as note_rows
 from . import open_requests
 
 GAP = 'question'  # intake.readiness.QUESTION: a needed question still blank
+ONLINE = '＋ Ask them to fill it out online'
 
 
 def _plural(n, one):
@@ -130,6 +134,52 @@ def _asked(refs, taken, requests):
                                                         for asks in requests)}  # fmt: skip
 
 
+def form_blanks(deal):
+    """[(form, [(slot, label)])] for each form the deal uses that nobody signed, its required answers still blank."""
+    from questionnaire import forms
+    from questionnaire.engine import walk
+    from questionnaire.selectors import context
+
+    from .queue_questionnaire import label
+
+    ctx = context.deal_context(deal)
+    armed = [found['form'] for found in ctx.resolved.values() if found['form']]
+    if not armed:
+        return []
+    facts = context.prefill_facts(deal)
+    out = []
+    for key in [key for key in forms.FORMS if key in armed]:
+        row = ctx.stored.get(key)
+        if row is not None and row.locked:
+            continue
+        view = context.form_view(key, row, facts)
+        numbers = {(b, e['id']): at + 1 for b, listed in view.stored.rows.items() for at, e in enumerate(listed)}
+        blanks = walk.blanks(view.form, view.view)
+        if blanks:
+            out.append((key, [(slot, label(view.form, slot, numbers)[0]) for slot in blanks]))
+    return out
+
+
+def _forms(deal, drafted, requests, asked):
+    from questionnaire import forms
+
+    rows = []
+    for key, blanks in form_blanks(deal):
+        refs = [f'q:{key}:{slot}' for slot, _label in blanks]
+        whole = f'qform:{key}'
+        taken = _asked([whole, *refs], drafted, requests)
+        out_already = whole in taken or all(ref in taken for ref in refs)
+        questions = sum(1 for ref in refs if ref in asked)
+        words = f'{_plural(len(blanks), "required answer")} on {forms.label(key)} still blank'
+        rows.append({
+            'key': f'questionnaire:{key}', 'section': 'Questionnaire', 'count': len(blanks),
+            'label': _with_questions(words, questions), 'questions_open': questions,
+            'items': [words_ for _slot, words_ in blanks], 'fix': {'tab': 'questionnaire', 'form': key},
+            'ask': None if out_already else {'refs': [whole]}, 'ask_label': ONLINE, 'left': 0 if out_already else 1,
+        })  # fmt: skip
+    return rows
+
+
 def lane(deal, payload, now, *, scope=None):
     drafted, requests = _taken(deal, now)
     open_questions = ReviewNote.objects.filter(deal_id=deal.id, kind='question', resolved_at__isnull=True)
@@ -158,4 +208,6 @@ def lane(deal, payload, now, *, scope=None):
             words = f'{_plural(len(files), "document")} not on file yet'
             taken = _asked([ref for ref, _label in files], drafted, requests)
             rows.append(_row('documents', 'Documents', words, files, taken, asked, fix))
+    if scope in (None, 'questionnaire'):
+        rows += _forms(deal, drafted, requests, asked)
     return rows

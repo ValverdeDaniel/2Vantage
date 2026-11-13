@@ -27,6 +27,11 @@ def _stored(ids):
     return batch.grouped(Questionnaire.objects.filter(deal_id__in=ids), lambda row: row.deal_id)
 
 
+def stored_rows(deal_id):
+    """The deal's Questionnaire rows, read once per batch scope (review's waiting entries share the read; slice 58)."""
+    return batch.per_deal('questionnaire.rows', deal_id, _stored, ())
+
+
 def deal_context(deal):
     intake = intake_selectors.intake_row(deal.id)
     checklist = (intake.checklist if intake else None) or {}

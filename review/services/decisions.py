@@ -11,7 +11,8 @@ owner's row itself; `review.owners` names who decides each section.
 Each returns Decided([ref], [Activity row]); the owners record their own rows (L.6: "the owners record approvals").
 An approval or "Keep ours" answers what was sent back about the answer (slice 56): its send-backs and asks that went
 out close (a person decided), so the item leaves Going back and the client's page no longer asks it again.
-Lock order: the Deal first, then the owners in chain order (intake, then census), each locking its rows by id (O.3.7).
+Lock order: the Deal first, then the owners in chain order (intake, census, then the questionnaires; slice 58), each
+locking its rows by id (O.3.7).
 A ref with nothing to decide (decided meanwhile, by someone else) is skipped, so a repeated click changes nothing.
 """
 
@@ -34,7 +35,7 @@ from .common import user_id
 
 Decided = namedtuple('Decided', 'refs activity')
 
-NO_SURFACE = 'Name the section: intake or census.'
+NO_SURFACE = 'Name the section: intake, census or questionnaire.'
 BOTH = 'Send refs, or a section, not both.'
 NOTHING = 'Name the answers to decide.'
 TOO_MANY = f'Decide at most {ref_rules.LIMIT} answers at a time.'

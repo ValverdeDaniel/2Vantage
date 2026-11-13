@@ -70,7 +70,7 @@ export function nextFor(entries, surface) {
 /** Where a ranked entry's or a lane row's `fix` lands: the Review & requests tab's view, or another tab. */
 export function fixUrl(dealId, fix) {
   if (!fix) return `/deals/${dealId}/review`;
-  if (fix.tab !== 'review') return `/deals/${dealId}/${fix.tab}`;
+  if (fix.tab !== 'review') return `/deals/${dealId}/${fix.tab}${fix.form ? `?form=${encodeURIComponent(fix.form)}` : ''}`;
   const query = new URLSearchParams();
   if (fix.view && fix.view !== 'board') query.set('view', fix.view);
   if (fix.section) query.set('section', fix.section);

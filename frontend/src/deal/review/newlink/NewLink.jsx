@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useDealForms } from '../../../api/questionnaire';
 import { planRequest, reviewKey, useClientContacts, useCreateRequest } from '../../../api/review';
 import { errorText } from '../../../lib/errors';
 import { useDebouncedValue } from '../../../lib/useDebouncedValue';
@@ -25,6 +26,8 @@ const BLANK = 'Only what they answer shows, never what else we hold.';
 export default function NewLink({ deal, meta, preset = '', onCreated, onCancel }) {
   const [state, setState] = useState(() => presetState(preset));
   const contacts = useClientContacts(deal.id, deal.client.id);
+  const forms = useDealForms(deal.id);
+  const unsigned = (forms.data?.forms || []).filter((form) => !form.signed);
   const create = useCreateRequest(deal.id);
   const asked = useDebouncedValue(floorKey(state), 350);
   const floor = useQuery({
@@ -87,7 +90,7 @@ export default function NewLink({ deal, meta, preset = '', onCreated, onCancel }
           )}
         </div>
         <div className="rr-newlink-h">What to ask</div>
-        <WhatToAsk meta={meta} state={state} onChange={change} disabled={create.isPending} />
+        <WhatToAsk meta={meta} state={state} onChange={change} disabled={create.isPending} forms={unsigned} />
         <div className="rr-newlink-h">Who can open it</div>
         <WhoCanOpen meta={meta} security={state.security} floor={ready ? floor.data?.floor : null} onChange={change}
           disabled={create.isPending} />

@@ -6,7 +6,8 @@ import FieldRow from './FieldRow';
  * while above the block's minimum, then "＋ Add …" while below its maximum. Rows keep their ids, so a removal moves no
  * answer; the chip shows the row's place.
  */
-export default function RowBlock({ spec, blockKey, data, draft, onChange, onAddRow, onRemoveRow, disabled }) {
+export default function RowBlock(props) {
+  const { spec, blockKey, data, draft, onChange, onAddRow, onRemoveRow, disabled, lockedOf, canRemove, footOf } = props;
   const block = spec.blocks[blockKey];
   const rows = data.rows?.[blockKey] || [];
   const onScreen = new Set(data.order);
@@ -21,7 +22,7 @@ export default function RowBlock({ spec, blockKey, data, draft, onChange, onAddR
             <span className="bnf-q-rowchip">
               {block.row_label} {row.number}
             </span>
-            {!disabled && !atMin && (
+            {!disabled && !atMin && (!canRemove || canRemove(row)) && (
               <button type="button" className="bnf-q-remove" onClick={() => onRemoveRow(blockKey, row.id)}>
                 Remove
               </button>
@@ -39,7 +40,8 @@ export default function RowBlock({ spec, blockKey, data, draft, onChange, onAddR
                   data={data}
                   value={shownValue(data, draft, slot)}
                   onChange={onChange}
-                  disabled={disabled}
+                  disabled={disabled || Boolean(lockedOf?.(slot))}
+                  foot={footOf?.(slot)}
                 />
               );
             })}

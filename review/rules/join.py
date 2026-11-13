@@ -4,7 +4,9 @@
 `join(asks, refs)` → (asks with the refs added, [refs it added]): an intake question goes into `intake.keys` (a request
 asking nothing of the intake starts a `selected` ask), a part of the intake into `intake.blocks`, a census value into
 `census.cells` (a request asking no census starts a `selected` one), their census file sets `census.file`, a file into
-`documents.slots`. A ref the asks already name explicitly is not added twice; what a scope carries the caller leaves
+`documents.slots`, and (slice 58) a questionnaire answer `q:<form>:<slot>` into its form's picks online (a row's
+answer picks its table, a question itself) while a whole form online `qform:<form>` asks the form whole, dropping its
+picks. A ref the asks already name explicitly is not added twice; what a scope carries the caller leaves
 out (it knows what is missing now, `portal.asked`). Questions keep the form's order. More than `asks.CELL_LIMIT`
 census values on one request is refused (`TooMany`): their census file is the better ask (L46).
 """
@@ -77,7 +79,33 @@ def _add(out, ref):
         documents = out.get('documents') or no_documents()
         out['documents'] = documents
         return _append(documents.setdefault('slots', []), rest)
+    if area in ('q', 'qform'):
+        return _add_form(out, area, rest)
     return False
+
+
+def _add_form(out, area, rest):
+    """A questionnaire answer joins its form's picks online; a whole form joins whole (G80)."""
+    form_key, _, slot = rest.partition(':')
+    asked = out.setdefault('questionnaires', [])
+    entry = next((one for one in asked if one['form'] == form_key), None)
+    if area == 'qform':
+        if entry is None:
+            asked.append({'form': form_key, 'mode': 'online', 'picks': {'fields': [], 'blocks': []}})
+            return True
+        whole = entry['mode'] == 'online' and not (entry['picks']['fields'] or entry['picks']['blocks'])
+        entry.update(mode='online', picks={'fields': [], 'blocks': []})
+        return not whole
+    block, _dot, rest_of = slot.partition('.')
+    kind, key = ('blocks', block) if rest_of else ('fields', block)
+    if entry is None:
+        asked.append({'form': form_key, 'mode': 'online', 'picks': {'fields': [], 'blocks': [], kind: [key]}})
+        return True
+    picks = entry.setdefault('picks', {'fields': [], 'blocks': []})
+    if entry['mode'] == 'online' and not (picks.get('fields') or picks.get('blocks')):
+        return False  # the whole form is asked online already
+    entry['mode'] = 'online'
+    return _append(picks.setdefault(kind, []), key)
 
 
 def join(asks, refs):

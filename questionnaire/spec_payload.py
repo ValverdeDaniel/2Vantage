@@ -5,12 +5,16 @@ No answers in it, so it is cached per form version. It carries the sections and 
 waits for the save's reply, G25) — and the options: a static or flat-table picker's list once (the SIC lists built a
 single time, G17), and for a dependent picker its table, read by the option key each row's payload names (G12). The
 browser holds no visibility, effect or progress rule: each payload says what is on screen.
+
+`portal_spec(key, picks)` (slice 58) is the same spec as a client's link reads it (G22, G86): narrowed to the picks
+(`engine.narrow`), with the signature section's own text left to the sign box beside it (old `signatureIntro`); its
+broker fields carry `broker`, which the link shows as text.
 """
 
 from functools import cache
 
 from . import forms
-from .engine.narrow import drivers
+from .engine.narrow import drivers, narrow
 from .engine.options import flat_options
 
 FIELD_KEYS = ('key', 'label', 'type', 'width', 'hint', 'placement', 'auto', 'depends_on')
@@ -42,7 +46,25 @@ def _field(form, block_key, field, driving):
 @cache
 def spec(key):
     """The browser's copy of one form (G.6 endpoint `meta/questionnaires/{form}/`)."""
+    return build(forms.FORMS[key])
+
+
+def portal_spec(key, picks=None):
+    """The spec a link reads: narrowed to its picks, the signature section's text left to the sign box."""
     form = forms.FORMS[key]
+    if picks and (picks.get('fields') or picks.get('blocks')):
+        form = narrow(form, picks)
+    out = build(form)
+    out['narrowed'] = bool(form.get('narrowed'))
+    for section in out['sections']:
+        if str(section['key']).startswith('signature'):
+            section['intro'] = ''
+    return out
+
+
+def build(form):
+    """One form (or a narrowed one) as the browser reads it."""
+    key = form['key']
     driving = drivers(form)
     dependent = {f['options_from'] for b in form['blocks'].values() for f in b['fields'] if f.get('depends_on')}
     return {

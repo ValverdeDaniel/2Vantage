@@ -8,8 +8,12 @@ import RowBlock from './RowBlock';
  * hints, the legend, and the row cards. What is on screen is the server's (`order`, `blocks`): a section's own
  * questions, its blocks, then the questions the carrier prints after them (`placement: after_blocks`, G21). An intro
  * that introduces a block goes with it (Florida Blue's "15. …" above the plans).
+ *
+ * The client's page shares it (slice 58, G83–G88) with three optional hooks: `lockedOf(slot)` (a broker's field the
+ * client reads, G86), `canRemove(row)` (only a row their link added, G87) and `footOf(slot)` (a refusal, a conflict, a
+ * colleague's answer under the question, as the old portal's `footOf`).
  */
-export default function PaperForm({ spec, data, draft, onChange, onAddRow, onRemoveRow, disabled }) {
+export default function PaperForm({ spec, data, draft, onChange, onAddRow, onRemoveRow, disabled, ...hooks }) {
   const onScreen = new Set(data.order);
   const shownBlocks = new Set(data.blocks);
   const row = (field) => (
@@ -21,7 +25,8 @@ export default function PaperForm({ spec, data, draft, onChange, onAddRow, onRem
       data={data}
       value={shownValue(data, draft, field.key)}
       onChange={onChange}
-      disabled={disabled}
+      disabled={disabled || Boolean(hooks.lockedOf?.(field.key))}
+      foot={hooks.footOf?.(field.key)}
     />
   );
   return (
@@ -54,6 +59,7 @@ export default function PaperForm({ spec, data, draft, onChange, onAddRow, onRem
                 onAddRow={onAddRow}
                 onRemoveRow={onRemoveRow}
                 disabled={disabled}
+                {...hooks}
               />
             ))}
             {after.length > 0 && <div className="bnf-q-grid">{after.map(row)}</div>}

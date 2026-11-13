@@ -7,8 +7,9 @@ import SectionQueue from './SectionQueue';
  * The Review view (plan.md §8.8; L11; old 891f1b3 `DealReviewTab.jsx` `view === 'queue'`, `bnf-board-queue`): every
  * section's client answers in one place, one section at a time behind its chip (Census · client, Intake), each with
  * what it holds to review. `?section=` picks the chip and is written on a click; with none, the first section holding
- * something. The AI reads' queue lives in the Documents station (L10, L19); questionnaires join with slice 58. A deal
- * that may no longer ask its client only reads (L129).
+ * something. The AI reads' queue lives in the Documents station (L10, L19); the questionnaires' client answers have
+ * their own chip (slice 58, L21: grouped by form and section). A deal that may no longer ask its client only reads
+ * (L129).
  */
 export default function QueueView({ deal, meta, board }) {
   const [params, setParams] = useSearchParams();

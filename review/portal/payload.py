@@ -7,7 +7,8 @@ Its keys are exactly `KEYS` (review's tests pin them; nothing joins without this
 - `form_stamp` (L103); `message`, `colleagues` (a count, never names) and `answered_elsewhere_at` (L82);
 - `intake` (intake_part), `people` and `add_people` (census_part), `census_file` and `documents` (files_part), and
   the to-do list `checklist` (rules.portal.rail);
-- `follow_ups` (slice 56, follow_ups.py): our notes, send-backs and replies and their questions, by item, as threads.
+- `follow_ups` (slice 56, follow_ups.py): our notes, send-backs and replies and their questions, by item, as threads;
+- `questionnaires` (slice 58, questionnaire_part.py): a card per form the link asks, with the link's view of it.
 No team notes, commission, intent, document ids, owner names, other deals' data or files from outside the request.
 """
 
@@ -16,7 +17,7 @@ from deals.models import AgencySettings
 
 from ..rules import policy
 from ..rules import portal as portal_rules
-from . import census_part, files_part, follow_ups, intake_part, words
+from . import census_part, files_part, follow_ups, intake_part, questionnaire_part, words
 from .asked import asked
 
 KEYS = (
@@ -40,6 +41,7 @@ KEYS = (
     'documents',
     'checklist',
     'follow_ups',
+    'questionnaires',
 )
 
 
@@ -63,7 +65,9 @@ def build(link, request, deal, *, staff=False, preview=False):
     census_file = files_part.census_file(found, link, link_ids)
     documents = files_part.documents(found, link, link_ids)
     answered = [row.submitted_at for row in others if row.submitted_at]
-    cards = follow_ups.cards(link, request, deal, found, link_ids=files_part.shown_links(link, link_ids))
+    shown = files_part.shown_links(link, link_ids)
+    cards = follow_ups.cards(link, request, deal, found, link_ids=shown)
+    forms = questionnaire_part.section(found, shown)
     return {
         'agency': agency(),
         'account_name': deal.client.name,
@@ -74,7 +78,9 @@ def build(link, request, deal, *, staff=False, preview=False):
         'can_write': not (staff or preview) and rules.client_asks_open(deal) is None,
         'staff': bool(staff),
         'preview': bool(preview),
-        'form_stamp': portal_rules.form_stamp(link, request, now, follow_ups.stamp(link, request)),
+        'form_stamp': portal_rules.form_stamp(
+            link, request, now, follow_ups.stamp(link, request) + questionnaire_part.stamp(request)
+        ),
         'message': request.message,
         'colleagues': len(others),
         'answered_elsewhere_at': _iso(min(answered)) if answered else None,
@@ -83,6 +89,9 @@ def build(link, request, deal, *, staff=False, preview=False):
         'add_people': census_part.add_people(found, link_ids),
         'census_file': census_file,
         'documents': documents,
-        'checklist': portal_rules.rail(words.RAIL, intake, people, census_file, documents, cards),
+        'checklist': portal_rules.rail(
+            words.RAIL, intake, people, census_file, documents, cards, questionnaire_part.rail_items(forms)
+        ),
         'follow_ups': cards,
+        'questionnaires': forms,
     }

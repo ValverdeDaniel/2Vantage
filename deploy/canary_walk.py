@@ -23,7 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import canaries as made  # noqa: E402
-from canary_portal import portal  # noqa: E402
+from canary_portal import portal, questionnaire  # noqa: E402
 from http_client import Checks, Client  # noqa: E402
 
 CARRIERS = ['aetna', 'cigna']  # asked, so the RFP has email drafts
@@ -170,6 +170,7 @@ def main():
             deal, client_id, document = made_deal
             roster(walk, deal)
             portal(walk, deal, made)  # the client portal's leg (slice 54): deploy/canary_portal.py
+            questionnaire(walk, deal)  # a medical answer on the questionnaire (slice 58): deploy/canary_portal.py
             files(walk, deal, document)
             lasers(walk, deal)
             surfaces(walk, deal, client_id)

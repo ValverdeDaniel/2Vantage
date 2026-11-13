@@ -2,9 +2,15 @@ import { NOTHING } from './newLinkModel';
 
 /*
  * What to ask, the minimal way (L40, L46; slice 57 brings the full Ask list with its ticks): the intake by scope, the
- * census by scope and its file, and any documents the checklist still needs. The choices' words come from /api/meta/
- * `review` (rule 1); what each scope asks is worked out on the server when the client opens the link.
+ * census by scope and its file, any documents the checklist still needs, and (slice 58, G80) each questionnaire the
+ * deal uses — off, online (they answer and sign it on the page; it needs a PIN) or as a signed copy they upload.
+ * Narrowing a form to some questions is the request page's per-question ＋ Ask. The choices' words come from
+ * /api/meta/ `review` (rule 1); what each scope asks is worked out on the server when the client opens the link.
  */
+const FORM_MODES = [
+  { key: 'online', label: 'Online — they answer and sign it on the page' },
+  { key: 'upload', label: 'As a signed copy — they upload it' },
+];
 function ScopeSelect({ label, value, options, onChange, disabled }) {
   return (
     <label className="rr-edit-row">
@@ -21,9 +27,13 @@ function ScopeSelect({ label, value, options, onChange, disabled }) {
   );
 }
 
-export default function WhatToAsk({ meta, state, onChange, disabled }) {
+export default function WhatToAsk({ meta, state, onChange, disabled, forms = [] }) {
   return (
     <div className="rr-newlink-levels">
+      {forms.map((form) => (
+        <ScopeSelect key={form.key} label={form.label} value={state.forms?.[form.key] || NOTHING} options={FORM_MODES}
+          disabled={disabled} onChange={(mode) => onChange({ forms: { ...state.forms, [form.key]: mode } })} />
+      ))}
       <ScopeSelect label="Intake" value={state.intake} options={meta?.intake_scopes || []} disabled={disabled}
         onChange={(intake) => onChange({ intake })} />
       <ScopeSelect label="Census" value={state.census} options={meta?.census_scopes || []} disabled={disabled}

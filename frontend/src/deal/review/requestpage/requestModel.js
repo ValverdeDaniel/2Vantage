@@ -2,7 +2,7 @@
 // `requestFilters.js`). The server says where every item stands (`status`); these group, filter and word it. The
 // statuses' words come from /api/meta/ `review.rail_statuses` (rule 1).
 
-export const PANES = ['intake', 'census', 'documents'];
+export const PANES = ['intake', 'census', 'questionnaire', 'documents'];
 
 // The Show chips (L27): what each keeps, by the items' own status.
 export const SHOWS = [

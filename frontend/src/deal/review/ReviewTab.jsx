@@ -8,6 +8,7 @@ import RequestView from './newlink/RequestView';
 import QueueView from './queue/QueueView';
 import ReviewViews from './ReviewViews';
 import { scopeOf, viewOf } from './reviewModel';
+import { fixUrl } from './section/sectionModel';
 import useLinkActions from './useLinkActions';
 
 /*
@@ -41,7 +42,7 @@ export default function ReviewTab({ deal }) {
   const go = (fix) => {
     if (!fix) return;
     if (fix.tab !== 'review') {
-      navigate(`/deals/${deal.id}/${fix.tab}`);
+      navigate(fixUrl(deal.id, fix));
       return;
     }
     if (fix.view === 'queue') pickQueue(fix.section);

@@ -104,7 +104,7 @@ PHASES = [
     ('in_progress', 'Not submitted yet', 'What the client has typed but not submitted yet: read only until they do'),
     ('going_back', 'Going back', 'Answers sent back to the client: they return here when the client answers again'),
 ]
-QUEUE_SECTIONS = [('census', 'Census · client'), ('intake', 'Intake')]
+QUEUE_SECTIONS = [('census', 'Census · client'), ('intake', 'Intake'), ('questionnaire', 'Questionnaire')]
 
 # Notes, the tray and the request page (slice 56; old 891f1b3 `NoteThread.jsx` KIND_WORDS, `RequestRail.jsx` STATUS,
 # `FollowUpSnippet.jsx` SECTIONS).
@@ -123,8 +123,18 @@ RAIL_STATUSES = [
     ('on_file', 'On file'),
     ('missing', 'Missing'),
 ]
-TRAY_SECTIONS = [('census', 'Census'), ('intake', 'Intake'), ('documents', 'Documents')]
-REQUEST_PANES = [('intake', 'Intake'), ('census', 'Census'), ('documents', 'Documents')]
+TRAY_SECTIONS = [
+    ('census', 'Census'),
+    ('intake', 'Intake'),
+    ('questionnaire', 'Questionnaire'),
+    ('documents', 'Documents'),
+]
+REQUEST_PANES = [
+    ('intake', 'Intake'),
+    ('census', 'Census'),
+    ('questionnaire', 'Questionnaire'),
+    ('documents', 'Documents'),
+]
 
 # The sections' boards (slice 57; old 891f1b3 `CensusReviewFieldRow.jsx` REQ_BUTTONS, `censusReviewRows.js`
 # STATUS_TITLE, `IntakeReviewView.jsx` REQ_BUTTONS and its status chips).

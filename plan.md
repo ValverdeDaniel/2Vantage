@@ -3050,6 +3050,27 @@ sections' boards** (B37, C27, C30): the Intake board's rules and the note the cl
 `CensusSettings.rules`; never Required for SSN), both revertible; census sends by contact are dropped (OQ88 default,
 L67, C29) and saved census filter setups wait (OQ7).
 
+**Built (slice 58):** questionnaires in review and on the portal (G68–G81, G83–G90, G92–G98; L21, L91). The
+questionnaire is the third owner (`review/owners.py`): its client door `questionnaire.services.client` (`save_client`,
+`add_row`, `remove_row`) keeps a client's answer as a pending entry in `Questionnaire.client` (slot `field` or
+`block.<row id>.field`, with `prior`), cleaned by the form's own cleaner against the link's view, a broker's field
+refused (G86), every refusal named (G88); `questionnaire.services.approvals` approves (origin `client`, the link; an
+emptied prefilled box goes to `cleared`), keeps ours, and takes an approval back; a staff typed or relayed edit closes
+a waiting answer as `replaced`. Refs are `q:<form>:<slot>` and a whole form online `qform:<form>`. A link asking a
+form online needs the PIN (OQ80; a signed copy, `mode: upload`, does not); its page carries `questionnaires` (a card
+per form, waived ones dropped: the link's view with values, bases, rows, what is on screen, blanks, progress, the
+broker's slots), the narrowed spec is its own cacheable read, and the client adds rows and removes their own, files a
+paper copy (`qform:<form>`), and **signs as the officer** (`questionnaire.services.sign_from_link`: held only by blank
+required answers, with "Sign anyway"; a narrowed ask takes no signature). **Signing freezes what the signer saw** (G51):
+the live prefill on screen is stored, and the client's own answers — attested by the signature — still wait for a
+person (OQ84); a signed form takes no more client writes, its waiting answers may only be approved (Keep ours and
+Undo answer 409 until it is reopened), and its signed copy is filed once none waits (OQ85: a copy prints approved
+values only; G135), by the approval that takes the last one, or at the signature when nothing waits. The review queue
+has a Questionnaire section (`selectors/queue_questionnaire.py`), `summary.facts` counts `pending.questionnaire` and
+`sections.questionnaire`, the Board's To review and Missing lanes list the forms ("＋ Ask them to fill it out online"),
+the request page has a Questionnaire tab, the tray joins a question onto a form's picks (`rules/join.py`) or a whole
+form, edit mode enters answers (`relay`), and the Ask card takes them off (`rules/form_plan.py`).
+
 **Full rules:** Part L (L.3; L.6: models, the owner contract, `rules/`, portal security) and O.3.4. **Slices:** 53–59.
 
 ### 5.9 Next step and agenda — `agenda/steps/`, `agenda/rows.py`
@@ -3667,6 +3688,11 @@ stores the choice (`intake.services.set_form_choice`) and reads the forms throug
 
 Each slot's status is worked out on read: missing, blank, prefill, client, to_check or ok (G.6). The forms are data
 modules under `questionnaire/forms/`, and the bundled blanks sit in `assets/questionnaires/`.
+
+Built in slice 58 (no migration): `client` holds the client's answers through a link (`questionnaire.services.client`;
+the entry is `intake/client_entries.py`'s with `prior`; status pending, approved, rejected or replaced), `rows` entries
+a client added carry `origin: client` and their `link`, and `officer_link` names the link the officer signed on. A
+pending answer never prints (OQ85); on a signed form `signed_document` stays empty until no client answer waits.
 
 **StagedRead** — a Claude read of a filled form waiting for a person (slice 52; G99, D74, D113): `deal`, `form`, `job`
 (FK ai.Job, null), `document` (FK, null), `status` (waiting, applied, discarded, undone; constants, not choices),
@@ -4526,6 +4552,20 @@ Built in slice 57 (each 404 past bigint or on another deal; 400 by field; 409 wi
   adds `origins, next_kinds, rules, intake_rules, board_statuses, census_segments, census_groups, note_rule_limit,
   enter_limit, file_hint`.
 
+Built in slice 58 (questionnaires; each 400 by field, 409 with a sentence):
+- A ref may be `q:<form>:<slot>` (a questionnaire answer; slot `field` or `block.<row id>.field`) wherever a ref is
+  taken (`approve/`, `reject/`, `undo/`, `tray/`, `notes/`, `enter/`, `requests/{rid}/form/` off), and `qform:<form>`
+  (the whole form, online) in the tray, notes and the Ask card. `queue/?surface=questionnaire` lists the client's
+  answers on the deal's forms; an item adds `form`, `sensitive`, `hidden`, `signed` (the officer signed: only Approve)
+  and its group is `<form>:<section>:<change>`. On a signed form `reject/` and `undo/` answer 409; `approve/` lands
+  the answers and files the signed copy once none waits.
+- `board/`: `lanes.to_review` adds `{key: questionnaire, …, fix: {tab: review, view: queue, section: questionnaire}}`;
+  `lanes.missing` adds a row per form the deal uses and nobody signed, `{key: questionnaire:<form>, section,
+  count, label, items, fix: {tab: questionnaire, form}, ask: {refs: [qform:<form>]} | null, ask_label, left}`;
+  `sections.questionnaire` (with `missing`, the forms' blank required answers). `request/?pane=questionnaire` lists
+  `qform:<form>` then each question on screen `{…, gate}`. /api/meta/ `review`: `queue_sections`, `tray_sections` and
+  `request_panes` add Questionnaire. `summary.facts`: `pending.questionnaire`, `ready.questionnaire`.
+
 | Method | Path | What it does |
 |---|---|---|
 | GET | `deals/{id}/review/badges/`, `…/board/?scope=` | Counts; lanes, Next and questions (L1, L2) |
@@ -4600,6 +4640,20 @@ thread: [{who: you | colleague | agency, kind, text, plain, at}]}]` to `KEYS` an
 `form_stamp` moves when a note to the link is sent or closed. `POST questions/` `{questions: [{ref, text}]}` (at most 20,
 each about a ref the page asks, text ≤ 1,000) → 201 `{follow_ups}`; 400 `{questions: [sentence]}`. `POST seen/` →
 `{seen_at}`. Both are writes: a staff session gets 403, a lost or archived deal 410.
+
+**Built (slice 58).** The page adds `questionnaires: [{form, title, subtitle, kind, version, mode online | upload,
+narrowed, blank, signed {name, signed_at} | null, locked, sign {label, attestation} | null, state {values, bases, rows
+{block: [{id, number, mine}]}, blocks, order, blanks, options, progress, broker, colleague} | null, file {slot
+qform:<form>, accept, received [{name, at}]} | null}]` to `KEYS`, and a to-do row per form first in `checklist` (`kind
+questionnaire`, done once signed, or a narrowed form answered). `save/` and `submit/` take `q:<form>:<slot>` refs and
+answer `questionnaires: {form: state}` for the forms they named; `files/` takes the slot `qform:<form>` (a paper copy,
+filed as the form's kind). `GET questionnaires/{form}/spec/?v=` → the spec as the link asks it (narrowed; the
+signature section's text left to the sign box), `private, max-age=3600`, the one cacheable portal answer; `GET
+questionnaires/{form}/blank/[?inline=1]` → the carrier's blank (404 none or narrowed); `POST questionnaires/{form}/rows/`
+`{block}` → 201 `{row_id, state, link}`; `DELETE questionnaires/{form}/rows/{block}/{row_id}/` → `{state, link}` (409 a
+row the link did not add or one holding an approved answer); `POST questionnaires/{form}/sign/` `{name, sign_anyway?}`
+→ `{questionnaire: card, link}`, 409 `{detail, incomplete: {filled, total}}` for blank required answers, a lost deal
+or a signature on file; 400 a narrowed ask. Each a write (a staff session 403, a lost deal 410) but the two GETs.
 
 Full list: Part L, L.6.
 
@@ -4935,6 +4989,12 @@ holds Going out over our form; Edit opens the link's settings card (`?settings=<
 drawer of every link (L38); ✎ Edit mode (`?edit=1`, L34, L35); "A new link…" (`?target=new`, `?preset=required |
 census-missing`, L40, L41) with "＋ Add a person to the deal" (L73), live numbers and their form.
 
+Built in slice 58: the Review view's Questionnaire chip (L21: the client's answers on every form the deal uses, by
+form and section; on a form the officer signed only Approve), the To review and Missing lanes' questionnaire rows
+("＋ Ask them to fill it out online", G76), the request page's Questionnaire tab (G78: the whole form online, then
+each question on screen with ＋ Ask), the New link builder's forms (G80: off, online, or as a signed copy), and the
+section bar on the Questionnaire tab (G45, G73).
+
 ### 8.9 Intake (`intake`)
 
 Part B (B1–B44; B.6). Slices 11, 39 and 40. Pills Form · Board · Request · Review (B36).
@@ -4974,6 +5034,10 @@ Florida Blue 51+, Warner large group and the SIIA disclosure (G1; OQ5).
 - **Built in slice 52:** a filled form read by Claude (D113, G99–G102) waits in the Work with Claude drawer's card, never
   on the tab; once used, its answers show on the form as Claude's reads (origin `ai`, file and page, amber when Claude
   doubted them) and the Claude strip over the tab offers ↶ Undo this run.
+- **Built in slice 58:** the section bar over the form ("N to review · N waiting on the client · N missing",
+  "Approve N ready ✓"; G45, G73). A client's answers through a link show violet until a person approves them (G136);
+  an officer's signature on the link reads "Signed by …" with the link; the checklist row's "＋ Ask them to fill it out
+  online" puts the whole form in the request tray (G76).
 
 ### 8.12 RFP (`rfp`)
 
@@ -5257,6 +5321,13 @@ Part L (L76–L110, L136; L.6). Slices 54, 58 and 59.
   IntakeSection, blocks/, PeopleSection, CellInput, AddPersonForm, FileSlots, SubmitBar, Unavailable, MovedPage,
   PreviewPage, `portalApi` with its own axios instance, `useAutosave`, `usePortalWrites`, `usePortalStamp`,
   `portalModel`), on the old classes; walked at 390×844 (`--need s54`). View as client is on the request card.
+- **Built (slice 58):** a card per questionnaire the link asks (`QuestionnaireSection`, `QuestionnaireSign`,
+  `QuestionnairePaper`, `BlankForm`, `useFormWrites`, `useFormSpec`, `questionnaireModel`): the title, "View the official
+  carrier form ▸" and "⬇ Download blank PDF" (G84), the intro, the form in the team's paper layout (the shared
+  `PaperForm`; the broker's fields read only, G86), rows their link added with Remove (G87), "Already filled this out on
+  paper?" (G90, G92), the officer's typed signature with its attestation and "Sign anyway" (G93), "Signed by …
+  Thank you", and a to-do row per form ("N of M — please sign", "signed"; G95); answers autosave with the page's;
+  walked at 390×844 (`--need s58`).
 
 ### 8.21 The grid
 

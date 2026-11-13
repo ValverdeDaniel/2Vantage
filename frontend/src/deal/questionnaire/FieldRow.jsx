@@ -2,10 +2,10 @@ import { optionsFor } from './formModel';
 import QuestionInput from './QuestionInput';
 
 /*
- * One question on the paper layout (G36): the label with its red star, the input, the italic hint. `data-q-slot` names
- * the answer, which Enter and Tab walk (G41).
+ * One question on the paper layout (G36): the label with its red star, the input, the italic hint, and (the client's
+ * page, slice 58) what stands under it (`foot`). `data-q-slot` names the answer, which Enter and Tab walk (G41).
  */
-export default function FieldRow({ spec, field, slot, data, value, onChange, disabled }) {
+export default function FieldRow({ spec, field, slot, data, value, onChange, disabled, foot = null }) {
   return (
     <div className={`bnf-q-field bnf-q-w${field.width || 1}`} data-q-slot={slot}>
       <label className="bnf-q-label">
@@ -21,6 +21,7 @@ export default function FieldRow({ spec, field, slot, data, value, onChange, dis
         disabled={disabled}
       />
       {field.hint && <div className="bnf-q-hint">{field.hint}</div>}
+      {foot}
     </div>
   );
 }

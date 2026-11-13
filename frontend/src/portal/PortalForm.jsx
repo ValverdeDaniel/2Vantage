@@ -4,6 +4,7 @@ import FollowUps from './FollowUps';
 import IntakeSection from './IntakeSection';
 import PeopleSection from './PeopleSection';
 import { liveRail, nothingAsked, plural } from './portalModel';
+import QuestionnaireSection from './QuestionnaireSection';
 import SubmitBar, { SavedNote, ThankYou } from './SubmitBar';
 import TodoRail from './TodoRail';
 import usePortalWrites from './usePortalWrites';
@@ -12,8 +13,8 @@ import usePortalWrites from './usePortalWrites';
  * What a link asks, on one page (plan.md §8.20; L80–L98, L105). Ported from old Vantage 891f1b3
  * `BenefitsClientPortal.jsx`'s main branch: the to-do rail (a sticky left column, above the form on a phone), the
  * greeting card, the shared request card ("From your broker:", "This request also went to N colleagues"), the intake
- * questions and blocks, the people, the files, the follow-ups and questions (slice 56), the notes and the foot.
- * Questionnaires join with slice 58, the receipt with 59.
+ * questions and blocks, the questionnaires (slice 58), the people, the files, the follow-ups and questions (slice 56),
+ * the notes and the foot. The receipt joins with slice 59.
  *
  * page: the payload · token · readOnly (View as client) · onReload() · onChallenge() (the PIN again)
  */
@@ -66,7 +67,7 @@ export default function PortalForm({ token, page, readOnly = false, onReload, on
   const writes = page.can_write && !readOnly;
   const w = usePortalWrites({ token, page, writes, onReload, onChallenge });
   const short = (page.agency.name || 'your broker').split(' ')[0];
-  const rail = liveRail(page, w.answers.values, w.staged);
+  const rail = liveRail(page, w.answers.values, w.staged, w.forms.states);
   const blocks = page.intake?.blocks || {};
   const files = { staged: w.staged, onStage: w.stage, onUnstage: w.unstage, onProblem: w.setProblem, readOnly: !writes };
 
@@ -97,6 +98,7 @@ export default function PortalForm({ token, page, readOnly = false, onReload, on
         {blocks.coverage && <CoverageBlock block={blocks.coverage} bind={w.bind} />}
         {blocks.lines && <LinesBlock block={blocks.lines} bind={w.bind} />}
         {blocks.bor && <BorBlock bor={blocks.bor} name={w.borName} onName={w.setBorName} readOnly={!writes} />}
+        <QuestionnaireSection token={token} cards={page.questionnaires} w={w} files={files} readOnly={!writes} />
         <PeopleSection people={page.people} adder={writes ? page.add_people : null} bind={w.bind}
                        onAdd={w.addPerson} />
         <DocumentSlots documents={page.documents} {...files} />

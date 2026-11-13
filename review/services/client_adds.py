@@ -1,10 +1,11 @@
 """What a client adds through their link besides answers: files and people (plan.md §5.8, §7.14; L90, L93, L94;
 C35; B12, B22).
 
-- `upload(link_id, slot, file)`: one file for one slot this link asks (`census_file`, or a document slot such as
-  `invoice@medical`). It goes through `documents.services.upload`, the only door: the kind's accept list, the first
-  bytes, the 30 MB cap and the member-data screen (B12), with source `client`, the link and the slot kept on the row
-  so the page names only files that came through its request (B22). Documents records the upload ("Uploaded a Census
+- `upload(link_id, slot, file)`: one file for one slot this link asks (`census_file`, a document slot such as
+  `invoice@medical`, or a form's paper copy `qform:<form>`, filed as the form's kind, slice 58, G90). It goes through
+  `documents.services.upload`, the only door: the kind's accept list, the first bytes, the 30 MB cap and the
+  member-data screen (B12), with source `client`, the link and the slot kept on the row so the page names only files
+  that came through its request (B22). Documents records the upload ("Uploaded a Census
   file", by the client). Then the link's save stamp and slide. Nothing reads it yet: client files are read once staff
   ask, or from slice 59.
 - `add_people(link_id, people)`: "＋ Add an employee / a dependent" (L90), through census's door; each waits whole
@@ -18,9 +19,10 @@ from rest_framework.exceptions import ValidationError
 from census.services import client as census_client
 from deals import clock
 from documents.services import upload as store_upload
+from questionnaire import forms as questionnaire_forms
 
 from ..models import ClientLink
-from ..portal.asked import asked
+from ..portal.asked import PAPER, asked, takes_paper
 from ..portal.files_part import CENSUS_SLOT, slot_kind
 from . import common, stamps
 
@@ -45,6 +47,11 @@ def upload(link_id, slot, file):
         if not found.census_file:
             raise ValidationError({'slot': [NOT_ASKED]})
         meta = {'kind': 'census'}
+    elif slot.startswith(PAPER):
+        ask = next((one for one in found.forms if f'{PAPER}{one.form}' == slot), None)
+        if ask is None or not takes_paper(ask):
+            raise ValidationError({'slot': [NOT_ASKED]})
+        meta = {'kind': questionnaire_forms.FILE_KIND[questionnaire_forms.FORMS[ask.form]['kind']]}
     else:
         if slot not in found.documents:
             raise ValidationError({'slot': [NOT_ASKED]})

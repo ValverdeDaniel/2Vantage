@@ -15,6 +15,16 @@
 the agent attested to the same answers — keeps `{at, by, reason}` in `reopens`, and drops the frozen prefill nobody
 confirmed, so it is live again (G27). The reason stays on the row, never in Activity (free text might name a member's
 condition; §3.8). Neither signing nor reopening is reverted through Activity: Reopen is the door.
+
+`sign_from_link(deal_id, link_id, form_key, name, sign_anyway=…, picks=…, blank=…)` (G93, G55; slice 58): the company
+officer signs on their link. It freezes what the signer saw — the client's own answers (G51): the blanks it counts are
+the link's view, the live prefill on screen is stored, and their answers waiting stay waiting for a person (OQ84),
+attested by the signature. Held only by blank required answers, with "Sign anyway"; a narrowed ask takes no signature.
+Who signed and on which link are kept (G55); the Activity row is the client's.
+
+**Filing waits for the answers it attests** (OQ85, G135): a signed copy prints approved values only, so while a client
+answer waits on the form the copy is not filed; the approval that takes the last one files it
+(`approvals.approve_client`). A form with nothing waiting files at the signature, as before.
 """
 
 from collections import namedtuple
@@ -28,6 +38,7 @@ from documents.review_rules import is_approved
 
 from .. import forms
 from ..engine import walk
+from ..selectors import portal
 from . import common, filing
 
 Signed = namedtuple('Signed', 'row who activity facts')
@@ -37,6 +48,9 @@ AUTHORIZATION = (
     "Signing for the client's officer needs their written authorization: tick the box to confirm you have it."
 )
 ALREADY = 'This signature is already on file.'
+NARROWED = 'This link asks part of the form, so it takes no signature.'
+FILED = '; the signed copy is filed in Documents'
+FILE_LATER = '; the signed copy is filed once their answers are approved'
 NOT_SIGNED = 'This form is not signed, so there is nothing to reopen.'
 REASON_NEEDED = 'Say why the form is reopened.'
 
@@ -62,16 +76,30 @@ def _name(value):
 
 
 def _freeze(row, view, user):
-    """Store every answer on screen that still shows the live prefill (origin `prefill`): the signer saw it."""
+    """Store every answer on screen that still shows the live prefill (origin `prefill`): the signer saw it. A slot
+    a client answer waits on showed that answer, which stays waiting."""
     frozen = {}
+    waiting = {slot for slot, entry in (row.client or {}).items() if (entry or {}).get('status') == 'pending'}
     for entry in walk.order(view.form, view.view):
         slot = entry['slot']
-        if slot not in row.answers and slot not in row.cleared and view.prefill.get(slot):
+        if slot not in row.answers and slot not in row.cleared and slot not in waiting and view.prefill.get(slot):
             frozen[slot] = view.prefill[slot]
     answers, sources = dict(row.answers), dict(row.sources)
     diff = apply(answers, sources, frozen, source('prefill', user))
     row.answers, row.sources = answers, sources
     return diff
+
+
+def _file(user, deal, row, facts, who, fields, summary):
+    """(the filed Document or None, the summary): the officer's signature, or the agent's after it, files what is now
+    signed — once no client answer waits on the form (OQ85: a copy prints approved values only)."""
+    if not row.locked:
+        return None, summary
+    if portal.waiting(row):
+        return None, summary + FILE_LATER
+    filed = filing.file_copy(user, deal, row, facts, who)
+    fields += ['signed_document', 'signed_copies']
+    return filed, summary + FILED
 
 
 @transaction.atomic
@@ -107,11 +135,7 @@ def sign(user, deal_id, form_key, who, name, *, authorized=False, sign_anyway=Fa
         row.agent_name, row.agent_signed_at, row.agent_signed_by = name, now, by
         fields = ['agent_name', 'agent_signed_at', 'agent_signed_by']
         summary = f'{label}: signed by the agent, {name}'
-    filed = None
-    if row.locked:  # the officer's signature, or the agent's after it: file what is now signed
-        filed = filing.file_copy(user, deal, row, facts, who)
-        fields += ['signed_document', 'signed_copies']
-        summary += '; the signed copy is filed in Documents'
+    filed, summary = _file(user, deal, row, facts, who, fields, summary)
     common.restamp(row, facts)
     row.save(update_fields=[*fields, 'flags', 'updated_at'])
     record = activity.record(
@@ -119,6 +143,42 @@ def sign(user, deal_id, form_key, who, name, *, authorized=False, sign_anyway=Fa
         changes=[activity.change(common.target(row), {f'{who}_signed_at': [None, now.isoformat()]})],
     )  # fmt: skip
     return Signed(row, who, record, facts)
+
+
+@transaction.atomic
+def sign_from_link(deal_id, link_id, form_key, name, *, sign_anyway=False, picks=None, blank=False):
+    """The company officer's typed signature on their link. Returns Signed; 400 a narrowed ask or no name, 409 blanks
+    (with the counts for "Sign anyway"), a lost deal, a signature already on file."""
+    if picks and (picks.get('fields') or picks.get('blocks')):
+        raise ValidationError({'name': [NARROWED]})
+    name = _name(name)
+    deal = common.lock_deal(deal_id)
+    refusal = rules.refuses(deal, 'sign')
+    if refusal:
+        raise activity.Refused(refusal)
+    row, _ctx, facts = common.open_row(None, deal, form_key)
+    if row.officer_signed_at is not None:
+        raise activity.Refused(ALREADY)
+    seen = portal.link_view(deal, form_key, link_id, blank=blank, row=row, facts=facts)
+    found = walk.progress(seen.form, seen.view)
+    if found['filled'] < found['total'] and not sign_anyway:
+        raise Incomplete(found['filled'], found['total'])
+    _freeze(row, common.view_of(row, facts), None)
+    now = clock.now()
+    row.officer_name, row.officer_signed_at, row.officer_signed_by = name, now, None
+    row.officer_authorized, row.officer_link = False, link_id
+    fields = ['answers', 'sources', 'officer_name', 'officer_signed_at', 'officer_signed_by', 'officer_authorized',
+              'officer_link']  # fmt: skip
+    summary = f'{forms.label(form_key)}: signed by the company officer as {name}, on their link'
+    filed, summary = _file(None, deal, row, facts, 'officer', fields, summary)
+    common.restamp(row, facts)
+    row.save(update_fields=[*fields, 'flags', 'updated_at'])
+    record = activity.record(
+        deal, None, common.AREA, 'signed', summary, revertible=False, document_id=filed.id if filed else None,
+        changes=[activity.change(common.target(row), {'officer_signed_at': [None, now.isoformat()]})],
+        actor_kind='client',
+    )  # fmt: skip
+    return Signed(row, 'officer', record, facts)
 
 
 @transaction.atomic

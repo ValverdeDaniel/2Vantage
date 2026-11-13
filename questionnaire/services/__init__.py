@@ -5,7 +5,11 @@
 - `signing`: `sign` (officer or agent; the officer's locks the form) and `reopen` with a reason (G49–G55);
 - `filing`: the signed copy filed as a protected Document at the officer's signature (G135);
 - `picks`: `choose_form`, the checklist item's form choice (G2, G4, G9, G133);
-- `marks`: `mark_answers`, approve / ignore / needs checking / clear (E103).
+- `marks`: `mark_answers`, approve / ignore / needs checking / clear (E103);
+- `client` (slice 58): the client's side through a portal link — `save_client` (answers wait as pending entries,
+  OQ84), `add_row` / `remove_row` (rows their link added); `signing.sign_from_link`, the officer's signature there;
+- `approvals` (slice 58): `approve_client`, `reject_client`, `revert_approval` — a person's decision on those
+  answers, which review's queues call through `review.owners`.
 `common` holds the locks (the Deal, intake's row for a choice, then the Questionnaire row), the first write's row and
 the Activity helpers. Each write runs in one transaction, records Activity (area `questionnaire`) and returns only
 what changed; a write that changes nothing writes nothing.
@@ -15,6 +19,6 @@ from .answers import set_answers
 from .marks import mark_answers
 from .picks import choose_form
 from .rows import add_row, remove_row
-from .signing import reopen, sign
+from .signing import reopen, sign, sign_from_link
 
-__all__ = ['add_row', 'choose_form', 'mark_answers', 'remove_row', 'reopen', 'set_answers', 'sign']
+__all__ = ['add_row', 'choose_form', 'mark_answers', 'remove_row', 'reopen', 'set_answers', 'sign', 'sign_from_link']

@@ -13,6 +13,11 @@ while the client answers it, and reads missing again once a link ends (L.6).
   shows people (census scope other than none; their names need the PIN, OQ80).
 - **Files**: the census file; the document slots named, the checklist's missing files on a "missing" ask, and the
   compliance files when the intake's `files` block is asked (old COMPLIANCE_TYPES).
+- **Questionnaires** (slice 58; G83, G96, L91): each form the request asks, in its order, but a form whose checklist
+  item a person waived (or that no longer applies) since the link went out (old `_link_questionnaires`). A form asked
+  online carries the link's view of it (`questionnaire.selectors.portal.link_view`, narrowed to its picks) and its
+  every question in each row it has is the link's to write (`writable`; never a broker's field, G86); a whole form
+  online or one asked as a signed copy takes the paper copy (`qform:<form>`, G90).
 """
 
 from collections import namedtuple
@@ -27,6 +32,9 @@ from intake import client_view as intake_view
 from intake import form, values
 from intake.checklist_words import COMPLIANCE
 from intake.models import Intake
+from questionnaire import forms as questionnaire_forms
+from questionnaire.selectors import context as questionnaire_context
+from questionnaire.selectors import portal as questionnaire_portal
 
 from ..models import ASK_KINDS, ReviewNote
 from ..rules import asks as ask_rules
@@ -35,8 +43,13 @@ from ..rules.requests import carries
 
 Asked = namedtuple(
     'Asked',
-    'intake_keys blocks people columns needed census_file add_people documents intake rules overlay reopened',
+    'intake_keys blocks people columns needed census_file add_people documents intake rules overlay reopened forms',
 )
+# One form a link asks: its key, `online` or `upload` (a signed copy), the picks narrowing it, whether it is narrowed,
+# and (online) the link's view of it (`questionnaire.selectors.portal.LinkView`).
+FormAsk = namedtuple('FormAsk', 'form mode picks narrowed view')
+ONLINE, UPLOAD = 'online', 'upload'
+PAPER = 'qform:'  # a form's paper copy: the file slot and the whole form's ref
 
 
 def _would_need(key, rules):
@@ -131,6 +144,45 @@ def reopened(link, request, intake):
     return frozenset(out)
 
 
+def _forms(asks, deal, link, blank):
+    """[FormAsk] for the forms `asks` names, waived ones left out (G83)."""
+    wanted = [entry for entry in asks.get('questionnaires') or [] if questionnaire_forms.get_form(entry.get('form'))]
+    if not wanted:
+        return []
+    ctx = questionnaire_context.deal_context(deal)
+    dropped = {resolved['item'] for resolved in ctx.resolved.values() if resolved['waived'] or not resolved['applies']}
+    facts = None
+    out = []
+    for entry in wanted:
+        form_key = entry['form']
+        if questionnaire_forms.item_of(questionnaire_forms.FORMS[form_key]) in dropped:
+            continue
+        picks = entry.get('picks') or {}
+        narrowed = bool(picks.get('fields') or picks.get('blocks'))
+        view = None
+        if entry.get('mode') == ONLINE:
+            facts = facts or questionnaire_context.prefill_facts(deal)
+            view = questionnaire_portal.link_view(
+                deal, form_key, link.id, picks=picks, blank=blank, row=ctx.stored.get(form_key), facts=facts
+            )
+        out.append(FormAsk(form_key, entry.get('mode') or ONLINE, picks, narrowed, view))
+    return out
+
+
+def form_writable(ask):
+    """The `q:` refs a link may write on one form: none once the form is signed."""
+    if ask.view is None or (ask.view.row is not None and ask.view.row.locked):
+        return set()
+    return {f'q:{ask.form}:{slot}' for slot in questionnaire_portal.writable(ask.view)}
+
+
+def takes_paper(ask):
+    """A paper copy: asked as a signed copy, or the whole form online while it is unsigned (G90)."""
+    if ask.mode == UPLOAD:
+        return True
+    return not ask.narrowed and not (ask.view and ask.view.row is not None and ask.view.row.locked)
+
+
 def asked(link, request, deal, *, link_ids=()):
     """Asked(...) for `link` now. `link_ids`: every link on its request (whose added people it shares)."""
     asks = request.asks or {}
@@ -152,6 +204,7 @@ def asked(link, request, deal, *, link_ids=()):
         rules=(intake.rules if intake else None) or {},
         overlay=overlay(deal, intake, link, blank) if keys else {},
         reopened=reopened(link, request, intake) if keys else frozenset(),
+        forms=_forms(asks, deal, link, blank),
     )
 
 
@@ -160,6 +213,8 @@ def refs(found):
     out = {f'intake:{key}' for key in found.intake_keys}
     out |= {f'intake:block:{block}' for block in found.blocks if block in ('contacts', 'coverage', 'lines')}
     out |= {f'census:{member_id}:{key}' for member_id, keys in found.columns.items() for key in keys}
+    for ask in found.forms:
+        out |= form_writable(ask)
     return out
 
 
@@ -171,6 +226,11 @@ def carried(found):
     out |= {f'doc:{slot}' for slot in found.documents}
     if found.census_file:
         out.add('census:file')
+    for ask in found.forms:
+        if ask.view is not None:
+            out |= {f'q:{ask.form}:{slot}' for slot in questionnaire_portal.writable(ask.view)}
+            if not ask.narrowed:
+                out.add(f'{PAPER}{ask.form}')
     return out
 
 

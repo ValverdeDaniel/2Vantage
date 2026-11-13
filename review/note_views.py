@@ -10,7 +10,7 @@ service → answer with what the screen redraws. Ids from the path are integers 
 - POST deals/{id}/review/tray/send/ {ids?, request_id?, new?: {people, security?, expires_on?, message?, blank?}}
   → {sent, targets, waiting, whys, dropped, request?, links?, tray}; `links` (a new link's, with its PIN this once).
 - POST deals/{id}/review/seen/ {at?} → {seen_at}: this person's last look (L33).
-- GET  deals/{id}/review/request/?pane=intake | census | documents[&request=<id>] → the request page
+- GET  deals/{id}/review/request/?pane=intake | census | questionnaire | documents[&request=<id>] → the request page
   (selectors/request_page.py); with `request`, the Ask card's `target` (slice 57).
 400 {field: [sentence]}; 409 {detail} (a deal that may no longer ask its client, nothing to send, no link for a note).
 """
@@ -30,7 +30,7 @@ from .selectors import tray as tray_selector
 from .services import notes, seen, send, tray
 from .views import MAX_ID, _activity_id, _body, _deal, _made
 
-PANES = ('intake', 'census', 'documents')
+PANES = ('intake', 'census', 'questionnaire', 'documents')
 
 
 def _tray(deal):
