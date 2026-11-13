@@ -54,6 +54,8 @@ def samples(deal, made):
         'api/deals/<int:pk>/review/census-blanks/': {'pk': deal.id},
         'api/deals/<int:pk>/review/section/': {'pk': deal.id},
         'api/deals/<int:pk>/review/rules/': {'pk': deal.id},
+        'api/deals/<int:pk>/review/marks/': {'pk': deal.id},  # slice 64: the Overview's marks across owners
+        'api/deals/<int:pk>/confidence/': {'pk': deal.id},
         'api/links/<int:lid>/': {'lid': made.links[0][0].id},
         'api/links/<int:lid>/preview/': {'lid': made.links[0][0].id},
         **{route: {'token': token} for route in PORTAL},
@@ -119,6 +121,8 @@ MATRIX = [
     ('GET', 'api/deals/<int:pk>/review/census-blanks/', ALL),
     ('GET', 'api/deals/<int:pk>/review/section/', ALL),
     ('POST', 'api/deals/<int:pk>/review/rules/', ALL, {'surface': 'intake', 'rules': {'website': {'state': 'waived'}}}),
+    ('POST', 'api/deals/<int:pk>/review/marks/', ALL, {'action': 'approve', 'refs': ['intake:fein']}),  # slice 64
+    ('GET', 'api/deals/<int:pk>/confidence/', ALL),
     ('PATCH', 'api/links/<int:lid>/', ALL, {'action': 'mark_sent', 'copied': True}),
     ('GET', 'api/links/<int:lid>/preview/', ALL),
     ('GET', 'api/portal/moved/', PUBLIC_READ),

@@ -16,6 +16,7 @@ from deals import activity
 
 from . import words
 from .models import ClientLink, ClientRequest
+from .services import marks
 
 MODELS = {'link': ClientLink, 'request': ClientRequest}
 TIMES = {'sent_at', 'expires_at', 'revoked_at', 'closed_at'}
@@ -70,7 +71,9 @@ def _now(row, key):
     return value.isoformat() if hasattr(value, 'isoformat') else value
 
 
-def revert(row, user):  # noqa: ARG001 (the reverters' signature)
+def revert(row, user):
+    if row.action == marks.MARKED:  # the Overview's marks across owners (slice 64): each owner's own Revert
+        return marks.revert(row, user)
     if row.action == 'pin':
         raise activity.Refused(words.PIN_KEPT)
     later = activity.later_keys(row)

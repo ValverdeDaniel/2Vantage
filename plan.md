@@ -4589,7 +4589,7 @@ Built in slice 58 (questionnaires; each 400 by field, 409 with a sentence):
 | POST | `deals/{id}/review/approve/`, `…/reject/`, `…/enter/`, `…/uploads/{doc}/`, `…/preview/` | Decisions, through the owners' services; `preview/` writes nothing |
 | POST | `deals/{id}/review/requests/[?dry_run=1]`, `…/requests/{rid}/form/[?dry_run=1]`, `…/requests/{rid}/people/`, `…/requests/{rid}/close/`, `…/links/update/` | The builder, the Ask card, people, close, Update links |
 | PATCH · GET | `links/{lid}/` · `links/{lid}/preview/` | `{action}`: mark_sent, unsend, extend, revoke, restore, expiry, address, new_pin, security, blank, nudge · View as client |
-| GET · POST | `deals/{id}/confidence/` · `deals/{id}/review/marks/` | The Overview's data-confidence read · `{document_id, action}` marks one file across every owner in one transaction (M.6; slice 64) |
+| GET · POST | `deals/{id}/confidence/` · `deals/{id}/review/marks/` | The Overview's data-confidence read · `{document_id, action}` marks one file across every owner in one transaction (M.6; slice 64). Built in slice 64: the read is `review.selectors.confidence` → `{cells: {scanned, corrected, typed, from_client, pending}, filled, confirmed: {total, by_person, by_recheck, pct}, warnings: {low, to_review, check, ignored}, documents: [{id, name, kind, values, confirmed, to_review, check, ignored, headline}] (50, `documents_more`), ignored · check: {rows: [{ref, owner, where, label, value (null for census, questionnaires and lasers), tab, form, doc, by, at}] (50), more}, recheck: {values, last}}`, one aggregate per owner over `jsonb_each(sources)` (`documents/source_counts.py`; each owner's `confidence.py`) plus one marked-rows query per owner, the same queries at any size. `review/marks/` takes `{action, document_id}` or `{action, refs}` (the owners' refs: `intake:<key>`, `census:<id>:<key>`, `plan:<id>:<key>`, `questionnaire:<form>:<slot>`) → `{action, changed: {owner: n}, count, activity_id}`; each owner writes through its own `services/file_marks.py` (Confirm all takes every value of the file, ignore and check its open warnings, clear its marked ones: `review_rules.takes`), and one Activity row (area `review`, action `marked`) holds every owner's marks; its Revert goes back through each owner's own; 404 for another deal's file |
 
 v1.1's `deals/{id}/links/`, with one link holding the asks, and `review/values/approve|reject/` give way to requests
 with one link per person (L.6). Full list: Part L, L.6.
@@ -5013,6 +5013,19 @@ the old order (M.6), except that the Waiting banner sits under the title (M33; O
   (`qform:<form>`, "＋ Ask" with the old title "…they fill it out online on their link"; M54), and the questionnaire
   group's client answers waiting (`review.summary` `pending.questionnaire`) open the review queue's Questionnaire
   section with Review ▸ (M50).
+- **Built in slice 64** (`deal/overview/confidence/`, `api/confidence.js`; review's `selectors/confidence.py` and
+  `services/marks.py`): Data confidence, the last side card, in the old `DataConfidence` frame — Scanned (Claude's
+  reads, with "N corrected by hand": a typed value keeping its file), Typed, From the client ("N awaiting approval":
+  the client's answers waiting), the Confirmed bar with "by a person" and "by the re-read" (approvals a person applied
+  from a re-check, `via: recheck`), low-confidence, to review, need checking and ignored; each file with its quality
+  chip, "N values · M confirmed", **Confirm all** (asks "Confirm N values from this file?", then approves every value
+  read from it on intake, census, quotes and the questionnaires as one review, with an Undo toast), Ignore N warnings
+  and ⚑ Needs checking; the Ignored and Needs checking lists (where, the field, the value — never member data — who,
+  when, the file; Undo, ✓ Approve, Undo all; 50 and "and N more"); and the AI re-read: **Double-check with AI** starts
+  the one `recheck` reader on every value read from a file that no person approved, open warnings first, 60 a file
+  (`ai/recheck/ {scanned: true}`), off without Claude, with nothing scanned or while a read runs; its last result
+  ("Re-read N scanned values — N agreed · N disagree · N not found"), the first six differences, Open the documents ▸,
+  and Review ▸ to its card in Work with Claude while it waits.
 
 ### 8.7 Agenda (`agenda`)
 
@@ -5967,7 +5980,7 @@ finding, when allowed → landing (§10.5).
 |---|---|---|---|
 | Quotes and renewals | Plans with carrier, name, number, codes, roles and links, and rows in printed order; matches existing plans and never duplicates a current plan; renewal packets; which plan a quote replaces, unticked when unsure; printed tier counts proposed unticked, never a plan's enrollment (OQ30); the printed layout, `QuoteLayout` | D46–D67, D115–D117, F138, F143 | 18, 19, 21 |
 | SBC | Flags design values that differ from the plan's; never a new plan, except an unticked design-only plan when nothing matches; always reviewed (OQ33) | D38, D47 | 22 |
-| Re-check | One check mode for flags and the Overview's double-check: agree, fix or not found; a person applies it | D93, E77, M92, M93 | 22, 64 |
+| Re-check | One check mode for flags and the Overview's double-check (`scanned`: every value read from a file that no person approved, open warnings first, 60 a file, never a laser; slice 64): agree, fix or not found; a person applies it | D93, E77, M92, M93 | 22, 64 |
 | Rank | Stars 5–8 plans with reasons, within `room()`, from the client guidance; refused without guidance; curated lines skipped | D96, D97, F111 | 37 |
 | Census mapping assist | Proposes targets for the mapping dialog from column shapes (below) | D109 | 51 |
 | Census roster | A PDF roster becomes a staged `CensusImport` for the Census tab | D110, C19 | 51 |

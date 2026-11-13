@@ -228,6 +228,16 @@ def quality_headline(high, low, missing):
     return {'label': 'Needs review', 'tone': 'rose'}
 
 
+def takes(action, entry):
+    """Whether a file-wide `action` takes this value of the file (M88, M89; the old Overview's per-file buttons):
+    approve takes every value (Confirm all), ignore and check its open warnings, clear its marked values."""
+    if action == APPROVE:
+        return bool(_entry(entry))
+    if action == CLEAR:
+        return bool(mark_state(entry))
+    return open_warning(entry)
+
+
 def warning_counts(entries):
     """{open, check, unflagged} over entries: the strip's "N AI values to review · M need checking" (E48)."""
     open_count = check = 0

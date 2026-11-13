@@ -5,6 +5,9 @@ which plan values Claude reads again, and what it proposes from its verdicts. ai
 - `claims(deal, scope)`: the open warnings (`review_rules.open_warning`, OQ28) on the deal's plans that came from a
   file — the values named (`refs`), those on some plans, those read from some files, or all of them — each with its
   file, page or cell, and a label of plan and field (never a person's details). A value no longer flagged is left out.
+  With `scanned` (the Overview's "Double-check with AI", M92, M93; slice 64) it takes every value from a file that no
+  person approved, open warnings first, at most `MAX_PER_FILE` a file (the old audit's spot-check). A laser is never
+  claimed (a key-only value: member data, §3.8).
 - `build_changes(deal, claims, verdicts, extra)`: one item per value, so each row of the card has its own tick:
   - Claude agrees: `confirm`, ticked: applying approves it as the person who pressed Apply (`via: recheck`, E77);
   - the file prints something else: `set_values` old → new, ticked unless Claude was unsure (a sold plan's is
@@ -15,8 +18,9 @@ which plan values Claude reads again, and what it proposes from its verdicts. ai
 
 from rest_framework.exceptions import ValidationError
 
+from deals import activity
 from documents.models import Document
-from documents.review_rules import open_warning
+from documents.review_rules import is_approved, open_warning
 
 from . import fields
 from .models import Plan
@@ -27,6 +31,7 @@ NOT_FOUND = 'not found on its page'
 NOT_A_VALUE = 'the file prints “{found}”, which is not a value for {label}'
 SOLD = 'Sold: left as sold'
 UNSURE = 'Claude was unsure of this fix.'
+MAX_PER_FILE = 60  # the AI re-read's values a file, open warnings first (the old scan_audit.MAX_CLAIMS_PER_DOC)
 SILENT = 'Claude did not report on it.'
 
 
@@ -56,27 +61,37 @@ def claims(deal, scope):
         documents = set(_ids(scope['document_ids'], 'document_ids', NO_FILES))
         if Document.all_objects.filter(deal=deal, id__in=documents).count() != len(documents):
             raise ValidationError({'document_ids': [NO_FILES]})
-    out = []
+    scanned, out = bool(scope.get('scanned')), []
     for plan in plans:
         for key in fields.keys_for(plan.line):
             source = plan.sources.get(key)
-            if key not in plan.values or not open_warning(source) or not (source or {}).get('doc'):
+            if key not in plan.values or not (source or {}).get('doc') or key in activity.key_only_values:
+                continue
+            if is_approved(source) if scanned else not open_warning(source):
                 continue
             if wanted is not None and key not in wanted.get(plan.id, ()):
                 continue
             if documents is not None and source['doc'] not in documents:
                 continue
-            out.append(
-                {
-                    'ref': f'plan:{plan.id}:{key}',
-                    'doc': source['doc'],
-                    'page': source.get('page') or None,
-                    'cell': source.get('cell') or '',
-                    'label': f'{plan.carrier} {plan.name} — {fields.BY_KEY[key]["label"]}',
-                    'value': str(plan.values[key]),
-                }
-            )
-    return out
+            claim = {
+                'ref': f'plan:{plan.id}:{key}',
+                'doc': source['doc'],
+                'page': source.get('page') or None,
+                'cell': source.get('cell') or '',
+                'label': f'{plan.carrier} {plan.name} — {fields.BY_KEY[key]["label"]}',
+                'value': str(plan.values[key]),
+            }
+            out.append((claim, open_warning(source)))
+    return _per_file(out) if scanned else [claim for claim, _open in out]
+
+
+def _per_file(found):
+    """The scanned values, file by file in the order their files first appear: open warnings first, then the rest,
+    at most MAX_PER_FILE a file."""
+    files = {}
+    for claim, flagged in found:
+        files.setdefault(claim['doc'], []).append((not flagged, claim))
+    return [claim for rows in files.values() for _rest, claim in sorted(rows, key=lambda r: r[0])[:MAX_PER_FILE]]
 
 
 def _split(ref):

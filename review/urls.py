@@ -1,6 +1,6 @@
 from django.urls import include, path
 
-from . import decision_views, form_views, note_views, views
+from . import confidence_views, decision_views, form_views, note_views, views
 from .portal import views as portal_views
 
 urlpatterns = [
@@ -25,6 +25,8 @@ urlpatterns = [
     path('deals/<int:pk>/review/census-blanks/', form_views.CensusBlanksView.as_view()),
     path('deals/<int:pk>/review/section/', form_views.SectionView.as_view()),
     path('deals/<int:pk>/review/rules/', form_views.RulesView.as_view()),
+    path('deals/<int:pk>/review/marks/', confidence_views.MarksView.as_view()),  # slice 64: marks across owners
+    path('deals/<int:pk>/confidence/', confidence_views.ConfidenceView.as_view()),  # the Overview's (slice 64)
     path('links/<int:lid>/', views.LinkView.as_view()),
     path('links/<int:lid>/preview/', portal_views.PreviewView.as_view()),
     path('portal/', include('review.portal.urls')),

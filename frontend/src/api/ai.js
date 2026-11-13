@@ -117,18 +117,20 @@ export function useAttachSbc(dealId) {
 }
 
 /**
- * ✦ Ask Claude to re-check (D40, D93; slice 22): ({refs, planIds, documentIds}) → the re-check job. With none of them,
- * every flagged value on the deal. Its card waits for a person: nothing changes until they apply it.
+ * ✦ Ask Claude to re-check (D40, D93; slice 22): ({refs, planIds, documentIds, scanned}) → the re-check job. With none
+ * of them, every flagged value on the deal; `scanned` is the Overview's Double-check with AI (M92; slice 64): every
+ * value read from a file that no person approved. Its card waits for a person: nothing changes until they apply it.
  */
 export function useStartRecheck(dealId) {
   return useJobWrite(
     dealId,
-    async ({ refs, planIds, documentIds } = {}) =>
+    async ({ refs, planIds, documentIds, scanned } = {}) =>
       (
         await api.post(`deals/${dealId}/ai/recheck/`, {
           ...(refs ? { refs } : {}),
           ...(planIds ? { plan_ids: planIds } : {}),
           ...(documentIds ? { document_ids: documentIds } : {}),
+          ...(scanned ? { scanned: true } : {}),
         })
       ).data,
   );

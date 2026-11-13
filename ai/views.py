@@ -154,9 +154,10 @@ def _refs(raw):
 
 
 class RecheckView(APIView):
-    """POST {refs? | plan_ids? | document_ids?, model?}: ✦ Ask Claude to re-check (D40, D93, E77; slice 22) → 201 the
-    job, or 200 the same re-check already going. Its change set waits for a person. 409 without a key, with nothing
-    flagged there or too many values; 400 for ids or refs that are not the deal's."""
+    """POST {refs? | plan_ids? | document_ids?, scanned?, model?}: ✦ Ask Claude to re-check (D40, D93, E77; slice 22)
+    → 201 the job, or 200 the same re-check already going. Its change set waits for a person. `scanned: true` is the
+    Overview's Double-check with AI (M92; slice 64): the values read from files that no person approved. 409 without a
+    key, with nothing flagged (or scanned) there or too many values; 400 for ids or refs that are not the deal's."""
 
     def post(self, request, pk):
         deal = _deal(pk)
@@ -168,6 +169,7 @@ class RecheckView(APIView):
             plan_ids=_ids(plan_ids, 'plan_ids') if plan_ids is not None else None,
             document_ids=_ids(document_ids) if document_ids is not None else None,
             model=_model(request.data),
+            scanned=request.data.get('scanned') is True,
         )
         job = _job(job.id)
         return Response(selectors.job_payload(job), status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)

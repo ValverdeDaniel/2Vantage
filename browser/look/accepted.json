@@ -5354,7 +5354,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M83",
-      "why": "Data confidence under the side cards is pending slice 64 (M83–M93).",
+      "why": "Data confidence stands last among the side cards with the old cells, Confirmed bar, legend and AI re-read (M83, M86, M92). 2Vantage's GD1 holds its two synthetic files (golden spec; the parity load uploads none, E1), so the values typed from them count as Scanned with \"N corrected by hand\" (M83: a typed value keeps its file), each file has its row with its quality chip, \"N values · 0 confirmed\" and Confirm all (M87, M88), and the AI re-read reads \"Not run yet\" where the old, with no file, says nothing came from a scan (M92). The totals are the values each app stores: 2Vantage counts every owner's stored values through the one review rule (M83).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -5386,8 +5386,8 @@
       "width": null,
       "check": "classes",
       "selector": null,
-      "item": "M83",
-      "why": "Missing in 2Vantage: Data confidence's classes (bnf-ov-confidence, bnf-ov-conf-*, bnf-progress-*, bnf-ov-key*, bnf-ov-audit*), pending slice 64 (M83–M93); bnf-req-formpick, since the form picker is intake's own bnf-q-formpick (M51, B30); bnf-com-nudge and its bb-amber source words, the golden deals having a primary producer (M81); the old stepper's skipped states (M40); bnf-next-warn and bnf-ov-waiting-next where the step's severity and words differ (I119); bb-sidebar-sub, the old sidebar's deal description (A21). Extra: the header strip's classes (M112), the Claude pill's (A25), bnf-next-info and bnf-ov-readonly (M26), bnf-ov-showall (Show all N on a Timeline of more than eight rows, M70), and the commission card's chips (bnf-com-chip*, M81).",
+      "item": "M51",
+      "why": "Missing in 2Vantage: bnf-req-formpick, since the form picker is intake's own bnf-q-formpick (M51, B30); bnf-com-nudge and its bb-amber source words, the golden deals having a primary producer (M81); the old stepper's skipped states (M40); bnf-next-warn and bnf-ov-waiting-next where the step's severity and words differ (I119); bb-sidebar-sub, the old sidebar's deal description (A21). Extra: the header strip's classes (M112), the Claude pill's (A25), bnf-next-info and bnf-ov-readonly (M26), bnf-ov-showall (Show all N on a Timeline of more than eight rows, M70), and the commission card's chips (bnf-com-chip*, M81), and Data confidence's file rows (bnf-ov-conf-docs, bnf-ov-conf-doc*, bnf-doc-name, bnf-quality-label; the parity load uploads no file, E1, M87).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -5397,8 +5397,8 @@
       "width": null,
       "check": "style",
       "selector": "body",
-      "item": "M83",
-      "why": "The page is shorter by Data confidence, pending slice 64 (M83–M93); the cards, the Activity card and the side cards stand where the old ones do.",
+      "item": "M112",
+      "why": "The page is longer: the deal header strip stands over the tab (M112) and Data confidence lists GD1's two files (M87, E1); the cards, the Activity card and the side cards stand where the old ones do, Data confidence last (M83).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -5465,6 +5465,39 @@
       "selector": ".bnf-ov-note-form",
       "item": "OQ96",
       "why": "Only the box moves: the notes follow the cards above them (OQ96, M112, M59).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.overview",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-ov-conf-cell",
+      "item": "M83",
+      "why": "Only the box moves: Data confidence follows the side cards above it (OQ96, M112); the Scanned cell is taller by \"N corrected by hand\" (M83: GD1's values typed from its files, E1).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.overview",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-ov-conf-value",
+      "item": "M83",
+      "why": "Only the box moves: Data confidence follows the side cards above it (OQ96, M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd1.overview",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-ov-audit",
+      "item": "M92",
+      "why": "Only the box moves, under GD1's two file rows (M87, E1); its note reads \"Not run yet — …\" over two lines where the old, with no file, says nothing came from a scan (M92).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -5882,7 +5915,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M83",
-      "why": "Data confidence under the side cards is pending slice 64 (M83–M93).",
+      "why": "Data confidence stands last among the side cards with the old cells, Confirmed bar, legend and AI re-read (M83, M86, M92); its totals are the values each app stores (2Vantage counts every owner's stored values through the one review rule, M83), so Typed differs. No file gave a value on this deal in either app, so neither lists files.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -5892,8 +5925,8 @@
       "width": null,
       "check": "classes",
       "selector": null,
-      "item": "M83",
-      "why": "Missing in 2Vantage: Data confidence's classes (bnf-ov-confidence, bnf-ov-conf-*, bnf-progress-*, bnf-ov-key*, bnf-ov-audit*), pending slice 64 (M83–M93); bnf-req-formpick, since the form picker is intake's own bnf-q-formpick (M51, B30); bnf-com-nudge and its bb-amber source words, the golden deals having a primary producer (M81); the old stepper's skipped states (M40); bnf-next-warn and bnf-ov-waiting-next where the step's severity and words differ (I119); bb-sidebar-sub, the old sidebar's deal description (A21). Extra: the header strip's classes (M112), the Claude pill's (A25), bnf-next-info and bnf-ov-readonly (M26), bnf-ov-showall (Show all N on a Timeline of more than eight rows, M70), and the commission card's chips (bnf-com-chip*, M81).",
+      "item": "M51",
+      "why": "Missing in 2Vantage: bnf-req-formpick, since the form picker is intake's own bnf-q-formpick (M51, B30); bnf-com-nudge and its bb-amber source words, the golden deals having a primary producer (M81); the old stepper's skipped states (M40); bnf-next-warn and bnf-ov-waiting-next where the step's severity and words differ (I119); bb-sidebar-sub, the old sidebar's deal description (A21). Extra: the header strip's classes (M112), the Claude pill's (A25), bnf-next-info and bnf-ov-readonly (M26), bnf-ov-showall (Show all N on a Timeline of more than eight rows, M70), and the commission card's chips (bnf-com-chip*, M81).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -5903,8 +5936,8 @@
       "width": null,
       "check": "style",
       "selector": "body",
-      "item": "M83",
-      "why": "The page is shorter by Data confidence, pending slice 64 (M83–M93); the cards, the Activity card and the side cards stand where the old ones do.",
+      "item": "M112",
+      "why": "The page is longer by the deal header strip over the tab (M112); the cards, the Activity card and the side cards stand where the old ones do, Data confidence last (M83).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -5971,6 +6004,39 @@
       "selector": ".bnf-ov-note-form",
       "item": "OQ96",
       "why": "Only the box moves: the notes follow the cards above them (OQ96, M112, M59).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd2.overview",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-ov-conf-cell",
+      "item": "M83",
+      "why": "Only the box moves: Data confidence follows the side cards above it (OQ96, M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd2.overview",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-ov-conf-value",
+      "item": "M83",
+      "why": "Only the box moves: Data confidence follows the side cards above it (OQ96, M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd2.overview",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-ov-audit",
+      "item": "M92",
+      "why": "Only the box moves: the AI re-read closes Data confidence, after the side cards above it (OQ96, M112, M92).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -6410,7 +6476,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M83",
-      "why": "Data confidence under the side cards is pending slice 64 (M83–M93).",
+      "why": "Data confidence stands last among the side cards with the old cells, Confirmed bar, legend and AI re-read (M83, M86, M92); its totals are the values each app stores (2Vantage counts every owner's stored values through the one review rule, M83), so Typed differs. No file gave a value on this deal in either app, so neither lists files.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -6442,8 +6508,8 @@
       "width": null,
       "check": "classes",
       "selector": null,
-      "item": "M83",
-      "why": "Missing in 2Vantage: Data confidence's classes (bnf-ov-confidence, bnf-ov-conf-*, bnf-progress-*, bnf-ov-key*, bnf-ov-audit*), pending slice 64 (M83–M93); bnf-req-formpick, since the form picker is intake's own bnf-q-formpick (M51, B30); bnf-com-nudge and its bb-amber source words, the golden deals having a primary producer (M81); the old stepper's skipped states (M40); bnf-next-warn and bnf-ov-waiting-next where the step's severity and words differ (I119); bb-sidebar-sub, the old sidebar's deal description (A21). Extra: the header strip's classes (M112), the Claude pill's (A25), bnf-next-info and bnf-ov-readonly (M26), bnf-ov-showall (Show all N on a Timeline of more than eight rows, M70), and the commission card's chips (bnf-com-chip*, M81).",
+      "item": "M51",
+      "why": "Missing in 2Vantage: bnf-req-formpick, since the form picker is intake's own bnf-q-formpick (M51, B30); bnf-com-nudge and its bb-amber source words, the golden deals having a primary producer (M81); the old stepper's skipped states (M40); bnf-next-warn and bnf-ov-waiting-next where the step's severity and words differ (I119); bb-sidebar-sub, the old sidebar's deal description (A21). Extra: the header strip's classes (M112), the Claude pill's (A25), bnf-next-info and bnf-ov-readonly (M26), bnf-ov-showall (Show all N on a Timeline of more than eight rows, M70), and the commission card's chips (bnf-com-chip*, M81).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -6453,8 +6519,8 @@
       "width": null,
       "check": "style",
       "selector": "body",
-      "item": "M83",
-      "why": "The page is shorter by Data confidence, pending slice 64 (M83–M93); the cards, the Activity card and the side cards stand where the old ones do.",
+      "item": "M112",
+      "why": "The page is longer by the deal header strip over the tab (M112); the cards, the Activity card and the side cards stand where the old ones do, Data confidence last (M83).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -6521,6 +6587,39 @@
       "selector": ".bnf-ov-note-form",
       "item": "OQ96",
       "why": "Only the box moves: the notes follow the cards above them (OQ96, M112, M59).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd3.overview",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-ov-conf-cell",
+      "item": "M83",
+      "why": "Only the box moves: Data confidence follows the side cards above it (OQ96, M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd3.overview",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-ov-conf-value",
+      "item": "M83",
+      "why": "Only the box moves: Data confidence follows the side cards above it (OQ96, M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd3.overview",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-ov-audit",
+      "item": "M92",
+      "why": "Only the box moves: the AI re-read closes Data confidence, after the side cards above it (OQ96, M112, M92).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -6949,7 +7048,7 @@
       "check": "pixels",
       "selector": null,
       "item": "M83",
-      "why": "Data confidence under the side cards is pending slice 64 (M83–M93).",
+      "why": "Data confidence stands last among the side cards with the old cells, Confirmed bar, legend and AI re-read (M83, M86, M92); its totals are the values each app stores (2Vantage counts every owner's stored values through the one review rule, M83), so Typed differs. No file gave a value on this deal in either app, so neither lists files.",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -6970,8 +7069,8 @@
       "width": null,
       "check": "classes",
       "selector": null,
-      "item": "M83",
-      "why": "Missing in 2Vantage: Data confidence's classes (bnf-ov-confidence, bnf-ov-conf-*, bnf-progress-*, bnf-ov-key*, bnf-ov-audit*), pending slice 64 (M83–M93); bnf-req-formpick, since the form picker is intake's own bnf-q-formpick (M51, B30); bnf-com-nudge and its bb-amber source words, the golden deals having a primary producer (M81); the old stepper's skipped states (M40); bnf-next-warn and bnf-ov-waiting-next where the step's severity and words differ (I119); bb-sidebar-sub, the old sidebar's deal description (A21). Extra: the header strip's classes (M112), the Claude pill's (A25), bnf-next-info and bnf-ov-readonly (M26), bnf-ov-showall (Show all N on a Timeline of more than eight rows, M70), and the commission card's chips (bnf-com-chip*, M81).",
+      "item": "M51",
+      "why": "Missing in 2Vantage: bnf-req-formpick, since the form picker is intake's own bnf-q-formpick (M51, B30); bnf-com-nudge and its bb-amber source words, the golden deals having a primary producer (M81); the old stepper's skipped states (M40); bnf-next-warn and bnf-ov-waiting-next where the step's severity and words differ (I119); bb-sidebar-sub, the old sidebar's deal description (A21). Extra: the header strip's classes (M112), the Claude pill's (A25), bnf-next-info and bnf-ov-readonly (M26), bnf-ov-showall (Show all N on a Timeline of more than eight rows, M70), and the commission card's chips (bnf-com-chip*, M81).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -6981,8 +7080,8 @@
       "width": null,
       "check": "style",
       "selector": "body",
-      "item": "M83",
-      "why": "The page is shorter by Data confidence, pending slice 64 (M83–M93); the cards, the Activity card and the side cards stand where the old ones do.",
+      "item": "M112",
+      "why": "The page is longer by the deal header strip over the tab (M112); the cards, the Activity card and the side cards stand where the old ones do, Data confidence last (M83).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null
@@ -7049,6 +7148,39 @@
       "selector": ".bnf-ov-note-form",
       "item": "OQ96",
       "why": "Only the box moves: the notes follow the cards above them (OQ96, M112, M59).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.overview",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-ov-conf-cell",
+      "item": "M83",
+      "why": "Only the box moves: Data confidence follows the side cards above it (OQ96, M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.overview",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-ov-conf-value",
+      "item": "M83",
+      "why": "Only the box moves: Data confidence follows the side cards above it (OQ96, M112).",
+      "new_sha256": null,
+      "signed_by": null,
+      "signed_on": null
+    },
+    {
+      "screen": "gd6.overview",
+      "width": null,
+      "check": "style",
+      "selector": ".bnf-ov-audit",
+      "item": "M92",
+      "why": "Only the box moves: the AI re-read closes Data confidence, after the side cards above it (OQ96, M112, M92).",
       "new_sha256": null,
       "signed_by": null,
       "signed_on": null

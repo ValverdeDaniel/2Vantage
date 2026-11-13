@@ -142,11 +142,13 @@ def run(job, progress):
     checker = registry.checkers.get(job.target)
     if checker is None:
         raise JobFailed(NO_CHECKER)
-    claims = checker.claims(job.deal, {'refs': (job.params or {}).get('refs') or []})
+    params = job.params or {}
+    scope = {'refs': params.get('refs') or [], **({'scanned': True} if params.get('scanned') else {})}
+    claims = checker.claims(job.deal, scope)  # the values still as they were asked about (Overview's: unapproved)
     if not claims:
         raise JobFailed(NOTHING)
-    count = len(claims)
-    progress.step(f'Re-checking {count} flagged value{"s" if count != 1 else ""} against their files', 3)
+    count, what = len(claims), 'scanned' if params.get('scanned') else 'flagged'
+    progress.step(f'Re-checking {count} {what} value{"s" if count != 1 else ""} against their files', 3)
     check = Check(job, progress)
     check.run(claims)
     Job.objects.filter(pk=job.pk).update(model=check.model)

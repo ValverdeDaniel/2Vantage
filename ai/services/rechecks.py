@@ -5,6 +5,8 @@ as `refs`, the open warnings on some plans or read from some files, or, with non
 deal. Refused in words: without Claude (409), with nothing flagged there (409), past `MAX_FLAGS` (409: pick one file
 or fewer plans), Opus for someone neither admin nor direct (409). The same re-check already going is returned. The
 job's change set always waits for a person (`landing.on_recheck`): Claude never approves or fixes a value itself.
+`scanned` is the Overview's "Double-check with AI" (M92, M93; slice 64): every value read from a file that no person
+approved, open warnings first and at most the owner's cap a file, cut to `MAX_FLAGS` rather than refused.
 """
 
 from rest_framework.exceptions import ValidationError
@@ -17,10 +19,11 @@ from .jobs import NO_OPUS, start
 MAX_FLAGS = 400  # one re-check checks at most this many values
 NO_CHECKER = 'Nothing re-checks those values yet.'
 NOTHING = 'Nothing there is flagged for review, so there is nothing to re-check.'
+NOTHING_SCANNED = 'Nothing on this deal came from a scan, so there is nothing to re-read.'
 TOO_MANY = '{n} flagged values is more than one re-check takes ({most}). Pick one file, or tick fewer plans.'
 
 
-def start_recheck(user, deal, *, owner='quotes', refs=None, plan_ids=None, document_ids=None, model=''):
+def start_recheck(user, deal, *, owner='quotes', refs=None, plan_ids=None, document_ids=None, model='', scanned=False):
     """(job, created)."""
     from ..reading import may_use_opus
 
@@ -36,11 +39,18 @@ def start_recheck(user, deal, *, owner='quotes', refs=None, plan_ids=None, docum
         for key, value in (('refs', refs), ('plan_ids', plan_ids), ('document_ids', document_ids))
         if value is not None
     }
+    if scanned:
+        scope['scanned'] = True
     claims = checker.claims(deal, scope)
     if not claims:
-        raise Refused(NOTHING)
-    if len(claims) > MAX_FLAGS:
+        raise Refused(NOTHING_SCANNED if scanned else NOTHING)
+    if len(claims) > MAX_FLAGS and not scanned:
         raise Refused(TOO_MANY.format(n=len(claims), most=MAX_FLAGS))
+    claims = claims[:MAX_FLAGS]
     documents = list(dict.fromkeys(claim['doc'] for claim in claims))
-    params = {'refs': [claim['ref'] for claim in claims], **({'model': model} if model else {})}
+    params = {
+        'refs': [claim['ref'] for claim in claims],
+        **({'model': model} if model else {}),
+        **({'scanned': True} if scanned else {}),
+    }
     return start(user, deal, kinds.RECHECK, documents=documents, params=params, target=owner)

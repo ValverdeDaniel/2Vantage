@@ -6,6 +6,7 @@ import InlineError from '../../ui/InlineError';
 import Loading from '../../ui/Loading';
 import { ArchiveConfirm, ArchivedBanner, LostBanner, LostRow } from './Banners';
 import CommissionCard from './CommissionCard';
+import ConfidenceCard from './confidence/ConfidenceCard';
 import CoverageNotesCard from './CoverageNotesCard';
 import AskedList from './feed/AskedList';
 import OutreachStrip from './feed/OutreachStrip';
@@ -24,9 +25,9 @@ import WaitingBanner from './WaitingBanner';
  * (M33, X-84; OQ96's default): the title row with Mark as lost… and Archive…, their inline rows and banners, the
  * Waiting banner, the header with its client box and facts, the tiles, then Card 1 and Card 2 side by side, and under
  * them the Activity card (the outreach strip, "Who we've asked" and the Timeline) beside the side cards (Notes,
- * Coverage notes, Commission; slice 63). Data confidence follows in 64. It reads `overview/`, the shell's `journey/`
- * (the banner, the Intake tile, Card 2's states), the deal header (lost, archived), the notes and the feed; every
- * control writes through the app that owns the value.
+ * Coverage notes, Commission; slice 63; then Data confidence, slice 64). It reads `overview/`, the shell's `journey/`
+ * (the banner, the Intake tile, Card 2's states), the deal header (lost, archived), the notes, the feed and review's
+ * confidence; every control writes through the app that owns the value.
  */
 export default function OverviewTab({ deal }) {
   const [open, setOpen] = useState(null); // the inline row showing: 'lost' | 'archive' | null
@@ -72,6 +73,7 @@ export default function OverviewTab({ deal }) {
               <NotesCard dealId={deal.id} />
               <CoverageNotesCard dealId={deal.id} notes={overview.data.coverage_notes} />
               <CommissionCard dealId={deal.id} commission={overview.data.commission} meta={meta.data} />
+              <ConfidenceCard dealId={deal.id} />
             </div>
           </div>
         </>
