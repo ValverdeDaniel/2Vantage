@@ -133,7 +133,8 @@ def test_A34_a_sales_status_row_refuses_revert_and_a_hand_row_reverts(api, user,
     deal, (medical, _) = sale
     sell(api, medical)
     converted = status_rows(deal).get()
-    assert api.get(f'/api/deals/{deal.id}/activity/').json()['results'][0]['can_revert'] is False
+    rows = api.get(f'/api/deals/{deal.id}/activity/').json()['results']  # by id: the clock can step back under load
+    assert next(row for row in rows if row['id'] == converted.id)['can_revert'] is False
     response = api.post(f'/api/activity/{converted.id}/revert/')
     assert (response.status_code, response.json()) == (409, {'detail': 'Un-sell the plan to undo this.'})
     sell(api, medical, False)
